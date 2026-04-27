@@ -1,0 +1,132 @@
+package de.vptr.midas.api.resource;
+
+import static de.vptr.midas.api.util.TestDataBuilder.createDefaultPostJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createDefaultPostPatchJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedPostJson;
+import static de.vptr.midas.api.util.TestUtil.createTestPost;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResourceAndJson;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testPermitAllGetWithJson;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+
+import org.junit.jupiter.api.Test;
+
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+class PostResourceTest {
+    private static final String ENDPOINT_URL = "/api/v1/posts";
+
+    @Test
+    void testGetAllPosts_permitAll() {
+        testPermitAllGetWithJson(ENDPOINT_URL);
+    }
+
+    @Test
+    void testGetAllPosts_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL);
+    }
+
+    @Test
+    void testGetPublishedPosts_permitAll() {
+        testPermitAllGetWithJson(ENDPOINT_URL + "/published");
+    }
+
+    @Test
+    void testGetPublishedPosts_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/published");
+    }
+
+    @Test
+    void testGetPost_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testGetPost_authorizedWithExistingPost() {
+        Long id = createTestPost();
+        testAuthorizedGetWithExistingResourceAndJson(ENDPOINT_URL + "/" + id);
+    }
+
+    @Test
+    void testGetPost_authorizedWithNonExistentPost() {
+        testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/999");
+    }
+
+    @Test
+    void testGetPostsByUser_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+    }
+
+    @Test
+    void testGetPostsByUser_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
+    }
+
+    @Test
+    void testGetPostsByCategory_permitAll() {
+        testPermitAllGetWithJson(ENDPOINT_URL + "/category/1");
+    }
+
+    @Test
+    void testGetPostsByCategory_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/category/1");
+    }
+
+    @Test
+    void testCreatePost_unauthorized() {
+        testUnauthorizedPost(ENDPOINT_URL, createDefaultPostJson());
+    }
+
+    @Test
+    void testCreatePost_authorizedWithSufficientRole() {
+        testAuthorizedPostWithCreation(ENDPOINT_URL, createDefaultPostJson());
+    }
+
+    @Test
+    void testCreatePost_authorizedWithInsufficientRole() {
+        testAuthorizedPostWithInsufficientRole(ENDPOINT_URL, createDefaultPostJson());
+    }
+
+    @Test
+    void testCreatePost_authorizedWithEmptyJson() {
+        testAuthorizedPostWithValidationError(ENDPOINT_URL, createEmptyJson());
+    }
+
+    @Test
+    void testCreatePost_authorizedWithInvalidJson() {
+        testAuthorizedPostWithValidationError(ENDPOINT_URL, createInvalidJson());
+    }
+
+    @Test
+    void testCreatePost_authorizedWithMalformedJson() {
+        testAuthorizedPostWithSyntaxError(ENDPOINT_URL, createMalformedJson());
+    }
+
+    @Test
+    void testUpdatePost_unauthorized() {
+        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPostJson());
+    }
+
+    @Test
+    void testPatchPost_unauthorized() {
+        testUnauthorizedPatch(ENDPOINT_URL + "/1", createDefaultPostPatchJson());
+    }
+
+    @Test
+    void testDeletePost_unauthorized() {
+        testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+}

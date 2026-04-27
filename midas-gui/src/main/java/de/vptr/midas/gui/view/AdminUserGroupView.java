@@ -1,0 +1,254 @@
+package de.vptr.midas.gui.view;
+
+import org.jboss.logging.Logger;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.Route;
+
+import de.vptr.midas.gui.component.button.CreateButton;
+import de.vptr.midas.gui.component.button.DeleteButton;
+import de.vptr.midas.gui.component.button.EditButton;
+import de.vptr.midas.gui.component.button.ManageUsersButton;
+import de.vptr.midas.gui.component.button.RefreshButton;
+import de.vptr.midas.gui.component.dialog.AdminUserGroupDialog;
+import de.vptr.midas.gui.component.dialog.AdminUserGroupMemberPanel;
+import de.vptr.midas.gui.component.layout.IntegerFilterLayout;
+import de.vptr.midas.gui.component.layout.SearchLayout;
+import de.vptr.midas.gui.dto.UserGroupResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.service.AuthService;
+import de.vptr.midas.gui.service.UserGroupService;
+import de.vptr.midas.gui.service.UserService;
+import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.inject.Inject;
+
+/** Component. */
+@Route(value = "admin/user-groups", layout = AdminMainLayout.class)
+public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeEnterObserver {
+
+    private static final Logger LOG = Logger.getLogger(AdminUserGroupView.class);
+
+    @Inject
+    UserGroupService groupService;
+
+    @Inject
+    AuthService authService;
+
+    @Inject
+    UserService userService;
+
+    private Grid<UserGroupResponseDto> grid;
+    private TextField searchField;
+    private Button searchButton;
+    private IntegerField userIdField;
+
+    private AdminUserGroupDialog groupDialog;
+    private AdminUserGroupMemberPanel memberPanel;
+
+    /** Creates a new instance. */
+    public AdminUserGroupView() {
+        this.setSizeFull();
+        this.setPadding(true);
+        this.setSpacing(true);
+    }
+
+    @Override
+    public void beforeEnter(final BeforeEnterEvent event) {
+        if (!this.authService.isAuthenticated()) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
+
+        this.buildUi();
+        this.loadGroupsAsync();
+    }
+
+    private void loadGroupsAsync() {
+        final String authHeader;
+        try {
+            authHeader = this.authService.getAuthorizationHeader();
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to get auth header", e);
+            NotificationUtil.showError("Authentication failed");
+            return;
+        }
+
+        this.loadDataAsync(
+                () -> this.groupService.getAllGroups(authHeader, 0, 50),
+                result -> this.grid.setItems(result));
+    }
+
+    private void buildUi() {
+        this.removeAll();
+
+        final Runnable onAuthFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+
+        final var header = new H2("User Groups");
+        final var searchLayout = this.createSearchLayout();
+        final var buttonLayout = this.createButtonLayout();
+        this.createGrid();
+        this.groupDialog = new AdminUserGroupDialog(this.groupService,
+                this::loadGroupsAsync, onAuthFailure);
+        this.memberPanel = new AdminUserGroupMemberPanel(this.groupService,
+                this.userService, this.authService, onAuthFailure);
+
+        this.add(header, searchLayout, buttonLayout, this.grid);
+    }
+
+    private HorizontalLayout createSearchLayout() {
+        final var searchLayout = new SearchLayout(
+                e -> {
+                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                        this.loadGroupsAsync();
+                    }
+                },
+                _ -> this.searchGroups(),
+                "Search by name...",
+                "Search Groups");
+
+        this.searchButton = searchLayout.getButton();
+        this.searchField = searchLayout.getTextfield();
+
+        // User ID filter
+        final var userFilterLayout = new IntegerFilterLayout(
+                _ -> this.filterByUser(),
+                "Enter User ID...",
+                "Filter by User");
+        this.userIdField = userFilterLayout.getIntegerField();
+
+        searchLayout.add(userFilterLayout);
+        return searchLayout;
+    }
+
+    private HorizontalLayout createButtonLayout() {
+        final var layout = new HorizontalLayout();
+        layout.setSpacing(true);
+
+        final var createButton = new CreateButton(_ -> this.groupDialog.open(null));
+        final var refreshButton = new RefreshButton(_ -> this.loadGroupsAsync());
+
+        layout.add(createButton, refreshButton);
+        return layout;
+    }
+
+    private void createGrid() {
+        this.grid = new Grid<>(UserGroupResponseDto.class, false);
+        this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        this.grid.setSizeFull();
+
+        // Configure columns
+        this.grid.addColumn((ValueProvider<UserGroupResponseDto, ?>) UserGroupResponseDto::getId).setHeader("ID")
+                .setWidth("80px").setFlexGrow(0);
+
+        // Make the name column clickable
+        this.grid.addComponentColumn(group -> {
+            final var nameSpan = new Span(group.getName());
+            nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
+            nameSpan.getStyle().set("cursor", "pointer");
+            nameSpan.getStyle().set("width", "100%");
+            nameSpan.getStyle().set("display", "block");
+            nameSpan.addClickListener(_ -> this.groupDialog.open(group));
+            return nameSpan;
+        }).setHeader("Name").setFlexGrow(2);
+
+        this.grid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0).setHeader("User Count")
+                .setWidth("120px").setFlexGrow(0);
+
+        // Add action column
+        this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("180px").setFlexGrow(0);
+    }
+
+    private HorizontalLayout createActionButtons(final UserGroupResponseDto group) {
+        final var layout = new HorizontalLayout();
+        layout.setSpacing(true);
+
+        final var editButton = new EditButton(_ -> this.groupDialog.open(group));
+        final var deleteButton = new DeleteButton(_ -> this.deleteGroup(group));
+        final var manageUsersButton = new ManageUsersButton(_ -> this.memberPanel.open(group));
+
+        layout.add(editButton, deleteButton, manageUsersButton);
+        return layout;
+    }
+
+    private void deleteGroup(final UserGroupResponseDto group) {
+        try {
+            if (this.groupService.deleteGroup(group.getId())) {
+                NotificationUtil.showSuccess("Group deleted successfully");
+                this.loadGroupsAsync();
+            } else {
+                NotificationUtil.showError("Failed to delete group");
+            }
+        } catch (final AuthenticationException e) {
+            NotificationUtil.showError("Session expired. Please log in again.");
+            this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+        } catch (final ServiceException e) {
+            NotificationUtil.showError(e, "Deleting group failed. Please try again.");
+        } catch (final RuntimeException e) {
+            LOG.error("Unexpected error deleting group", e);
+            NotificationUtil.showError("Unexpected error occurred");
+        }
+    }
+
+    private void searchGroups() {
+        final String query = this.searchField.getValue();
+        if (query == null || query.trim().isEmpty()) {
+            this.loadGroupsAsync();
+            return;
+        }
+
+        this.searchButton.setEnabled(false);
+
+        final String authHeader;
+        try {
+            authHeader = this.authService.getAuthorizationHeader();
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to get auth header", e);
+            this.searchButton.setEnabled(true);
+            NotificationUtil.showError("Authentication failed");
+            return;
+        }
+
+        this.loadDataAsync(
+                () -> this.groupService.searchGroups(query, authHeader),
+                result -> {
+                    this.searchButton.setEnabled(true);
+                    this.grid.setItems(result);
+                },
+                _ -> {
+                    this.searchButton.setEnabled(true);
+                    NotificationUtil.showError("Failed to search groups");
+                });
+    }
+
+    private void filterByUser() {
+        final Integer userId = this.userIdField.getValue();
+        if (userId == null) {
+            this.loadGroupsAsync();
+            return;
+        }
+
+        final String authHeader;
+        try {
+            authHeader = this.authService.getAuthorizationHeader();
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to get auth header", e);
+            NotificationUtil.showError("Authentication failed");
+            return;
+        }
+
+        this.loadDataAsync(
+                () -> this.groupService.getGroupsByUser(userId.longValue(), authHeader),
+                result -> this.grid.setItems(result));
+    }
+}

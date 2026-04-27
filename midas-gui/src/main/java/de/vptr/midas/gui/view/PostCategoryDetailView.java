@@ -1,0 +1,157 @@
+package de.vptr.midas.gui.view;
+
+import java.time.format.DateTimeFormatter;
+
+import org.jboss.logging.Logger;
+
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.Route;
+
+import de.vptr.midas.gui.dto.PostCategoryResponseDto;
+import de.vptr.midas.gui.dto.PostResponseDto;
+import de.vptr.midas.gui.service.AuthService;
+import de.vptr.midas.gui.service.PostCategoryService;
+import de.vptr.midas.gui.service.PostService;
+import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.inject.Inject;
+
+/** Component. */
+@Route(value = "categories", layout = MainLayout.class)
+public class PostCategoryDetailView extends AbstractAsyncDataView implements BeforeEnterObserver,
+        HasUrlParameter<String> {
+
+    private static final Logger LOG = Logger.getLogger(PostCategoryDetailView.class);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    @Inject
+    PostCategoryService categoryService;
+
+    @Inject
+    PostService postService;
+
+    @Inject
+    AuthService authService;
+
+    private String identifier;
+    private Grid<PostResponseDto> postGrid;
+    private H2 header;
+    private PostCategoryResponseDto category;
+
+    /** Creates a new instance. */
+    public PostCategoryDetailView() {
+        this.setSizeFull();
+        this.setPadding(true);
+        this.setSpacing(true);
+    }
+
+    @Override
+    public void setParameter(final BeforeEvent event, final String parameter) {
+        this.identifier = parameter;
+    }
+
+    @Override
+    public void beforeEnter(final BeforeEnterEvent event) {
+        if (!this.authService.isAuthenticated()) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
+
+        this.resolveCategoryAsync(this.identifier);
+    }
+
+    private void resolveCategoryAsync(final String identifier) {
+        LOG.infof("Resolving category for identifier: %s", identifier);
+
+        this.loadDataAsync(
+                () -> {
+                    try {
+                        final var categoryId = Long.parseLong(identifier);
+                        final var opt = this.categoryService.getCategoryById(categoryId);
+                        if (opt.isPresent()) {
+                            return opt.get();
+                        }
+                    } catch (final NumberFormatException ignored) {
+                        LOG.debugf("Identifier '%s' is not numeric, searching by name", identifier);
+                    }
+
+                    final var allCategories = this.categoryService
+                            .getAllCategories(this.authService.getAuthorizationHeader());
+                    return allCategories.stream()
+                            .filter(cat -> cat.getName().equalsIgnoreCase(identifier))
+                            .findFirst()
+                            .orElse(null);
+                },
+                resolvedCategory -> {
+                    if (resolvedCategory == null) {
+                        NotificationUtil.showError("Category not found");
+                        this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class));
+                        return;
+                    }
+                    this.category = resolvedCategory;
+                    this.buildUi();
+                    this.loadPostsAsync();
+                },
+                ErrorHandler::handleInUiContext,
+                30);
+    }
+
+    private void buildUi() {
+        this.removeAll();
+
+        final var backButton = new Button("← Back to Categories",
+                e -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
+        backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+
+        this.header = new H2(this.category.getName());
+        this.createPostGrid();
+
+        this.add(backButton, this.header, this.postGrid);
+    }
+
+    private void createPostGrid() {
+        this.postGrid = new Grid<>(PostResponseDto.class, false);
+        this.postGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        this.postGrid.setSizeFull();
+
+        this.postGrid.addComponentColumn(post -> {
+            final var titleButton = new Button(post.getTitle(),
+                    e -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+            titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            return titleButton;
+        }).setHeader("Title").setFlexGrow(3);
+
+        this.postGrid.addColumn(PostResponseDto::getUsername)
+                .setHeader("Author")
+                .setFlexGrow(1);
+
+        this.postGrid.addColumn(post -> post.getCreated() != null
+                ? post.getCreated().format(DATE_FORMATTER)
+                : "")
+                .setHeader("Date")
+                .setFlexGrow(1);
+
+        this.postGrid.setPageSize(20);
+    }
+
+    private void loadPostsAsync() {
+        LOG.infof("Loading posts for category: %s", this.category.getName());
+
+        this.loadDataAsync(
+                () -> this.postService.getPostsByCategory(this.category.getId()),
+                posts -> {
+                    LOG.infof("Successfully loaded %s posts", posts.size());
+                    this.postGrid.setItems(posts);
+                },
+                ErrorHandler::handleInUiContext,
+                30);
+    }
+}

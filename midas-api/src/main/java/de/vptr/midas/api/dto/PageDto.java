@@ -1,0 +1,15 @@
+package de.vptr.midas.api.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+/** Data transfer object for page data. */
+public class PageDto {
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must not exceed 255 characters")
+    public String title;
+
+    @NotBlank(message = "Content is required")
+    @Size(max = 50000, message = "Content must not exceed 50000 characters")
+    public String content;
+}

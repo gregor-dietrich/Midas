@@ -1,0 +1,72 @@
+# Coverage reports
+.coverage
+
+# Binary bundles (GUI)
+midas-gui/src/main/bundles
+
+# Logs
+**/*.log*
+
+# Python
+.venv
+__pycache__
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+.flattened-pom.xml
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.factorypath
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Plugin directory
+/.quarkus/cli/plugins/
+# TLS Certificates
+.certs/
+
+# Vaadin/Frontend files (GUI-specific)
+node_modules/
+midas-gui/src/main/frontend/generated/
+midas-gui/pnpmfile.js
+midas-gui/vite.generated.ts
+midas-gui/webpack.generated.js
+midas-gui/tsconfig.json
+midas-gui/types.d.ts
+midas-gui/vite.config.ts

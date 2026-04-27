@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs Exclusion Filter
+  
+  This filter excludes false positives and intentional design patterns that SpotBugs flags.
+  
+  SE_NO_SERIALVERSIONID:
+    Vaadin Flow components are UI components that are never serialized. They are ephemeral
+    and created per-request/session. Adding serialVersionUID to suppress this warning is
+    unnecessary boilerplate and creates a false sense of serialization support.
+  
+  SE_TRANSIENT_FIELD_NOT_RESTORED:
+    Similar to above - transient fields in Vaadin components are never deserialized
+    because the components themselves are never serialized.
+
+  SE_BAD_FIELD:
+    Vaadin view and component classes extend Vaadin base classes that implement Serializable,
+    but these views are never actually serialized. The injected service fields and state fields
+    are not serializable by design, but this is intentional since serialization never occurs.
+
+  EI_EXPOSE_REP / EI_EXPOSE_REP2:
+    Vaadin UI component classes return or store direct references to mutable component objects
+    (Button, DatePicker, etc.) and injected services. For Vaadin UI, returning the actual
+    component reference is necessary for callers to add event listeners and configure the
+    component. Making defensive copies of UI components or CDI-injected services is not
+    applicable in this context.
+-->
+<FindBugsFilter xmlns="http://findbugs.sourceforge.net/filter/3.0.0">
+    <!-- Suppress all SE_ pattern warnings (serialization issues) for the entire project -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID" />
+    </Match>
+
+    <Match>
+        <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
+    </Match>
+
+    <!-- Vaadin views/components are never serialized despite extending Serializable base classes -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD" />
+        <Or>
+            <Package name="~de\.vptr\.midas\.gui\.view.*" />
+            <Package name="~de\.vptr\.midas\.gui\.component.*" />
+        </Or>
+    </Match>
+
+    <!-- Vaadin UI components intentionally return direct component references for API usage -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP" />
+        <Or>
+            <Package name="~de\.vptr\.midas\.gui\.view.*" />
+            <Package name="~de\.vptr\.midas\.gui\.component.*" />
+        </Or>
+    </Match>
+
+    <!-- Vaadin components store injected CDI services - defensive copy is not applicable -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2" />
+        <Or>
+            <Package name="~de\.vptr\.midas\.gui\.view.*" />
+            <Package name="~de\.vptr\.midas\.gui\.component.*" />
+        </Or>
+    </Match>
+    <!-- Jackson DTOs with mutable fields (List, etc.) - defensive copy not appropriate for DTOs -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP" />
+        <Package name="~de\.vptr\.midas\.gui\.dto.*" />
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2" />
+        <Package name="~de\.vptr\.midas\.gui\.dto.*" />
+    </Match>
+</FindBugsFilter>

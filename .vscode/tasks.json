@@ -1,0 +1,104 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+// for the documentation about the tasks.json format
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "quarkus",
+          "pattern": [
+            {
+              "regexp": "\\[(\\d+)\\]\\s(.*):(\\d+):(\\d+)\\s\\-\\s{(.*)}:\\s(.*)$",
+              "file": 2,
+              "line": 3,
+              "column": 4,
+              "message": 6
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Scanning for projects...",
+            "endsPattern": "(^.*Quarkus .* started in .*\\.)|(^.* ERROR .* Failed to start)"
+          }
+        }
+      ],
+      "group": "build",
+      "label": "(api) quarkus:dev",
+      "command": "cd midas-api && mvn quarkus:dev -Ddebug=5005",
+      "windows": {
+        "command": "cd midas-api && mvn quarkus:dev -Ddebug=5005"
+      }
+    },
+    {
+      "type": "shell",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "quarkus",
+          "pattern": [
+            {
+              "regexp": "\\[(\\d+)\\]\\s(.*):(\\d+):(\\d+)\\s\\-\\s{(.*)}:\\s(.*)$",
+              "file": 2,
+              "line": 3,
+              "column": 4,
+              "message": 6
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Scanning for projects...",
+            "endsPattern": "(^.*Quarkus .* started in .*\\.)|(^.* ERROR .* Failed to start)"
+          }
+        }
+      ],
+      "group": "build",
+      "label": "(gui) quarkus:dev",
+      "command": "cd midas-gui && mvn quarkus:dev -Ddebug=5006",
+      "windows": {
+        "command": "cd midas-gui && mvn quarkus:dev -Ddebug=5006"
+      }
+    },
+    {
+      "label": "(test) Run Streamlit",
+      "type": "shell",
+      "command": "python3 -m venv ${workspaceFolder}/.venv && cd midas-test && PYTHONPATH=${workspaceFolder}/midas-test/src:$PYTHONPATH ${workspaceFolder}/.venv/bin/python -m pip install -q -e '.[dev]' && PYTHONPATH=${workspaceFolder}/midas-test/src:$PYTHONPATH ${workspaceFolder}/.venv/bin/python -m streamlit run main.py --server.port 8501",
+      "windows": {
+        "command": "python -m venv ${workspaceFolder}/.venv && cd midas-test && set PYTHONPATH=${workspaceFolder}\\midas-test\\src;%PYTHONPATH% && ${workspaceFolder}/.venv/Scripts/python -m pip install -q -e \".[dev]\" && ${workspaceFolder}/.venv/Scripts/python -m streamlit run main.py --server.port 8501"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "(test) Regenerate requirements.txt",
+      "type": "shell",
+      "command": "python3 -m venv ${workspaceFolder}/.venv 2>/dev/null; cd midas-test && ${workspaceFolder}/.venv/bin/python -m pip install -q --upgrade pip && ${workspaceFolder}/.venv/bin/python -m pip install -q pip-tools && ${workspaceFolder}/.venv/bin/python -m piptools compile --strip-extras --output-file=requirements.txt pyproject.toml",
+      "windows": {
+        "command": "python -m venv ${workspaceFolder}/.venv 2>nul & cd midas-test && ${workspaceFolder}/.venv/Scripts/python -m pip install -q --upgrade pip && ${workspaceFolder}/.venv/Scripts/python -m pip install -q pip-tools && ${workspaceFolder}/.venv/Scripts/python -m piptools compile --strip-extras --output-file=requirements.txt pyproject.toml"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "(test) Install Dev Dependencies",
+      "type": "shell",
+      "command": "python3 -m venv ${workspaceFolder}/.venv 2>/dev/null; cd midas-test && ${workspaceFolder}/.venv/bin/python -m pip install -e '.[dev]'",
+      "windows": {
+        "command": "python -m venv ${workspaceFolder}/.venv 2>nul & cd midas-test && ${workspaceFolder}/.venv/Scripts/python -m pip install -e \".[dev]\""
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+midas-gui/*.ts linguist-vendored
+midas-gui/src/main/frontend/** linguist-vendored
