@@ -6,6 +6,7 @@ import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -74,6 +75,14 @@ public class AdminAccountUserPanel extends FormDialog {
                 .setFlexGrow(1);
         this.userGrid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
                 .setFlexGrow(1);
+
+        this.userGrid.addComponentColumn(user -> {
+            final var checkbox = new Checkbox();
+            checkbox.setValue(user.isNegative());
+            checkbox.setLabel("Negative");
+            checkbox.addValueChangeListener(e -> this.updateUserNegativeFlag(user, e.getValue()));
+            return checkbox;
+        }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
 
         this.userGrid.addComponentColumn(user -> {
             final var removeButton = new RemoveUserButton(_ -> this.removeUserFromAccount(user));
@@ -196,6 +205,22 @@ public class AdminAccountUserPanel extends FormDialog {
             NotificationUtil.showError(e, "Adding user to account failed. Please try again.");
         } catch (final RuntimeException e) {
             LOG.error("Unexpected error adding user to account", e);
+            NotificationUtil.showError("Unexpected error occurred");
+        }
+    }
+
+    private void updateUserNegativeFlag(final UserResponseDto user, final boolean isNegative) {
+        try {
+            this.accountService.updateUserAccountMeta(
+                    this.selectedAccount.getId(), user.getId(), isNegative);
+            NotificationUtil.showSuccess("Updated negative flag for " + user.getUsername());
+        } catch (final AuthenticationException e) {
+            NotificationUtil.showError("Session expired. Please log in again.");
+            this.onAuthFailure.run();
+        } catch (final ServiceException e) {
+            NotificationUtil.showError(e, "Failed to update negative flag. Please try again.");
+        } catch (final RuntimeException e) {
+            LOG.error("Unexpected error updating negative flag", e);
             NotificationUtil.showError("Unexpected error occurred");
         }
     }

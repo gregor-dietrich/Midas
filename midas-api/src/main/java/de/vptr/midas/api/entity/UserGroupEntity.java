@@ -1,9 +1,14 @@
 package de.vptr.midas.api.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,6 +28,13 @@ public class UserGroupEntity extends PanacheEntityBase {
 
     @NotBlank
     public String name;
+
+    @Generated(event = EventType.INSERT)
+    public LocalDateTime created;
+
+    @Generated(event = EventType.UPDATE)
+    @Column(name = "last_edit")
+    public LocalDateTime lastEdit;
 
     @OneToMany(mappedBy = "group", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<UserGroupMetaEntity> userGroupMetas;

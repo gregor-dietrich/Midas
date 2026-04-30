@@ -1,6 +1,5 @@
 package de.vptr.midas.api.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,11 +54,10 @@ public class AccountService {
 
         final AccountEntity account = new AccountEntity();
         account.name = accountDto.name;
-        account.created = LocalDateTime.now();
-        account.lastEdit = account.created;
-        account.persist();
+        account.persistAndFlush();
+        AccountEntity.getEntityManager().detach(account);
 
-        return this.accountResponseAssembler.toAccountResponseDto(account);
+        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(account.id));
     }
 
     /** Updates the account with the given id. */
@@ -70,11 +68,11 @@ public class AccountService {
 
         // Complete replacement (PUT semantics)
         existingAccount.name = accountDto.name;
-        existingAccount.lastEdit = LocalDateTime.now();
 
-        existingAccount.persist();
+        existingAccount.persistAndFlush();
+        AccountEntity.getEntityManager().detach(existingAccount);
 
-        return this.accountResponseAssembler.toAccountResponseDto(existingAccount);
+        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(existingAccount.id));
     }
 
     /** Partially updates the account with the given id. */
@@ -87,9 +85,9 @@ public class AccountService {
             existingAccount.name = accountDto.name;
         }
 
-        existingAccount.lastEdit = LocalDateTime.now();
-        existingAccount.persist();
-        return this.accountResponseAssembler.toAccountResponseDto(existingAccount);
+        existingAccount.persistAndFlush();
+        AccountEntity.getEntityManager().detach(existingAccount);
+        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(existingAccount.id));
     }
 
     /** Deletes the account with the given id. */

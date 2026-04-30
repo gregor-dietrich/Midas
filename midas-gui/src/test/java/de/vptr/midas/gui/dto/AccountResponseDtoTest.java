@@ -20,6 +20,7 @@ class AccountResponseDtoTest {
         assertThat(dto.getUserCount()).isZero();
         assertThat(dto.getAssociatedUserIds()).isNull();
         assertThat(dto.getBalance()).isNull();
+        assertThat(dto.isNegative()).isFalse();
     }
 
     @Test
@@ -34,6 +35,7 @@ class AccountResponseDtoTest {
         dto.setUserCount(3);
         dto.setAssociatedUserIds(userIds);
         dto.setBalance(new BigDecimal("1234.56"));
+        dto.setIsNegative(true);
 
         // Then
         assertThat(dto.getId()).isEqualTo(5L);
@@ -41,6 +43,22 @@ class AccountResponseDtoTest {
         assertThat(dto.getUserCount()).isEqualTo(3);
         assertThat(dto.getAssociatedUserIds()).containsExactly(10L, 20L, 30L);
         assertThat(dto.getBalance()).isEqualByComparingTo(new BigDecimal("1234.56"));
+        assertThat(dto.isNegative()).isTrue();
+    }
+
+    @Test
+    void isNegative_shouldDefaultToFalse_andBeSettable() {
+        // Given
+        final AccountResponseDto dto = new AccountResponseDto();
+
+        // Then
+        assertThat(dto.isNegative()).isFalse();
+
+        // When
+        dto.setIsNegative(true);
+
+        // Then
+        assertThat(dto.isNegative()).isTrue();
     }
 
     @Test

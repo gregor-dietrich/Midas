@@ -3,6 +3,9 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -32,8 +35,10 @@ public class PostCategoryEntity extends PanacheEntityBase {
     @NotBlank
     public String name;
 
+    @Generated(event = EventType.INSERT)
     public LocalDateTime created;
 
+    @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
@@ -72,15 +77,15 @@ public class PostCategoryEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final PostCategoryEntity that = (PostCategoryEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return this.getClass().hashCode();
     }
 }

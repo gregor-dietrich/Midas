@@ -2,7 +2,6 @@ package de.vptr.midas.api.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -191,12 +190,11 @@ public class PaymentService {
         payment.comment = paymentDto.comment;
         payment.date = paymentDto.date;
         payment.amount = paymentDto.amount;
-        payment.created = LocalDateTime.now();
-        payment.lastEdit = payment.created;
 
         validatePaymentAccounts(payment);
-        payment.persist();
-        return new PaymentResponseDto(payment);
+        payment.persistAndFlush();
+        PaymentEntity.getEntityManager().detach(payment);
+        return new PaymentResponseDto(PaymentEntity.findById(payment.id));
     }
 
     /** Updates the payment with the given id. */
@@ -239,11 +237,11 @@ public class PaymentService {
         existingPayment.comment = paymentDto.comment;
         existingPayment.date = paymentDto.date;
         existingPayment.amount = paymentDto.amount;
-        existingPayment.lastEdit = LocalDateTime.now();
 
         validatePaymentAccounts(existingPayment);
-        existingPayment.persist();
-        return new PaymentResponseDto(existingPayment);
+        existingPayment.persistAndFlush();
+        PaymentEntity.getEntityManager().detach(existingPayment);
+        return new PaymentResponseDto(PaymentEntity.findById(existingPayment.id));
     }
 
     /** Partially updates the payment with the given id. */
@@ -283,9 +281,9 @@ public class PaymentService {
 
         // Validate that at least one account is still present after the patch
         validatePaymentAccounts(existingPayment);
-        existingPayment.lastEdit = LocalDateTime.now();
-        existingPayment.persist();
-        return new PaymentResponseDto(existingPayment);
+        existingPayment.persistAndFlush();
+        PaymentEntity.getEntityManager().detach(existingPayment);
+        return new PaymentResponseDto(PaymentEntity.findById(existingPayment.id));
     }
 
     /** Deletes the payment with the given id. */

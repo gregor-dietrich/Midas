@@ -3,6 +3,9 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,8 +31,10 @@ public class PageEntity extends PanacheEntityBase {
     @NotBlank
     public String content;
 
+    @Generated(event = EventType.INSERT)
     public LocalDateTime created;
 
+    @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
@@ -44,15 +49,15 @@ public class PageEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final PageEntity that = (PageEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return this.getClass().hashCode();
     }
 }

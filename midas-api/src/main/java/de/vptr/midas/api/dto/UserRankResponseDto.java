@@ -1,5 +1,7 @@
 package de.vptr.midas.api.dto;
 
+import java.time.LocalDateTime;
+
 import de.vptr.midas.api.entity.UserRankEntity;
 
 /** Data transfer object for user rank response data. */
@@ -53,6 +55,8 @@ public class UserRankResponseDto {
 
     // Computed fields
     public Long usersCount;
+    public LocalDateTime created;
+    public LocalDateTime lastEdit;
 
     public UserRankResponseDto() {
     }
@@ -93,6 +97,8 @@ public class UserRankResponseDto {
             this.userRankEdit = entity.userRankEdit;
 
             this.usersCount = usersCount;
+            this.created = entity.created;
+            this.lastEdit = entity.lastEdit;
         }
     }
 }

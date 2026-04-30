@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.data.renderer.NumberRenderer;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
@@ -43,6 +44,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private Grid<AccountResponseDto> grid;
     private Span totalBalanceLabel;
     private Map<Long, BigDecimal> accountBalances = new HashMap<>();
+    private List<AccountResponseDto> accountsList = new ArrayList<>();
 
     public AccountView() {
         this.setSizeFull();
@@ -69,6 +71,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         }, result -> {
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());
             this.accountBalances = result.balances;
+            this.accountsList = result.accounts;
             this.grid.setItems(result.accounts);
             this.updateTotalBalance();
             LOG.infof("Grid updated with %s accounts", result.accounts.size());
@@ -116,11 +119,19 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
                 .setFlexGrow(2)
                 .setSortable(true);
 
-        this.grid.addColumn(account -> this.getAccountBalance(account.getId()))
-                .setHeader("Balance")
-                .setRenderer(new NumberRenderer<>(
-                        account -> this.getAccountBalance(account.getId()),
-                        "€ %.2f"))
+        this.grid.addColumn(new ComponentRenderer<>(account -> {
+            final Span balanceSpan = new Span();
+            final BigDecimal raw = this.getAccountBalance(account.getId());
+            final BigDecimal effective = account.isNegative() ? raw.negate() : raw;
+            balanceSpan.setText(String.format("€ %.2f", effective));
+            if (effective.compareTo(BigDecimal.ZERO) > 0) {
+                balanceSpan.getStyle().set("color", "var(--lumo-success-color)");
+            } else if (effective.compareTo(BigDecimal.ZERO) < 0) {
+                balanceSpan.getStyle().set("color", "var(--lumo-error-color)");
+            }
+            balanceSpan.getStyle().set("font-weight", "bold");
+            return balanceSpan;
+        }))
                 .setFlexGrow(1)
                 .setSortable(false);
 
@@ -146,18 +157,24 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
     private void updateTotalBalance() {
         if (this.totalBalanceLabel != null && this.accountBalances != null) {
-            // Calculate total balance by summing all account balances
-            final BigDecimal totalBalance = this.accountBalances.values().stream()
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // Sum balances, subtracting those flagged as negative for the current user
+            final BigDecimal totalBalance = this.accountsList.stream()
+                    .reduce(BigDecimal.ZERO, (sum, account) -> {
+                        final BigDecimal bal = this.accountBalances.getOrDefault(
+                                account.getId(), BigDecimal.ZERO);
+                        return account.isNegative() ? sum.subtract(bal) : sum.add(bal);
+                    }, BigDecimal::add);
 
-            final String balanceText = String.format("Total Balance: €%.2f", totalBalance);
+            final String balanceText = String.format("Total Balance: € %.2f", totalBalance);
             this.totalBalanceLabel.setText(balanceText);
 
-            // Style the total balance based on positive/negative
-            if (totalBalance.compareTo(BigDecimal.ZERO) >= 0) {
+            // Style the total balance based on positive/negative, but not for zero
+            if (totalBalance.compareTo(BigDecimal.ZERO) > 0) {
                 this.totalBalanceLabel.getStyle().set("color", "var(--lumo-success-color)");
-            } else {
+            } else if (totalBalance.compareTo(BigDecimal.ZERO) < 0) {
                 this.totalBalanceLabel.getStyle().set("color", "var(--lumo-error-color)");
+            } else {
+                this.totalBalanceLabel.getStyle().remove("color");
             }
 
             LOG.infof("Updated total balance display: €%s", totalBalance);

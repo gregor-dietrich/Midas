@@ -5,6 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,8 +59,10 @@ public class PaymentEntity extends PanacheEntityBase {
     @Column(precision = 15, scale = 2)
     public BigDecimal amount;
 
+    @Generated(event = EventType.INSERT)
     public LocalDateTime created;
 
+    @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
@@ -101,15 +106,15 @@ public class PaymentEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final PaymentEntity that = (PaymentEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return this.getClass().hashCode();
     }
 }

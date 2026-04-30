@@ -1,6 +1,5 @@
 package de.vptr.midas.api.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,10 +74,9 @@ public class PostCategoryService {
             category.parent = existingParent;
         }
 
-        category.created = LocalDateTime.now();
-        category.lastEdit = category.created;
-        category.persist();
-        return this.toCategoryResponseDto(category);
+        category.persistAndFlush();
+        PostCategoryEntity.getEntityManager().detach(category);
+        return this.toCategoryResponseDto(PostCategoryEntity.findById(category.id));
     }
 
     /** Updates the category with the given id. */
@@ -114,9 +112,9 @@ public class PostCategoryService {
             existingCategory.parent = null;
         }
 
-        existingCategory.lastEdit = LocalDateTime.now();
-        existingCategory.persist();
-        return this.toCategoryResponseDto(existingCategory);
+        existingCategory.persistAndFlush();
+        PostCategoryEntity.getEntityManager().detach(existingCategory);
+        return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));
     }
 
     /** Partially updates the category with the given id. */
@@ -152,9 +150,9 @@ public class PostCategoryService {
             }
         }
 
-        existingCategory.lastEdit = LocalDateTime.now();
-        existingCategory.persist();
-        return this.toCategoryResponseDto(existingCategory);
+        existingCategory.persistAndFlush();
+        PostCategoryEntity.getEntityManager().detach(existingCategory);
+        return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));
     }
 
     /**

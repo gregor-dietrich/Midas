@@ -50,6 +50,9 @@ public class UserResponseDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
+    @JsonProperty("isNegative")
+    private boolean isNegative;
+
     public UserResponseDto() {
         // Default constructor for Jackson
     }
@@ -148,6 +151,19 @@ public class UserResponseDto {
 
     public void setCommentsCount(final Long commentsCount) {
         this.commentsCount = commentsCount;
+    }
+
+    /**
+     * Returns whether this user's account association is flagged as negative.
+     * Populated when users are returned in account context.
+     */
+    public boolean isNegative() {
+        return this.isNegative;
+    }
+
+    /** Sets whether this user's account association is flagged as negative. */
+    public void setIsNegative(final boolean isNegative) {
+        this.isNegative = isNegative;
     }
 
     /** Handles the to user dto operation. */

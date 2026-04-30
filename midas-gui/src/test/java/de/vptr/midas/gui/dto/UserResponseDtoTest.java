@@ -82,6 +82,21 @@ class UserResponseDtoTest {
     }
 
     @Test
+    void isNegative_shouldDefaultToFalse_andBeSettable() {
+        // Given
+        final UserResponseDto dto = new UserResponseDto();
+
+        // Then
+        assertThat(dto.isNegative()).isFalse();
+
+        // When
+        dto.setIsNegative(true);
+
+        // Then
+        assertThat(dto.isNegative()).isTrue();
+    }
+
+    @Test
     void toString_shouldContainExpectedFields() {
         // Given
         final UserResponseDto dto = new UserResponseDto();

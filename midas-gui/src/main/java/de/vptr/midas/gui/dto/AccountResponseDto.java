@@ -26,6 +26,9 @@ public class AccountResponseDto {
     @JsonProperty("balance")
     private BigDecimal balance; // Optional balance field
 
+    @JsonProperty("isNegative")
+    private boolean isNegative;
+
     public AccountResponseDto() {
         // Default constructor for Jackson
     }
@@ -52,6 +55,16 @@ public class AccountResponseDto {
 
     public void setBalance(final BigDecimal balance) {
         this.balance = balance;
+    }
+
+    /** Returns whether this account counts negatively toward the user's total. */
+    public boolean isNegative() {
+        return this.isNegative;
+    }
+
+    /** Sets whether this account counts negatively toward the user's total. */
+    public void setIsNegative(final boolean isNegative) {
+        this.isNegative = isNegative;
     }
 
     public void setId(final Long id) {

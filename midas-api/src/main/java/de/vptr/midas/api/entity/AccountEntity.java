@@ -4,14 +4,17 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Column;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
@@ -28,8 +31,10 @@ public class AccountEntity extends PanacheEntityBase {
     @Column(unique = true)
     public String name;
 
+    @Generated(event = EventType.INSERT)
     public LocalDateTime created;
 
+    @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
@@ -63,15 +68,15 @@ public class AccountEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final AccountEntity that = (AccountEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return this.getClass().hashCode();
     }
 }

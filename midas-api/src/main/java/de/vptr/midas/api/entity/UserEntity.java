@@ -3,6 +3,9 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -64,10 +67,16 @@ public class UserEntity extends PanacheEntityBase {
     @Column(name = "last_ip", length = 45)
     public String lastIp;
 
+    @Generated(event = EventType.INSERT)
     public LocalDateTime created;
 
+    @Generated(event = EventType.INSERT)
     @Column(name = "last_login")
     public LocalDateTime lastLogin;
+
+    @Generated(event = EventType.UPDATE)
+    @Column(name = "last_edit")
+    public LocalDateTime lastEdit;
 
     @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JsonIgnore

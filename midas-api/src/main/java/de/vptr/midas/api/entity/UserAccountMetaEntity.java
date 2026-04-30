@@ -3,7 +3,11 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -12,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -38,14 +41,15 @@ public class UserAccountMetaEntity extends PanacheEntityBase {
     @JoinColumn(name = "account_id", nullable = false)
     public AccountEntity account;
 
-    private LocalDateTime timestamp;
+    @Generated(event = EventType.INSERT)
+    public LocalDateTime created;
 
-    @PrePersist
-    protected void prePersist() {
-        if (this.timestamp == null) {
-            this.timestamp = LocalDateTime.now();
-        }
-    }
+    @Generated(event = EventType.UPDATE)
+    @Column(name = "last_edit")
+    public LocalDateTime lastEdit;
+
+    @Column(name = "is_negative", columnDefinition = "TINYINT(1) DEFAULT 0")
+    public boolean isNegative = false;
 
     // Helper method to find by user and account
     public static UserAccountMetaEntity findByUserAndAccount(final Long userId, final Long accountId) {

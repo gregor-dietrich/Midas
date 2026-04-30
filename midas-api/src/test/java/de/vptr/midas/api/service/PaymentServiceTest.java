@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -444,8 +443,6 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         malformedPayment.comment = "Malformed payment";
         malformedPayment.date = LocalDate.now();
         malformedPayment.amount = new BigDecimal("10.00");
-        malformedPayment.created = LocalDateTime.now();
-        malformedPayment.lastEdit = malformedPayment.created;
         malformedPayment.persist();
 
         final var exception = assertThrows(WebApplicationException.class,
@@ -461,8 +458,6 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         malformedPayment.comment = "Malformed payment";
         malformedPayment.date = LocalDate.now();
         malformedPayment.amount = new BigDecimal("10.00");
-        malformedPayment.created = LocalDateTime.now();
-        malformedPayment.lastEdit = malformedPayment.created;
         malformedPayment.persist();
 
         final PaymentDto patchDto = new PaymentDto();

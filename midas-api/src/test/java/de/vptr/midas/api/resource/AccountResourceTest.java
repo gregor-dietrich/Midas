@@ -7,6 +7,7 @@ import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createPaymentJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUniqueAccountJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createUserAccountMetaJson;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
@@ -171,12 +172,14 @@ class AccountResourceTest {
     }
 
     @Test
-    void testCreateMyAccountPayment_rejectsPaymentsOutsideScopedAccount() {
+    void testCreateMyAccountPayment_allowsPaymentsBetweenAnyAccessibleAccounts() {
         final String clientKey = uniqueClientKey();
         final long scopedAccountId = this.createAdminAccessibleAccount(clientKey);
         final long sourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final long targetAccountId = this.createAdminAccessibleAccount(clientKey);
 
+        // Payment not involving the scoped account is now permitted as long as
+        // the user has access to both source and target accounts.
         forwardedAuthenticatedRequest(clientKey)
                 .contentType(ContentType.JSON)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, 1L, "100.00", "Off-account payment",
@@ -184,12 +187,11 @@ class AccountResourceTest {
                 .when()
                 .post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments")
                 .then()
-                .statusCode(400)
-                .body("message", equalTo("Payment must involve the specified account"));
+                .statusCode(201);
     }
 
     @Test
-    void testUpdateMyAccountPayment_rejectsMovingPaymentOutsideScopedAccount() {
+    void testUpdateMyAccountPayment_allowsMovingPaymentToOtherAccessibleAccounts() {
         final String clientKey = uniqueClientKey();
         final long scopedAccountId = this.createAdminAccessibleAccount(clientKey);
         final long originalTargetAccountId = this.createAdminAccessibleAccount(clientKey);
@@ -207,6 +209,7 @@ class AccountResourceTest {
                 .extract()
                 .path("id");
 
+        // Updating to accounts not involving scopedAccountId is now permitted.
         forwardedAuthenticatedRequest(clientKey)
                 .contentType(ContentType.JSON)
                 .body(createPaymentJson(replacementTargetAccountId, replacementSourceAccountId, 2L, "150.00",
@@ -214,8 +217,30 @@ class AccountResourceTest {
                 .when()
                 .put(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments/" + paymentId)
                 .then()
-                .statusCode(400)
-                .body("message", equalTo("Payment must involve the specified account"));
+                .statusCode(200);
+    }
+
+    @Test
+    void testUpdateUserAccountMeta_setsIsNegativeFlag() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+
+        // Set isNegative = true
+        forwardedAuthenticatedRequest(clientKey)
+                .contentType(ContentType.JSON)
+                .body(createUserAccountMetaJson(true))
+                .when()
+                .patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID)
+                .then()
+                .statusCode(204);
+
+        // Verify flag is reflected in GET /accounts/{id}/users
+        forwardedAuthenticatedRequest(clientKey)
+                .when()
+                .get(ENDPOINT_URL + "/" + accountId + "/users")
+                .then()
+                .statusCode(200)
+                .body("[0].isNegative", equalTo(true));
     }
 
     private long createAdminAccessibleAccount(final String clientKey) {

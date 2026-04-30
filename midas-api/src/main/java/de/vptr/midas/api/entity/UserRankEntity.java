@@ -1,6 +1,10 @@
 package de.vptr.midas.api.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -115,6 +119,13 @@ public class UserRankEntity extends PanacheEntityBase {
     @OneToMany(mappedBy = "rank", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JsonIgnore
     public List<UserEntity> users;
+
+    @Generated(event = EventType.INSERT)
+    public LocalDateTime created;
+
+    @Generated(event = EventType.UPDATE)
+    @Column(name = "last_edit")
+    public LocalDateTime lastEdit;
 
     @Override
     public boolean equals(final Object o) {

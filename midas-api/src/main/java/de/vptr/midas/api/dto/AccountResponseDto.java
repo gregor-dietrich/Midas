@@ -17,6 +17,7 @@ public class AccountResponseDto {
     public int userCount;
     public List<Long> associatedUserIds;
     public BigDecimal balance;
+    public boolean isNegative;
     public LocalDateTime created;
     public LocalDateTime lastEdit;
 

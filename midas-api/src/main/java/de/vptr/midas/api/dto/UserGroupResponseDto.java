@@ -1,5 +1,7 @@
 package de.vptr.midas.api.dto;
 
+import java.time.LocalDateTime;
+
 import de.vptr.midas.api.entity.UserGroupEntity;
 
 /** Data transfer object for user group response data. */
@@ -7,6 +9,8 @@ public class UserGroupResponseDto {
     public Long id;
     public String name;
     public Long userCount;
+    public LocalDateTime created;
+    public LocalDateTime lastEdit;
 
     public UserGroupResponseDto() {
     }
@@ -19,5 +23,7 @@ public class UserGroupResponseDto {
         this.id = entity.id;
         this.name = entity.name;
         this.userCount = userCount;
+        this.created = entity.created;
+        this.lastEdit = entity.lastEdit;
     }
 }

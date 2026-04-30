@@ -8,11 +8,13 @@ import de.vptr.midas.gui.dto.AccountDto;
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
+import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -85,6 +87,11 @@ public interface AccountClient {
         @Path("/{accountId}/users/{userId}")
         Response removeUserFromAccount(@PathParam("accountId") Long accountId, @PathParam("userId") Long userId,
                         @HeaderParam("Authorization") String authorization);
+
+        @PATCH
+        @Path("/{accountId}/users/{userId}")
+        Response updateUserAccountMeta(@PathParam("accountId") Long accountId, @PathParam("userId") Long userId,
+                        UserAccountMetaDto metaDto, @HeaderParam("Authorization") String authorization);
 
         @GET
         @Path("/{id}/balance")

@@ -8,6 +8,7 @@ import de.vptr.midas.api.dto.AccountDto;
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
+import de.vptr.midas.api.dto.UserAccountMetaDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.PaymentEntity;
 import de.vptr.midas.api.entity.UserEntity;
@@ -211,6 +212,16 @@ public class AccountResource {
             account.balance = balances.getOrDefault(account.id, BigDecimal.ZERO);
         });
 
+        // Set isNegative flag per account for the current user
+        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
+        if (currentUser != null) {
+            final Map<Long, Boolean> isNegativeFlags = this.accountAccessService
+                    .getIsNegativeFlagsForUser(currentUser.id, accountIds);
+            accounts.forEach(account -> {
+                account.isNegative = isNegativeFlags.getOrDefault(account.id, false);
+            });
+        }
+
         return accounts;
     }
 
@@ -294,6 +305,25 @@ public class AccountResource {
         return ResponseUtil.notFound();
     }
 
+    /**
+     * Updates the user-account meta (e.g. isNegative flag) for the association.
+     *
+     * @param accountId the account in the association
+     * @param userId    the user in the association
+     * @param metaDto   the meta properties to update
+     * @return 204 No Content on success
+     */
+    @PATCH
+    @Path("/{accountId}/users/{userId}")
+    @RolesAllowed({ "user-account:edit" })
+    public Response updateUserAccountMeta(
+            @PathParam("accountId") @Min(1) final Long accountId,
+            @PathParam("userId") @Min(1) final Long userId,
+            final UserAccountMetaDto metaDto) {
+        this.accountAccessService.updateUserAccountMeta(userId, accountId, metaDto.isNegative);
+        return ResponseUtil.noContent();
+    }
+
     /** Processes the request and returns the result. */
     @GET
     @Path("/search")
@@ -321,12 +351,6 @@ public class AccountResource {
             if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
                 throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
             }
-        }
-
-        // Ensure at least one account is the specified account
-        if (!accountId.equals(paymentDto.sourceAccountId) && !accountId.equals(paymentDto.targetAccountId)) {
-            throw new WebApplicationException("Payment must involve the specified account",
-                    Response.Status.BAD_REQUEST);
         }
 
         // Ignore caller-supplied userId on user-facing endpoints.
@@ -390,11 +414,6 @@ public class AccountResource {
             paymentDto.userId = existingPayment.userId.id;
         } else {
             paymentDto.userId = this.getCurrentUser(username).id;
-        }
-
-        if (!accountId.equals(paymentDto.sourceAccountId) && !accountId.equals(paymentDto.targetAccountId)) {
-            throw new WebApplicationException("Payment must involve the specified account",
-                    Response.Status.BAD_REQUEST);
         }
 
         // Verify user has access to all accounts in the updated payment

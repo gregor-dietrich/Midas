@@ -20,6 +20,7 @@ import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.dto.BalanceResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
+import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
@@ -302,6 +303,28 @@ public class AccountService {
         return ServiceHelper.executeWithResponse(() -> this.accountClient.removeUserFromAccount(accountId, userId,
                 authHeader), this.authService, LOG, "removing user " + userId + " from account " + accountId,
                 response -> response.getStatus() == 204);
+    }
+
+    /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
+    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative)
+            throws ServiceException, AuthenticationException {
+        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s",
+                accountId, userId, Boolean.valueOf(isNegative));
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            throw new AuthenticationException("Authentication required");
+        }
+        final var dto = new UserAccountMetaDto();
+        dto.setIsNegative(isNegative);
+        ServiceHelper.executeWithResponse(
+                () -> this.accountClient.updateUserAccountMeta(accountId, userId, dto, authHeader),
+                this.authService, LOG, "updating user-account meta", response -> {
+                    if (response.getStatus() != 204) {
+                        throw ServiceHelper.responseFailure("Failed to update user-account meta", response);
+                    }
+                    return null;
+                });
     }
 
     /** Returns the account balance. */

@@ -1,6 +1,5 @@
 package de.vptr.midas.api.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,11 +57,10 @@ public class PageService {
         final PageEntity page = new PageEntity();
         page.title = pageDto.title;
         page.content = pageDto.content;
-        page.created = LocalDateTime.now();
-        page.lastEdit = page.created;
-        page.persist();
+        page.persistAndFlush();
+        PageEntity.getEntityManager().detach(page);
 
-        return new PageResponseDto(page);
+        return new PageResponseDto(PageEntity.findById(page.id));
     }
 
     /** Updates the page with the given id. */
@@ -83,10 +81,10 @@ public class PageService {
         // Complete replacement (PUT semantics)
         existingPage.title = pageDto.title;
         existingPage.content = pageDto.content;
-        existingPage.lastEdit = LocalDateTime.now();
-        existingPage.persist();
+        existingPage.persistAndFlush();
+        PageEntity.getEntityManager().detach(existingPage);
 
-        return new PageResponseDto(existingPage);
+        return new PageResponseDto(PageEntity.findById(existingPage.id));
     }
 
     /** Partially updates the page with the given id. */
@@ -105,9 +103,9 @@ public class PageService {
             existingPage.content = pageDto.content;
         }
 
-        existingPage.lastEdit = LocalDateTime.now();
-        existingPage.persist();
-        return new PageResponseDto(existingPage);
+        existingPage.persistAndFlush();
+        PageEntity.getEntityManager().detach(existingPage);
+        return new PageResponseDto(PageEntity.findById(existingPage.id));
     }
 
     /** Deletes the page with the given id. */

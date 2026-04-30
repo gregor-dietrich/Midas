@@ -1,6 +1,5 @@
 package de.vptr.midas.api.service;
 
-import java.time.LocalDateTime;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
@@ -111,8 +110,9 @@ public class UserService {
         }
 
         final UserEntity user = this.buildUserEntity(userDto, normalizedEmail);
-        user.persist();
-        return this.toResponseDto(user);
+        user.persistAndFlush();
+        UserEntity.getEntityManager().detach(user);
+        return this.toResponseDto(UserEntity.findById(user.id));
     }
 
     @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
@@ -134,9 +134,6 @@ public class UserService {
         } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new WebApplicationException("Failed to hash password", Response.Status.INTERNAL_SERVER_ERROR);
         }
-
-        user.created = LocalDateTime.now();
-        user.lastLogin = user.created;
 
         // Set rank if provided, otherwise default to rank 2 (User)
         if (userDto.rankId != null) {
@@ -215,8 +212,9 @@ public class UserService {
             existingUser.rank = defaultRank;
         }
 
-        existingUser.persist();
-        return this.toResponseDto(existingUser);
+        existingUser.persistAndFlush();
+        UserEntity.getEntityManager().detach(existingUser);
+        return this.toResponseDto(UserEntity.findById(existingUser.id));
     }
 
     /** Partially updates the user with the given id. */
@@ -277,8 +275,9 @@ public class UserService {
             existingUser.rank = rank;
         }
 
-        existingUser.persist();
-        return this.toResponseDto(existingUser);
+        existingUser.persistAndFlush();
+        UserEntity.getEntityManager().detach(existingUser);
+        return this.toResponseDto(UserEntity.findById(existingUser.id));
     }
 
     /** Deletes the user with the given id. */

@@ -8,6 +8,7 @@ import static de.vptr.midas.api.util.ServiceTestUtil.setupTestUser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -103,8 +104,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertEquals(newPost.title, createdPost.title);
         assertEquals(newPost.content, createdPost.content);
         assertNotNull(createdPost.created);
-        assertNotNull(createdPost.lastEdit);
-        assertEquals(createdPost.created, createdPost.lastEdit);
+        assertNull(createdPost.lastEdit);
         assertFalse(createdPost.published); // Default should be false
         assertFalse(createdPost.commentable); // Default should be false
     }
@@ -141,7 +141,6 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var createdPost = this.postService.createPost(newPost);
 
         final var originalCreated = createdPost.created;
-        final var originalLastEdit = createdPost.lastEdit;
 
         // Wait a bit to ensure timestamp difference
         try {
@@ -165,7 +164,8 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertEquals("Updated Title", updatedPost.title);
         assertEquals("Updated content", updatedPost.content);
         assertEquals(originalCreated, updatedPost.created);
-        assertTrue(updatedPost.lastEdit.isAfter(originalLastEdit));
+        assertNotNull(updatedPost.lastEdit);
+        assertTrue(updatedPost.lastEdit.isAfter(originalCreated));
     }
 
     @Test

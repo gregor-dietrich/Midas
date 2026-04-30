@@ -111,8 +111,9 @@ public class PostService {
         }
 
         final PostEntity post = this.buildPostEntity(postDto);
-        post.persist();
-        return this.toResponseDto(post);
+        post.persistAndFlush();
+        PostEntity.getEntityManager().detach(post);
+        return this.toResponseDto(PostEntity.findById(post.id));
     }
 
     @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
@@ -122,8 +123,6 @@ public class PostService {
         post.content = postDto.content;
         post.published = postDto.published != null ? postDto.published : false;
         post.commentable = postDto.commentable != null ? postDto.commentable : false;
-        post.created = LocalDateTime.now();
-        post.lastEdit = post.created;
 
         // Set user - required for creation
         final UserEntity user = UserEntity.findById(postDto.userId);
@@ -167,7 +166,6 @@ public class PostService {
         existingPost.content = postDto.content;
         existingPost.published = postDto.published != null ? postDto.published : false;
         existingPost.commentable = postDto.commentable != null ? postDto.commentable : false;
-        existingPost.lastEdit = LocalDateTime.now();
 
         // userId changes are not allowed — preserve existing user
 
@@ -182,8 +180,9 @@ public class PostService {
             existingPost.category = null;
         }
 
-        existingPost.persist();
-        return this.toResponseDto(existingPost);
+        existingPost.persistAndFlush();
+        PostEntity.getEntityManager().detach(existingPost);
+        return this.toResponseDto(PostEntity.findById(existingPost.id));
     }
 
     /** Partially updates the post with the given id. */
@@ -221,9 +220,9 @@ public class PostService {
             existingPost.category = category;
         }
 
-        existingPost.lastEdit = LocalDateTime.now();
-        existingPost.persist();
-        return this.toResponseDto(existingPost);
+        existingPost.persistAndFlush();
+        PostEntity.getEntityManager().detach(existingPost);
+        return this.toResponseDto(PostEntity.findById(existingPost.id));
     }
 
     /** Deletes the post with the given id. */

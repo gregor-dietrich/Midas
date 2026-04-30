@@ -53,7 +53,9 @@ CREATE TABLE user_ranks (
     user_account_edit BOOLEAN NOT NULL DEFAULT FALSE,
     user_rank_add BOOLEAN NOT NULL DEFAULT FALSE,
     user_rank_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    user_rank_edit BOOLEAN NOT NULL DEFAULT FALSE
+    user_rank_edit BOOLEAN NOT NULL DEFAULT FALSE,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_edit TIMESTAMP
 );
 
 -- Table: users
@@ -70,6 +72,7 @@ CREATE TABLE users (
     last_ip VARCHAR(45) DEFAULT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_edit TIMESTAMP,
     FOREIGN KEY (rank_id) REFERENCES user_ranks(id) ON UPDATE CASCADE
 );
 
@@ -129,7 +132,8 @@ CREATE TABLE user_accounts_meta (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     account_id BIGINT NOT NULL,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_edit TIMESTAMP,
     is_negative BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE(user_id, account_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -139,7 +143,9 @@ CREATE TABLE user_accounts_meta (
 -- Table: user_groups
 CREATE TABLE user_groups (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_edit TIMESTAMP
 );
 
 -- Table: user_groups_meta
@@ -147,7 +153,8 @@ CREATE TABLE user_groups_meta (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     group_id BIGINT NOT NULL,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_edit TIMESTAMP,
     UNIQUE(user_id, group_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (group_id) REFERENCES user_groups(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -219,6 +226,31 @@ CREATE OR REPLACE TRIGGER user_accounts_set_last_edit
 
 CREATE OR REPLACE TRIGGER user_payments_set_last_edit
     BEFORE UPDATE ON user_payments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_edit();
+
+CREATE OR REPLACE TRIGGER user_ranks_set_last_edit
+    BEFORE UPDATE ON user_ranks
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_edit();
+
+CREATE OR REPLACE TRIGGER users_set_last_edit
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_edit();
+
+CREATE OR REPLACE TRIGGER user_groups_set_last_edit
+    BEFORE UPDATE ON user_groups
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_edit();
+
+CREATE OR REPLACE TRIGGER user_accounts_meta_set_last_edit
+    BEFORE UPDATE ON user_accounts_meta
+    FOR EACH ROW
+    EXECUTE FUNCTION update_last_edit();
+
+CREATE OR REPLACE TRIGGER user_groups_meta_set_last_edit
+    BEFORE UPDATE ON user_groups_meta
     FOR EACH ROW
     EXECUTE FUNCTION update_last_edit();
 

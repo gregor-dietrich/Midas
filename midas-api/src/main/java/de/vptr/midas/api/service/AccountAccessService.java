@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
@@ -60,10 +61,18 @@ public class AccountAccessService {
                 .getResultList();
         final Map<Long, Long> commentCounts = QueryAggregationUtil.toLongCountMap(commentResults);
 
+        final List<UserAccountMetaEntity> metas = UserAccountMetaEntity.findByAccountId(accountId);
+        final Map<Long, Boolean> isNegativeByUser = metas.stream()
+                .collect(Collectors.toMap(m -> m.user.id, m -> m.isNegative));
+
         return users.stream()
-                .map(u -> new UserResponseDto(u,
-                        postCounts.getOrDefault(u.id, 0L),
-                        commentCounts.getOrDefault(u.id, 0L)))
+                .map(u -> {
+                    final UserResponseDto dto = new UserResponseDto(u,
+                            postCounts.getOrDefault(u.id, 0L),
+                            commentCounts.getOrDefault(u.id, 0L));
+                    dto.isNegative = isNegativeByUser.getOrDefault(u.id, false);
+                    return dto;
+                })
                 .toList();
     }
 
@@ -197,9 +206,10 @@ public class AccountAccessService {
         final var meta = new UserAccountMetaEntity();
         meta.user = user;
         meta.account = account;
-        meta.persist();
+        meta.persistAndFlush();
+        UserAccountMetaEntity.getEntityManager().detach(meta);
 
-        return meta;
+        return UserAccountMetaEntity.findById(meta.id);
     }
 
     /** Removes a user from an account. */
@@ -250,5 +260,41 @@ public class AccountAccessService {
             throw new WebApplicationException("Access denied", Response.Status.FORBIDDEN);
         }
         return this.getAccountBalance(accountId);
+    }
+
+    /**
+     * Updates the isNegative flag for the user-account association.
+     *
+     * @param userId     the user whose association to update
+     * @param accountId  the account in the association
+     * @param isNegative the new flag value
+     */
+    @Transactional
+    public void updateUserAccountMeta(final Long userId, final Long accountId, final boolean isNegative) {
+        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(userId, accountId);
+        if (meta == null) {
+            throw new WebApplicationException("User-account association not found", Response.Status.NOT_FOUND);
+        }
+        meta.isNegative = isNegative;
+        meta.persistAndFlush();
+    }
+
+    /**
+     * Returns a map of accountId to isNegative flag for the given user and
+     * account list.
+     *
+     * @param userId     the user whose flags to look up
+     * @param accountIds the accounts to query
+     * @return map of accountId to isNegative
+     */
+    public Map<Long, Boolean> getIsNegativeFlagsForUser(final Long userId, final List<Long> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return Map.of();
+        }
+        final List<UserAccountMetaEntity> metas = UserAccountMetaEntity
+                .find("user.id = ?1 AND account.id IN ?2", userId, accountIds)
+                .list();
+        return metas.stream()
+                .collect(Collectors.toMap(m -> m.account.id, m -> m.isNegative));
     }
 }

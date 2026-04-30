@@ -342,7 +342,21 @@ public class TestDataBuilder {
     }
 
     /**
-     * Creates a user update JSON (without password)
+     * Creates a user-account meta JSON for testing the PATCH meta endpoint.
+     *
+     * @param isNegative the isNegative flag value
+     * @return JSON string
+     */
+    public static String createUserAccountMetaJson(final boolean isNegative) {
+        return String.format("""
+                {
+                    "isNegative": %b
+                }
+                """, isNegative);
+    }
+
+    /**
+     * Creates an updated user update JSON (without password)
      */
     public static String createUserUpdateJson(final String username, final String email) {
         return String.format("""

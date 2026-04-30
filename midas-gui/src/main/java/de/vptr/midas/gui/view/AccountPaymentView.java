@@ -32,6 +32,8 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 
+import org.vaadin.lineawesome.LineAwesomeIcon;
+
 import de.vptr.midas.gui.component.button.CreateButton;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
@@ -278,9 +280,14 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.openPaymentDialog(null), "Create Payment");
+        final var createButton = new CreateButton(_ -> this.openPaymentDialog(null, true), "Create Payment");
 
-        buttonLayout.add(createButton);
+        final var debitButton = new Button("", _ -> this.openPaymentDialog(null, false));
+        debitButton.setIcon(LineAwesomeIcon.MINUS_SOLID.create());
+        debitButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        debitButton.setTooltipText("Create Payment (as sender)");
+
+        buttonLayout.add(createButton, debitButton);
         return buttonLayout;
     }
 
@@ -396,7 +403,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.grid.addItemClickListener(event -> {
             if (event.getClickCount() == 1) {
                 final PaymentResponseDto payment = event.getItem();
-                this.openPaymentDialog(payment.toPaymentDto());
+                this.openPaymentDialog(payment.toPaymentDto(), true);
             }
         });
     }
@@ -493,7 +500,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
     }
 
-    private void openPaymentDialog(final PaymentDto payment) {
+    private void openPaymentDialog(final PaymentDto payment, final boolean openAsRecipient) {
         this.paymentDialog.removeAll();
         this.currentPayment = payment != null ? payment : new PaymentDto();
 
@@ -589,6 +596,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         // Load current payment data
         this.binder.readBean(this.currentPayment);
 
+        // Pre-select current account and today's date for new payments
+        if (payment == null) {
+            if (openAsRecipient) {
+                targetAccountField.setValue(this.currentAccount);
+            } else {
+                sourceAccountField.setValue(this.currentAccount);
+            }
+            dateField.setValue(LocalDate.now());
+        }
+
         this.paymentDialog.open();
     }
 
@@ -605,14 +622,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             // Custom validation: at least one account must be selected
             if (this.currentPayment.getSourceAccountId() == null && this.currentPayment.getTargetAccountId() == null) {
                 NotificationUtil.showError("At least one account (source or target) must be selected");
-                return;
-            }
-
-            // Ensure at least one account is the current account
-            if (!this.accountId.equals(this.currentPayment.getSourceAccountId())
-                    && !this.accountId.equals(this.currentPayment.getTargetAccountId())) {
-                NotificationUtil.showError(
-                        "At least one account must be the current account (" + this.currentAccount.getName() + ")");
                 return;
             }
 

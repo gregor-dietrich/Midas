@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.AccountClient;
+import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
@@ -1080,6 +1081,88 @@ class AccountServiceTest {
                 ExceptionTestUtil.assertHandles401WithLogout(
                                 () -> this.accountService.updateMyAccountPayment(accountId, paymentId, payment,
                                                 authHeader),
+                                this.authService);
+        }
+
+        // ===================== updateUserAccountMeta tests =====================
+
+        @Test
+        void updateUserAccountMeta_shouldSucceed_when204Returned() {
+                final var accountId = 1L;
+                final var userId = 2L;
+                final var mockResponse = ResponseTestUtil.createMockResponse(204);
+
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.accountClient.updateUserAccountMeta(
+                                org.mockito.ArgumentMatchers.eq(accountId),
+                                org.mockito.ArgumentMatchers.eq(userId),
+                                org.mockito.ArgumentMatchers.any(UserAccountMetaDto.class),
+                                org.mockito.ArgumentMatchers.eq(TestUtil.TEST_AUTH_HEADER)))
+                                .thenReturn(mockResponse);
+
+                // Should not throw
+                this.accountService.updateUserAccountMeta(accountId, userId, true);
+        }
+
+        @Test
+        void updateUserAccountMeta_shouldThrowServiceException_whenNon204Returned() {
+                final var accountId = 1L;
+                final var userId = 2L;
+                final var mockResponse = ResponseTestUtil.createBadRequestResponse();
+
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.accountClient.updateUserAccountMeta(
+                                org.mockito.ArgumentMatchers.eq(accountId),
+                                org.mockito.ArgumentMatchers.eq(userId),
+                                org.mockito.ArgumentMatchers.any(UserAccountMetaDto.class),
+                                org.mockito.ArgumentMatchers.eq(TestUtil.TEST_AUTH_HEADER)))
+                                .thenReturn(mockResponse);
+
+                ExceptionTestUtil.assertThrowsServiceException(
+                                () -> this.accountService.updateUserAccountMeta(accountId, userId, false),
+                                "Failed to update user-account meta: HTTP 400");
+        }
+
+        @Test
+        void updateUserAccountMeta_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
+                when(this.authService.getAuthorizationHeader()).thenReturn(null);
+
+                ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                                () -> this.accountService.updateUserAccountMeta(1L, 2L, true));
+        }
+
+        @Test
+        void updateUserAccountMeta_shouldThrowServiceException_whenProcessingExceptionOccurs() {
+                final var accountId = 1L;
+                final var userId = 2L;
+
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.accountClient.updateUserAccountMeta(
+                                org.mockito.ArgumentMatchers.eq(accountId),
+                                org.mockito.ArgumentMatchers.eq(userId),
+                                org.mockito.ArgumentMatchers.any(UserAccountMetaDto.class),
+                                org.mockito.ArgumentMatchers.eq(TestUtil.TEST_AUTH_HEADER)))
+                                .thenThrow(ExceptionTestUtil.createProcessingException());
+
+                ExceptionTestUtil.assertThrowsBackendConnectionFailed(
+                                () -> this.accountService.updateUserAccountMeta(accountId, userId, true));
+        }
+
+        @Test
+        void updateUserAccountMeta_shouldThrowAuthenticationException_when401Error() {
+                final var accountId = 1L;
+                final var userId = 2L;
+
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.accountClient.updateUserAccountMeta(
+                                org.mockito.ArgumentMatchers.eq(accountId),
+                                org.mockito.ArgumentMatchers.eq(userId),
+                                org.mockito.ArgumentMatchers.any(UserAccountMetaDto.class),
+                                org.mockito.ArgumentMatchers.eq(TestUtil.TEST_AUTH_HEADER)))
+                                .thenThrow(ExceptionTestUtil.create401Exception());
+
+                ExceptionTestUtil.assertHandles401WithLogout(
+                                () -> this.accountService.updateUserAccountMeta(accountId, userId, true),
                                 this.authService);
         }
 }

@@ -123,19 +123,13 @@ public class PostCommentService {
                             "User with username '" + currentUsername + "' not found", Response.Status.NOT_FOUND));
         }
 
-        comment.created = LocalDateTime.now();
-        comment.lastEdit = comment.created;
-        comment.persist();
+        comment.persistAndFlush();
+        PostCommentEntity.getEntityManager().detach(comment);
 
-        // Force load lazy fields to avoid LazyInitializationException
-        if (comment.post != null) {
-            comment.post.title.length(); // Force lazy loading
-        }
-        if (comment.user != null) {
-            comment.user.username.length(); // Force lazy loading
-        }
-
-        return new PostCommentResponseDto(comment);
+        return new PostCommentResponseDto(PostCommentEntity
+                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
+                        comment.id)
+                .<PostCommentEntity>firstResult());
     }
 
     /** Updates the comment with the given id. */
@@ -155,19 +149,14 @@ public class PostCommentService {
 
         // Only update content field for PUT (since we only allow content in DTO)
         existingComment.content = comment.content;
-        existingComment.lastEdit = LocalDateTime.now();
 
-        existingComment.persist();
+        existingComment.persistAndFlush();
+        PostCommentEntity.getEntityManager().detach(existingComment);
 
-        // Force initialization of lazy fields to avoid LazyInitializationException
-        if (existingComment.post != null) {
-            existingComment.post.title.length(); // Force lazy loading
-        }
-        if (existingComment.user != null) {
-            existingComment.user.username.length(); // Force lazy loading
-        }
-
-        return new PostCommentResponseDto(existingComment);
+        return new PostCommentResponseDto(PostCommentEntity
+                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
+                        existingComment.id)
+                .<PostCommentEntity>firstResult());
     }
 
     /** Partially updates the comment with the given id. */
@@ -185,18 +174,13 @@ public class PostCommentService {
             existingComment.content = comment.content;
         }
 
-        existingComment.lastEdit = LocalDateTime.now();
-        existingComment.persist();
+        existingComment.persistAndFlush();
+        PostCommentEntity.getEntityManager().detach(existingComment);
 
-        // Force initialization of lazy fields to avoid LazyInitializationException
-        if (existingComment.post != null) {
-            existingComment.post.title.length(); // Force lazy loading
-        }
-        if (existingComment.user != null) {
-            existingComment.user.username.length(); // Force lazy loading
-        }
-
-        return new PostCommentResponseDto(existingComment);
+        return new PostCommentResponseDto(PostCommentEntity
+                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
+                        existingComment.id)
+                .<PostCommentEntity>firstResult());
     }
 
     /** Deletes the comment with the given id. */

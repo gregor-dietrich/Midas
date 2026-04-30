@@ -80,7 +80,7 @@ public class UserGroupService {
 
         final UserGroupEntity group = new UserGroupEntity();
         group.name = groupDto.name;
-        group.persist();
+        group.persistAndFlush();
 
         return new UserGroupResponseDto(group, 0L);
     }
@@ -99,7 +99,7 @@ public class UserGroupService {
 
         // Complete replacement (PUT semantics)
         existingGroup.name = groupDto.name;
-        existingGroup.persist();
+        existingGroup.persistAndFlush();
 
         return this.toGroupResponseDto(existingGroup);
     }
@@ -117,7 +117,7 @@ public class UserGroupService {
             existingGroup.name = groupDto.name;
         }
 
-        existingGroup.persist();
+        existingGroup.persistAndFlush();
         return this.toGroupResponseDto(existingGroup);
     }
 
@@ -148,9 +148,10 @@ public class UserGroupService {
         final var meta = new UserGroupMetaEntity();
         meta.user = user;
         meta.group = group;
-        meta.persist();
+        meta.persistAndFlush();
+        UserGroupMetaEntity.getEntityManager().detach(meta);
 
-        return meta;
+        return UserGroupMetaEntity.findById(meta.id);
     }
 
     /** Removes a user from a group. */
