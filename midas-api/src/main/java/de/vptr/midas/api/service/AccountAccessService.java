@@ -162,7 +162,6 @@ public class AccountAccessService {
             accountIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
 
             // Compute incoming payments (target) aggregated by account
-            @SuppressWarnings("unchecked")
             final List<Object[]> incomingResults = PaymentEntity.getEntityManager()
                     .createQuery(
                             "SELECT p.targetAccount.id, COALESCE(SUM(p.amount), 0) "
@@ -182,7 +181,6 @@ public class AccountAccessService {
             }
 
             // Compute outgoing payments (source) aggregated by account
-            @SuppressWarnings("unchecked")
             final List<Object[]> outgoingResults = PaymentEntity.getEntityManager()
                     .createQuery(
                             "SELECT p.sourceAccount.id, COALESCE(SUM(p.amount), 0) "
@@ -260,7 +258,8 @@ public class AccountAccessService {
      * Returns all accounts for the current user identified by username (no
      * pagination support backward compat).
      */
-    // NOTE: Results are capped at MAX_ACCOUNTS_LIMIT. Pagination not yet implemented.
+    // NOTE: Results are capped at MAX_ACCOUNTS_LIMIT. Pagination not yet
+    // implemented.
     public List<AccountResponseDto> getAccountsForCurrentUser(final String username) {
         return this.getAccountsForCurrentUser(username, 0, MAX_ACCOUNTS_LIMIT);
     }

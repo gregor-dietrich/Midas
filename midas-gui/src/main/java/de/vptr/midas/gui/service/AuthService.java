@@ -1,10 +1,8 @@
 package de.vptr.midas.gui.service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -39,8 +37,14 @@ public class AuthService {
     @Inject
     SessionAuthorizationStore sessionAuthorizationStore;
 
-    /** Authenticates the user credentials. */
-    @Timeout(value = 5, unit = ChronoUnit.SECONDS)
+    /**
+     * Authenticates the user credentials.
+     *
+     * <p>
+     * Note: Do NOT add @Timeout here. The UiAsyncExecutor applies timeout at the
+     * call site. Timeout interceptors fail on non-Quarkus threads that lack config
+     * context.
+     */
     public AuthResultDto authenticate(final String username, final String password) {
         LOG.trace("Starting authentication");
 
@@ -172,17 +176,6 @@ public class AuthService {
             throw new AuthenticationException("Authentication required");
         }
         return authHeader;
-    }
-
-    /**
-     * Returns the authorization header for backward compatibility with existing
-     * callers.
-     *
-     * @deprecated Use {@link #getAuthorizationHeader()} instead.
-     */
-    @Deprecated(forRemoval = true)
-    public String getBasicAuthHeader() {
-        return this.getAuthorizationHeader();
     }
 
     /**

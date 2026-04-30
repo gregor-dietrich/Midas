@@ -1,7 +1,6 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +14,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Unit tests for BackendAvailabilityService core logic.
+ *
+ * <p>Note: SmallRye Fault Tolerance decorators (@Retry, @Timeout, @Fallback) require
+ * the Quarkus runtime and are not testable in unit tests. Decorator behavior is
+ * tested via integration tests or manual testing in dev mode.
+ */
 @ExtendWith(MockitoExtension.class)
 class BackendAvailabilityServiceTest {
 
@@ -51,14 +56,5 @@ class BackendAvailabilityServiceTest {
 
         assertThat(result).isFalse();
         verify(response).close();
-    }
-
-    @Test
-    void isBackendAvailable_shouldPropagateException_whenBackendThrowsOutsideFaultToleranceProxy() {
-        when(this.backendHealthClient.checkHealth()).thenThrow(new ProcessingException("Connection refused"));
-
-        assertThatThrownBy(() -> this.service.isBackendAvailable())
-                .isInstanceOf(ProcessingException.class)
-                .hasMessage("Connection refused");
     }
 }

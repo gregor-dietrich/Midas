@@ -9,14 +9,16 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Standalone CLI utility for generating password salts and hashes.
+ * Standalone CLI utility for generating password salts and hashes during initialization.
+ * Invoked by {@code scripts/password.sh} to generate credentials for {@code sql/init.sql}.
+ *
+ * <p>Note: This class replicates PBKDF2-SHA256 hashing logic from
+ * {@link de.vptr.midas.api.security.PasswordHashingService} because it must be usable as a
+ * standalone CLI tool without loading the full application context. Not for production use.
+ *
  * Usage: generate &lt;password&gt;
  * Outputs: salt and hash suitable for insertion into init.sql.
- *
- * @deprecated Use {@link de.vptr.midas.api.security.PasswordHashingService} instead.
- *     This class duplicates PBKDF2-SHA256 hashing logic from PasswordHashingService.
  */
-@Deprecated
 public class PasswordUtility {
 
     private static final SecureRandom random = new SecureRandom();

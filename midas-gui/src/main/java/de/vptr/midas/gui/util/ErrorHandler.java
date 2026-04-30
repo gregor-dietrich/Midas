@@ -76,8 +76,9 @@ public final class ErrorHandler {
     private static void dispatch(final Throwable cause, final UI ui) {
         if (cause instanceof AuthenticationException) {
             LOG.warn("Authentication error, redirecting to login", cause);
-            NotificationUtil.showError("Session expired. Please log in again.");
+            // Navigate first — notification is secondary and must not block the redirect.
             ui.navigate(LoginView.class);
+            NotificationUtil.showError("Session expired. Please log in again.");
         } else if (cause instanceof TimeoutException) {
             LOG.warn("Async operation timed out", cause);
             NotificationUtil.showError("Operation timed out. Please try again.");

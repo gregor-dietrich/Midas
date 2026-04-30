@@ -19,16 +19,6 @@ public class ExceptionTestUtil {
     }
 
     /**
-     * Assert that an exception is thrown with "Not authenticated" message
-     *
-     * @deprecated Use {@link #assertThrowsUserNotAuthenticated(Runnable)} instead
-     */
-    @Deprecated
-    public static void assertThrowsNotAuthenticated(final Runnable methodCall) {
-        assertThrowsUserNotAuthenticated(methodCall);
-    }
-
-    /**
      * Assert that an exception is thrown with "User is not authenticated" message
      */
     public static void assertThrowsUserNotAuthenticated(final Runnable methodCall) {

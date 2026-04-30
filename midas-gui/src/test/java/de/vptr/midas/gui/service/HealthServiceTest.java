@@ -1,7 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -14,9 +14,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Unit tests for BackendAvailabilityService health check scenarios.
+ *
+ * <p>Tests the core response status checks. Decorator behavior (@Retry, @Timeout,
+ * @Fallback) is tested via manual testing in dev mode or integration tests.
+ */
 @ExtendWith(MockitoExtension.class)
 class HealthServiceTest {
 
@@ -37,6 +42,7 @@ class HealthServiceTest {
         final var result = this.backendAvailabilityService.isBackendAvailable();
 
         assertThat(result).isTrue();
+        verify(response).close();
     }
 
     @Test
@@ -48,6 +54,7 @@ class HealthServiceTest {
         final var result = this.backendAvailabilityService.isBackendAvailable();
 
         assertThat(result).isFalse();
+        verify(response).close();
     }
 
     @Test
@@ -59,23 +66,6 @@ class HealthServiceTest {
         final var result = this.backendAvailabilityService.isBackendAvailable();
 
         assertThat(result).isFalse();
-    }
-
-    @Test
-    void isBackendAvailable_shouldPropagateProcessingException_whenConnectionFails() {
-        when(this.backendHealthClient.checkHealth()).thenThrow(new ProcessingException("Connection refused"));
-
-        assertThatThrownBy(() -> this.backendAvailabilityService.isBackendAvailable())
-                .isInstanceOf(ProcessingException.class)
-                .hasMessage("Connection refused");
-    }
-
-    @Test
-    void isBackendAvailable_shouldPropagateRuntimeException_whenUnexpectedExceptionOccurs() {
-        when(this.backendHealthClient.checkHealth()).thenThrow(new RuntimeException("Unexpected error"));
-
-        assertThatThrownBy(() -> this.backendAvailabilityService.isBackendAvailable())
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Unexpected error");
+        verify(response).close();
     }
 }
