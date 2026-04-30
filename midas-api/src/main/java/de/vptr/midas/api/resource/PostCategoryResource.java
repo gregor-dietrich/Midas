@@ -75,16 +75,7 @@ public class PostCategoryResource {
     @POST
     @RolesAllowed({ "post-category:add" })
     public Response createCategory(@Valid final PostCategoryDto categoryDto) {
-        // Map DTO to entity
-        final var category = new PostCategoryEntity();
-        category.name = categoryDto.name;
-        if (categoryDto.parentId != null) {
-            final PostCategoryEntity parent = new PostCategoryEntity();
-            parent.id = categoryDto.parentId;
-            category.parent = parent;
-        }
-
-        final var responseDto = this.categoryService.createCategory(category);
+        final var responseDto = this.categoryService.createCategory(categoryDto);
         return ResponseUtil.created(responseDto);
     }
 
@@ -93,21 +84,7 @@ public class PostCategoryResource {
     @Path("/{id}")
     @RolesAllowed({ "post-category:edit" })
     public Response updateCategory(@PathParam("id") final Long id, @Valid final PostCategoryDto categoryDto) {
-        // Map DTO to entity
-        final var category = new PostCategoryEntity();
-        category.id = id;
-        category.name = categoryDto.name;
-
-        // Handle parent mapping
-        if (categoryDto.parentId != null) {
-            final var parent = new PostCategoryEntity();
-            parent.id = categoryDto.parentId;
-            category.parent = parent;
-        } else {
-            category.parent = null;
-        }
-
-        final var responseDto = this.categoryService.updateCategory(category);
+        final var responseDto = this.categoryService.updateCategory(id, categoryDto);
         return ResponseUtil.ok(responseDto);
     }
 
@@ -116,24 +93,7 @@ public class PostCategoryResource {
     @Path("/{id}")
     @RolesAllowed({ "post-category:edit" })
     public Response patchCategory(@PathParam("id") final Long id, @Valid final PostCategoryDto categoryDto) {
-        // Map DTO to entity
-        final var category = new PostCategoryEntity();
-        category.id = id;
-        category.name = categoryDto.name;
-
-        // For PATCH, handle parent changes if provided
-        // Note: This simplified approach treats null parentId as "make root category"
-        // In practice, you might want to use separate endpoints for structure changes
-        if (categoryDto.parentId != null) {
-            final var parent = new PostCategoryEntity();
-            parent.id = categoryDto.parentId;
-            category.parent = parent;
-        } else {
-            // If parentId is explicitly null, make it a root category
-            category.parent = null;
-        }
-
-        final var responseDto = this.categoryService.patchCategory(category);
+        final var responseDto = this.categoryService.patchCategory(id, categoryDto);
         return ResponseUtil.ok(responseDto);
     }
 

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import de.vptr.midas.api.dto.PostCategoryDto;
 import de.vptr.midas.api.dto.PostCategoryResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostEntity;
@@ -62,21 +63,19 @@ public class PostCategoryService {
 
     /** Creates a new post category. */
     @Transactional
-    public PostCategoryResponseDto createCategory(final PostCategoryEntity category) {
-        // Validate name is provided for creation
-        if (category.name == null || category.name.trim().isEmpty()) {
+    public PostCategoryResponseDto createCategory(final PostCategoryDto dto) {
+        if (dto.name == null || dto.name.trim().isEmpty()) {
             throw new ValidationException("Name is required for creating a category");
         }
-
-        // If parent is specified, ensure it exists
-        if (category.parent != null && category.parent.id != null) {
-            final var existingParent = (PostCategoryEntity) PostCategoryEntity.findById(category.parent.id);
+        final PostCategoryEntity category = new PostCategoryEntity();
+        category.name = dto.name;
+        if (dto.parentId != null) {
+            final var existingParent = (PostCategoryEntity) PostCategoryEntity.findById(dto.parentId);
             if (existingParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
             category.parent = existingParent;
         }
-
         category.persistAndFlush();
         PostCategoryEntity.getEntityManager().detach(category);
         return this.toCategoryResponseDto(PostCategoryEntity.findById(category.id));
@@ -84,37 +83,29 @@ public class PostCategoryService {
 
     /** Updates the category with the given id. */
     @Transactional
-    public PostCategoryResponseDto updateCategory(final PostCategoryEntity category) {
-        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(category.id);
+    public PostCategoryResponseDto updateCategory(final Long id, final PostCategoryDto dto) {
+        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(id);
         if (existingCategory == null) {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
         }
-
-        // Validate name is provided for complete replacement (PUT)
-        if (category.name == null || category.name.trim().isEmpty()) {
+        if (dto.name == null || dto.name.trim().isEmpty()) {
             throw new ValidationException("Name is required for updating a category");
         }
-
-        // Complete replacement (PUT semantics) - update name and parent
-        existingCategory.name = category.name;
-
-        // Handle parent change - validate if parent is provided
-        if (category.parent != null && category.parent.id != null) {
-            final PostCategoryEntity newParent = PostCategoryEntity.findById(category.parent.id);
+        existingCategory.name = dto.name;
+        if (dto.parentId != null) {
+            final PostCategoryEntity newParent = PostCategoryEntity.findById(dto.parentId);
             if (newParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
-            // Prevent circular references
             if (this.isDescendantOf(newParent.id, existingCategory.id)) {
                 throw new WebApplicationException("Cannot set parent to a descendant category",
                         Response.Status.BAD_REQUEST);
             }
             existingCategory.parent = newParent;
-        } else if (category.parent == null) {
-            // Explicitly set to null if parent is null (making it a root category)
+        } else {
+            // Explicitly null parentId = make root category (PUT replaces all fields)
             existingCategory.parent = null;
         }
-
         existingCategory.persistAndFlush();
         PostCategoryEntity.getEntityManager().detach(existingCategory);
         return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));
@@ -122,37 +113,27 @@ public class PostCategoryService {
 
     /** Partially updates the category with the given id. */
     @Transactional
-    public PostCategoryResponseDto patchCategory(final PostCategoryEntity category) {
-        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(category.id);
+    public PostCategoryResponseDto patchCategory(final Long id, final PostCategoryDto dto) {
+        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(id);
         if (existingCategory == null) {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
         }
-
-        // Partial update (PATCH semantics) - only update provided fields
-        if (category.name != null) {
-            existingCategory.name = category.name;
+        if (dto.name != null) {
+            existingCategory.name = dto.name;
         }
-
-        // Handle parent change if provided
-        if (category.parent != null) {
-            if (category.parent.id != null) {
-                final PostCategoryEntity newParent = (PostCategoryEntity) PostCategoryEntity
-                        .findById(category.parent.id);
-                if (newParent == null) {
-                    throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
-                }
-                // Prevent circular references
-                if (this.isDescendantOf(newParent.id, existingCategory.id)) {
-                    throw new WebApplicationException("Cannot set parent to a descendant category",
-                            Response.Status.BAD_REQUEST);
-                }
-                existingCategory.parent = newParent;
-            } else {
-                // Set to null if parent ID is null (making it a root category)
-                existingCategory.parent = null;
+        // PATCH: only change parent if parentId is explicitly provided
+        if (dto.parentId != null) {
+            final PostCategoryEntity newParent = (PostCategoryEntity) PostCategoryEntity.findById(dto.parentId);
+            if (newParent == null) {
+                throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
+            if (this.isDescendantOf(newParent.id, existingCategory.id)) {
+                throw new WebApplicationException("Cannot set parent to a descendant category",
+                        Response.Status.BAD_REQUEST);
+            }
+            existingCategory.parent = newParent;
         }
-
+        // null parentId in PATCH = "don't change parent" (not "make root")
         existingCategory.persistAndFlush();
         PostCategoryEntity.getEntityManager().detach(existingCategory);
         return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));

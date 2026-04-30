@@ -4,8 +4,6 @@ import java.util.List;
 
 import de.vptr.midas.api.dto.PostCommentDto;
 import de.vptr.midas.api.dto.PostCommentResponseDto;
-import de.vptr.midas.api.entity.PostCommentEntity;
-import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.service.PostCommentService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -67,15 +65,25 @@ public class PostCommentResource {
     @GET
     @Path("/post/{postId}")
     @PermitAll
-    public List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") @Min(1) final Long postId) {
-        return this.commentService.findByPostId(postId);
+    public List<PostCommentResponseDto> getCommentsByPost(
+            @PathParam("postId") @Min(1) final Long postId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size) {
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.commentService.findByPostId(postId, safePage, safeSize);
     }
 
     @GET
     @Path("/user/{userId}")
     @Authenticated
-    public List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.commentService.findByUserId(userId);
+    public List<PostCommentResponseDto> getCommentsByUser(
+            @PathParam("userId") @Min(1) final Long userId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size) {
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.commentService.findByUserId(userId, safePage, safeSize);
     }
 
     @GET
@@ -113,17 +121,8 @@ public class PostCommentResource {
     @POST
     @RolesAllowed({ "post-comment:add" })
     public Response createComment(@Valid final PostCommentDto commentDto) {
-        // Map DTO to entity
-        final PostCommentEntity comment = new PostCommentEntity();
-        comment.content = commentDto.content;
-        if (commentDto.postId != null) {
-            comment.post = PostEntity.findById(commentDto.postId);
-            if (comment.post == null) {
-                return ResponseUtil.notFound();
-            }
-        }
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PostCommentResponseDto created = this.commentService.createComment(comment, currentUsername);
+        final PostCommentResponseDto created = this.commentService.createComment(commentDto, currentUsername);
         return ResponseUtil.created(created);
     }
 
@@ -133,12 +132,7 @@ public class PostCommentResource {
     @RolesAllowed({ "post-comment:edit" })
     public Response updateComment(@PathParam("id") @Min(1) final Long id, @Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        // Map DTO to entity
-        final PostCommentEntity comment = new PostCommentEntity();
-        comment.id = id;
-        comment.content = commentDto.content;
-
-        final PostCommentResponseDto updated = this.commentService.updateComment(comment, currentUsername);
+        final PostCommentResponseDto updated = this.commentService.updateComment(id, commentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
@@ -148,12 +142,7 @@ public class PostCommentResource {
     @RolesAllowed({ "post-comment:edit" })
     public Response patchComment(@PathParam("id") @Min(1) final Long id, @Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        // Map DTO to entity
-        final PostCommentEntity comment = new PostCommentEntity();
-        comment.id = id;
-        comment.content = commentDto.content;
-
-        final PostCommentResponseDto updated = this.commentService.patchComment(comment, currentUsername);
+        final PostCommentResponseDto updated = this.commentService.patchComment(id, commentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 

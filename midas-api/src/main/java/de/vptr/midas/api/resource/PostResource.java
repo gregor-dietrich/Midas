@@ -79,15 +79,25 @@ public class PostResource {
     @GET
     @Path("/user/{userId}")
     // TODO: add an admin-only path that returns all posts (including drafts) for a user.
-    public List<PostResponseDto> getPostsByUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.postService.findPublishedByUserId(userId);
+    public List<PostResponseDto> getPostsByUser(
+            @PathParam("userId") @Min(1) final Long userId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size) {
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.postService.findPublishedByUserId(userId, safePage, safeSize);
     }
 
     @GET
     @Path("/category/{categoryId}")
     @PermitAll
-    public List<PostResponseDto> getPostsByCategory(@PathParam("categoryId") @Min(1) final Long categoryId) {
-        return this.postService.findByCategoryId(categoryId);
+    public List<PostResponseDto> getPostsByCategory(
+            @PathParam("categoryId") @Min(1) final Long categoryId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size) {
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.postService.findByCategoryId(categoryId, safePage, safeSize);
     }
 
     /** Returns all posts matching the search query. */

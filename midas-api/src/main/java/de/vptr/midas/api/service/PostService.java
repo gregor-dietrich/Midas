@@ -79,30 +79,46 @@ public class PostService {
     }
 
     /** Returns all posts by the given user. */
+    /** Returns all posts by the given user with default pagination. */
     public List<PostResponseDto> findByUserId(final Long userId) {
+        return findByUserId(userId, 0, 20);
+    }
+
+    /** Returns all posts by the given user with pagination. */
+    public List<PostResponseDto> findByUserId(final Long userId, final int page, final int size) {
         final List<PostEntity> posts = PostEntity
                 .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.id = ?1 ORDER BY p.created DESC",
                         userId)
-                .list();
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
     /** Returns published posts by the given user. */
     public List<PostResponseDto> findPublishedByUserId(final Long userId) {
+        return findPublishedByUserId(userId, 0, 20);
+    }
+
+    /** Returns published posts by the given user with pagination. */
+    public List<PostResponseDto> findPublishedByUserId(final Long userId, final int page, final int size) {
         final List<PostEntity> posts = PostEntity
                 .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
                         + "WHERE p.user.id = ?1 AND p.published = true ORDER BY p.created DESC",
                         userId)
-                .list();
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
-    /** Returns all posts in the given category. */
+    /** Returns all posts in the given category with default pagination. */
     public List<PostResponseDto> findByCategoryId(final Long categoryId) {
+        return findByCategoryId(categoryId, 0, 20);
+    }
+
+    /** Returns all posts in the given category with pagination. */
+    public List<PostResponseDto> findByCategoryId(final Long categoryId, final int page, final int size) {
         final List<PostEntity> posts = PostEntity
                 .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.category.id = ?1 ORDER BY p.created DESC",
                         categoryId)
-                .list();
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 

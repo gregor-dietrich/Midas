@@ -32,7 +32,7 @@ import io.restassured.specification.RequestSpecification;
 @QuarkusTest
 class AccountResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/accounts";
-    private static final long ADMIN_USER_ID = 1L;
+    private static final long ADMIN_USER_ID = 1L;  // admin user always created with id=1 in seed data
     private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
 
     @Test

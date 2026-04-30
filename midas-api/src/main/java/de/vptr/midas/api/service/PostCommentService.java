@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
+import de.vptr.midas.api.dto.PostCommentDto;
 import de.vptr.midas.api.dto.PostCommentResponseDto;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
@@ -55,22 +56,33 @@ public class PostCommentService {
     }
 
     /** Returns all comments for the given post. */
+    /** Returns all comments for the given post with default pagination. */
     public List<PostCommentResponseDto> findByPostId(final Long postId) {
+        return findByPostId(postId, 0, 20);
+    }
+
+    /** Returns all comments for the given post with pagination. */
+    public List<PostCommentResponseDto> findByPostId(final Long postId, final int page, final int size) {
         final List<PostCommentEntity> comments = PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.post.id = ?1",
                         postId)
-                .list();
+                .page(page, size).list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
                 .toList();
     }
 
-    /** Returns all comments by the given user. */
+    /** Returns all comments by the given user with default pagination. */
     public List<PostCommentResponseDto> findByUserId(final Long userId) {
+        return findByUserId(userId, 0, 20);
+    }
+
+    /** Returns all comments by the given user with pagination. */
+    public List<PostCommentResponseDto> findByUserId(final Long userId, final int page, final int size) {
         final List<PostCommentEntity> comments = PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.user.id = ?1",
                         userId)
-                .list();
+                .page(page, size).list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
                 .toList();
@@ -88,44 +100,31 @@ public class PostCommentService {
 
     /** Creates a new comment, assigning the current user. */
     @Transactional
-    public PostCommentResponseDto createComment(final PostCommentEntity comment, final String currentUsername) {
-        // Validate content is provided for creation
-        if (comment.content == null || comment.content.trim().isEmpty()) {
+    public PostCommentResponseDto createComment(final PostCommentDto dto, final String currentUsername) {
+        if (dto.content == null || dto.content.trim().isEmpty()) {
             throw new ValidationException("Content is required for creating a comment");
         }
-
-        // Validate post exists
-        final PostEntity existingPost = PostEntity.findById(comment.post != null ? comment.post.id : null);
+        final PostEntity existingPost = PostEntity.findById(dto.postId);
         if (existingPost == null) {
             throw new WebApplicationException(
-                    "Post with ID " + (comment.post != null ? comment.post.id : null) + " does not exist.",
+                    "Post with ID " + dto.postId + " does not exist.",
                     Response.Status.BAD_REQUEST);
         }
-
-        // Validate post is published
         if (existingPost.published == null || !existingPost.published) {
             throw new WebApplicationException("Cannot add comment to an unpublished post.",
                     Response.Status.BAD_REQUEST);
         }
-
-        // Validate post allows comments
         if (existingPost.commentable == null || !existingPost.commentable) {
             throw new WebApplicationException("Comments are not allowed on this post.", Response.Status.BAD_REQUEST);
         }
-
-        // Always assign the managed post entity
+        final PostCommentEntity comment = new PostCommentEntity();
+        comment.content = dto.content;
         comment.post = existingPost;
-
-        // Auto-assign current user if not provided
-        if (comment.user == null) {
-            comment.user = (UserEntity) UserEntity.find("username", currentUsername).firstResultOptional()
-                    .orElseThrow(() -> new WebApplicationException(
-                            "User with username '" + currentUsername + "' not found", Response.Status.NOT_FOUND));
-        }
-
+        comment.user = (UserEntity) UserEntity.find("username", currentUsername).firstResultOptional()
+                .orElseThrow(() -> new WebApplicationException(
+                        "User with username '" + currentUsername + "' not found", Response.Status.NOT_FOUND));
         comment.persistAndFlush();
         PostCommentEntity.getEntityManager().detach(comment);
-
         return new PostCommentResponseDto(PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
                         comment.id)
@@ -134,25 +133,19 @@ public class PostCommentService {
 
     /** Updates the comment with the given id. */
     @Transactional
-    public PostCommentResponseDto updateComment(final PostCommentEntity comment, final String currentUsername) {
-        final PostCommentEntity existingComment = PostCommentEntity.findById(comment.id);
+    public PostCommentResponseDto updateComment(final Long id, final PostCommentDto dto,
+            final String currentUsername) {
+        final PostCommentEntity existingComment = PostCommentEntity.findById(id);
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
-
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to edit comment");
-
-        // Validate content is provided for complete replacement (PUT)
-        if (comment.content == null || comment.content.trim().isEmpty()) {
+        if (dto.content == null || dto.content.trim().isEmpty()) {
             throw new ValidationException("Content is required for updating a comment");
         }
-
-        // Only update content field for PUT (since we only allow content in DTO)
-        existingComment.content = comment.content;
-
+        existingComment.content = dto.content;
         existingComment.persistAndFlush();
         PostCommentEntity.getEntityManager().detach(existingComment);
-
         return new PostCommentResponseDto(PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
                         existingComment.id)
@@ -161,22 +154,18 @@ public class PostCommentService {
 
     /** Partially updates the comment with the given id. */
     @Transactional
-    public PostCommentResponseDto patchComment(final PostCommentEntity comment, final String currentUsername) {
-        final PostCommentEntity existingComment = PostCommentEntity.findById(comment.id);
+    public PostCommentResponseDto patchComment(final Long id, final PostCommentDto dto,
+            final String currentUsername) {
+        final PostCommentEntity existingComment = PostCommentEntity.findById(id);
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
-
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to patch comment");
-
-        // Partial update (PATCH semantics) - only update provided fields
-        if (comment.content != null) {
-            existingComment.content = comment.content;
+        if (dto.content != null) {
+            existingComment.content = dto.content;
         }
-
         existingComment.persistAndFlush();
         PostCommentEntity.getEntityManager().detach(existingComment);
-
         return new PostCommentResponseDto(PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
                         existingComment.id)
