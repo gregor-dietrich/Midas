@@ -46,7 +46,7 @@ public class AdminUserDialog extends FormDialog {
     private Binder<UserDto> binder;
     private UserDto currentUser;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserDialog. */
     public AdminUserDialog(final UserService userService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

@@ -15,7 +15,7 @@ import de.vptr.midas.gui.view.UserView;
 /** Navigation tabs for navigation. */
 public class NavigationTabs extends Tabs {
 
-    /** Creates a new instance. */
+    /** Initializes NavigationTabs. */
     public NavigationTabs() {
         this.add(new Tab(new RouterLink("Home", HomeView.class)));
         this.add(new Tab(new RouterLink("Accounts", AccountView.class)));

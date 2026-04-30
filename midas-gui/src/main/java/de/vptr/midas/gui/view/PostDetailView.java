@@ -28,7 +28,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** PostDetailView view. */
 @Route(value = "posts", layout = MainLayout.class)
 public class PostDetailView extends AbstractAsyncDataView
         implements HasUrlParameter<String>, BeforeEnterObserver {
@@ -47,7 +47,7 @@ public class PostDetailView extends AbstractAsyncDataView
 
     private String identifier;
 
-    /** Creates a new instance. */
+    /** Initializes PostDetailView. */
     public PostDetailView() {
         this.setSizeFull();
         this.setPadding(true);

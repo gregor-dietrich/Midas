@@ -24,7 +24,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Detail view for a single post category. */
 @Route(value = "categories", layout = MainLayout.class)
 public class PostCategoryDetailView extends AbstractAsyncDataView implements BeforeEnterObserver,
         HasUrlParameter<String> {
@@ -46,7 +46,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
     private H2 header;
     private PostCategoryResponseDto category;
 
-    /** Creates a new instance. */
+    /** Initializes PostCategoryDetailView. */
     public PostCategoryDetailView() {
         this.setSizeFull();
         this.setPadding(true);

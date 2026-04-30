@@ -52,7 +52,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private AdminUserRankDialog rankDialog;
     private boolean initialized = false;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserRankView. */
     public AdminUserRankView() {
         this.setSizeFull();
         this.setPadding(true);

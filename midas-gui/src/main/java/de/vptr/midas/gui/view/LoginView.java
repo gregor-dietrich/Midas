@@ -36,7 +36,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private boolean initialized = false;
 
-    /** Creates a new instance. */
+    /** Initializes LoginView. */
     public LoginView() {
         this.setSizeFull();
         this.setAlignItems(Alignment.CENTER);

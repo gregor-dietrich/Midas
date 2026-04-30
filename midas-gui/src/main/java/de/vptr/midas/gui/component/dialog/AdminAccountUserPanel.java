@@ -46,7 +46,7 @@ public class AdminAccountUserPanel extends FormDialog {
     private ComboBox<UserResponseDto> availableUsersCombo;
     private AccountDto selectedAccount;
 
-    /** Creates a new instance. */
+    /** Initializes AdminAccountUserPanel. */
     public AdminAccountUserPanel(final AccountService accountService,
             final AuthService authService,
             final UserService userService,

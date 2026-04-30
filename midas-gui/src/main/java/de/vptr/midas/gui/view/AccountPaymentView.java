@@ -52,7 +52,7 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** AccountPaymentView view. */
 @Route(value = "accounts/:accountId", layout = MainLayout.class)
 public class AccountPaymentView extends VerticalLayout implements BeforeEnterObserver {
 
@@ -92,7 +92,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private Binder<PaymentDto> binder;
     private PaymentDto currentPayment;
 
-    /** Creates a new instance. */
+    /** Initializes AccountPaymentView. */
     public AccountPaymentView() {
         this.setSizeFull();
         this.setSpacing(true);

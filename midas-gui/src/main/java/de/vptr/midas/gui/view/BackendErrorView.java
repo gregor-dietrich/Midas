@@ -27,7 +27,7 @@ public class BackendErrorView extends VerticalLayout implements BeforeEnterObser
 
     private boolean initialized = false;
 
-    /** Creates a new instance. */
+    /** Initializes BackendErrorView. */
     public BackendErrorView() {
         this.setSizeFull();
         this.setAlignItems(Alignment.CENTER);

@@ -18,7 +18,7 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** User view for browsing pages. */
 @Route(value = "pages", layout = MainLayout.class)
 public class PageView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -33,7 +33,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     private Grid<PageResponseDto> grid;
     private AsyncSearchLayout searchLayout;
 
-    /** Creates a new instance. */
+    /** Initializes PageView. */
     public PageView() {
         this.setSizeFull();
         this.setPadding(true);

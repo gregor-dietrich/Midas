@@ -34,7 +34,7 @@ public class AdminUserGroupDialog extends FormDialog {
     private Binder<UserGroupDto> binder;
     private UserGroupDto currentGroup;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserGroupDialog. */
     public AdminUserGroupDialog(final UserGroupService groupService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

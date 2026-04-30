@@ -32,7 +32,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
         this(searchAction, clearAction, placeholder, tooltip, DEFAULT_WIDTH, new SearchExecutionSupport());
     }
 
-    /** Creates a new instance. */
+    /** Initializes AsyncSearchLayout. */
     public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction,
             final String placeholder, final String tooltip, final String fieldWidth) {
         this(searchAction, clearAction, placeholder, tooltip, fieldWidth, new SearchExecutionSupport());

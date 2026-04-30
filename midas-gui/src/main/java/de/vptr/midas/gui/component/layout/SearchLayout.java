@@ -24,7 +24,7 @@ public class SearchLayout extends HorizontalLayout {
     private Button button;
     private final TextField textField;
 
-    /** Creates a new instance. */
+    /** Initializes SearchLayout. */
     public SearchLayout(final HasValue.ValueChangeListener<ComponentValueChangeEvent<TextField, String>> listener,
             final ComponentEventListener<ClickEvent<Button>> searchAction, final String placeholderText,
             final String tooltipText, final String fieldLabel, final String fieldWidth) {

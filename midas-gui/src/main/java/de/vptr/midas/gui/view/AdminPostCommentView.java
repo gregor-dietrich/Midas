@@ -35,7 +35,7 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** AdminPostCommentView view. */
 @Route(value = "admin/comments", layout = AdminMainLayout.class)
 public class AdminPostCommentView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -56,7 +56,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
 
     private AdminPostCommentDialog commentDialog;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostCommentView. */
     public AdminPostCommentView() {
         this.setSizeFull();
         this.setPadding(true);

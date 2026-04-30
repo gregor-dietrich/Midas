@@ -39,7 +39,7 @@ public class AdminUserRankDialog extends FormDialog {
     private Binder<UserRankDto> binder;
     private UserRankDto currentRank;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserRankDialog. */
     public AdminUserRankDialog(final UserRankService rankService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

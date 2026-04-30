@@ -49,7 +49,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
     private Long currentUserId;
 
-    /** Creates a new instance. */
+    /** Initializes UserGroupView. */
     public UserGroupView() {
         this.setSizeFull();
         this.setPadding(true);

@@ -17,7 +17,7 @@ import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** PageDetailView view. */
 @Route(value = "pages", layout = MainLayout.class)
 public class PageDetailView extends AbstractAsyncDataView implements BeforeEnterObserver, HasUrlParameter<String> {
 
@@ -31,7 +31,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
 
     private String identifier;
 
-    /** Creates a new instance. */
+    /** Initializes PageDetailView. */
     public PageDetailView() {
         this.setSizeFull();
         this.setPadding(true);

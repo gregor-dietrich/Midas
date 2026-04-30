@@ -44,7 +44,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing posts. */
 @Route(value = "admin/posts", layout = AdminMainLayout.class)
 public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -77,7 +77,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private AdminPostCommentPanel commentPanel;
     private List<PostCategoryResponseDto> availableCategories;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostView. */
     public AdminPostView() {
         this.setSizeFull();
         this.setPadding(true);

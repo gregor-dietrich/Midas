@@ -44,7 +44,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     private ComboBox<UserResponseDto> availableUsersCombo;
     private UserGroupResponseDto selectedGroup;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserGroupMemberPanel. */
     public AdminUserGroupMemberPanel(final UserGroupService groupService,
             final UserService userService,
             final AuthService authService,

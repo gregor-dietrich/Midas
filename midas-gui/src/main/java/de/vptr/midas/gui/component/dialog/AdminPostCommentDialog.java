@@ -33,7 +33,7 @@ public class AdminPostCommentDialog extends FormDialog {
     private Binder<PostCommentDto> binder;
     private PostCommentDto currentComment;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostCommentDialog. */
     public AdminPostCommentDialog(final PostCommentService commentService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

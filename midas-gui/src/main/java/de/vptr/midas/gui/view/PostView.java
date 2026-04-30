@@ -57,7 +57,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     private List<PostResponseDto> allPosts;
     private List<PostCategoryResponseDto> availableCategories;
 
-    /** Creates a new instance. */
+    /** Initializes PostView. */
     public PostView() {
         this.setSizeFull();
         this.setPadding(true);

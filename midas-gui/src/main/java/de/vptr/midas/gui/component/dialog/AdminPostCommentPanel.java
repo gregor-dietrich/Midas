@@ -34,7 +34,7 @@ public class AdminPostCommentPanel extends FormDialog {
     private PostCommentDto currentComment;
     private PostResponseDto selectedPost;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostCommentPanel. */
     public AdminPostCommentPanel(final PostCommentService postCommentService,
             final Runnable onAuthFailure) {
         super();

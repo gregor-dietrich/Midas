@@ -58,7 +58,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private List<UserRankResponseDto> availableRanks;
     private boolean initialized = false;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserView. */
     public AdminUserView() {
         this.setSizeFull();
         this.setPadding(true);

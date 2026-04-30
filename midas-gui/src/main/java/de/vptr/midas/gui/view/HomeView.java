@@ -15,7 +15,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.GreetService;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Landing/home view for authenticated users. */
 @Route(value = "", layout = MainLayout.class)
 public class HomeView extends VerticalLayout implements BeforeEnterObserver {
 

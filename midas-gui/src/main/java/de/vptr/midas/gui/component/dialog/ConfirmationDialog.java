@@ -10,7 +10,7 @@ public class ConfirmationDialog extends ConfirmDialog {
     private static final String DEFAULT_DIALOG_TITLE = "Confirm";
     private static final String DEFAULT_DIALOG_TEXT = "Are you sure?";
 
-    /** Creates a new instance. */
+    /** Initializes ConfirmationDialog. */
     public ConfirmationDialog(final ComponentEventListener<ConfirmDialog.ConfirmEvent> confirmAction,
             final String dialogTitle, final String dialogText, final String confirmButtonText,
             final String cancelButtonText) {

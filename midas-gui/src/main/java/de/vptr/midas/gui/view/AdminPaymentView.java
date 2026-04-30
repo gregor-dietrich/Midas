@@ -69,7 +69,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     private AdminPaymentDialog paymentDialog;
     private List<AccountResponseDto> availableAccounts;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPaymentView. */
     public AdminPaymentView() {
         this.setSizeFull();
         this.setSpacing(true);

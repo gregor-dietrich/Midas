@@ -34,7 +34,7 @@ public class AdminAccountDialog extends FormDialog {
     private Binder<AccountDto> binder;
     private AccountDto currentAccount;
 
-    /** Creates a new instance. */
+    /** Initializes AdminAccountDialog. */
     public AdminAccountDialog(final AccountService accountService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

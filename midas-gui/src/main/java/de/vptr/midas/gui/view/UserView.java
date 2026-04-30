@@ -18,9 +18,10 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** User view for browsing users. */
 @Route(value = "users", layout = MainLayout.class)
 public class UserView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -36,7 +37,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     private Grid<UserResponseDto> grid;
     private AsyncSearchLayout searchLayout;
 
-    /** Creates a new instance. */
+    /** Initializes UserView. */
     public UserView() {
         this.setSizeFull();
         this.setPadding(true);
@@ -69,7 +70,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
         }
 
         this.loadDataAsync(
-                () -> this.userService.getAllUsers(authHeader, 0, 50),
+                () -> this.userService.getAllUsers(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 users -> {
                     LOG.infof("Successfully loaded %s users", users.size());
                     this.grid.setItems(users);

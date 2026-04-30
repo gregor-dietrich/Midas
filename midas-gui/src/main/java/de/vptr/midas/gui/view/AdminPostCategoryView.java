@@ -31,7 +31,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** AdminPostCategoryView view. */
 @Route(value = "admin/categories", layout = AdminMainLayout.class)
 public class AdminPostCategoryView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -50,7 +50,7 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
 
     private AdminPostCategoryDialog categoryDialog;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostCategoryView. */
     public AdminPostCategoryView() {
         this.setSizeFull();
         this.setPadding(true);

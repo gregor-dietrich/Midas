@@ -33,7 +33,7 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     private TreeGrid<PostCategoryResponseDto> treeGrid;
     private List<PostCategoryResponseDto> allCategories;
 
-    /** Creates a new instance. */
+    /** Initializes PostCategoryView. */
     public PostCategoryView() {
         this.setSizeFull();
         this.setPadding(true);

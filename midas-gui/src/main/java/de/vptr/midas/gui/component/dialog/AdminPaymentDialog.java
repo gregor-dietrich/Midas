@@ -42,7 +42,7 @@ public class AdminPaymentDialog extends FormDialog {
     private Binder<PaymentDto> binder;
     private PaymentDto currentPayment;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPaymentDialog. */
     public AdminPaymentDialog(final PaymentService paymentService,
             final UserService userService,
             final Runnable onSave,

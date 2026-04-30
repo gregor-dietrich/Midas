@@ -26,7 +26,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Detail view for a single user group. */
 @Route(value = "groups/:identifier", layout = MainLayout.class)
 public class UserGroupDetailView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -45,7 +45,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private Long groupId;
     private UserGroupResponseDto currentGroup;
 
-    /** Creates a new instance. */
+    /** Initializes UserGroupDetailView. */
     public UserGroupDetailView() {
         this.setSizeFull();
         this.setPadding(true);

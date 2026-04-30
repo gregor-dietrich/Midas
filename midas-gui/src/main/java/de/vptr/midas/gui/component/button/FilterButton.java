@@ -11,7 +11,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 public class FilterButton extends Button {
     private static final String DEFAULT_TOOLTIP = "Search";
 
-    /** Creates a new instance. */
+    /** Initializes FilterButton. */
     public FilterButton(final ComponentEventListener<ClickEvent<Button>> filterAction, final String tooltipText,
             final ButtonVariant... variants) {
         super("", filterAction);

@@ -58,7 +58,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     private AdminAccountDialog accountDialog;
     private AdminAccountUserPanel userPanel;
 
-    /** Creates a new instance. */
+    /** Initializes AdminAccountView. */
     public AdminAccountView() {
         this.setSizeFull();
         this.setSpacing(true);

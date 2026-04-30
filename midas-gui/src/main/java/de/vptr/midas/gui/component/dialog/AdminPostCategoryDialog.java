@@ -38,7 +38,7 @@ public class AdminPostCategoryDialog extends FormDialog {
     private Binder<PostCategoryDto> binder;
     private PostCategoryDto currentCategory;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostCategoryDialog. */
     public AdminPostCategoryDialog(final PostCategoryService categoryService,
             final Runnable onSave,
             final Runnable onAuthFailure) {

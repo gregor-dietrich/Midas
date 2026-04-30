@@ -58,7 +58,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     private AdminUserGroupDialog groupDialog;
     private AdminUserGroupMemberPanel memberPanel;
 
-    /** Creates a new instance. */
+    /** Initializes AdminUserGroupView. */
     public AdminUserGroupView() {
         this.setSizeFull();
         this.setPadding(true);

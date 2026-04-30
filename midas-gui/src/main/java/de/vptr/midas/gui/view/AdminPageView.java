@@ -38,7 +38,7 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing pages. */
 @Route(value = "admin/pages", layout = AdminMainLayout.class)
 public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -58,7 +58,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     private Binder<PageDto> binder;
     private PageDto currentPage;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPageView. */
     public AdminPageView() {
         this.setSizeFull();
         this.setPadding(true);

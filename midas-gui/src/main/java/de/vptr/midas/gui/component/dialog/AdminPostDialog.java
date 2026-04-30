@@ -42,7 +42,7 @@ public class AdminPostDialog extends FormDialog {
     private Binder<PostDto> binder;
     private PostDto currentPost;
 
-    /** Creates a new instance. */
+    /** Initializes AdminPostDialog. */
     public AdminPostDialog(final PostService postService,
             final UserService userService,
             final Runnable onSave,

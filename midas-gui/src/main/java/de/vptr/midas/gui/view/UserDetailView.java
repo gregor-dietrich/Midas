@@ -27,7 +27,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Detail view for a single user. */
 @Route(value = "users", layout = MainLayout.class)
 public class UserDetailView extends AbstractAsyncDataView implements BeforeEnterObserver, HasUrlParameter<String> {
 
@@ -46,7 +46,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
     private String identifier;
     private Grid<UserGroupResponseDto> groupsGrid;
 
-    /** Creates a new instance. */
+    /** Initializes UserDetailView. */
     public UserDetailView() {
         this.setSizeFull();
         this.setPadding(true);

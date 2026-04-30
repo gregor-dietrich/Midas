@@ -18,7 +18,7 @@ public class DateFilterLayout extends HorizontalLayout {
     private final DatePicker startDatePicker;
     private final DatePicker endDatePicker;
 
-    /** Creates a new instance. */
+    /** Initializes DateFilterLayout. */
     public DateFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction,
             final String tooltipText, final String fieldWidth) {
         this.setAlignItems(Alignment.END);
