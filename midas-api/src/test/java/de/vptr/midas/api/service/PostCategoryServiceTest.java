@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.dto.PostCategoryDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.util.ServiceTestDataBuilder;
 import de.vptr.midas.api.util.ServiceTestUtil;
@@ -57,9 +58,7 @@ class PostCategoryServiceTest {
 
         // Create child category
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        // Need to get the actual entity to set as parent
-        final var parentEntity = (PostCategoryEntity) PostCategoryEntity.findById(createdParent.id);
-        childCategory.parent = parentEntity;
+        childCategory.parentId = createdParent.id;
 
         final var createdChild = this.postCategoryService.createCategory(childCategory);
 
@@ -76,9 +75,7 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
 
         // Set a non-existent parent
-        final var fakeParent = new PostCategoryEntity();
-        fakeParent.id = 999999L;
-        category.parent = fakeParent;
+        category.parentId = 999999L;
 
         assertThrows(WebApplicationException.class, () -> {
             this.postCategoryService.createCategory(category);
@@ -88,7 +85,7 @@ class PostCategoryServiceTest {
     @Test
     @TestTransaction
     void testCreateCategoryWithBlankName() {
-        final var category = new PostCategoryEntity();
+        final var category = new PostCategoryDto();
         category.name = ""; // blank name
 
         assertThrows(ValidationException.class, () -> {
@@ -99,7 +96,7 @@ class PostCategoryServiceTest {
     @Test
     @TestTransaction
     void testCreateCategoryWithNullName() {
-        final var category = new PostCategoryEntity();
+        final var category = new PostCategoryDto();
         category.name = null;
 
         assertThrows(ValidationException.class, () -> {
@@ -110,7 +107,7 @@ class PostCategoryServiceTest {
     @Test
     @TestTransaction
     void testCreateCategoryWithWhitespaceOnlyName() {
-        final var category = new PostCategoryEntity();
+        final var category = new PostCategoryDto();
         category.name = "   "; // whitespace only
 
         assertThrows(ValidationException.class, () -> {
@@ -147,9 +144,7 @@ class PostCategoryServiceTest {
 
         // Create a child category
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        // Need to get the actual entity to set as parent
-        final var rootEntity = (PostCategoryEntity) PostCategoryEntity.findById(createdRoot.id);
-        childCategory.parent = rootEntity;
+        childCategory.parentId = createdRoot.id;
         this.postCategoryService.createCategory(childCategory);
 
         final var rootCategories = this.postCategoryService.findRootCategories();
@@ -169,13 +164,11 @@ class PostCategoryServiceTest {
 
         // Create multiple child categories
         final var childCategory1 = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        // Need to get the actual entity to set as parent
-        final var parentEntity = (PostCategoryEntity) PostCategoryEntity.findById(createdParent.id);
-        childCategory1.parent = parentEntity;
+        childCategory1.parentId = createdParent.id;
         final var createdChild1 = this.postCategoryService.createCategory(childCategory1);
 
         final var childCategory2 = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory2.parent = parentEntity;
+        childCategory2.parentId = createdParent.id;
         final var createdChild2 = this.postCategoryService.createCategory(childCategory2);
 
         final var childCategories = this.postCategoryService.findByParentId(createdParent.id);
@@ -201,11 +194,10 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         // Update the category
-        final var updateCategory = new PostCategoryEntity();
-        updateCategory.id = createdCategory.id;
+        final var updateCategory = new PostCategoryDto();
         updateCategory.name = "Updated Category " + ServiceTestUtil.generateUniqueTestSuffix();
 
-        final var updatedCategory = this.postCategoryService.updateCategory(updateCategory);
+        final var updatedCategory = this.postCategoryService.updateCategory(createdCategory.id, updateCategory);
 
         assertNotNull(updatedCategory);
         assertEquals(createdCategory.id, updatedCategory.id);
@@ -220,12 +212,11 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         // Try to update with blank name
-        final var updateCategory = new PostCategoryEntity();
-        updateCategory.id = createdCategory.id;
+        final var updateCategory = new PostCategoryDto();
         updateCategory.name = ""; // blank name
 
         assertThrows(ValidationException.class, () -> {
-            this.postCategoryService.updateCategory(updateCategory);
+            this.postCategoryService.updateCategory(createdCategory.id, updateCategory);
         });
     }
 
@@ -237,24 +228,22 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         // Try to update with null name
-        final var updateCategory = new PostCategoryEntity();
-        updateCategory.id = createdCategory.id;
+        final var updateCategory = new PostCategoryDto();
         updateCategory.name = null;
 
         assertThrows(ValidationException.class, () -> {
-            this.postCategoryService.updateCategory(updateCategory);
+            this.postCategoryService.updateCategory(createdCategory.id, updateCategory);
         });
     }
 
     @Test
     @TestTransaction
     void testUpdateNonExistentCategory() {
-        final var updateCategory = new PostCategoryEntity();
-        updateCategory.id = 999999L;
+        final var updateCategory = new PostCategoryDto();
         updateCategory.name = "Updated Category";
 
         assertThrows(WebApplicationException.class, () -> {
-            this.postCategoryService.updateCategory(updateCategory);
+            this.postCategoryService.updateCategory(999999L, updateCategory);
         });
     }
 
@@ -266,11 +255,10 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         // Patch the category
-        final var patchCategory = new PostCategoryEntity();
-        patchCategory.id = createdCategory.id;
+        final var patchCategory = new PostCategoryDto();
         patchCategory.name = "Patched Category " + ServiceTestUtil.generateUniqueTestSuffix();
 
-        final var patchedCategory = this.postCategoryService.patchCategory(patchCategory);
+        final var patchedCategory = this.postCategoryService.patchCategory(createdCategory.id, patchCategory);
 
         assertNotNull(patchedCategory);
         assertEquals(createdCategory.id, patchedCategory.id);
@@ -285,11 +273,10 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         // Patch with null name (should not update name)
-        final var patchCategory = new PostCategoryEntity();
-        patchCategory.id = createdCategory.id;
+        final var patchCategory = new PostCategoryDto();
         patchCategory.name = null; // null should not update
 
-        final var patchedCategory = this.postCategoryService.patchCategory(patchCategory);
+        final var patchedCategory = this.postCategoryService.patchCategory(createdCategory.id, patchCategory);
 
         assertNotNull(patchedCategory);
         assertEquals(createdCategory.id, patchedCategory.id);
@@ -299,12 +286,11 @@ class PostCategoryServiceTest {
     @Test
     @TestTransaction
     void testPatchNonExistentCategory() {
-        final var patchCategory = new PostCategoryEntity();
-        patchCategory.id = 999999L;
+        final var patchCategory = new PostCategoryDto();
         patchCategory.name = "Patched Category";
 
         assertThrows(WebApplicationException.class, () -> {
-            this.postCategoryService.patchCategory(patchCategory);
+            this.postCategoryService.patchCategory(999999L, patchCategory);
         });
     }
 
@@ -339,16 +325,12 @@ class PostCategoryServiceTest {
 
         // Create a child category
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        // Need to get the actual entity to set as parent
-        final var rootEntity = (PostCategoryEntity) PostCategoryEntity.findById(createdRoot.id);
-        childCategory.parent = rootEntity;
+        childCategory.parentId = createdRoot.id;
         final var createdChild = this.postCategoryService.createCategory(childCategory);
 
         // Create a grandchild category
         final var grandchildCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        // Need to get the actual entity to set as parent
-        final var childEntity = (PostCategoryEntity) PostCategoryEntity.findById(createdChild.id);
-        grandchildCategory.parent = childEntity;
+        grandchildCategory.parentId = createdChild.id;
         final var createdGrandchild = this.postCategoryService.createCategory(grandchildCategory);
 
         // Verify hierarchical structure

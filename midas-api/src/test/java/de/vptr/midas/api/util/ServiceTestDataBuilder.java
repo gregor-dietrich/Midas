@@ -5,6 +5,8 @@ import java.time.LocalDate;
 
 import de.vptr.midas.api.dto.PageDto;
 import de.vptr.midas.api.dto.PaymentDto;
+import de.vptr.midas.api.dto.PostCategoryDto;
+import de.vptr.midas.api.dto.PostCommentDto;
 import de.vptr.midas.api.dto.PostDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserGroupDto;
@@ -297,12 +299,21 @@ public class ServiceTestDataBuilder {
     }
 
     /**
-     * Creates a unique PostCategoryDto for testing (needs to be created since it
-     * doesn't exist yet)
+     * Creates a unique PostCategoryDto for testing
      */
-    public static PostCategoryEntity createUniquePostCategoryDto() {
-        final var entity = new PostCategoryEntity();
-        entity.name = ServiceTestUtil.createUniqueTestName("Test Category");
-        return entity;
+    public static PostCategoryDto createUniquePostCategoryDto() {
+        final var dto = new PostCategoryDto();
+        dto.name = ServiceTestUtil.createUniqueTestName("Test Category");
+        return dto;
+    }
+
+    /**
+     * Creates a unique PostCommentDto for testing
+     */
+    public static PostCommentDto createUniquePostCommentDto(final String content, final Long postId) {
+        final var dto = new PostCommentDto();
+        dto.content = content;
+        dto.postId = postId;
+        return dto;
     }
 }

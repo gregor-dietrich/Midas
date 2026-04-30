@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.dto.PostCommentDto;
 import de.vptr.midas.api.dto.PostCommentResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostCommentEntity;
@@ -81,8 +82,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateComment() {
-        final PostCommentEntity newComment = ServiceTestDataBuilder.createPostCommentEntity(
-                "Test Comment Content", this.testUser, this.testPost);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Test Comment Content", this.testPost.id);
 
         final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
                 this.testUser.username);
@@ -99,18 +100,17 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testUpdateComment() {
         // First create a comment
-        final PostCommentEntity newComment = ServiceTestDataBuilder.createPostCommentEntity(
-                "Original Comment", this.testUser, this.testPost);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Original Comment", this.testPost.id);
         final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
                 this.testUser.username);
 
         // Update the comment
-        final PostCommentEntity updateEntity = ServiceTestDataBuilder
-                .createPostCommentUpdateEntity("Updated Comment Content");
-        updateEntity.id = createdComment.id;
-        // Note: user and post are set internally by the service
+        final var updateDto = new PostCommentDto();
+        updateDto.content = "Updated Comment Content";
 
-        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(updateEntity, "admin");
+        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(createdComment.id, updateDto,
+                this.testUser.username);
 
         assertNotNull(updatedComment);
         assertEquals("Updated Comment Content", updatedComment.content);
@@ -119,18 +119,17 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdateCommentShouldDenyNonOwnerWithoutAdminAccess() {
-        final PostCommentEntity newComment = ServiceTestDataBuilder.createPostCommentEntity(
-                "Original Comment", this.testUser, this.testPost);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Original Comment", this.testPost.id);
         final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
                 this.testUser.username);
         final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
 
-        final PostCommentEntity updateEntity = ServiceTestDataBuilder
-                .createPostCommentUpdateEntity("Blocked update");
-        updateEntity.id = createdComment.id;
+        final var updateDto = new PostCommentDto();
+        updateDto.content = "Blocked update";
 
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.updateComment(updateEntity, intruder.username));
+                () -> this.postCommentService.updateComment(createdComment.id, updateDto, intruder.username));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
@@ -138,8 +137,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testDeleteComment() {
         // First create a comment
-        final PostCommentEntity newComment = ServiceTestDataBuilder.createPostCommentEntity(
-                "Comment to delete", this.testUser, this.testPost);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Comment to delete", this.testPost.id);
         final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
                 this.testUser.username);
 
@@ -162,8 +161,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindById() {
         // First create a comment
-        final PostCommentEntity newComment = ServiceTestDataBuilder.createPostCommentEntity(
-                "Find By ID Comment", this.testUser, this.testPost);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Find By ID Comment", this.testPost.id);
         final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
                 this.testUser.username);
 
@@ -183,12 +182,12 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByPostId() {
         // First create comments
-        final var comment1 = ServiceTestDataBuilder.createPostCommentEntity(
-                "First comment", this.testUser, this.testPost);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "First comment", this.testPost.id);
         this.postCommentService.createComment(comment1, this.testUser.username);
 
-        final var comment2 = ServiceTestDataBuilder.createPostCommentEntity(
-                "Second comment", this.testUser, this.testPost);
+        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Second comment", this.testPost.id);
         this.postCommentService.createComment(comment2, this.testUser.username);
 
         final var postComments = this.postCommentService.findByPostId(this.testPost.id);
@@ -206,12 +205,12 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByUserId() {
         // First create comments
-        final var comment1 = ServiceTestDataBuilder.createPostCommentEntity(
-                "User comment 1", this.testUser, this.testPost);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "User comment 1", this.testPost.id);
         this.postCommentService.createComment(comment1, this.testUser.username);
 
-        final var comment2 = ServiceTestDataBuilder.createPostCommentEntity(
-                "User comment 2", this.testUser, this.testPost);
+        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "User comment 2", this.testPost.id);
         this.postCommentService.createComment(comment2, this.testUser.username);
 
         final var userComments = this.postCommentService.findByUserId(this.testUser.id);
@@ -228,8 +227,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindRecentComments() {
         // First create a comment
-        final PostCommentEntity comment1 = ServiceTestDataBuilder.createPostCommentEntity(
-                "Recent comment", this.testUser, this.testPost);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
+                "Recent comment", this.testPost.id);
         this.postCommentService.createComment(comment1, this.testUser.username);
 
         final var recentComments = this.postCommentService.findRecentComments(10);
