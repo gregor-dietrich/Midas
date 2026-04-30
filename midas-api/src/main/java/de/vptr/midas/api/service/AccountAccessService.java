@@ -151,8 +151,6 @@ public class AccountAccessService {
     }
 
     /** Returns balances for the given list of account ids. */
-    // TODO P-06: Replace with GROUP BY SQL aggregate to avoid materializing all payment rows.
-    // Current implementation fetches all rows and aggregates in Java.
     @Transactional(Transactional.TxType.SUPPORTS)
     public Map<Long, BigDecimal> getAccountBalances(final List<Long> accountIds) {
         return PerformanceMonitor.time("getAccountBalances(" + accountIds.size() + " accounts)", () -> {
@@ -161,28 +159,45 @@ public class AccountAccessService {
             }
 
             final Map<Long, BigDecimal> balances = new HashMap<>();
-
             accountIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
 
+            // Compute incoming payments (target) aggregated by account
             @SuppressWarnings("unchecked")
-            final List<Object[]> results = PaymentEntity.getEntityManager()
+            final List<Object[]> incomingResults = PaymentEntity.getEntityManager()
                     .createQuery(
-                            "SELECT p.targetAccount.id, p.sourceAccount.id, p.amount "
+                            "SELECT p.targetAccount.id, COALESCE(SUM(p.amount), 0) "
                                     + "FROM PaymentEntity p "
-                                    + "WHERE p.targetAccount.id IN :accountIds OR p.sourceAccount.id IN :accountIds")
+                                    + "WHERE p.targetAccount.id IN :accountIds "
+                                    + "GROUP BY p.targetAccount.id",
+                            Object[].class)
                     .setParameter("accountIds", accountIds)
                     .getResultList();
 
-            for (final Object[] row : results) {
-                final Long targetId = (Long) row[0];
-                final Long sourceId = (Long) row[1];
-                final BigDecimal amount = (BigDecimal) row[2];
-
-                if (targetId != null && balances.containsKey(targetId)) {
-                    balances.put(targetId, balances.get(targetId).add(amount));
+            for (final Object[] row : incomingResults) {
+                final Long accountId = (Long) row[0];
+                final BigDecimal amount = (BigDecimal) row[1];
+                if (accountId != null) {
+                    balances.put(accountId, balances.get(accountId).add(amount));
                 }
-                if (sourceId != null && balances.containsKey(sourceId)) {
-                    balances.put(sourceId, balances.get(sourceId).subtract(amount));
+            }
+
+            // Compute outgoing payments (source) aggregated by account
+            @SuppressWarnings("unchecked")
+            final List<Object[]> outgoingResults = PaymentEntity.getEntityManager()
+                    .createQuery(
+                            "SELECT p.sourceAccount.id, COALESCE(SUM(p.amount), 0) "
+                                    + "FROM PaymentEntity p "
+                                    + "WHERE p.sourceAccount.id IN :accountIds "
+                                    + "GROUP BY p.sourceAccount.id",
+                            Object[].class)
+                    .setParameter("accountIds", accountIds)
+                    .getResultList();
+
+            for (final Object[] row : outgoingResults) {
+                final Long accountId = (Long) row[0];
+                final BigDecimal amount = (BigDecimal) row[1];
+                if (accountId != null) {
+                    balances.put(accountId, balances.get(accountId).subtract(amount));
                 }
             }
 
