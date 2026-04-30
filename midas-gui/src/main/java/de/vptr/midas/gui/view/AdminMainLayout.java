@@ -17,6 +17,7 @@ import de.vptr.midas.gui.component.button.LogoutButton;
 import de.vptr.midas.gui.component.button.ThemeToggleButton;
 import de.vptr.midas.gui.component.button.UserViewButton;
 import de.vptr.midas.gui.component.tabs.AdminNavigationTabs;
+import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.BackendAvailabilityService;
 import de.vptr.midas.gui.service.ThemeService;
@@ -30,6 +31,8 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
     private Button userViewButton;
     private Button logoutButton;
     private Tabs navigationTabs;
+    private UserRankResponseDto cachedUserRank = null;
+    private boolean cachedUserRankValid = false;
 
     @Inject
     AuthService authService;
@@ -124,8 +127,8 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             return;
         }
 
-        // Check admin permission for admin views
-        if (!this.userRankService.getCurrentUserRank().canAdminView()) {
+        // Check admin permission for admin views (use cached rank to avoid duplicate calls)
+        if (!this.getCachedUserRank().canAdminView()) {
             LOG.trace("User does not have admin:view permission, redirecting to home");
             event.forwardTo(HomeView.class);
             return;
@@ -211,8 +214,8 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
         this.sidebar.getStyle().set("background-color", "var(--lumo-contrast-5pct)");
         this.sidebar.getStyle().set("border-right", "1px solid var(--lumo-contrast-10pct)");
 
-        // Create navigation tabs
-        this.navigationTabs = new AdminNavigationTabs(this.userRankService.getCurrentUserRank());
+        // Create navigation tabs (use cached rank)
+        this.navigationTabs = new AdminNavigationTabs(this.getCachedUserRank());
         this.sidebar.add(this.navigationTabs);
 
         // Create content area where the actual views will be displayed
@@ -256,6 +259,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
                 this.authService.logout();
                 // Clear cached user rank on logout
                 this.userRankService.clearCachedUserRank();
+                this.cachedUserRankValid = false; // Clear request-scope cache
                 this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
             });
 
@@ -285,5 +289,17 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
                 this.userViewButton = null;
             }
         }
+    }
+
+    /**
+     * Returns the current user rank from service, caching it for the duration of this layout instance.
+     * This avoids redundant service calls during the same navigation/render cycle.
+     */
+    private UserRankResponseDto getCachedUserRank() {
+        if (!this.cachedUserRankValid) {
+            this.cachedUserRank = this.userRankService.getCurrentUserRank();
+            this.cachedUserRankValid = true;
+        }
+        return this.cachedUserRank;
     }
 }

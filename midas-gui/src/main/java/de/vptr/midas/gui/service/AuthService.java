@@ -180,7 +180,7 @@ public class AuthService {
      *
      * @deprecated Use {@link #getAuthorizationHeader()} instead.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public String getBasicAuthHeader() {
         return this.getAuthorizationHeader();
     }

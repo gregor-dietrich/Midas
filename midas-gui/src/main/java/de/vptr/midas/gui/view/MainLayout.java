@@ -28,6 +28,8 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
     private Button adminViewButton;
     private Button logoutButton;
     private Tabs navigationTabs;
+    private boolean cachedAdminPermission = false;
+    private boolean cachedAdminPermissionValid = false;
 
     @Inject
     AuthService authService;
@@ -212,11 +214,16 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
             this.authService.logout();
             // Clear cached user rank on logout
             this.userRankService.clearCachedUserRank();
+            this.cachedAdminPermissionValid = false; // Clear request-scope cache
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         });
 
-        // Only create admin button if user has admin:view permission
-        if (this.userRankService.getCurrentUserRank().canAdminView()) {
+        // Only create admin button if user has admin:view permission (cached per layout instance)
+        if (!this.cachedAdminPermissionValid) {
+            this.cachedAdminPermission = this.userRankService.getCurrentUserRank().canAdminView();
+            this.cachedAdminPermissionValid = true;
+        }
+        if (this.cachedAdminPermission) {
             this.adminViewButton = new AdminViewButton(
                     _ -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
         }
