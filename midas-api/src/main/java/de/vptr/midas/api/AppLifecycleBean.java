@@ -20,7 +20,7 @@ public class AppLifecycleBean {
      * https://www.asciiart.eu/text-to-ascii-art
      * Font: Big Money-sw, Horizontal Layout: Squeezed, Border: Cats
      */
-    private static final String asciiArt = """
+    private static final String ASCII_ART = """
 
              /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\
             ( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )
@@ -39,7 +39,7 @@ public class AppLifecycleBean {
              > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <""";
 
     void onStart(@Observes final StartupEvent ev) {
-        LOG.info(asciiArt);
+        LOG.info(ASCII_ART);
         LOG.info("Welcome to Midas API! o/");
     }
 

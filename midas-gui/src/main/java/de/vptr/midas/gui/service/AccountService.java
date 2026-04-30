@@ -2,7 +2,6 @@ package de.vptr.midas.gui.service;
 
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,7 +93,7 @@ public class AccountService {
         final var authHeader = this.authService.getAuthorizationHeader();
         if (authHeader == null) {
             LOG.warn("No authentication header available");
-            return Optional.empty();
+            throw new AuthenticationException("Authentication required");
         }
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountByName(name, authHeader),
                 this.authService, LOG, "fetching account by name " + name, response -> {
@@ -173,7 +172,7 @@ public class AccountService {
         final var authHeader = this.authService.getAuthorizationHeader();
         if (authHeader == null) {
             LOG.warn("No authentication header available");
-            return Collections.emptyList();
+            throw new AuthenticationException("Authentication required");
         }
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getOutgoingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching outgoing payments for account " + accountId, response -> {
@@ -193,7 +192,7 @@ public class AccountService {
         final var authHeader = this.authService.getAuthorizationHeader();
         if (authHeader == null) {
             LOG.warn("No authentication header available");
-            return Collections.emptyList();
+            throw new AuthenticationException("Authentication required");
         }
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getIncomingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching incoming payments for account " + accountId, response -> {
@@ -213,7 +212,7 @@ public class AccountService {
         final var authHeader = this.authService.getAuthorizationHeader();
         if (authHeader == null) {
             LOG.warn("No authentication header available");
-            return Collections.emptyList();
+            throw new AuthenticationException("Authentication required");
         }
         return ServiceHelper.execute(
                 () -> this.accountClient.getAssociatedUsers(accountId, authHeader),

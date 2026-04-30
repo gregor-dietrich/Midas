@@ -86,7 +86,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
 
         final var targetView = event.getNavigationTarget();
 
-        LOG.tracef("MainLayout.beforeEnter - Target: %s", targetView.getSimpleName());
+        LOG.tracef("AdminMainLayout.beforeEnter - Target: %s", targetView.getSimpleName());
 
         // Skip all checks for the backend error view
         if (targetView == BackendErrorView.class) {

@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -36,6 +37,7 @@ public class UserGroupEntity extends PanacheEntityBase {
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "group", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<UserGroupMetaEntity> userGroupMetas;
 
@@ -47,6 +49,9 @@ public class UserGroupEntity extends PanacheEntityBase {
     // Helper method to get users in this group
     /** Returns all users in this group. */
     public List<UserEntity> getUsers() {
+        if (this.userGroupMetas == null) {
+            return java.util.List.of();
+        }
         return this.userGroupMetas.stream()
                 .map(meta -> meta.user)
                 .toList();

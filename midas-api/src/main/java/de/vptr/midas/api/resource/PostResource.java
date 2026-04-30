@@ -51,7 +51,11 @@ public class PostResource {
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.getAllPosts(safePage, safeSize);
+        // Unauthenticated callers only see published posts; authenticated callers see all.
+        if (this.securityContext.getUserPrincipal() != null) {
+            return this.postService.getAllPosts(safePage, safeSize);
+        }
+        return this.postService.findPublishedPosts(safePage, safeSize);
     }
 
     /** Returns published posts with normalized pagination parameters. */
@@ -74,8 +78,9 @@ public class PostResource {
 
     @GET
     @Path("/user/{userId}")
+    // TODO: add an admin-only path that returns all posts (including drafts) for a user.
     public List<PostResponseDto> getPostsByUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.postService.findByUserId(userId);
+        return this.postService.findPublishedByUserId(userId);
     }
 
     @GET
@@ -98,10 +103,11 @@ public class PostResource {
 
     @GET
     @Path("/date-range")
+    // TODO: add an admin-only path that returns all posts (including drafts) within a date range.
     public List<PostResponseDto> getPostsByDateRange(
             @QueryParam("startDate") final String startDate,
             @QueryParam("endDate") final String endDate) {
-        return this.postService.findByDateRange(startDate, endDate);
+        return this.postService.findPublishedByDateRange(startDate, endDate);
     }
 
     @POST

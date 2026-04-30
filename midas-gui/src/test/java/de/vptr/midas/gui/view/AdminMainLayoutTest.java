@@ -26,7 +26,6 @@ import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({ "unchecked", "rawtypes" })
 class AdminMainLayoutTest {
 
     @Mock
@@ -57,6 +56,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldSkipChecks_whenTargetIsBackendErrorView() {
         when(this.event.getNavigationTarget()).thenReturn((Class) BackendErrorView.class);
 
@@ -67,6 +67,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToError_whenBackendUnavailable() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(false);
@@ -77,6 +78,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToLogin_whenNotAuthenticated() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
@@ -88,6 +90,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToHome_whenNoAdminPermission() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
@@ -102,6 +105,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldAllowAccess_whenAdminPermissionGranted() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
@@ -118,6 +122,7 @@ class AdminMainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldSkipAuthCheck_whenTargetIsLoginView() {
         when(this.event.getNavigationTarget()).thenReturn((Class) LoginView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);

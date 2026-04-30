@@ -19,14 +19,16 @@ import com.vaadin.flow.router.Route;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** View for browsing and searching user groups. */
 @Route(value = "groups", layout = MainLayout.class)
 public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -56,7 +58,10 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
+        try {
+            this.authService.requireAuthorizationHeader();
+        } catch (final AuthenticationException e) {
+            LOG.debugf("Authentication required: %s", e.getMessage());
             event.forwardTo(LoginView.class);
             return;
         }
@@ -155,7 +160,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
                 () -> {
                     LOG.info("Making REST calls to load groups and current user");
                     final var currentUser = this.userService.getCurrentUser().orElse(null);
-                    final var allGroups = this.groupService.getAllGroups(authHeader, 0, 50);
+                    final var allGroups = this.groupService.getAllGroups(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE);
 
                     List<UserGroupResponseDto> myGroups = Collections.emptyList();
                     if (currentUser != null) {
@@ -184,7 +189,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
         final var otherGroups = allGroups.stream()
                 .filter(group -> !myGroupIds.contains(group.getId()))
-                .collect(Collectors.toList());
+                .toList();
 
         this.myGroupsGrid.setItems(myGroups);
         this.otherGroupsGrid.setItems(otherGroups);
@@ -230,11 +235,11 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
                     final var myResults = result.allGroups.stream()
                             .filter(group -> myGroupIds.contains(group.getId()))
-                            .collect(Collectors.toList());
+                            .toList();
 
                     final var otherResults = result.allGroups.stream()
                             .filter(group -> !myGroupIds.contains(group.getId()))
-                            .collect(Collectors.toList());
+                            .toList();
 
                     this.myGroupsGrid.setItems(myResults);
                     this.otherGroupsGrid.setItems(otherResults);

@@ -63,18 +63,21 @@ public class UserGroupResource {
 
     @GET
     @Path("/{id}/users")
+    @RolesAllowed({ "user-group:edit", "user-group:delete" })
     public List<UserResponseDto> getUsersInGroup(@PathParam("id") @Min(1) final Long groupId) {
         return this.groupService.getUsersInGroup(groupId);
     }
 
     @GET
     @Path("/user/{userId}")
+    @RolesAllowed({ "user-group:edit", "user-group:delete" })
     public List<UserGroupResponseDto> getGroupsForUser(@PathParam("userId") @Min(1) final Long userId) {
         return this.groupService.getGroupsForUser(userId);
     }
 
     @GET
     @Path("/user/{userId}/group/{groupId}/check")
+    @RolesAllowed({ "user-group:edit", "user-group:delete" })
     public Response checkUserInGroup(@PathParam("userId") @Min(1) final Long userId,
             @PathParam("groupId") @Min(1) final Long groupId) {
         final boolean isInGroup = this.groupService.isUserInGroup(userId, groupId);

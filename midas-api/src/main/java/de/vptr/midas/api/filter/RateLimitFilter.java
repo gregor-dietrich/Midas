@@ -61,6 +61,9 @@ public class RateLimitFilter implements ContainerRequestFilter {
     @ConfigProperty(name = "midas.rate-limit.bucket.max-entries", defaultValue = "10000")
     int maxBucketEntries;
 
+    @ConfigProperty(name = "rate-limit.trust-forwarded-for", defaultValue = "false")
+    boolean trustForwardedFor;
+
     @PostConstruct
     void initBucketStores() {
         final int maxEntries = Math.max(1, this.maxBucketEntries);
@@ -159,11 +162,13 @@ public class RateLimitFilter implements ContainerRequestFilter {
     }
 
     String resolveClientKey(final ContainerRequestContext requestContext) {
-        final String forwardedClientAddress = resolveTrustedClientAddress(
-                requestContext.getHeaderString(FORWARDED_FOR_HEADER),
-                requestContext.getHeaderString(REAL_IP_HEADER));
-        if (forwardedClientAddress != null) {
-            return forwardedClientAddress;
+        if (this.trustForwardedFor) {
+            final String forwardedClientAddress = resolveTrustedClientAddress(
+                    requestContext.getHeaderString(FORWARDED_FOR_HEADER),
+                    requestContext.getHeaderString(REAL_IP_HEADER));
+            if (forwardedClientAddress != null) {
+                return forwardedClientAddress;
+            }
         }
 
         final RoutingContext routingContext = resolveRoutingContext();

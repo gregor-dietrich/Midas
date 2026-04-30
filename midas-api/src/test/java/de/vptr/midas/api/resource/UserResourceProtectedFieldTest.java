@@ -13,6 +13,8 @@ import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.service.UserService;
 import jakarta.ws.rs.core.SecurityContext;
 
+// NOTE: This is an intentional plain JUnit test, not a @QuarkusTest.
+// It tests field-level validation logic via direct instantiation without requiring the full CDI container.
 class UserResourceProtectedFieldTest {
 
     @Test

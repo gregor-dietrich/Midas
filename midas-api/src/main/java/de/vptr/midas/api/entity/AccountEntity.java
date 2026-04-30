@@ -7,6 +7,7 @@ import java.util.List;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -41,9 +42,11 @@ public class AccountEntity extends PanacheEntityBase {
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<UserAccountMetaEntity> userAccountMetas;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "sourceAccount", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<PaymentEntity> outgoingPayments;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "targetAccount", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<PaymentEntity> incomingPayments;
 

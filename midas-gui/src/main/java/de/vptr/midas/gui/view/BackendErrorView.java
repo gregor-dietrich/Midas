@@ -9,26 +9,40 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.service.ThemeService;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** View displayed when the backend is unavailable. */
 @Route(value = "backend-error", layout = MainLayout.class)
 @PageTitle("Midas - Backend Unavailable")
-public class BackendErrorView extends VerticalLayout {
+public class BackendErrorView extends VerticalLayout implements BeforeEnterObserver {
 
     @Inject
     ThemeService themeService;
+
+    private boolean initialized = false;
 
     /** Creates a new instance. */
     public BackendErrorView() {
         this.setSizeFull();
         this.setAlignItems(Alignment.CENTER);
         this.setJustifyContentMode(JustifyContentMode.CENTER);
+    }
 
+    @Override
+    public void beforeEnter(final BeforeEnterEvent event) {
+        if (!this.initialized) {
+            this.buildUi();
+            this.initialized = true;
+        }
+    }
+
+    private void buildUi() {
         final var errorIcon = new Icon(VaadinIcon.EXCLAMATION_CIRCLE);
         errorIcon.setSize("64px");
         errorIcon.setColor("var(--lumo-error-color)");

@@ -10,16 +10,17 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
+// Note: ExceptionMapper<Exception> intentionally excludes Error subclasses (OOM, SOE) which should propagate to the container.
 /** Catch-all mapper that prevents stack trace leaks to API clients. */
 @Provider
 @Priority(Priorities.USER + 1000)
-public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
+public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 
     private static final Logger LOG = Logger.getLogger(GenericExceptionMapper.class);
     private static final String GENERIC_INTERNAL_MESSAGE = "An unexpected error occurred";
 
     @Override
-    public Response toResponse(final Throwable exception) {
+    public Response toResponse(final Exception exception) {
         if (exception instanceof final WebApplicationException wae) {
             return mapWebApplicationException(wae);
         }

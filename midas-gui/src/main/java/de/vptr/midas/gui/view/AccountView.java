@@ -26,7 +26,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** View for managing user accounts. */
 @Route(value = "accounts", layout = MainLayout.class)
 public class AccountView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -45,14 +45,22 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private Span totalBalanceLabel;
     private Map<Long, BigDecimal> accountBalances = new HashMap<>();
     private List<AccountResponseDto> accountsList = new ArrayList<>();
+    private boolean initialized = false;
 
     public AccountView() {
         this.setSizeFull();
-        this.buildUi();
     }
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
+        if (!this.authService.isAuthenticated()) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
+        if (!this.initialized) {
+            this.buildUi();
+            this.initialized = true;
+        }
         this.loadAccountsAsync();
     }
 

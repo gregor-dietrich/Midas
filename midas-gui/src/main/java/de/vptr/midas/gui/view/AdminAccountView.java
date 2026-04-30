@@ -32,9 +32,10 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing accounts. */
 @Route(value = "admin/accounts", layout = AdminMainLayout.class)
 public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -66,10 +67,10 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
-        LOG.info("UserAccountView.beforeEnter - Starting view initialization");
+        LOG.info("AdminAccountView.beforeEnter - Starting view initialization");
         this.buildUi();
         this.loadAccountsAsync();
-        LOG.info("UserAccountView.beforeEnter - View initialization completed");
+        LOG.info("AdminAccountView.beforeEnter - View initialization completed");
     }
 
     private void loadAccountsAsync() {
@@ -81,7 +82,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             return;
         }
         this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(authHeader, 0, 50),
+                () -> this.accountService.getAllAccounts(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 accounts -> this.grid.setItems(accounts));
     }
 
@@ -192,12 +193,12 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
                 () -> this.accountService.searchAccounts(query.trim(), authHeader),
                 accounts -> {
                     this.searchButton.setEnabled(true);
-                    this.searchButton.setText("");
+                    this.searchButton.setText("Search Accounts");
                     this.grid.setItems(accounts);
                 },
                 throwable -> {
                     this.searchButton.setEnabled(true);
-                    this.searchButton.setText("");
+                    this.searchButton.setText("Search Accounts");
                     ErrorHandler.handleInUiContext(throwable);
                 });
     }

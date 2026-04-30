@@ -221,7 +221,7 @@ class PostServiceTest {
         when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
         // When & Then
-        ExceptionTestUtil.assertThrowsNotAuthenticated(() -> this.postService.createPost(newPost));
+        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.postService.createPost(newPost));
     }
 
     @Test
@@ -266,7 +266,7 @@ class PostServiceTest {
         when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
         // When & Then
-        ExceptionTestUtil.assertThrowsNotAuthenticated(() -> this.postService.updatePost(postToUpdate));
+        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.postService.updatePost(postToUpdate));
     }
 
     @Test

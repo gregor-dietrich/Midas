@@ -82,7 +82,8 @@ public class UserGroupService {
         group.name = groupDto.name;
         group.persistAndFlush();
 
-        return new UserGroupResponseDto(group, 0L);
+        final UserGroupEntity savedGroup = UserGroupEntity.findById(group.id);
+        return new UserGroupResponseDto(savedGroup, 0L);
     }
 
     /** Updates the group with the given id. */

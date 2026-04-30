@@ -1,9 +1,14 @@
 package de.vptr.midas.api.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Builder utility for creating test data JSON strings
  */
 public class TestDataBuilder {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private TestDataBuilder() {
         // Utility class
@@ -13,13 +18,15 @@ public class TestDataBuilder {
      * Creates a basic user JSON for testing
      */
     public static String createUserJson(final String username, final String email, final String password) {
-        return String.format("""
-                {
-                    "username": "%s",
-                    "email": "%s",
-                    "password": "%s"
-                }
-                """, username, email, password);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("username", username);
+            data.put("email", email);
+            data.put("password", password);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize user test data", e);
+        }
     }
 
     /**
@@ -38,14 +45,16 @@ public class TestDataBuilder {
      */
     public static String createPostJson(final String title, final String content, final boolean published,
             final Long userId) {
-        return String.format("""
-                {
-                    "title": "%s",
-                    "content": "%s",
-                    "published": %s,
-                    "userId": %d
-                }
-                """, title, content, published, userId);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("title", title);
+            data.put("content", content);
+            data.put("published", published);
+            data.put("userId", userId);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize post test data", e);
+        }
     }
 
     /**
@@ -53,16 +62,18 @@ public class TestDataBuilder {
      */
     public static String createPostJson(final String title, final String content, final boolean published,
             final boolean commentable, final Long userId, final Long categoryId) {
-        return String.format("""
-                {
-                    "title": "%s",
-                    "content": "%s",
-                    "published": %b,
-                    "commentable": %b,
-                    "userId": %d,
-                    "categoryId": %d
-                }
-                """, title, content, published, commentable, userId, categoryId);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("title", title);
+            data.put("content", content);
+            data.put("published", published);
+            data.put("commentable", commentable);
+            data.put("userId", userId);
+            data.put("categoryId", categoryId);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize post test data", e);
+        }
     }
 
     /**
@@ -83,11 +94,13 @@ public class TestDataBuilder {
      * Creates a basic account JSON for testing
      */
     public static String createAccountJson(final String name) {
-        return String.format("""
-                {
-                    "name": "%s"
-                }
-                """, name);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("name", name);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize account test data", e);
+        }
     }
 
     /**
@@ -108,25 +121,29 @@ public class TestDataBuilder {
      * Creates a payment JSON for testing
      */
     public static String createPaymentJson(final String description, final double amount, final String currency) {
-        return String.format("""
-                {
-                    "description": "%s",
-                    "amount": %.2f,
-                    "currency": "%s"
-                }
-                """, description, amount, currency);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("description", description);
+            data.put("amount", amount);
+            data.put("currency", currency);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize payment test data", e);
+        }
     }
 
     /**
      * Creates a post category JSON for testing
      */
     public static String createPostCategoryJson(final String name, final String description) {
-        return String.format("""
-                {
-                    "name": "%s",
-                    "description": "%s"
-                }
-                """, name, description);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("name", name);
+            data.put("description", description);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize post category test data", e);
+        }
     }
 
     /**
@@ -147,11 +164,13 @@ public class TestDataBuilder {
      * Creates a user group JSON for testing
      */
     public static String createUserGroupJson(final String name) {
-        return String.format("""
-                {
-                    "name": "%s"
-                }
-                """, name);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("name", name);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize user group test data", e);
+        }
     }
 
     /**
@@ -212,51 +231,49 @@ public class TestDataBuilder {
             final boolean userGroupAdd, final boolean userGroupEdit, final boolean userGroupDelete,
             final boolean userRankAdd, final boolean userRankEdit, final boolean userRankDelete,
             final boolean userAccountAdd, final boolean userAccountEdit, final boolean userAccountDelete) {
-        return String.format("""
-                {
-                    "name": "%s",
-                    "pageAdd": %b,
-                    "pageEdit": %b,
-                    "pageDelete": %b,
-                    "postAdd": %b,
-                    "postEdit": %b,
-                    "postDelete": %b,
-                    "postCategoryAdd": %b,
-                    "postCategoryEdit": %b,
-                    "postCategoryDelete": %b,
-                    "postCommentAdd": %b,
-                    "postCommentEdit": %b,
-                    "postCommentDelete": %b,
-                    "userAdd": %b,
-                    "userEdit": %b,
-                    "userDelete": %b,
-                    "userGroupAdd": %b,
-                    "userGroupEdit": %b,
-                    "userGroupDelete": %b,
-                    "userRankAdd": %b,
-                    "userRankEdit": %b,
-                    "userRankDelete": %b,
-                    "userAccountAdd": %b,
-                    "userAccountEdit": %b,
-                    "userAccountDelete": %b
-                }
-                """, name, pageAdd, pageEdit, pageDelete, postAdd, postEdit, postDelete,
-                postCategoryAdd, postCategoryEdit, postCategoryDelete,
-                postCommentAdd, postCommentEdit, postCommentDelete,
-                userAdd, userEdit, userDelete,
-                userGroupAdd, userGroupEdit, userGroupDelete,
-                userRankAdd, userRankEdit, userRankDelete,
-                userAccountAdd, userAccountEdit, userAccountDelete);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("name", name);
+            data.put("pageAdd", pageAdd);
+            data.put("pageEdit", pageEdit);
+            data.put("pageDelete", pageDelete);
+            data.put("postAdd", postAdd);
+            data.put("postEdit", postEdit);
+            data.put("postDelete", postDelete);
+            data.put("postCategoryAdd", postCategoryAdd);
+            data.put("postCategoryEdit", postCategoryEdit);
+            data.put("postCategoryDelete", postCategoryDelete);
+            data.put("postCommentAdd", postCommentAdd);
+            data.put("postCommentEdit", postCommentEdit);
+            data.put("postCommentDelete", postCommentDelete);
+            data.put("userAdd", userAdd);
+            data.put("userEdit", userEdit);
+            data.put("userDelete", userDelete);
+            data.put("userGroupAdd", userGroupAdd);
+            data.put("userGroupEdit", userGroupEdit);
+            data.put("userGroupDelete", userGroupDelete);
+            data.put("userRankAdd", userRankAdd);
+            data.put("userRankEdit", userRankEdit);
+            data.put("userRankDelete", userRankDelete);
+            data.put("userAccountAdd", userAccountAdd);
+            data.put("userAccountEdit", userAccountEdit);
+            data.put("userAccountDelete", userAccountDelete);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize user rank test data", e);
+        }
     }
 
     // PostComment builders
     public static String createPostCommentJson(final String content, final Long postId) {
-        return String.format("""
-                {
-                    "content": "%s",
-                    "postId": %d
-                }
-                """, content, postId);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("content", content);
+            data.put("postId", postId);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize post comment test data", e);
+        }
     }
 
     public static String createDefaultPostCommentJson(final Long postId) {
@@ -281,13 +298,15 @@ public class TestDataBuilder {
 
     // Page builders
     public static String createPageJson(final String title, final String content, final boolean published) {
-        return String.format("""
-                {
-                    "title": "%s",
-                    "content": "%s",
-                    "published": %b
-                }
-                """, title, content, published);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("title", title);
+            data.put("content", content);
+            data.put("published", published);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize page test data", e);
+        }
     }
 
     public static String createDefaultPageJson() {
@@ -301,16 +320,18 @@ public class TestDataBuilder {
     // Payment builders
     public static String createPaymentJson(final Long targetAccountId, final Long sourceAccountId, final Long userId,
             final String amount, final String comment, final String date) {
-        return String.format("""
-                {
-                    "targetAccountId": %d,
-                    "sourceAccountId": %d,
-                    "userId": %d,
-                    "amount": %s,
-                    "comment": "%s",
-                    "date": "%s"
-                }
-                """, targetAccountId, sourceAccountId, userId, amount, comment, date);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("targetAccountId", targetAccountId);
+            data.put("sourceAccountId", sourceAccountId);
+            data.put("userId", userId);
+            data.put("amount", amount);
+            data.put("comment", comment);
+            data.put("date", date);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize payment test data", e);
+        }
     }
 
     public static String createDefaultPaymentJson() {
@@ -348,34 +369,40 @@ public class TestDataBuilder {
      * @return JSON string
      */
     public static String createUserAccountMetaJson(final boolean isNegative) {
-        return String.format("""
-                {
-                    "isNegative": %b
-                }
-                """, isNegative);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("isNegative", isNegative);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize user account meta test data", e);
+        }
     }
 
     /**
      * Creates an updated user update JSON (without password)
      */
     public static String createUserUpdateJson(final String username, final String email) {
-        return String.format("""
-                {
-                    "username": "%s",
-                    "email": "%s"
-                }
-                """, username, email);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("username", username);
+            data.put("email", email);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize user update test data", e);
+        }
     }
 
     /**
      * Creates a post patch JSON for testing partial updates
      */
     public static String createPostPatchJson(final String title) {
-        return String.format("""
-                {
-                    "title": "%s"
-                }
-                """, title);
+        try {
+            final var data = new java.util.LinkedHashMap<String, Object>();
+            data.put("title", title);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize post patch test data", e);
+        }
     }
 
     /**

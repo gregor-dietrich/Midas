@@ -9,6 +9,7 @@ import java.util.Optional;
 import de.vptr.midas.api.dto.PostCategoryResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostEntity;
+import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
@@ -18,6 +19,8 @@ import jakarta.ws.rs.core.Response;
 /** Service for post category business logic. */
 @ApplicationScoped
 public class PostCategoryService {
+
+    private static final int MAX_CATEGORY_DEPTH = 100;
 
     /** Returns all categories with default pagination. */
     public List<PostCategoryResponseDto> getAllCategories() {
@@ -178,7 +181,7 @@ public class PostCategoryService {
 
         Long currentId = potentialParentId;
         int depth = 0;
-        while (currentId != null && depth < 100) { // Safety limit 100
+        while (currentId != null && depth < MAX_CATEGORY_DEPTH) {
             currentId = parentMap.get(currentId);
             if (currentId != null && currentId.equals(categoryId)) {
                 return true;
@@ -196,13 +199,13 @@ public class PostCategoryService {
 
     /** Returns all categories matching the given query. */
     public List<PostCategoryResponseDto> searchCategories(final String query) {
-        if (query == null || query.trim().isEmpty()) {
+        final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
+        if (searchTerm == null) {
             return this.getAllCategories();
         }
-        final var searchTerm = "%" + query.trim().toLowerCase() + "%";
-        final List<PostCategoryEntity> categories = PostCategoryEntity.find(
-                "SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE LOWER(c.name) LIKE ?1",
-                searchTerm).page(0, 100).list();
+        final List<PostCategoryEntity> categories = SearchQueryUtil.applyDefaultSearchLimit(PostCategoryEntity.find(
+                "SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE LOWER(c.name) LIKE ?1 ESCAPE '\\'",
+                searchTerm)).list();
         return this.toCategoryResponseDtos(categories);
     }
 

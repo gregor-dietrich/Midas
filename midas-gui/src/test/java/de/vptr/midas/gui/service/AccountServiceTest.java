@@ -145,6 +145,14 @@ class AccountServiceTest {
         }
 
         @Test
+        void getAccountByName_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
+                when(this.authService.getAuthorizationHeader()).thenReturn(null);
+
+                ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                                () -> this.accountService.getAccountByName("Test Account"));
+        }
+
+        @Test
         void getAccountsByUser_shouldReturnUserAccounts_whenUserExists() {
                 // Given
                 final var userId = 1L;
@@ -443,12 +451,11 @@ class AccountServiceTest {
         }
 
         @Test
-        void getOutgoingPayments_shouldReturnEmptyList_whenAuthHeaderIsNull() {
+        void getOutgoingPayments_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
                 when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
-                final var result = this.accountService.getOutgoingPayments(1L);
-
-                assertThat(result).isEmpty();
+                ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                                () -> this.accountService.getOutgoingPayments(1L));
         }
 
         @Test
@@ -491,12 +498,11 @@ class AccountServiceTest {
         }
 
         @Test
-        void getIncomingPayments_shouldReturnEmptyList_whenAuthHeaderIsNull() {
+        void getIncomingPayments_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
                 when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
-                final var result = this.accountService.getIncomingPayments(1L);
-
-                assertThat(result).isEmpty();
+                ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                                () -> this.accountService.getIncomingPayments(1L));
         }
 
         @Test
@@ -539,12 +545,11 @@ class AccountServiceTest {
         }
 
         @Test
-        void getAssociatedUsers_shouldReturnEmptyList_whenAuthHeaderIsNull() {
+        void getAssociatedUsers_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
                 when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
-                final var result = this.accountService.getAssociatedUsers(1L);
-
-                assertThat(result).isEmpty();
+                ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                                () -> this.accountService.getAssociatedUsers(1L));
         }
 
         @Test

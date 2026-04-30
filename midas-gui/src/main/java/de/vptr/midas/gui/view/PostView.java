@@ -30,13 +30,14 @@ import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** View for browsing published posts. */
 @Route(value = "posts", layout = MainLayout.class)
 public class PostView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
     private static final Logger LOG = Logger.getLogger(PostView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy");
     private static final int EXCERPT_LENGTH = 200;
+    private static final int CATEGORY_LOAD_TIMEOUT_SECONDS = 15;
 
     @Inject
     PostService postService;
@@ -224,7 +225,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
                     this.availableCategories = List.of();
                     ErrorHandler.handleInUiContext(throwable);
                 },
-                15);
+                CATEGORY_LOAD_TIMEOUT_SECONDS);
     }
 
     private void searchPosts(final String query) {
@@ -232,6 +233,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         try {
             authHeader = this.authService.getAuthorizationHeader();
         } catch (final RuntimeException e) {
+            LOG.error("Failed to get auth header for search", e);
             NotificationUtil.showError("Authentication failed");
             return;
         }

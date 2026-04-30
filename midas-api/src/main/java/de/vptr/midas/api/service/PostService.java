@@ -33,7 +33,7 @@ public class PostService {
 
     private void verifyPostOwnership(final String currentUsername, final PostEntity post) {
         if (currentUsername == null) {
-            return;
+            throw new ValidationException("Authentication required to modify posts.");
         }
         if (post.user != null && !post.user.username.equals(currentUsername)
                 && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
@@ -82,6 +82,16 @@ public class PostService {
     public List<PostResponseDto> findByUserId(final Long userId) {
         final List<PostEntity> posts = PostEntity
                 .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.id = ?1 ORDER BY p.created DESC",
+                        userId)
+                .list();
+        return this.toResponseDtos(posts);
+    }
+
+    /** Returns published posts by the given user. */
+    public List<PostResponseDto> findPublishedByUserId(final Long userId) {
+        final List<PostEntity> posts = PostEntity
+                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
+                        + "WHERE p.user.id = ?1 AND p.published = true ORDER BY p.created DESC",
                         userId)
                 .list();
         return this.toResponseDtos(posts);
@@ -270,6 +280,31 @@ public class PostService {
             final List<PostEntity> posts = PostEntity
                     .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
                             + "WHERE p.created >= ?1 AND p.created <= ?2 ORDER BY p.created DESC",
+                            startDateTime, endDateTime)
+                    .list();
+            return this.toResponseDtos(posts);
+        } catch (final DateTimeParseException e) {
+            throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
+        }
+    }
+
+    /** Returns published posts within the given date range. */
+    public List<PostResponseDto> findPublishedByDateRange(final String startDate, final String endDate) {
+        if (startDate == null || endDate == null) {
+            return this.findPublishedPosts();
+        }
+
+        try {
+            final LocalDate start = LocalDate.parse(startDate);
+            final LocalDate end = LocalDate.parse(endDate);
+
+            final LocalDateTime startDateTime = start.atStartOfDay();
+            final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
+
+            final List<PostEntity> posts = PostEntity
+                    .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
+                            + "WHERE p.created >= ?1 AND p.created <= ?2 AND p.published = true "
+                            + "ORDER BY p.created DESC",
                             startDateTime, endDateTime)
                     .list();
             return this.toResponseDtos(posts);

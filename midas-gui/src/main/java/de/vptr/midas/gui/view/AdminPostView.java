@@ -161,6 +161,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
                 throwable -> {
                     LOG.error("Error loading categories", throwable);
                     this.availableCategories = List.of();
+                    ErrorHandler.handleInUiContext(throwable);
                 },
                 15);
     }

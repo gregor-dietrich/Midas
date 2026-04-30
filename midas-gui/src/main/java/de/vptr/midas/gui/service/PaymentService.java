@@ -126,9 +126,7 @@ public class PaymentService {
             LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.execute(
-                () -> this.paymentClient.getPaymentsBySourceAccount(sourceId, authHeader),
-                this.authService, LOG, "fetching payments for source account " + sourceId);
+        return getPaymentsBySourceAccount(sourceId, authHeader);
     }
 
     /** Returns the payments by source account. */
@@ -153,9 +151,7 @@ public class PaymentService {
             LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.execute(
-                () -> this.paymentClient.getPaymentsByTargetAccount(targetId, authHeader),
-                this.authService, LOG, "fetching payments for target account " + targetId);
+        return getPaymentsByTargetAccount(targetId, authHeader);
     }
 
     /** Returns the payments by target account. */

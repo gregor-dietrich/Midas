@@ -12,6 +12,8 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -22,22 +24,38 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Login view for user authentication. */
 @Route(value = "login", layout = MainLayout.class)
 @PageTitle("Midas - Login")
-public class LoginView extends VerticalLayout {
+public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private static final Logger LOG = Logger.getLogger(LoginView.class);
 
     @Inject
     AuthService authService;
 
+    private boolean initialized = false;
+
     /** Creates a new instance. */
     public LoginView() {
         this.setSizeFull();
         this.setAlignItems(Alignment.CENTER);
         this.setJustifyContentMode(JustifyContentMode.CENTER);
+    }
 
+    @Override
+    public void beforeEnter(final BeforeEnterEvent event) {
+        if (this.authService.isAuthenticated()) {
+            event.forwardTo(HomeView.class);
+            return;
+        }
+        if (!this.initialized) {
+            this.buildUi();
+            this.initialized = true;
+        }
+    }
+
+    private void buildUi() {
         final var title = new H1("Midas - Login");
 
         final var usernameField = new TextField("Username");

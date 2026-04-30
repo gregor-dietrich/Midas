@@ -31,10 +31,9 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing user ranks and permissions. */
 @Route(value = "admin/user-ranks", layout = AdminMainLayout.class)
 public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -51,6 +50,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private Button searchButton;
 
     private AdminUserRankDialog rankDialog;
+    private boolean initialized = false;
 
     /** Creates a new instance. */
     public AdminUserRankView() {
@@ -59,18 +59,16 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         this.setSpacing(true);
     }
 
-    @PostConstruct
-    void init() {
-        this.buildUi();
-    }
-
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
         if (!this.authService.isAuthenticated()) {
             event.forwardTo(LoginView.class);
             return;
         }
-
+        if (!this.initialized) {
+            this.buildUi();
+            this.initialized = true;
+        }
         this.loadRanksAsync();
     }
 

@@ -107,7 +107,6 @@ class PostCommentServiceTest {
                                 "Test Post", 1L, "testuser");
                 final var expectedComments = Collections.singletonList(comment);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.getCommentsByPost(postId, TestUtil.TEST_AUTH_HEADER))
                                 .thenReturn(expectedComments);
@@ -125,7 +124,7 @@ class PostCommentServiceTest {
         void getCommentsByPost_shouldThrowAuthenticationException_whenNotAuthenticated() {
                 // Given
                 final var postId = 1L;
-                when(this.authService.isAuthenticated()).thenReturn(false);
+                when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
                 // When & Then
                 ExceptionTestUtil.assertThrowsUserNotAuthenticated(
@@ -144,7 +143,6 @@ class PostCommentServiceTest {
                                 post.getTitle(), user.getId(), user.getUsername());
                 final var mockResponse = ResponseTestUtil.createOkResponse(expectedComment);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.getComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
@@ -162,7 +160,6 @@ class PostCommentServiceTest {
                 final var commentId = 999L;
                 final var mockResponse = ResponseTestUtil.createNotFoundResponse();
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.getComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
@@ -189,7 +186,6 @@ class PostCommentServiceTest {
                                 post.getTitle(), user.getId(), user.getUsername());
                 final var mockResponse = ResponseTestUtil.createCreatedResponse(createdComment);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.createComment(any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER)))
                                 .thenReturn(mockResponse);
@@ -211,7 +207,6 @@ class PostCommentServiceTest {
                 newComment.setPostId(1L);
                 final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.createComment(any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER)))
                                 .thenReturn(mockResponse);
@@ -240,7 +235,6 @@ class PostCommentServiceTest {
                                 post.getTitle(), user.getId(), user.getUsername());
                 final var mockResponse = ResponseTestUtil.createOkResponse(updatedComment);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.updateComment(eq(1L), any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER)))
                                 .thenReturn(mockResponse);
@@ -261,7 +255,6 @@ class PostCommentServiceTest {
                 final var commentId = 1L;
                 final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.deleteComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
@@ -279,7 +272,6 @@ class PostCommentServiceTest {
                 final var commentId = 1L;
                 final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.deleteComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
@@ -296,7 +288,6 @@ class PostCommentServiceTest {
                 final var postId = 1L;
                 final var webException = ExceptionTestUtil.createWebApplicationException(500);
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.getCommentsByPost(postId, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
 
@@ -311,7 +302,6 @@ class PostCommentServiceTest {
                 final var postId = 1L;
                 final var webException = ExceptionTestUtil.create401Exception();
 
-                when(this.authService.isAuthenticated()).thenReturn(true);
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.getCommentsByPost(postId, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
 

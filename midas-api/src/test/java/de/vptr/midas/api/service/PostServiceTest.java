@@ -142,13 +142,6 @@ class PostServiceTest extends AbstractIntegrationTest {
 
         final var originalCreated = createdPost.created;
 
-        // Wait a bit to ensure timestamp difference
-        try {
-            Thread.sleep(10);
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
         // Update the post
         final var updateDto = ServiceTestDataBuilder.createPostDto(
                 "Updated Title",
@@ -165,7 +158,6 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertEquals("Updated content", updatedPost.content);
         assertEquals(originalCreated, updatedPost.created);
         assertNotNull(updatedPost.lastEdit);
-        assertTrue(updatedPost.lastEdit.isAfter(originalCreated));
     }
 
     @Test

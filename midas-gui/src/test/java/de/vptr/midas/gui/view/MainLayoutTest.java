@@ -24,7 +24,6 @@ import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({ "unchecked", "rawtypes" })
 class MainLayoutTest {
 
     @Mock
@@ -55,6 +54,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldSkipChecks_whenTargetIsBackendErrorView() {
         when(this.event.getNavigationTarget()).thenReturn((Class) BackendErrorView.class);
 
@@ -66,6 +66,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToError_whenBackendUnavailable() {
         when(this.event.getNavigationTarget()).thenReturn((Class) HomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(false);
@@ -76,6 +77,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToError_whenBackendCheckThrows() {
         when(this.event.getNavigationTarget()).thenReturn((Class) HomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenThrow(new RuntimeException("timeout"));
@@ -86,6 +88,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldSkipAuthCheck_whenTargetIsLoginView() {
         when(this.event.getNavigationTarget()).thenReturn((Class) LoginView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
@@ -97,6 +100,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToLogin_whenNotAuthenticated() {
         when(this.event.getNavigationTarget()).thenReturn((Class) HomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
@@ -108,6 +112,7 @@ class MainLayoutTest {
     }
 
     @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldNotForward_whenAuthenticated() {
         when(this.event.getNavigationTarget()).thenReturn((Class) HomeView.class);
         when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);

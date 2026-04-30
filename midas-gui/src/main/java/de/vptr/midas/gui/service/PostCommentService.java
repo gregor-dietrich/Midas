@@ -54,11 +54,12 @@ public class PostCommentService {
     public List<PostCommentResponseDto> getCommentsByPost(final Long postId)
             throws AuthenticationException, ServiceException {
         LOG.infof("Getting comments for post: %s", postId);
-        if (!this.authService.isAuthenticated()) {
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
         return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
             final var response = this.commentClient.getCommentsByPost(postId, authHeader);
             LOG.infof("Successfully retrieved %s comments for post %s", response.size(), postId);
             return response;
@@ -97,13 +98,14 @@ public class PostCommentService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public PostCommentDto getCommentById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting comment by id: %s", id);
-        if (!this.authService.isAuthenticated()) {
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            return this.commentClient.getComment(id, authHeader);
-        }, this.authService, LOG, "getting comment " + id, response -> {
+        return ServiceHelper.executeWithResponse(
+                () -> this.commentClient.getComment(id, authHeader),
+                this.authService, LOG, "getting comment " + id, response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                 final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                         "comment response");
@@ -119,19 +121,17 @@ public class PostCommentService {
     /** Creates a new comment. */
     public PostCommentDto createComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
         LOG.infof("Creating comment for post: %s", comment.getPostId() != null ? comment.getPostId() : "unknown");
-        if (!this.authService.isAuthenticated()) {
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-
-            // Create a simple DTO that matches the backend API expectations
-            final var apiComment = new PostCommentDto();
-            apiComment.setContent(comment.getContent());
-            apiComment.setPostId(comment.getPostId());
-
-            return this.commentClient.createComment(apiComment, authHeader);
-        }, this.authService, LOG, "creating comment", "Failed to create comment", response -> {
+        final var apiComment = new PostCommentDto();
+        apiComment.setContent(comment.getContent());
+        apiComment.setPostId(comment.getPostId());
+        return ServiceHelper.executeWithResponse(
+                () -> this.commentClient.createComment(apiComment, authHeader),
+                this.authService, LOG, "creating comment", "Failed to create comment", response -> {
             if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
                 final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                         "created comment response");
@@ -146,18 +146,16 @@ public class PostCommentService {
     /** Updates the comment. */
     public PostCommentDto updateComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
         LOG.infof("Updating comment: %s", comment.getId());
-        if (!this.authService.isAuthenticated()) {
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-
-            // For PUT operations, only content is needed (postId comes from URL)
-            final var apiComment = new PostCommentDto();
-            apiComment.setContent(comment.getContent());
-
-            return this.commentClient.updateComment(comment.getId(), apiComment, authHeader);
-        }, this.authService, LOG, "updating comment " + comment.getId(), "Failed to update comment", response -> {
+        final var apiComment = new PostCommentDto();
+        apiComment.setContent(comment.getContent());
+        return ServiceHelper.executeWithResponse(
+                () -> this.commentClient.updateComment(comment.getId(), apiComment, authHeader),
+                this.authService, LOG, "updating comment " + comment.getId(), "Failed to update comment", response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                 final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                         "updated comment response");
@@ -172,13 +170,14 @@ public class PostCommentService {
     /** Handles the delete comment operation. */
     public boolean deleteComment(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Deleting comment: %s", id);
-        if (!this.authService.isAuthenticated()) {
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            LOG.warn("No authentication header available");
             throw new AuthenticationException("Authentication required");
         }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            return this.commentClient.deleteComment(id, authHeader);
-        }, this.authService, LOG, "deleting comment " + id, response -> {
+        return ServiceHelper.executeWithResponse(
+                () -> this.commentClient.deleteComment(id, authHeader),
+                this.authService, LOG, "deleting comment " + id, response -> {
             if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()
                     || response.getStatus() == Response.Status.OK.getStatusCode()) {
                 LOG.infof("Successfully deleted comment: %s", id);

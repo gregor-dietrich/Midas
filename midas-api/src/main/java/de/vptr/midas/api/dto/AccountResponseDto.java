@@ -14,7 +14,7 @@ public class AccountResponseDto {
 
     public Long id;
     public String name;
-    public int userCount;
+    public Long userCount;
     public List<Long> associatedUserIds;
     public BigDecimal balance;
     public boolean isNegative;
@@ -31,7 +31,7 @@ public class AccountResponseDto {
     public AccountResponseDto(final AccountEntity entity, final int userCount, final List<Long> associatedUserIds) {
         this.id = entity.id;
         this.name = entity.name;
-        this.userCount = userCount;
+        this.userCount = (long) userCount;
         this.associatedUserIds = associatedUserIds != null ? associatedUserIds : List.of();
         this.balance = null;
         this.created = entity.created;

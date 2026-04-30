@@ -20,11 +20,12 @@ public class ExceptionTestUtil {
 
     /**
      * Assert that an exception is thrown with "Not authenticated" message
+     *
+     * @deprecated Use {@link #assertThrowsUserNotAuthenticated(Runnable)} instead
      */
+    @Deprecated
     public static void assertThrowsNotAuthenticated(final Runnable methodCall) {
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage("Authentication required");
+        assertThrowsUserNotAuthenticated(methodCall);
     }
 
     /**

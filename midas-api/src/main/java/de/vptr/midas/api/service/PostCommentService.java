@@ -6,12 +6,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import de.vptr.midas.api.dto.PostCommentResponseDto;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -42,7 +42,7 @@ public class PostCommentService {
                 .list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns the comment with the given id. */
@@ -62,7 +62,7 @@ public class PostCommentService {
                 .list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns all comments by the given user. */
@@ -73,7 +73,7 @@ public class PostCommentService {
                 .list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns the most recent comments up to the given limit. */
@@ -83,7 +83,7 @@ public class PostCommentService {
                 .page(0, limit).list();
         return comments.stream()
                 .map(PostCommentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Creates a new comment, assigning the current user. */
@@ -201,14 +201,17 @@ public class PostCommentService {
         if (query == null || query.trim().isEmpty()) {
             return this.getAllComments();
         }
-        final var searchTerm = "%" + query.trim().toLowerCase() + "%";
+        final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
+        if (searchTerm == null) {
+            return this.getAllComments();
+        }
         final List<PostCommentEntity> comments = PostCommentEntity.find(
-                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE LOWER(c.content) LIKE ?1 OR LOWER(c.user.username) LIKE ?1",
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE LOWER(c.content) LIKE ?1 ESCAPE '\\' OR LOWER(c.user.username) LIKE ?1 ESCAPE '\\'",
                 searchTerm).page(0, 100).list();
 
         return comments.stream()
                 .map(PostCommentResponseDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /** Returns comments within the given date range. */
@@ -231,7 +234,7 @@ public class PostCommentService {
 
             return comments.stream()
                     .map(PostCommentResponseDto::new)
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (final DateTimeParseException e) {
             throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
         }
@@ -239,8 +242,13 @@ public class PostCommentService {
 
     private void verifyCommentOwnership(final String currentUsername, final PostCommentEntity existingComment,
             final String deniedMessage) {
-        if (existingComment.user != null && currentUsername != null
-                && !existingComment.user.username.equals(currentUsername)
+        if (currentUsername == null) {
+            throw new ValidationException("Authentication required to modify comments.");
+        }
+        if (existingComment.user == null) {
+            throw new ValidationException("Comment has no owner and cannot be modified.");
+        }
+        if (!existingComment.user.username.equals(currentUsername)
                 && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
             throw new WebApplicationException(deniedMessage, Response.Status.FORBIDDEN);
         }

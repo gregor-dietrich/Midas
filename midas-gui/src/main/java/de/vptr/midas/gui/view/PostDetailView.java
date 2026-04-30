@@ -68,7 +68,7 @@ public class PostDetailView extends AbstractAsyncDataView
 
         if (this.identifier == null || this.identifier.trim().isEmpty()) {
             NotificationUtil.showError("Invalid post identifier");
-            event.getUI().navigate(PostView.class);
+            event.forwardTo(PostView.class);
             return;
         }
 

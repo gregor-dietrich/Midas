@@ -27,6 +27,8 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class AccountAccessService {
 
+    private static final int MAX_ACCOUNTS_LIMIT = 100;
+
     @Inject
     AccountResponseAssembler accountResponseAssembler;
 
@@ -99,7 +101,7 @@ public class AccountAccessService {
             final List<PaymentEntity> payments = PaymentEntity.getEntityManager()
                     .createQuery(
                             "SELECT p FROM PaymentEntity p "
-                                    + "LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.userId "
+                                    + "LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user "
                                     + "WHERE p.sourceAccount.id = :accountId OR p.targetAccount.id = :accountId "
                                     + "ORDER BY p.date DESC")
                     .setParameter("accountId", accountId)
@@ -114,7 +116,7 @@ public class AccountAccessService {
     /** Returns all outgoing payments for the given account. */
     public List<PaymentResponseDto> getOutgoingPayments(final Long accountId) {
         return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.userId WHERE p.sourceAccount.id = ?1",
+                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
                         accountId)
                 .list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
@@ -124,7 +126,7 @@ public class AccountAccessService {
     /** Returns all incoming payments for the given account. */
     public List<PaymentResponseDto> getIncomingPayments(final Long accountId) {
         return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.userId WHERE p.targetAccount.id = ?1",
+                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
                         accountId)
                 .list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
@@ -149,6 +151,8 @@ public class AccountAccessService {
     }
 
     /** Returns balances for the given list of account ids. */
+    // TODO P-06: Replace with GROUP BY SQL aggregate to avoid materializing all payment rows.
+    // Current implementation fetches all rows and aggregates in Java.
     @Transactional(Transactional.TxType.SUPPORTS)
     public Map<Long, BigDecimal> getAccountBalances(final List<Long> accountIds) {
         return PerformanceMonitor.time("getAccountBalances(" + accountIds.size() + " accounts)", () -> {
@@ -241,8 +245,9 @@ public class AccountAccessService {
      * Returns all accounts for the current user identified by username (no
      * pagination support backward compat).
      */
+    // NOTE: Results are capped at MAX_ACCOUNTS_LIMIT. Pagination not yet implemented.
     public List<AccountResponseDto> getAccountsForCurrentUser(final String username) {
-        return this.getAccountsForCurrentUser(username, 0, 100);
+        return this.getAccountsForCurrentUser(username, 0, MAX_ACCOUNTS_LIMIT);
     }
 
     /** Returns true if the user has access to the given account. */

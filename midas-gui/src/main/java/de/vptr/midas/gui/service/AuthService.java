@@ -177,7 +177,10 @@ public class AuthService {
     /**
      * Returns the authorization header for backward compatibility with existing
      * callers.
+     *
+     * @deprecated Use {@link #getAuthorizationHeader()} instead.
      */
+    @Deprecated
     public String getBasicAuthHeader() {
         return this.getAuthorizationHeader();
     }

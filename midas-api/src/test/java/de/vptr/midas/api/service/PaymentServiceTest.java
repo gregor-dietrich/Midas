@@ -439,7 +439,7 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByIdDeniedWhenPaymentHasNoAccounts() {
         final PaymentEntity malformedPayment = new PaymentEntity();
-        malformedPayment.userId = this.testUser;
+        malformedPayment.user = this.testUser;
         malformedPayment.comment = "Malformed payment";
         malformedPayment.date = LocalDate.now();
         malformedPayment.amount = new BigDecimal("10.00");
@@ -454,7 +454,7 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testPatchPaymentDeniedWhenPaymentHasNoAccounts() {
         final PaymentEntity malformedPayment = new PaymentEntity();
-        malformedPayment.userId = this.testUser;
+        malformedPayment.user = this.testUser;
         malformedPayment.comment = "Malformed payment";
         malformedPayment.date = LocalDate.now();
         malformedPayment.amount = new BigDecimal("10.00");

@@ -31,8 +31,8 @@ public class PaymentResponseDto {
         this.targetAccountName = entity.targetAccount != null ? entity.targetAccount.name : null;
         this.sourceAccountId = entity.sourceAccount != null ? entity.sourceAccount.id : null;
         this.sourceAccountName = entity.sourceAccount != null ? entity.sourceAccount.name : null;
-        this.userId = entity.userId != null ? entity.userId.id : null;
-        this.username = entity.userId != null ? entity.userId.username : null;
+        this.userId = entity.user != null ? entity.user.id : null;
+        this.username = entity.user != null ? entity.user.username : null;
         this.comment = entity.comment;
         this.date = entity.date;
         this.amount = entity.amount;

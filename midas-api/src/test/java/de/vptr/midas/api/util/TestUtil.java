@@ -9,11 +9,11 @@ import io.restassured.specification.RequestSpecification;
  */
 public class TestUtil {
 
-    public static final String ADMIN_USERNAME = "admin";
-    public static final String ADMIN_PASSWORD = "admin";
+    public static final String ADMIN_USERNAME = System.getProperty("test.admin.username", "admin");
+    public static final String ADMIN_PASSWORD = System.getProperty("test.admin.password", "admin");
 
-    public static final String GUEST_USERNAME = "guest";
-    public static final String GUEST_PASSWORD = "guest";
+    public static final String GUEST_USERNAME = System.getProperty("test.guest.username", "guest");
+    public static final String GUEST_PASSWORD = System.getProperty("test.guest.password", "guest");
 
     private TestUtil() {
         // Utility class

@@ -35,13 +35,17 @@ public class UserRankResource {
     @Inject
     UserRankService rankService;
 
+    // No "user-rank:view" role exists in the current security model; use "user-rank:edit"
+    // as the closest privilege that grants read access to rank definitions.
     @GET
+    @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public List<UserRankResponseDto> getAllRanks() {
         return this.rankService.getAllRanks();
     }
 
     @GET
     @Path("/{id}")
+    @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public Response getRank(@PathParam("id") @Min(1) final Long id) {
         return ResponseUtil.okOrNotFound(
                 this.rankService.findById(id));
@@ -49,6 +53,7 @@ public class UserRankResource {
 
     @GET
     @Path("/name/{name}")
+    @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public Response getRankByName(@PathParam("name") @Size(max = 255) final String name) {
         return ResponseUtil.okOrNotFound(
                 this.rankService.findByName(name));
@@ -57,6 +62,7 @@ public class UserRankResource {
     /** Returns all ranks matching the search query. */
     @GET
     @Path("/search")
+    @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public List<UserRankResponseDto> searchRanks(@QueryParam("query") final String query) {
         if (query == null || query.trim().isEmpty()) {
             return this.getAllRanks();

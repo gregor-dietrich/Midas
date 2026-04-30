@@ -304,6 +304,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void resetSearchButton() {
         this.searchButton.setEnabled(true);
-        this.searchButton.setText("Search");
+        this.searchButton.setText("Search Pages");
     }
 }

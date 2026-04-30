@@ -30,10 +30,12 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
+import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing user groups. */
 @Route(value = "admin/user-groups", layout = AdminMainLayout.class)
 public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -65,7 +67,10 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
+        try {
+            this.authService.requireAuthorizationHeader();
+        } catch (final AuthenticationException e) {
+            LOG.debugf("Authentication required: %s", e.getMessage());
             event.forwardTo(LoginView.class);
             return;
         }
@@ -85,7 +90,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         }
 
         this.loadDataAsync(
-                () -> this.groupService.getAllGroups(authHeader, 0, 50),
+                () -> this.groupService.getAllGroups(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 result -> this.grid.setItems(result));
     }
 
@@ -225,9 +230,9 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
                     this.searchButton.setEnabled(true);
                     this.grid.setItems(result);
                 },
-                _ -> {
+                throwable -> {
                     this.searchButton.setEnabled(true);
-                    NotificationUtil.showError("Failed to search groups");
+                    ErrorHandler.handleInUiContext(throwable);
                 });
     }
 

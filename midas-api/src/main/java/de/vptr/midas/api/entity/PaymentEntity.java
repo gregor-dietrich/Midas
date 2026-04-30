@@ -46,7 +46,7 @@ public class PaymentEntity extends PanacheEntityBase {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    public UserEntity userId;
+    public UserEntity user;
 
     @NotBlank
     public String comment;
@@ -73,7 +73,7 @@ public class PaymentEntity extends PanacheEntityBase {
 
     // Helper methods for queries
     public static List<PaymentEntity> findByUserId(final Long userId) {
-        return find("userId.id", userId).list();
+        return find("user.id", userId).list();
     }
 
     public static List<PaymentEntity> findBySourceAccountId(final Long sourceId) {
@@ -96,7 +96,7 @@ public class PaymentEntity extends PanacheEntityBase {
     /** Returns the total payment amount for the given user. */
     public static BigDecimal getTotalAmountByUser(final Long userId) {
         return getEntityManager()
-                .createQuery("SELECT SUM(p.amount) FROM PaymentEntity p WHERE p.userId.id = :userId", BigDecimal.class)
+                .createQuery("SELECT SUM(p.amount) FROM PaymentEntity p WHERE p.user.id = :userId", BigDecimal.class)
                 .setParameter("userId", userId)
                 .getSingleResult();
     }

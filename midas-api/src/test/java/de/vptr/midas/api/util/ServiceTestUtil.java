@@ -11,6 +11,9 @@ import de.vptr.midas.api.service.UserService;
  */
 public class ServiceTestUtil {
 
+    private static final org.jboss.logging.Logger LOG =
+            org.jboss.logging.Logger.getLogger(ServiceTestUtil.class);
+
     private ServiceTestUtil() {
         // Utility class
     }
@@ -63,9 +66,11 @@ public class ServiceTestUtil {
      * Sets up a test category and returns the entity
      */
     public static PostCategoryEntity setupTestCategory() {
-        PostCategoryEntity testCategory = PostCategoryEntity.find("name", "Test Category").firstResult();
+        final String uniqueName = "Test Category " + TestUtil.generateUniqueSuffix();
+        PostCategoryEntity testCategory = PostCategoryEntity.find("name", uniqueName).firstResult();
         if (testCategory == null) {
             testCategory = ServiceTestDataBuilder.createUniquePostCategoryEntity();
+            testCategory.name = uniqueName;
             testCategory.persist();
         }
         return testCategory;
@@ -79,7 +84,7 @@ public class ServiceTestUtil {
             final var deleteAllMethod = entityClass.getMethod("deleteAll");
             deleteAllMethod.invoke(null);
         } catch (final Exception e) {
-            // If deleteAll is not available, ignore
+            LOG.warnf("Cleanup failed for %s: %s", entityClass.getSimpleName(), e.getMessage());
         }
     }
 }

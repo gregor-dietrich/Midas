@@ -37,6 +37,9 @@ import jakarta.ws.rs.core.SecurityContext;
 @Authenticated
 public class UserResource {
 
+    /** Default rank ID assigned to newly registered users ("User" rank). */
+    private static final long DEFAULT_USER_RANK_ID = 2L;
+
     @Inject
     UserService userService;
 
@@ -76,8 +79,9 @@ public class UserResource {
     @RolesAllowed({ "user:add" })
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        if (userDto.rankId != null && userDto.rankId != 2L && !this.securityContext.isUserInRole("user-rank:edit")) {
-            userDto.rankId = 2L; // Default user rank
+        if (userDto.rankId != null && userDto.rankId != DEFAULT_USER_RANK_ID
+                && !this.securityContext.isUserInRole("user-rank:edit")) {
+            userDto.rankId = DEFAULT_USER_RANK_ID;
         }
         final UserResponseDto created = this.userService.createUser(userDto);
         return ResponseUtil.created(created);
@@ -91,9 +95,9 @@ public class UserResource {
     }
 
     @GET
-    @Path("/email/{email}")
+    @Path("/email")
     @RolesAllowed({ "user:delete", "user:edit" })
-    public Response getUserByEmail(@PathParam("email") @Size(max = 255) final String email) {
+    public Response getUserByEmail(@QueryParam("email") @Size(max = 255) final String email) {
         return ResponseUtil.okOrNotFound(this.userService.findByEmail(email));
     }
 

@@ -21,7 +21,7 @@ public class UserResponseDto {
     public Long postsCount;
     public Long commentsCount;
     // Populated when user is returned in account context (per-account association flag)
-    public boolean isNegative;
+    public Boolean isNegative;
 
     public UserResponseDto() {
     }

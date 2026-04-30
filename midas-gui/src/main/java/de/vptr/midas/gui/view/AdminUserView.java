@@ -32,10 +32,10 @@ import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.PostConstruct;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing application users. */
 @Route(value = "admin/users", layout = AdminMainLayout.class)
 public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -56,6 +56,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
 
     private AdminUserDialog userDialog;
     private List<UserRankResponseDto> availableRanks;
+    private boolean initialized = false;
 
     /** Creates a new instance. */
     public AdminUserView() {
@@ -64,18 +65,16 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.setSpacing(true);
     }
 
-    @PostConstruct
-    void init() {
-        this.buildUi();
-    }
-
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
         if (!this.authService.isAuthenticated()) {
             event.forwardTo(LoginView.class);
             return;
         }
-
+        if (!this.initialized) {
+            this.buildUi();
+            this.initialized = true;
+        }
         this.loadRanksAsync();
         this.loadUsersAsync();
     }
@@ -95,7 +94,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         }
 
         this.loadDataAsync(
-                () -> this.userService.getAllUsers(authHeader, 0, 50),
+                () -> this.userService.getAllUsers(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 users -> {
                     LOG.infof("Successfully loaded %s users", users.size());
                     this.grid.setItems(users);
@@ -121,6 +120,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
                 },
                 throwable -> {
                     LOG.error("Error loading ranks", throwable);
+                    ErrorHandler.handleInUiContext(throwable);
                 });
     }
 

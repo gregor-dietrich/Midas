@@ -106,7 +106,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         if (accountIdStr == null || accountIdStr.isEmpty()) {
             NotificationUtil.showError("Invalid account ID");
-            event.getUI().navigate(AccountView.class);
+            event.forwardTo(AccountView.class);
             return;
         }
 
@@ -114,7 +114,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             this.accountId = Long.parseLong(accountIdStr);
         } catch (final NumberFormatException e) {
             NotificationUtil.showError("Invalid account ID format");
-            event.getUI().navigate(AccountView.class);
+            event.forwardTo(AccountView.class);
             return;
         }
 

@@ -37,9 +37,10 @@ import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin view for managing payments. */
 @Route(value = "admin/payments", layout = AdminMainLayout.class)
 public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -97,7 +98,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         }
 
         this.loadDataAsync(
-                () -> this.paymentService.getAllPayments(authHeader, 0, 50),
+                () -> this.paymentService.getAllPayments(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 payments -> {
                     LOG.infof("Successfully loaded %s payments", payments.size());
                     this.grid.setItems(payments);
@@ -117,7 +118,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         }
 
         this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(authHeader, 0, 100),
+                () -> this.accountService.getAllAccounts(authHeader, 0, UiConstants.LARGE_PAGE_SIZE),
                 accounts -> {
                     LOG.infof("Successfully loaded %s accounts", accounts.size());
                     this.availableAccounts = accounts;

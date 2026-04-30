@@ -23,19 +23,28 @@ public class ResponseUtil {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 
+    /** Returns 404 Not Found with a structured error body. */
     public static Response notFound() {
-        return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity(new de.vptr.midas.api.exception.ApiErrorResponse(
+                        404, "Not Found", "The requested resource was not found."))
+                .build();
     }
 
     public static Response ok() {
         return Response.status(Response.Status.OK).build();
     }
 
+    /**
+     * Returns 200 OK with the entity body, or 204 No Content if entity is null.
+     */
     public static <T> Response ok(final T entity) {
         return entity == null ? noContent() : Response.status(Response.Status.OK).entity(entity).build();
     }
 
-    /** Processes the request and returns the result. */
+    /**
+     * Returns 200 OK with the entity if present, or 404 Not Found with a structured error body if absent.
+     */
     public static <T> Response okOrNotFound(final Optional<T> entity) {
         return entity.map(Response::ok)
                 .map(Response.ResponseBuilder::build)

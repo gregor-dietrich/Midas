@@ -9,7 +9,7 @@ import com.vaadin.flow.router.Route;
 import de.vptr.midas.gui.service.AuthService;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** Admin home view displaying welcome message. */
 @Route(value = "admin", layout = AdminMainLayout.class)
 public class AdminHomeView extends VerticalLayout implements BeforeEnterObserver {
 
@@ -23,6 +23,10 @@ public class AdminHomeView extends VerticalLayout implements BeforeEnterObserver
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
+        if (!this.authService.isAuthenticated()) {
+            event.forwardTo(LoginView.class);
+            return;
+        }
         this.buildUi();
     }
 

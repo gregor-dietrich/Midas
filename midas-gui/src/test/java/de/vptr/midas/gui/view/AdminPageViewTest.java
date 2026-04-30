@@ -50,7 +50,7 @@ class AdminPageViewTest {
         this.view.handleSearchError(new AuthenticationException("Session expired"));
 
         assertThat(this.searchButton.isEnabled()).isTrue();
-        assertThat(this.searchButton.getText()).isEqualTo("Search");
+        assertThat(this.searchButton.getText()).isEqualTo("Search Pages");
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
         verify(this.ui).navigate(LoginView.class);
     }

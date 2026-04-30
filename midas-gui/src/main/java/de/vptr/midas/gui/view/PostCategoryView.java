@@ -12,12 +12,13 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
-/** Component. */
+/** View for browsing post categories. */
 @Route(value = "categories", layout = MainLayout.class)
 public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnterObserver {
 
@@ -41,7 +42,10 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
+        try {
+            this.authService.requireAuthorizationHeader();
+        } catch (final AuthenticationException e) {
+            LOG.debugf("Authentication required: %s", e.getMessage());
             event.forwardTo(LoginView.class);
             return;
         }

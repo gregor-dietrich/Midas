@@ -30,7 +30,9 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCommentService;
+import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
 /** Component. */
@@ -85,7 +87,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         }
 
         this.loadDataAsync(
-                () -> this.commentService.getAllComments(authHeader, 0, 50),
+                () -> this.commentService.getAllComments(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
                 comments -> {
                     LOG.infof("Successfully loaded %s comments", comments.size());
                     this.grid.setItems(comments);
@@ -240,9 +242,9 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
                     LOG.infof("Successfully found %s comments", comments.size());
                     this.grid.setItems(comments);
                 },
-                _ -> {
+                throwable -> {
                     this.searchButton.setEnabled(true);
-                    NotificationUtil.showError("Failed to search comments");
+                    ErrorHandler.handleInUiContext(throwable);
                 });
     }
 

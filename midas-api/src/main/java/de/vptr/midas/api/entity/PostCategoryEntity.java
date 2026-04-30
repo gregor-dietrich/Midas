@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -46,9 +47,11 @@ public class PostCategoryEntity extends PanacheEntityBase {
     @JoinColumn(name = "parent_id")
     public PostCategoryEntity parent;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "parent", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<PostCategoryEntity> children;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     public List<PostEntity> posts;
 

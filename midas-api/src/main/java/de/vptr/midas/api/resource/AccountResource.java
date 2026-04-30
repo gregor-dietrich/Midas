@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import de.vptr.midas.api.dto.AccountAccessResponseDto;
+import de.vptr.midas.api.dto.AccountAssociationResponseDto;
 import de.vptr.midas.api.dto.AccountDto;
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentDto;
@@ -70,7 +72,7 @@ public class AccountResource {
         return this.accountService.getAllAccounts(safePage, safeSize);
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns the account with the given ID. */
     @GET
     @Path("/{id}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
@@ -82,7 +84,7 @@ public class AccountResource {
         return ResponseUtil.notFound();
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns the account with the given name. */
     @GET
     @Path("/name/{name}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
@@ -135,7 +137,7 @@ public class AccountResource {
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns the balance for the account the current user has access to. */
     @GET
     @Path("/my/{id}/balance")
     public Response getMyAccountBalance(@PathParam("id") @Min(1) final Long accountId) {
@@ -144,7 +146,7 @@ public class AccountResource {
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns all payments for the current user's account. */
     @GET
     @Path("/my/{accountId}/payments")
     public List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountId") @Min(1) final Long accountId) {
@@ -152,7 +154,7 @@ public class AccountResource {
         return this.accountAccessService.getAccountPayments(accountId);
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns all outgoing payments for the current user's account. */
     @GET
     @Path("/my/{accountId}/payments/outgoing")
     public List<PaymentResponseDto> getMyAccountOutgoingPayments(@PathParam("accountId") @Min(1) final Long accountId) {
@@ -160,7 +162,7 @@ public class AccountResource {
         return this.accountAccessService.getOutgoingPayments(accountId);
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns all incoming payments for the current user's account. */
     @GET
     @Path("/my/{accountId}/payments/incoming")
     public List<PaymentResponseDto> getMyAccountIncomingPayments(@PathParam("accountId") @Min(1) final Long accountId) {
@@ -184,7 +186,7 @@ public class AccountResource {
         return this.accountAccessService.getAccountsForCurrentUser(username);
     }
 
-    /** Processes the request and returns the result. */
+    /** Returns all accounts with normalized pagination and balance information. */
     @GET
     @Path("/my/with-balances")
     public List<AccountResponseDto> getMyAccountsWithBalances(
@@ -232,16 +234,16 @@ public class AccountResource {
     public Response checkUserAccountAssociation(@PathParam("userId") @Min(1) final Long userId,
             @PathParam("accountId") @Min(1) final Long accountId) {
         final boolean isAssociated = this.accountAccessService.isUserAssociatedWithAccount(userId, accountId);
-        return ResponseUtil.ok("{\"associated\": " + isAssociated + "}");
+        return ResponseUtil.ok(new AccountAssociationResponseDto(isAssociated));
     }
 
-    /** Processes the request and returns the result. */
+    /** Checks whether the current user has access to the given account. */
     @GET
     @Path("/my/{accountId}/check")
     public Response checkMyAccountAccess(@PathParam("accountId") @Min(1) final Long accountId) {
         final String username = this.requireCurrentUsername();
         final boolean hasAccess = this.accountAccessService.hasUserAccessToAccount(username, accountId);
-        return ResponseUtil.ok("{\"hasAccess\": " + hasAccess + "}");
+        return ResponseUtil.ok(new AccountAccessResponseDto(hasAccess));
     }
 
     /** Processes the request and returns the result. */
@@ -410,8 +412,8 @@ public class AccountResource {
 
         // Keep existing attribution for shared-account edits; never trust
         // caller-supplied userId.
-        if (existingPayment.userId != null) {
-            paymentDto.userId = existingPayment.userId.id;
+        if (existingPayment.user != null) {
+            paymentDto.userId = existingPayment.user.id;
         } else {
             paymentDto.userId = this.getCurrentUser(username).id;
         }

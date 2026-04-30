@@ -51,11 +51,12 @@ public class UserRankService {
     /** Creates a new user rank. */
     @Transactional
     public UserRankResponseDto createRank(final UserRankDto rankDto) {
-        final UserRankEntity rank = new UserRankEntity();
+        UserRankEntity rank = new UserRankEntity();
         rank.name = rankDto.name;
         this.mapPermissions(rank, rankDto);
 
-        rank.persist();
+        rank.persistAndFlush();
+        rank = UserRankEntity.findById(rank.id);
         return new UserRankResponseDto(rank, 0L);
     }
 
@@ -95,35 +96,91 @@ public class UserRankService {
 
     /** Full replacement — null defaults to false. Used by create/update. */
     private void mapPermissions(final UserRankEntity rank, final UserRankDto dto) {
-        rank.adminView = dto.adminView != null ? dto.adminView : false;
-        rank.pageAdd = dto.pageAdd != null ? dto.pageAdd : false;
-        rank.pageDelete = dto.pageDelete != null ? dto.pageDelete : false;
-        rank.pageEdit = dto.pageEdit != null ? dto.pageEdit : false;
-        rank.postAdd = dto.postAdd != null ? dto.postAdd : false;
-        rank.postDelete = dto.postDelete != null ? dto.postDelete : false;
-        rank.postEdit = dto.postEdit != null ? dto.postEdit : false;
-        rank.postCategoryAdd = dto.postCategoryAdd != null ? dto.postCategoryAdd : false;
-        rank.postCategoryDelete = dto.postCategoryDelete != null ? dto.postCategoryDelete : false;
-        rank.postCategoryEdit = dto.postCategoryEdit != null ? dto.postCategoryEdit : false;
-        rank.postCommentAdd = dto.postCommentAdd != null ? dto.postCommentAdd : false;
-        rank.postCommentDelete = dto.postCommentDelete != null ? dto.postCommentDelete : false;
-        rank.postCommentEdit = dto.postCommentEdit != null ? dto.postCommentEdit : false;
-        rank.userAdd = dto.userAdd != null ? dto.userAdd : false;
-        rank.userDelete = dto.userDelete != null ? dto.userDelete : false;
-        rank.userEdit = dto.userEdit != null ? dto.userEdit : false;
-        rank.userGroupAdd = dto.userGroupAdd != null ? dto.userGroupAdd : false;
-        rank.userGroupDelete = dto.userGroupDelete != null ? dto.userGroupDelete : false;
-        rank.userGroupEdit = dto.userGroupEdit != null ? dto.userGroupEdit : false;
-        rank.userAccountAdd = dto.userAccountAdd != null ? dto.userAccountAdd : false;
-        rank.userAccountDelete = dto.userAccountDelete != null ? dto.userAccountDelete : false;
-        rank.userAccountEdit = dto.userAccountEdit != null ? dto.userAccountEdit : false;
-        rank.userRankAdd = dto.userRankAdd != null ? dto.userRankAdd : false;
-        rank.userRankDelete = dto.userRankDelete != null ? dto.userRankDelete : false;
-        rank.userRankEdit = dto.userRankEdit != null ? dto.userRankEdit : false;
+        applyPermissionsFromDto(rank, dto);
+        if (dto.adminView == null) {
+            rank.adminView = false;
+        }
+        if (dto.pageAdd == null) {
+            rank.pageAdd = false;
+        }
+        if (dto.pageDelete == null) {
+            rank.pageDelete = false;
+        }
+        if (dto.pageEdit == null) {
+            rank.pageEdit = false;
+        }
+        if (dto.postAdd == null) {
+            rank.postAdd = false;
+        }
+        if (dto.postDelete == null) {
+            rank.postDelete = false;
+        }
+        if (dto.postEdit == null) {
+            rank.postEdit = false;
+        }
+        if (dto.postCategoryAdd == null) {
+            rank.postCategoryAdd = false;
+        }
+        if (dto.postCategoryDelete == null) {
+            rank.postCategoryDelete = false;
+        }
+        if (dto.postCategoryEdit == null) {
+            rank.postCategoryEdit = false;
+        }
+        if (dto.postCommentAdd == null) {
+            rank.postCommentAdd = false;
+        }
+        if (dto.postCommentDelete == null) {
+            rank.postCommentDelete = false;
+        }
+        if (dto.postCommentEdit == null) {
+            rank.postCommentEdit = false;
+        }
+        if (dto.userAdd == null) {
+            rank.userAdd = false;
+        }
+        if (dto.userDelete == null) {
+            rank.userDelete = false;
+        }
+        if (dto.userEdit == null) {
+            rank.userEdit = false;
+        }
+        if (dto.userGroupAdd == null) {
+            rank.userGroupAdd = false;
+        }
+        if (dto.userGroupDelete == null) {
+            rank.userGroupDelete = false;
+        }
+        if (dto.userGroupEdit == null) {
+            rank.userGroupEdit = false;
+        }
+        if (dto.userAccountAdd == null) {
+            rank.userAccountAdd = false;
+        }
+        if (dto.userAccountDelete == null) {
+            rank.userAccountDelete = false;
+        }
+        if (dto.userAccountEdit == null) {
+            rank.userAccountEdit = false;
+        }
+        if (dto.userRankAdd == null) {
+            rank.userRankAdd = false;
+        }
+        if (dto.userRankDelete == null) {
+            rank.userRankDelete = false;
+        }
+        if (dto.userRankEdit == null) {
+            rank.userRankEdit = false;
+        }
     }
 
     /** Partial update — only overwrites non-null fields. Used by patch. */
     private void patchPermissions(final UserRankEntity rank, final UserRankDto dto) {
+        applyPermissionsFromDto(rank, dto);
+    }
+
+    /** Applies non-null permission fields from the DTO to the entity. */
+    private void applyPermissionsFromDto(final UserRankEntity rank, final UserRankDto dto) {
         if (dto.adminView != null) {
             rank.adminView = dto.adminView;
         }
