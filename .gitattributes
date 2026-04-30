@@ -1,2 +1,9 @@
+* text=auto eol=lf
+.github/** linguist-vendored
+midas-*/.mvn/** linguist-vendored
+midas-*/mvnw linguist-vendored
+midas-*/mvnw.cmd linguist-vendored
 midas-gui/*.ts linguist-vendored
 midas-gui/src/main/frontend/** linguist-vendored
+scripts/**  linguist-vendored
+Makefile linguist-vendored
