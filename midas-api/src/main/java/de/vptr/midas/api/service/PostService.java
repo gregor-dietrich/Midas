@@ -78,7 +78,6 @@ public class PostService {
         return this.toResponseDtos(posts);
     }
 
-    /** Returns all posts by the given user. */
     /** Returns all posts by the given user with default pagination. */
     public List<PostResponseDto> findByUserId(final Long userId) {
         return findByUserId(userId, 0, 20);

@@ -55,7 +55,6 @@ public class PostCommentService {
                 .map(PostCommentResponseDto::new);
     }
 
-    /** Returns all comments for the given post. */
     /** Returns all comments for the given post with default pagination. */
     public List<PostCommentResponseDto> findByPostId(final Long postId) {
         return findByPostId(postId, 0, 20);

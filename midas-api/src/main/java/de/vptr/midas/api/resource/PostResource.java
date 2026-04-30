@@ -76,6 +76,7 @@ public class PostResource {
         return ResponseUtil.okOrNotFound(this.postService.findById(id));
     }
 
+    /** Returns published posts by user with pagination. */
     @GET
     @Path("/user/{userId}")
     // TODO: add an admin-only path that returns all posts (including drafts) for a user.
@@ -88,6 +89,7 @@ public class PostResource {
         return this.postService.findPublishedByUserId(userId, safePage, safeSize);
     }
 
+    /** Returns published posts by category with pagination. */
     @GET
     @Path("/category/{categoryId}")
     @PermitAll

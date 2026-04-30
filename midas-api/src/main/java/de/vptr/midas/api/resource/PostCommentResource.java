@@ -62,6 +62,7 @@ public class PostCommentResource {
         return ResponseUtil.okOrNotFound(this.commentService.findById(id));
     }
 
+    /** Returns comments for a post with pagination. */
     @GET
     @Path("/post/{postId}")
     @PermitAll
@@ -74,6 +75,7 @@ public class PostCommentResource {
         return this.commentService.findByPostId(postId, safePage, safeSize);
     }
 
+    /** Returns comments by user with pagination. */
     @GET
     @Path("/user/{userId}")
     @Authenticated
