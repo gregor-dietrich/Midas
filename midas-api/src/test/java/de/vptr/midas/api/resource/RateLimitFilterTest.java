@@ -243,7 +243,9 @@ class RateLimitFilterTest {
                     "midas.rate-limit.auth.permits", "2",
                     "midas.rate-limit.auth-failure.permits", "2",
                     "midas.rate-limit.period-seconds", "60",
-                    "midas.rate-limit.bucket.max-entries", "2");
+                    "midas.rate-limit.bucket.max-entries", "2",
+                    // Tests simulate a trusted reverse-proxy environment
+                    "rate-limit.trust-forwarded-for", "true");
         }
     }
 }
