@@ -1,10 +1,11 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,8 +21,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for user rank operations. */
 @ApplicationScoped
 public class UserRankService {
 
@@ -44,7 +44,7 @@ public class UserRankService {
     AuthService authService;
 
     /** Returns the all ranks. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserRankResponseDto> getAllRanks()
             throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all ranks");
@@ -55,7 +55,7 @@ public class UserRankService {
     }
 
     /** Returns the current user rank. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public UserRankResponseDto getCurrentUserRank() {
         final var emptyRank = new UserRankResponseDto();
 
@@ -121,7 +121,7 @@ public class UserRankService {
     }
 
     /** Returns the rank by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public UserRankResponseDto getRankById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting user rank by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -171,7 +171,7 @@ public class UserRankService {
     }
 
     /** Handles the search ranks operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserRankResponseDto> searchRanks(final String query)
             throws AuthenticationException, ServiceException {
         LOG.debugf("Searching ranks with query: %s", query);

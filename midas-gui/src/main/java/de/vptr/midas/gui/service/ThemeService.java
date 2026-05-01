@@ -24,10 +24,20 @@ public class ThemeService {
             this.themeVariant = themeVariant;
         }
 
+        /**
+         * Returns the display name of this theme.
+         *
+         * @return the display name
+         */
         public String getDisplayName() {
             return this.displayName;
         }
 
+        /**
+         * Returns the theme variant string used by Vaadin.
+         *
+         * @return the theme variant, or {@code null} for default
+         */
         public String getThemeVariant() {
             return this.themeVariant;
         }

@@ -267,7 +267,7 @@ public class AccountResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "user-account:edit" })
-    public Response patchAccount(@PathParam("id") @Min(1) final Long id, @Valid final AccountDto accountDto) {
+    public Response patchAccount(@PathParam("id") @Min(1) final Long id, final AccountDto accountDto) {
         final var updated = this.accountService.patchAccount(id, accountDto);
         return ResponseUtil.ok(updated);
     }
@@ -341,40 +341,7 @@ public class AccountResource {
     public Response createMyAccountPayment(@PathParam("accountId") @Min(1) final Long accountId,
             @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
-        final UserEntity currentUser = this.getCurrentUser(username);
-
-        // Verify user has access to the account(s) in the payment
-        if (paymentDto.sourceAccountId != null && paymentDto.sourceAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
-                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-            }
-        }
-        if (paymentDto.targetAccountId != null && paymentDto.targetAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
-                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-            }
-        }
-
-        // Ignore caller-supplied userId on user-facing endpoints.
-        paymentDto.userId = currentUser.id;
-
-        // Verify that if there's a different source account involved, user has access
-        // to it
-        if (paymentDto.sourceAccountId != null && !paymentDto.sourceAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
-                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-            }
-        }
-
-        // Verify that if there's a different target account involved, user has access
-        // to it
-        if (paymentDto.targetAccountId != null && !paymentDto.targetAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
-                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-            }
-        }
-
-        final PaymentResponseDto created = this.paymentService.createPayment(paymentDto);
+        final PaymentResponseDto created = this.paymentService.createPaymentForUser(paymentDto, username, accountId);
         return ResponseUtil.created(created);
     }
 
@@ -385,61 +352,9 @@ public class AccountResource {
             @PathParam("paymentId") @Min(1) final Long paymentId,
             @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
-
-        // First verify user has access to the account
-        if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
-            throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
-        }
-
-        // Get existing payment to verify it belongs to the account
-        final PaymentEntity existingPayment = PaymentEntity.findById(paymentId);
-        if (existingPayment == null) {
-            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
-        }
-
-        // Verify payment is associated with the account
-        boolean paymentBelongsToAccount = false;
-        if (existingPayment.sourceAccount != null && existingPayment.sourceAccount.id.equals(accountId)) {
-            paymentBelongsToAccount = true;
-        }
-        if (existingPayment.targetAccount != null && existingPayment.targetAccount.id.equals(accountId)) {
-            paymentBelongsToAccount = true;
-        }
-
-        if (!paymentBelongsToAccount) {
-            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
-        }
-
-        // Keep existing attribution for shared-account edits; never trust
-        // caller-supplied userId.
-        if (existingPayment.user != null) {
-            paymentDto.userId = existingPayment.user.id;
-        } else {
-            paymentDto.userId = this.getCurrentUser(username).id;
-        }
-
-        // Verify user has access to all accounts in the updated payment
-        if (paymentDto.sourceAccountId != null) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
-                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-            }
-        }
-        if (paymentDto.targetAccountId != null) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
-                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-            }
-        }
-
-        final PaymentResponseDto updated = this.paymentService.updatePayment(paymentId, paymentDto, username);
+        final PaymentResponseDto updated = this.paymentService.updatePaymentForUser(paymentId, paymentDto, username,
+                accountId);
         return ResponseUtil.ok(updated);
-    }
-
-    private UserEntity getCurrentUser(final String username) {
-        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-        if (currentUser == null) {
-            throw new WebApplicationException("Current user not found", Response.Status.BAD_REQUEST);
-        }
-        return currentUser;
     }
 
     private String requireCurrentUsername() {

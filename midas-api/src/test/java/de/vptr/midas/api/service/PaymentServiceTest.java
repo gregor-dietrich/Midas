@@ -508,7 +508,7 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         dto.comment = "test";
         dto.date = LocalDate.now();
         dto.amount = new BigDecimal("10.00");
-        assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
+        assertThrows(IllegalArgumentException.class, () -> this.paymentService.createPayment(dto));
     }
 
     @Test
@@ -537,7 +537,7 @@ class PaymentServiceTest extends AbstractIntegrationTest {
 
     @Test
     @TestTransaction
-    void testCreatePaymentValidationZeroAmount() {
+    void testCreatePaymentWithZeroAmount() {
         final var dto = new PaymentDto();
         dto.sourceAccountId = this.testSourceAccount.id;
         dto.targetAccountId = this.testTargetAccount.id;
@@ -545,7 +545,9 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         dto.comment = "test";
         dto.date = LocalDate.now();
         dto.amount = BigDecimal.ZERO;
-        assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
+        final var created = this.paymentService.createPayment(dto);
+        assertNotNull(created);
+        assertEquals(BigDecimal.ZERO.compareTo(created.amount), 0);
     }
 
     @Test

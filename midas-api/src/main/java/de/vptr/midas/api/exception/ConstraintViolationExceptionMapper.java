@@ -13,7 +13,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     @Override
     public Response toResponse(final ConstraintViolationException exception) {
         final var message = exception.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .map(violation -> violation.getMessage())
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("Validation failed");
 

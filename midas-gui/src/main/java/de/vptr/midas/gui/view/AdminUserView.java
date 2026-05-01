@@ -76,18 +76,12 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             this.initialized = true;
         }
         this.loadRanksAsync();
-        this.loadUsersAsync();
+        this.setupLazyDataProvider();
     }
 
-    private void loadUsersAsync() {
-        LOG.info("Starting async user loading");
-
-        this.loadDataAsync(
-                () -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE),
-                users -> {
-                    LOG.infof("Successfully loaded %s users", users.size());
-                    this.grid.setItems(users);
-                });
+    private void setupLazyDataProvider() {
+        this.grid.setItems(
+                query -> this.userService.getAllUsers(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadRanksAsync() {
@@ -113,7 +107,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.userDialog = new AdminUserDialog(
-                this.userService, this::loadUsersAsync, authFailure);
+                this.userService, this::setupLazyDataProvider, authFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
@@ -121,9 +115,9 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadUsersAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchUsers(),
                 "Search by username or email...",
@@ -140,7 +134,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var createButton = new CreateButton(_ -> this.userDialog.open(null, this.availableRanks));
-        final var refreshButton = new RefreshButton(_ -> this.loadUsersAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -203,7 +197,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         try {
             if (this.userService.deleteUser(user.getId())) {
                 NotificationUtil.showSuccess("User deleted successfully");
-                this.loadUsersAsync();
+                this.setupLazyDataProvider();
             } else {
                 NotificationUtil.showError("Failed to delete user");
             }

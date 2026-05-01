@@ -1,5 +1,9 @@
 package de.vptr.midas.gui;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -7,43 +11,33 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-/** Component. */
+/** Application lifecycle management. */
 @ApplicationScoped
 public class AppLifecycleBean {
 
     private static final Logger LOG = Logger.getLogger(AppLifecycleBean.class);
 
-    /**
-     * ASCII art for the application logo.
-     * This is displayed in the console when the application starts.
-     * 
-     * https://www.asciiart.eu/text-to-ascii-art
-     * Font: Big Money-sw, Horizontal Layout: Squeezed, Border: Cats
-     */
-    private static final String asciiArt = """
-
-             /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\
-            ( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )
-             > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <
-             /\\_/\\   __       __ __       __                           ______  __    __ ______   /\\_/\\
-            ( o.o ) /  \\     /  /  |     /  |                         /      \\/  |  /  /      | ( o.o )
-             > ^ <  $$  \\   /$$ $$/  ____$$ | ______   _______       /$$$$$$  $$ |  $$ $$$$$$/   > ^ <
-             /\\_/\\  $$$  \\ /$$$ /  |/    $$ |/      \\ /       |      $$ | _$$/$$ |  $$ | $$ |    /\\_/\\
-            ( o.o ) $$$$  /$$$$ $$ /$$$$$$$ |$$$$$$  /$$$$$$$/       $$ |/    $$ |  $$ | $$ |   ( o.o )
-             > ^ <  $$ $$ $$/$$ $$ $$ |  $$ |/    $$ $$      \\       $$ |$$$$ $$ |  $$ | $$ |    > ^ <
-             /\\_/\\  $$ |$$$/ $$ $$ $$ \\__$$ /$$$$$$$ |$$$$$$  |      $$ \\__$$ $$ \\__$$ |_$$ |_   /\\_/\\
-            ( o.o ) $$ | $/  $$ $$ $$    $$ $$    $$ /     $$/       $$    $$/$$    $$// $$   | ( o.o )
-             > ^ <  $$/      $$/$$/ $$$$$$$/ $$$$$$$/$$$$$$$/         $$$$$$/  $$$$$$/ $$$$$$/   > ^ <
-             /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\
-            ( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )
-             > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ < """;
-
     void onStart(@Observes final StartupEvent ev) {
-        LOG.info(asciiArt);
+        final String banner = readBanner();
+        if (banner != null) {
+            LOG.info(banner);
+        }
         LOG.info("Welcome to Midas GUI! o/");
     }
 
     void onStop(@Observes final ShutdownEvent ev) {
         LOG.info("Midas GUI is shutting down. Goodbye! \\o");
+    }
+
+    private String readBanner() {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("banner.txt")) {
+            if (inputStream == null) {
+                return null;
+            }
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (final IOException e) {
+            LOG.warn("Failed to read banner.txt", e);
+            return null;
+        }
     }
 }

@@ -161,21 +161,4 @@ public class PaymentDto {
         this.username = username;
     }
 
-    @Override
-    public String toString() {
-        return "PaymentDto{"
-                + "id=" + this.id
-                + ", userId=" + this.userId
-                + ", username='" + this.username + '\''
-                + ", sourceAccountId=" + this.sourceAccountId
-                + ", sourceAccountName='" + this.sourceAccountName + '\''
-                + ", targetAccountId=" + this.targetAccountId
-                + ", targetAccountName='" + this.targetAccountName + '\''
-                + ", amount=" + this.amount
-                + ", date=" + this.date
-                + ", comment='" + this.comment + '\''
-                + ", created=" + this.created
-                + ", lastEdit=" + this.lastEdit
-                + '}';
-    }
 }

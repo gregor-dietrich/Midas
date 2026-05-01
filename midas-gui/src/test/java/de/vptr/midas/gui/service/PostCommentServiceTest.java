@@ -290,7 +290,7 @@ class PostCommentServiceTest {
 
                 // When & Then
                 ExceptionTestUtil.assertThrowsServiceException(() -> this.postCommentService.getCommentsByPost(postId),
-                                "Backend error: 500");
+                                "Backend request failed");
         }
 
         @Test

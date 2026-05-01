@@ -1,5 +1,7 @@
 package de.vptr.midas.api.util;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
@@ -31,7 +33,7 @@ public class TestUtil {
      * Creates a REST-assured request with basic authentication (admin)
      */
     public static RequestSpecification authenticatedRequest() {
-        return given().auth().basic(ADMIN_USERNAME, ADMIN_PASSWORD);
+        return given().auth().preemptive().basic(ADMIN_USERNAME, ADMIN_PASSWORD);
     }
 
     /**
@@ -226,7 +228,8 @@ public class TestUtil {
      * Generates a unique suffix based on current time and random number
      */
     public static String generateUniqueSuffix() {
-        return String.valueOf(System.currentTimeMillis()) + "_" + String.valueOf((int) (Math.random() * 100000));
+        return String.valueOf(System.currentTimeMillis()) + "_"
+                + String.valueOf(ThreadLocalRandom.current().nextInt(100000));
     }
 
     /**

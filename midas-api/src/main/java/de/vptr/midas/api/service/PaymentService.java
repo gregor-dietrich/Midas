@@ -162,18 +162,6 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDto createPayment(final PaymentDto paymentDto) {
         validatePaymentAccountIds(paymentDto);
-        if (paymentDto.userId == null) {
-            throw new ValidationException("User ID is required");
-        }
-        if (paymentDto.comment == null || paymentDto.comment.trim().isEmpty()) {
-            throw new ValidationException("Comment is required");
-        }
-        if (paymentDto.date == null) {
-            throw new ValidationException("Date is required");
-        }
-        if (paymentDto.amount == null || paymentDto.amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ValidationException("Amount must be positive");
-        }
 
         final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountId, "Target");
         final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountId, "Source");
@@ -201,18 +189,6 @@ public class PaymentService {
     public PaymentResponseDto updatePayment(final Long id, final PaymentDto paymentDto,
             final String currentUsername) {
         validatePaymentAccountIds(paymentDto);
-        if (paymentDto.userId == null) {
-            throw new ValidationException("User ID is required");
-        }
-        if (paymentDto.comment == null || paymentDto.comment.trim().isEmpty()) {
-            throw new ValidationException("Comment is required");
-        }
-        if (paymentDto.date == null) {
-            throw new ValidationException("Date is required");
-        }
-        if (paymentDto.amount == null || paymentDto.amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ValidationException("Amount must be positive");
-        }
 
         final PaymentEntity existingPayment = PaymentEntity.findById(id);
         if (existingPayment == null) {
@@ -242,6 +218,83 @@ public class PaymentService {
         return new PaymentResponseDto(existingPayment);
     }
 
+    /**
+     * Creates a payment scoped to the given user and account.
+     * Validates that the user has access to all accounts involved.
+     */
+    @Transactional
+    public PaymentResponseDto createPaymentForUser(final PaymentDto paymentDto,
+            final String username, final Long accountId) {
+        this.verifyAccountAccessForPayment(username, accountId, paymentDto);
+        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
+        paymentDto.userId = currentUser != null ? currentUser.id : null;
+        return this.createPayment(paymentDto);
+    }
+
+    /**
+     * Updates a payment scoped to the given user and account.
+     * Validates that the user has access to the account and that
+     * the payment belongs to it.
+     */
+    @Transactional
+    public PaymentResponseDto updatePaymentForUser(final Long paymentId, final PaymentDto paymentDto,
+            final String username, final Long accountId) {
+        if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+            throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
+        }
+        final PaymentEntity existingPayment = PaymentEntity.findById(paymentId);
+        if (existingPayment == null) {
+            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
+        }
+        if (!paymentBelongsToAccount(existingPayment, accountId)) {
+            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
+        }
+        if (existingPayment.user != null) {
+            paymentDto.userId = existingPayment.user.id;
+        } else {
+            final UserEntity currentUser = UserEntity.find("username", username).firstResult();
+            paymentDto.userId = currentUser != null ? currentUser.id : null;
+        }
+        if (paymentDto.sourceAccountId != null
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
+            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
+        }
+        if (paymentDto.targetAccountId != null
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
+            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
+        }
+        return this.updatePayment(paymentId, paymentDto, username);
+    }
+
+    private void verifyAccountAccessForPayment(final String username, final Long accountId,
+            final PaymentDto paymentDto) {
+        if (paymentDto.sourceAccountId != null && paymentDto.sourceAccountId.equals(accountId)) {
+            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
+            }
+        }
+        if (paymentDto.targetAccountId != null && paymentDto.targetAccountId.equals(accountId)) {
+            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
+            }
+        }
+        if (paymentDto.sourceAccountId != null && !paymentDto.sourceAccountId.equals(accountId)) {
+            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
+                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
+            }
+        }
+        if (paymentDto.targetAccountId != null && !paymentDto.targetAccountId.equals(accountId)) {
+            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
+                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
+            }
+        }
+    }
+
+    private static boolean paymentBelongsToAccount(final PaymentEntity payment, final Long accountId) {
+        return (payment.sourceAccount != null && payment.sourceAccount.id.equals(accountId))
+                || (payment.targetAccount != null && payment.targetAccount.id.equals(accountId));
+    }
+
     /** Partially updates the payment with the given id. */
     @Transactional
     public PaymentResponseDto patchPayment(final Long id, final PaymentDto paymentDto,
@@ -266,13 +319,19 @@ public class PaymentService {
                 throw new ValidationException("Payment user re-attribution is not allowed.");
             }
         }
-        if (paymentDto.comment != null && !paymentDto.comment.trim().isEmpty()) {
+        if (paymentDto.comment != null) {
+            if (paymentDto.comment.trim().isEmpty()) {
+                throw new jakarta.validation.ValidationException("Comment cannot be blank");
+            }
             existingPayment.comment = paymentDto.comment;
         }
         if (paymentDto.date != null) {
             existingPayment.date = paymentDto.date;
         }
-        if (paymentDto.amount != null && paymentDto.amount.compareTo(BigDecimal.ZERO) > 0) {
+        if (paymentDto.amount != null) {
+            if (paymentDto.amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new jakarta.validation.ValidationException("Amount must be positive");
+            }
             existingPayment.amount = paymentDto.amount;
         }
 

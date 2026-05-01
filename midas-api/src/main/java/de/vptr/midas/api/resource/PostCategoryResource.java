@@ -92,7 +92,7 @@ public class PostCategoryResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "post-category:edit" })
-    public Response patchCategory(@PathParam("id") final Long id, @Valid final PostCategoryDto categoryDto) {
+    public Response patchCategory(@PathParam("id") final Long id, final PostCategoryDto categoryDto) {
         final var responseDto = this.categoryService.patchCategory(id, categoryDto);
         return ResponseUtil.ok(responseDto);
     }

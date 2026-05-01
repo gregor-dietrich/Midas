@@ -91,13 +91,4 @@ public class AccountResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "AccountResponseDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", userCount=" + this.userCount
-                + ", associatedUserIds=" + this.associatedUserIds
-                + '}';
-    }
 }

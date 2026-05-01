@@ -1,11 +1,12 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,8 +21,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for page operations. */
 @ApplicationScoped
 public class PageService {
 
@@ -35,7 +35,7 @@ public class PageService {
     AuthService authService;
 
     /** Returns the all pages. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PageResponseDto> getAllPages() throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all pages");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -45,8 +45,21 @@ public class PageService {
                 this.authService, LOG, "fetching pages");
     }
 
+    /** Returns the all pages paginated. */
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    public List<PageResponseDto> getAllPages(final Integer page, final Integer size)
+            throws AuthenticationException, ServiceException {
+        LOG.debugf("Fetching all pages page %s size %s", page, size);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        final Integer safePage = PaginationParamUtil.sanitizePage(page);
+        final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
+        return ServiceHelper.execute(
+                () -> this.pageClient.getAllPages(safePage, safeSize, authHeader),
+                this.authService, LOG, "fetching pages");
+    }
+
     /** Returns the page by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<PageResponseDto> getPageById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting page by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -120,7 +133,7 @@ public class PageService {
     }
 
     /** Handles the search content operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PageResponseDto> searchContent(final String searchTerm) {
         LOG.debugf("Searching page content: %s", searchTerm);
         return ServiceHelper.execute(() -> {
@@ -130,7 +143,7 @@ public class PageService {
     }
 
     /** Handles the search pages operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PageResponseDto> searchPages(final String query) {
         LOG.debugf("Searching pages with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();

@@ -32,6 +32,7 @@ class AsyncAuthAlignmentViewTest {
     void setUp() {
         this.ui = mock(UI.class);
         UI.setCurrent(this.ui);
+        lenient().when(this.ui.isAttached()).thenReturn(true);
         lenient().doAnswer(invocation -> {
             final var command = invocation.getArgument(0, Command.class);
             UI.setCurrent(this.ui);

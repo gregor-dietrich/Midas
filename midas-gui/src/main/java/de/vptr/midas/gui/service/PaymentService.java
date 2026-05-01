@@ -1,12 +1,13 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,8 +21,7 @@ import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for payment operations. */
 @ApplicationScoped
 public class PaymentService {
 
@@ -35,7 +35,7 @@ public class PaymentService {
     AuthService authService;
 
     /** Returns the all payments. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getAllPayments(final Integer page, final Integer size)
             throws ServiceException, AuthenticationException {
         LOG.debug("Fetching all payments");
@@ -48,7 +48,7 @@ public class PaymentService {
     }
 
     /** Returns the payment by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<PaymentDto> getPaymentById(final Long id) {
         LOG.debugf("Fetching payment with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -68,7 +68,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by user. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getPaymentsByUser(final Long userId) {
         LOG.debugf("Fetching payments for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -78,7 +78,7 @@ public class PaymentService {
     }
 
     /** Returns the recent payments. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getRecentPayments(final int limit) {
         final int safeLimit = PaginationParamUtil.sanitizeRecentLimit(limit);
         LOG.debugf("Fetching recent payments with limit: %s", safeLimit);
@@ -89,7 +89,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by date range. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getPaymentsByDateRange(final LocalDate startDate, final LocalDate endDate) {
         LOG.debugf("Fetching payments for date range: %s to %s", startDate, endDate);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -99,7 +99,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by source account. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getPaymentsBySourceAccount(final Long sourceId) {
         LOG.debugf("Fetching payments for source account: %s", sourceId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -109,7 +109,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by target account. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> getPaymentsByTargetAccount(final Long targetId) {
         LOG.debugf("Fetching payments for target account: %s", targetId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -158,7 +158,7 @@ public class PaymentService {
     }
 
     /** Handles the search payments operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentResponseDto> searchPayments(final String query) {
         LOG.debugf("Searching payments with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();

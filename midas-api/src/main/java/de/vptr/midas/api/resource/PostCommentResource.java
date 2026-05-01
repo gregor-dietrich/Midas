@@ -9,7 +9,6 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -57,7 +56,6 @@ public class PostCommentResource {
 
     @GET
     @Path("/{id}")
-    @PermitAll
     public Response getComment(@PathParam("id") @Min(1) final Long id) {
         return ResponseUtil.okOrNotFound(this.commentService.findById(id));
     }
@@ -65,7 +63,6 @@ public class PostCommentResource {
     /** Returns comments for a post with pagination. */
     @GET
     @Path("/post/{postId}")
-    @PermitAll
     public List<PostCommentResponseDto> getCommentsByPost(
             @PathParam("postId") @Min(1) final Long postId,
             @QueryParam("page") @DefaultValue("0") final int page,
@@ -90,7 +87,6 @@ public class PostCommentResource {
 
     @GET
     @Path("/recent")
-    @PermitAll
     public List<PostCommentResponseDto> getRecentComments(@QueryParam("limit") @DefaultValue("10") final int limit) {
         final int safeLimit = PaginationUtil.sanitizeRecentLimit(limit);
         return this.commentService.findRecentComments(safeLimit);
@@ -99,7 +95,6 @@ public class PostCommentResource {
     /** Returns all comments matching the search query. */
     @GET
     @Path("/search")
-    @PermitAll
     public List<PostCommentResponseDto> searchComments(@QueryParam("query") final String query) {
         if (query != null && query.length() > 100) {
             throw new WebApplicationException("Search query too long", Response.Status.BAD_REQUEST);
@@ -142,7 +137,7 @@ public class PostCommentResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "post-comment:edit" })
-    public Response patchComment(@PathParam("id") @Min(1) final Long id, @Valid final PostCommentDto commentDto) {
+    public Response patchComment(@PathParam("id") @Min(1) final Long id, final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostCommentResponseDto updated = this.commentService.patchComment(id, commentDto, currentUsername);
         return ResponseUtil.ok(updated);

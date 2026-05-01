@@ -143,21 +143,4 @@ public class PostDto {
         this.commentsCount = commentsCount;
     }
 
-    @Override
-    public String toString() {
-        return "PostDto{"
-                + "id=" + this.id
-                + ", title='" + this.title + '\''
-                + ", content='" + this.content + '\''
-                + ", userId=" + this.userId
-                + ", username='" + this.username + '\''
-                + ", categoryId=" + this.categoryId
-                + ", categoryName='" + this.categoryName + '\''
-                + ", published=" + this.published
-                + ", commentable=" + this.commentable
-                + ", created=" + this.created
-                + ", lastEdit=" + this.lastEdit
-                + ", commentsCount=" + this.commentsCount
-                + '}';
-    }
 }

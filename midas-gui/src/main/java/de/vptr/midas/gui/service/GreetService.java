@@ -4,6 +4,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.AuthClient;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
@@ -20,35 +21,26 @@ public class GreetService {
     @Inject
     AuthService authService;
 
-    /** Handles the greet operation. */
+    /**
+     * Returns a greeting for the given name.
+     *
+     * @throws AuthenticationException if the user is not authenticated
+     */
     public String greet(final String name) {
         LOG.debugf("GreetService.greet called with name: %s", name);
 
-        try {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                return "Error: Not authenticated";
-            }
-
-            var greeting = "Hello, ";
-            if (name == null || name.isEmpty()) {
-                greeting += "anonymous user";
-            } else {
-                greeting += name;
-            }
-
-            return greeting + "!";
-        } catch (final RuntimeException e) {
-            LOG.error("Error calling greeting API", e);
-
-            // Check if it's an authentication error
-            if (e.getMessage() != null && e.getMessage().contains("401")) {
-                // Session might have expired, logout user
-                this.authService.logout();
-                return "Error: Session expired. Please log in again.";
-            }
-
-            return "Error: Could not connect to backend service";
+        final var authHeader = this.authService.getAuthorizationHeader();
+        if (authHeader == null) {
+            throw new AuthenticationException("Not authenticated");
         }
+
+        var greeting = "Hello, ";
+        if (name == null || name.isEmpty()) {
+            greeting += "anonymous user";
+        } else {
+            greeting += name;
+        }
+
+        return greeting + "!";
     }
 }

@@ -10,6 +10,10 @@ public final class EntityValidator {
     private EntityValidator() {
     }
 
+    /**
+     * Validates that no entity exists for the given field and value.
+     * Throws ValidationException if a duplicate is found.
+     */
     public static <T> void checkUnique(final Optional<T> existing, final String fieldName, final String value) {
         checkUnique(existing, fieldName, value, "already exists");
     }

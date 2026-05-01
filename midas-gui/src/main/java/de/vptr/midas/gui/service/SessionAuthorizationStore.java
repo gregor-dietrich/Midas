@@ -1,37 +1,51 @@
 package de.vptr.midas.gui.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Base64;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 /** Stores authorization headers behind opaque session ids. */
 @ApplicationScoped
-public class SessionAuthorizationStore {
+public final class SessionAuthorizationStore {
 
     static final Duration SESSION_TTL = Duration.ofMinutes(30);
 
-    private static final int CLEANUP_INTERVAL = 64;
     private static final int MAX_SESSIONS = 10_000;
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH = 128;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final SecretKey ENCRYPTION_KEY = generateKey();
 
     private final Clock clock;
-    private final AtomicInteger operationCount;
-    private final Map<String, AuthorizationEntry> authorizationsBySessionId;
+    private final Cache<String, AuthorizationEntry> cache;
 
+    /**
+     * Creates a new session authorization store with the system default clock.
+     */
     public SessionAuthorizationStore() {
         this(Clock.systemUTC());
     }
 
     SessionAuthorizationStore(final Clock clock) {
-        this.clock = Objects.requireNonNull(clock, "clock");
-        this.operationCount = new AtomicInteger();
-        this.authorizationsBySessionId = new ConcurrentHashMap<>();
+        this.clock = clock;
+        this.cache = Caffeine.newBuilder()
+                .expireAfterWrite(SESSION_TTL)
+                .maximumSize(MAX_SESSIONS)
+                .build();
     }
 
     /**
@@ -39,19 +53,11 @@ public class SessionAuthorizationStore {
      *
      * @param authorizationHeader the backend authorization header
      * @return generated opaque session id
-     * @throws IllegalStateException if the session store is full
      */
     public String createSession(final String authorizationHeader) {
-        this.cleanupExpiredSessionsIfNeeded();
-        if (this.authorizationsBySessionId.size() >= MAX_SESSIONS) {
-            this.cleanupExpiredSessions();
-            if (this.authorizationsBySessionId.size() >= MAX_SESSIONS) {
-                throw new IllegalStateException("Session store is full (max " + MAX_SESSIONS + " sessions)");
-            }
-        }
         final String sessionId = UUID.randomUUID().toString();
-        this.authorizationsBySessionId.put(sessionId,
-                new AuthorizationEntry(authorizationHeader, this.clock.instant().plus(SESSION_TTL)));
+        this.cache.put(sessionId,
+                new AuthorizationEntry(encrypt(authorizationHeader), this.clock.instant().plus(SESSION_TTL)));
         return sessionId;
     }
 
@@ -65,16 +71,14 @@ public class SessionAuthorizationStore {
         if (sessionId == null) {
             return null;
         }
-        this.cleanupExpiredSessionsIfNeeded();
-
         final var now = this.clock.instant();
-        final var entry = this.authorizationsBySessionId.computeIfPresent(sessionId, (key, existingEntry) -> {
-            if (existingEntry.isExpired(now)) {
-                return null;
-            }
-            return existingEntry.refresh(now.plus(SESSION_TTL));
-        });
-        return entry == null ? null : entry.authorizationHeader();
+        final var entry = this.cache.getIfPresent(sessionId);
+        if (entry == null || entry.isExpired(now)) {
+            this.cache.invalidate(sessionId);
+            return null;
+        }
+        this.cache.put(sessionId, entry.refresh(now.plus(SESSION_TTL)));
+        return decrypt(entry.authorizationHeader());
     }
 
     /**
@@ -84,23 +88,59 @@ public class SessionAuthorizationStore {
      */
     public void revokeSession(final String sessionId) {
         if (sessionId != null) {
-            this.authorizationsBySessionId.remove(sessionId);
+            this.cache.invalidate(sessionId);
         }
-        this.cleanupExpiredSessionsIfNeeded();
-    }
-
-    void cleanupExpiredSessions() {
-        final var now = this.clock.instant();
-        this.authorizationsBySessionId.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
     }
 
     int storedSessionCount() {
-        return this.authorizationsBySessionId.size();
+        this.cache.cleanUp();
+        return (int) this.cache.estimatedSize();
     }
 
-    private void cleanupExpiredSessionsIfNeeded() {
-        if (this.operationCount.incrementAndGet() % CLEANUP_INTERVAL == 0) {
-            this.cleanupExpiredSessions();
+    private static SecretKey generateKey() {
+        try {
+            final var keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(256, SECURE_RANDOM);
+            return keyGen.generateKey();
+        } catch (final Exception e) {
+            throw new IllegalStateException("Failed to generate encryption key", e);
+        }
+    }
+
+    private String encrypt(final String plaintext) {
+        if (plaintext == null) {
+            return null;
+        }
+        try {
+            final var iv = new byte[GCM_IV_LENGTH];
+            SECURE_RANDOM.nextBytes(iv);
+            final var cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, ENCRYPTION_KEY, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            final var ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
+            final var combined = new byte[iv.length + ciphertext.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(ciphertext, 0, combined, iv.length, ciphertext.length);
+            return Base64.getEncoder().encodeToString(combined);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Failed to encrypt authorization header", e);
+        }
+    }
+
+    private String decrypt(final String ciphertext) {
+        if (ciphertext == null) {
+            return null;
+        }
+        try {
+            final var combined = Base64.getDecoder().decode(ciphertext);
+            final var iv = new byte[GCM_IV_LENGTH];
+            System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH);
+            final var encrypted = new byte[combined.length - GCM_IV_LENGTH];
+            System.arraycopy(combined, GCM_IV_LENGTH, encrypted, 0, encrypted.length);
+            final var cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, ENCRYPTION_KEY, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Failed to decrypt authorization header", e);
         }
     }
 

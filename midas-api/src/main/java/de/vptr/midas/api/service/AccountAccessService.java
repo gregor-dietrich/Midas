@@ -113,11 +113,14 @@ public class AccountAccessService {
         });
     }
 
+    private static final int MAX_PAYMENTS = 1_000;
+
     /** Returns all outgoing payments for the given account. */
     public List<PaymentResponseDto> getOutgoingPayments(final Long accountId) {
         return PaymentEntity
                 .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
                         accountId)
+                .page(0, MAX_PAYMENTS)
                 .list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
                 .toList();
@@ -128,6 +131,7 @@ public class AccountAccessService {
         return PaymentEntity
                 .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
                         accountId)
+                .page(0, MAX_PAYMENTS)
                 .list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
                 .toList();

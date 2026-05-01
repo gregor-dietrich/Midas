@@ -81,28 +81,4 @@ class PostResponseDtoTest {
         assertThat(result.getCommentsCount()).isEqualTo(42L);
     }
 
-    @Test
-    void toString_shouldContainExpectedFields() {
-        // Given
-        final PostResponseDto dto = new PostResponseDto();
-        dto.setId(1L);
-        dto.setTitle("My Post");
-        dto.setUsername("alice");
-        dto.setCategoryName("General");
-        dto.setPublished(true);
-        dto.setCommentsCount(3L);
-
-        // When
-        final String result = dto.toString();
-
-        // Then
-        assertThat(result).startsWith("PostResponseDto{");
-        assertThat(result).contains("id=1");
-        assertThat(result).contains("title='My Post'");
-        assertThat(result).contains("username='alice'");
-        assertThat(result).contains("categoryName='General'");
-        assertThat(result).contains("published=true");
-        assertThat(result).contains("commentsCount=3");
-        assertThat(result).endsWith("}");
-    }
 }

@@ -83,7 +83,7 @@ class ServiceHelperTest {
                 "Failed to create account",
                 currentResponse -> "ignored"))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("Failed to create account: Invalid account payload");
+                .hasMessage("Backend request failed");
 
         verify(this.response).bufferEntity();
         verify(this.response).close();
@@ -106,7 +106,7 @@ class ServiceHelperTest {
                 LOG,
                 "fetching page"))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("Page lookup failed");
+                .hasMessage("Backend request failed");
 
         verify(this.response).bufferEntity();
         verify(this.response).close();

@@ -9,7 +9,6 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -45,23 +44,17 @@ public class PostResource {
 
     /** Returns all posts with normalized pagination parameters. */
     @GET
-    @PermitAll
     public List<PostResponseDto> getAllPosts(
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        // Unauthenticated callers only see published posts; authenticated callers see all.
-        if (this.securityContext.getUserPrincipal() != null) {
-            return this.postService.getAllPosts(safePage, safeSize);
-        }
-        return this.postService.findPublishedPosts(safePage, safeSize);
+        return this.postService.getAllPosts(safePage, safeSize);
     }
 
     /** Returns published posts with normalized pagination parameters. */
     @GET
     @Path("/published")
-    @PermitAll
     public List<PostResponseDto> getPublishedPosts(
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
@@ -92,7 +85,6 @@ public class PostResource {
     /** Returns published posts by category with pagination. */
     @GET
     @Path("/category/{categoryId}")
-    @PermitAll
     public List<PostResponseDto> getPostsByCategory(
             @PathParam("categoryId") @Min(1) final Long categoryId,
             @QueryParam("page") @DefaultValue("0") final int page,
@@ -105,14 +97,9 @@ public class PostResource {
     /** Returns all posts matching the search query. */
     @GET
     @Path("/search")
-    @PermitAll
     public List<PostResponseDto> searchPosts(@QueryParam("query") final String query) {
         if (query == null || query.trim().isEmpty()) {
-            // Unauthenticated callers only see published posts; authenticated callers see all.
-            if (this.securityContext.getUserPrincipal() != null) {
-                return this.postService.getAllPosts();
-            }
-            return this.postService.findPublishedPosts();
+            return this.postService.getAllPosts();
         }
         return this.postService.searchPosts(query);
     }
@@ -147,7 +134,7 @@ public class PostResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "post:edit" })
-    public Response patchPost(@PathParam("id") @Min(1) final Long id, @Valid final PostDto postDto) {
+    public Response patchPost(@PathParam("id") @Min(1) final Long id, final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostResponseDto updated = this.postService.patchPost(id, postDto, currentUsername);
         return ResponseUtil.ok(updated);

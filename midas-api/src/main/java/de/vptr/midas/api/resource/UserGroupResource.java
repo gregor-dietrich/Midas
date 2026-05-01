@@ -112,7 +112,7 @@ public class UserGroupResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "user-group:edit" })
-    public Response patchGroup(@PathParam("id") @Min(1) final Long id, @Valid final UserGroupDto groupDto) {
+    public Response patchGroup(@PathParam("id") @Min(1) final Long id, final UserGroupDto groupDto) {
         final UserGroupResponseDto updated = this.groupService.patchGroup(id, groupDto);
         return ResponseUtil.ok(updated);
     }

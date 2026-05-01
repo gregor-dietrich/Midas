@@ -509,12 +509,4 @@ public class UserRankResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "UserRankResponseDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", usersCount=" + this.usersCount
-                + '}';
-    }
 }

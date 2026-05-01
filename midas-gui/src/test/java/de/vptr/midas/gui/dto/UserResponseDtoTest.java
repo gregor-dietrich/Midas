@@ -96,32 +96,4 @@ class UserResponseDtoTest {
         assertThat(dto.isNegative()).isTrue();
     }
 
-    @Test
-    void toString_shouldContainExpectedFields() {
-        // Given
-        final UserResponseDto dto = new UserResponseDto();
-        dto.setId(1L);
-        dto.setUsername("bob");
-        dto.setEmail("bob@test.com");
-        dto.setRankName("User");
-        dto.setBanned(false);
-        dto.setActivated(true);
-        dto.setPostsCount(5L);
-        dto.setCommentsCount(12L);
-
-        // When
-        final String result = dto.toString();
-
-        // Then
-        assertThat(result).startsWith("UserResponseDto{");
-        assertThat(result).contains("id=1");
-        assertThat(result).contains("username='bob'");
-        assertThat(result).contains("email='bob@test.com'");
-        assertThat(result).contains("rankName='User'");
-        assertThat(result).contains("banned=false");
-        assertThat(result).contains("activated=true");
-        assertThat(result).contains("postsCount=5");
-        assertThat(result).contains("commentsCount=12");
-        assertThat(result).endsWith("}");
-    }
 }

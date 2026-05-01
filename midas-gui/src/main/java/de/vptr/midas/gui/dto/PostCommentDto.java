@@ -88,16 +88,4 @@ public class PostCommentDto {
         this.created = created;
     }
 
-    @Override
-    public String toString() {
-        return "PostCommentDto{"
-                + "id=" + this.id
-                + ", content='" + this.content + '\''
-                + ", postId=" + this.postId
-                + ", postTitle='" + this.postTitle + '\''
-                + ", userId=" + this.userId
-                + ", username='" + this.username + '\''
-                + ", created=" + this.created
-                + '}';
-    }
 }

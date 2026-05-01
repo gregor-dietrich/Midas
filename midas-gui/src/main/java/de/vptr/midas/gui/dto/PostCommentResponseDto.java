@@ -104,13 +104,4 @@ public class PostCommentResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "PostCommentResponseDto{"
-                + "id=" + this.id
-                + ", postTitle='" + this.postTitle + '\''
-                + ", username='" + this.username + '\''
-                + ", created=" + this.created
-                + '}';
-    }
 }

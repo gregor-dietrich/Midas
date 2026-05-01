@@ -142,7 +142,7 @@ public class UserResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "user:edit" })
-    public Response patchUser(@PathParam("id") @Min(1) final Long id, @Valid final UserDto userDto) {
+    public Response patchUser(@PathParam("id") @Min(1) final Long id, final UserDto userDto) {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(id).orElse(null);
         enforceProtectedFieldPermissions(userDto, existing, this.securityContext);

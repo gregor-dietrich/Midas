@@ -48,7 +48,7 @@ public class UserAccountMetaEntity extends PanacheEntityBase {
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
-    @Column(name = "is_negative", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "is_negative", nullable = false)
     public boolean isNegative = false;
 
     // Helper method to find by user and account

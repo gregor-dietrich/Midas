@@ -100,9 +100,6 @@ public class PostCommentService {
     /** Creates a new comment, assigning the current user. */
     @Transactional
     public PostCommentResponseDto createComment(final PostCommentDto dto, final String currentUsername) {
-        if (dto.content == null || dto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required for creating a comment");
-        }
         final PostEntity existingPost = PostEntity.findById(dto.postId);
         if (existingPost == null) {
             throw new WebApplicationException(
@@ -135,9 +132,6 @@ public class PostCommentService {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to edit comment");
-        if (dto.content == null || dto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required for updating a comment");
-        }
         existingComment.content = dto.content;
         existingComment.persistAndFlush();
         return new PostCommentResponseDto(existingComment);

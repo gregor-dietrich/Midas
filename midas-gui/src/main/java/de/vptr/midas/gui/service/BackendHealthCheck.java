@@ -9,6 +9,8 @@ import org.jboss.logging.Logger;
 import de.vptr.midas.gui.client.BackendHealthClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
 
 /**
  * Readiness probe that verifies the backend API is reachable.
@@ -37,8 +39,14 @@ public class BackendHealthCheck implements HealthCheck {
                     .down()
                     .withData("status", status)
                     .build();
-        } catch (final RuntimeException e) {
-            LOG.warnf("Backend health check failed: %s", e.getMessage());
+        } catch (final ProcessingException e) {
+            LOG.warnf("Backend health check failed (connection error): %s", e.getMessage());
+            return HealthCheckResponse.named("midas-api-backend")
+                    .down()
+                    .withData("error", e.getMessage())
+                    .build();
+        } catch (final WebApplicationException e) {
+            LOG.warnf("Backend health check failed (HTTP error): %s", e.getMessage());
             return HealthCheckResponse.named("midas-api-backend")
                     .down()
                     .withData("error", e.getMessage())

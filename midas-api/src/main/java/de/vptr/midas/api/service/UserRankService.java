@@ -97,80 +97,19 @@ public class UserRankService {
     /** Full replacement — null defaults to false. Used by create/update. */
     private void mapPermissions(final UserRankEntity rank, final UserRankDto dto) {
         applyPermissionsFromDto(rank, dto);
-        if (dto.adminView == null) {
-            rank.adminView = false;
-        }
-        if (dto.pageAdd == null) {
-            rank.pageAdd = false;
-        }
-        if (dto.pageDelete == null) {
-            rank.pageDelete = false;
-        }
-        if (dto.pageEdit == null) {
-            rank.pageEdit = false;
-        }
-        if (dto.postAdd == null) {
-            rank.postAdd = false;
-        }
-        if (dto.postDelete == null) {
-            rank.postDelete = false;
-        }
-        if (dto.postEdit == null) {
-            rank.postEdit = false;
-        }
-        if (dto.postCategoryAdd == null) {
-            rank.postCategoryAdd = false;
-        }
-        if (dto.postCategoryDelete == null) {
-            rank.postCategoryDelete = false;
-        }
-        if (dto.postCategoryEdit == null) {
-            rank.postCategoryEdit = false;
-        }
-        if (dto.postCommentAdd == null) {
-            rank.postCommentAdd = false;
-        }
-        if (dto.postCommentDelete == null) {
-            rank.postCommentDelete = false;
-        }
-        if (dto.postCommentEdit == null) {
-            rank.postCommentEdit = false;
-        }
-        if (dto.userAdd == null) {
-            rank.userAdd = false;
-        }
-        if (dto.userDelete == null) {
-            rank.userDelete = false;
-        }
-        if (dto.userEdit == null) {
-            rank.userEdit = false;
-        }
-        if (dto.userGroupAdd == null) {
-            rank.userGroupAdd = false;
-        }
-        if (dto.userGroupDelete == null) {
-            rank.userGroupDelete = false;
-        }
-        if (dto.userGroupEdit == null) {
-            rank.userGroupEdit = false;
-        }
-        if (dto.userAccountAdd == null) {
-            rank.userAccountAdd = false;
-        }
-        if (dto.userAccountDelete == null) {
-            rank.userAccountDelete = false;
-        }
-        if (dto.userAccountEdit == null) {
-            rank.userAccountEdit = false;
-        }
-        if (dto.userRankAdd == null) {
-            rank.userRankAdd = false;
-        }
-        if (dto.userRankDelete == null) {
-            rank.userRankDelete = false;
-        }
-        if (dto.userRankEdit == null) {
-            rank.userRankEdit = false;
+        try {
+            for (final var dtoField : UserRankDto.class.getDeclaredFields()) {
+                if (dtoField.getType() == Boolean.class) {
+                    dtoField.setAccessible(true);
+                    if (dtoField.get(dto) == null) {
+                        final var entityField = UserRankEntity.class.getDeclaredField(dtoField.getName());
+                        entityField.setAccessible(true);
+                        entityField.set(rank, Boolean.FALSE);
+                    }
+                }
+            }
+        } catch (final ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to map default permissions", e);
         }
     }
 

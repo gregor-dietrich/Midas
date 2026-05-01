@@ -73,20 +73,11 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         }
 
         this.buildUi();
-        this.loadPagesAsync();
+        this.setupLazyDataProvider();
     }
 
-    private void loadPagesAsync() {
-        LOG.info("Starting async page loading");
-        this.loadDataAsync(
-                () -> {
-                    LOG.info("Making REST call to load pages");
-                    return this.pageService.getAllPages();
-                },
-                pages -> {
-                    LOG.infof("Successfully loaded %s pages", pages.size());
-                    this.grid.setItems(pages);
-                });
+    private void setupLazyDataProvider() {
+        this.grid.setItems(query -> this.pageService.getAllPages(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -104,9 +95,9 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadPagesAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchPages(),
                 "Search by title or content...",
@@ -123,7 +114,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var createButton = new CreateButton(_ -> this.openPageDialog(null));
-        final var refreshButton = new RefreshButton(_ -> this.loadPagesAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -243,7 +234,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             }
 
             this.pageDialog.close();
-            this.loadPagesAsync();
+            this.setupLazyDataProvider();
 
         } catch (final ValidationException e) {
             NotificationUtil.showError("Please check the form for errors");
@@ -262,7 +253,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         try {
             this.pageService.deletePage(page.getId());
             NotificationUtil.showSuccess("Page deleted successfully");
-            this.loadPagesAsync();
+            this.setupLazyDataProvider();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));

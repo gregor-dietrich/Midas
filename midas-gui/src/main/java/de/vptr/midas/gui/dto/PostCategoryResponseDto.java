@@ -119,15 +119,4 @@ public class PostCategoryResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "PostCategoryResponseDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", parentName='" + this.parentName + '\''
-                + ", isRootCategory=" + this.isRootCategory
-                + ", childrenCount=" + this.childrenCount
-                + ", postsCount=" + this.postsCount
-                + '}';
-    }
 }

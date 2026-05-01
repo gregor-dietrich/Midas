@@ -10,6 +10,10 @@ public final class PaginationUtil {
     private PaginationUtil() {
     }
 
+    /**
+     * Normalizes page number to the default page
+     * when the provided value is negative.
+     */
     public static int sanitizePage(final int page) {
         return Math.max(DEFAULT_PAGE, page);
     }

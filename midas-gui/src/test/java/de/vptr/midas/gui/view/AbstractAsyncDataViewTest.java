@@ -46,6 +46,7 @@ class AbstractAsyncDataViewTest {
     @BeforeEach
     void setUp() {
         this.ui = mock(UI.class);
+        lenient().when(this.ui.isAttached()).thenReturn(true);
         lenient().doAnswer(invocation -> {
             invocation.getArgument(0, Command.class).execute();
             return null;

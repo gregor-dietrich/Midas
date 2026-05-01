@@ -81,19 +81,13 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         LOG.info("AdminPaymentView.beforeEnter - Starting view initialization");
         this.buildUi();
         this.loadAccountsAsync();
-        this.loadPaymentsAsync();
+        this.setupLazyDataProvider();
         LOG.info("AdminPaymentView.beforeEnter - View initialization completed");
     }
 
-    private void loadPaymentsAsync() {
-        LOG.info("Starting async payment loading");
-
-        this.loadDataAsync(
-                () -> this.paymentService.getAllPayments(0, UiConstants.DEFAULT_PAGE_SIZE),
-                payments -> {
-                    LOG.infof("Successfully loaded %s payments", payments.size());
-                    this.grid.setItems(payments);
-                });
+    private void setupLazyDataProvider() {
+        this.grid.setItems(
+                query -> this.paymentService.getAllPayments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadAccountsAsync() {
@@ -123,7 +117,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.paymentDialog = new AdminPaymentDialog(
-                this.paymentService, this.userService, this::loadPaymentsAsync, authFailure);
+                this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
         this.availableAccounts = List.of();
 
         this.add(header, searchLayout, buttonLayout, this.grid);
@@ -132,9 +126,9 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadPaymentsAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchPayments(),
                 "Search by comment or other account...",
@@ -174,7 +168,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadPaymentsAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
         final var createButton = new CreateButton(
                 _ -> this.paymentDialog.open(null, this.availableAccounts), "Create Payment");
 
@@ -228,7 +222,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         try {
             if (this.paymentService.deletePayment(payment.getId())) {
                 NotificationUtil.showSuccess("Payment deleted successfully");
-                this.loadPaymentsAsync();
+                this.setupLazyDataProvider();
             } else {
                 NotificationUtil.showError("Failed to delete payment");
             }

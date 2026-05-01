@@ -26,8 +26,8 @@ class PostCommentResourceTest {
     }
 
     @Test
-    void testGetCommentById_permitAll() {
-        TestUtil.testPermitAllGetWithJson(ENDPOINT_URL + "/1");
+    void testGetCommentById_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/1");
     }
 
     @Test
@@ -50,8 +50,8 @@ class PostCommentResourceTest {
     }
 
     @Test
-    void testGetCommentsByPost_permitAll() {
-        TestUtil.testPermitAllGetWithJson(ENDPOINT_URL + "/post/1");
+    void testGetCommentsByPost_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/post/1");
     }
 
     @Test

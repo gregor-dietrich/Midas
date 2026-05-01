@@ -124,17 +124,6 @@ public class PostService {
     /** Creates a new post. */
     @Transactional
     public PostResponseDto createPost(final PostDto postDto) {
-        // Validate required fields for POST
-        if (postDto.title == null || postDto.title.trim().isEmpty()) {
-            throw new ValidationException("Title is required for creating a post");
-        }
-        if (postDto.content == null || postDto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required for creating a post");
-        }
-        if (postDto.userId == null) {
-            throw new ValidationException("User ID is required for creating a post");
-        }
-
         final PostEntity post = this.buildPostEntity(postDto);
         post.persistAndFlush();
         return this.toResponseDto(post);
@@ -170,14 +159,6 @@ public class PostService {
     /** Updates the post with the given id. */
     @Transactional
     public PostResponseDto updatePost(final Long id, final PostDto postDto, final String currentUsername) {
-        // Validate required fields for PUT
-        if (postDto.title == null || postDto.title.trim().isEmpty()) {
-            throw new ValidationException("Title is required for updating a post");
-        }
-        if (postDto.content == null || postDto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required for updating a post");
-        }
-
         final PostEntity existingPost = PostEntity.findById(id);
         if (existingPost == null) {
             throw new WebApplicationException("Post not found", Response.Status.NOT_FOUND);

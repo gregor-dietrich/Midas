@@ -297,12 +297,11 @@ public class TestDataBuilder {
     }
 
     // Page builders
-    public static String createPageJson(final String title, final String content, final boolean published) {
+    public static String createPageJson(final String title, final String content) {
         try {
             final var data = new java.util.LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
-            data.put("published", published);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize page test data", e);
@@ -310,11 +309,11 @@ public class TestDataBuilder {
     }
 
     public static String createDefaultPageJson() {
-        return createPageJson("Test Page", "Test content", false);
+        return createPageJson("Test Page", "Test content");
     }
 
     public static String createUpdatedPageJson() {
-        return createPageJson("Updated Page", "Updated content", true);
+        return createPageJson("Updated Page", "Updated content");
     }
 
     // Payment builders

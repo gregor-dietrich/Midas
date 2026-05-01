@@ -54,6 +54,7 @@ class PasswordHashingServiceTest {
         assertTrue(hashedPassword.length() > 0);
     }
 
+    @Test
     void testHashPassword_consistency() throws NoSuchAlgorithmException, InvalidKeySpecException {
         final var hash1 = this.passwordHashingService.hashPassword(this.testPassword, this.testSalt);
         final var hash2 = this.passwordHashingService.hashPassword(this.testPassword, this.testSalt);

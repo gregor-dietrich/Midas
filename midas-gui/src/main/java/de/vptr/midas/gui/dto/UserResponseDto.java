@@ -184,17 +184,4 @@ public class UserResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "UserResponseDto{"
-                + "id=" + this.id
-                + ", username='" + this.username + '\''
-                + ", email='" + this.email + '\''
-                + ", rankName='" + this.rankName + '\''
-                + ", banned=" + this.banned
-                + ", activated=" + this.activated
-                + ", postsCount=" + this.postsCount
-                + ", commentsCount=" + this.commentsCount
-                + '}';
-    }
 }

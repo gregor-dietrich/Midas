@@ -78,24 +78,4 @@ class AccountResponseDtoTest {
         assertThat(result.getName()).isEqualTo("Mapped Account");
     }
 
-    @Test
-    void toString_shouldContainExpectedFields() {
-        // Given
-        final AccountResponseDto dto = new AccountResponseDto();
-        dto.setId(1L);
-        dto.setName("Acme");
-        dto.setUserCount(2);
-        dto.setAssociatedUserIds(List.of(100L));
-
-        // When
-        final String result = dto.toString();
-
-        // Then
-        assertThat(result).startsWith("AccountResponseDto{");
-        assertThat(result).contains("id=1");
-        assertThat(result).contains("name='Acme'");
-        assertThat(result).contains("userCount=2");
-        assertThat(result).contains("associatedUserIds=[100]");
-        assertThat(result).endsWith("}");
-    }
 }

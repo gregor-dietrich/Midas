@@ -69,14 +69,13 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     public void beforeEnter(final BeforeEnterEvent event) {
         LOG.info("AdminAccountView.beforeEnter - Starting view initialization");
         this.buildUi();
-        this.loadAccountsAsync();
+        this.setupLazyDataProvider();
         LOG.info("AdminAccountView.beforeEnter - View initialization completed");
     }
 
-    private void loadAccountsAsync() {
-        this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(0, UiConstants.DEFAULT_PAGE_SIZE),
-                accounts -> this.grid.setItems(accounts));
+    private void setupLazyDataProvider() {
+        this.grid.setItems(
+                query -> this.accountService.getAllAccounts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -88,7 +87,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
-        this.accountDialog = new AdminAccountDialog(this.accountService, this::loadAccountsAsync, onAuthFailure);
+        this.accountDialog = new AdminAccountDialog(this.accountService, this::setupLazyDataProvider, onAuthFailure);
         this.userPanel = new AdminAccountUserPanel(this.accountService, this.authService, this.userService,
                 onAuthFailure);
 
@@ -98,9 +97,9 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadAccountsAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchAccounts(),
                 "Search by name...",
@@ -124,7 +123,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadAccountsAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
         final var createButton = new CreateButton(_ -> this.accountDialog.open(null), "Create Account");
 
         buttonLayout.add(refreshButton, createButton);
@@ -206,7 +205,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             final var accountDto = account.toAccountDto();
             if (this.accountService.deleteAccount(accountDto.getId())) {
                 NotificationUtil.showSuccess("Account deleted successfully");
-                this.loadAccountsAsync();
+                this.setupLazyDataProvider();
             } else {
                 NotificationUtil.showError("Failed to delete account");
             }

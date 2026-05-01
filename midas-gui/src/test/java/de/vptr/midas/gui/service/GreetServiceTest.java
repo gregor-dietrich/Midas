@@ -1,7 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.AuthClient;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import jakarta.inject.Inject;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,41 +67,25 @@ class GreetServiceTest {
     }
 
     @Test
-    void greet_shouldReturnErrorMessage_whenNotAuthenticated() {
+    void greet_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
-        // When
-        final String result = this.greetService.greet("John");
-
-        // Then
-        assertThat(result).isEqualTo("Error: Not authenticated");
+        // When / Then
+        assertThatThrownBy(() -> this.greetService.greet("John"))
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessage("Not authenticated");
     }
 
     @Test
-    void greet_shouldReturnSessionExpiredMessage_when401Error() {
-        // Given
-        final String name = "John";
-        when(this.authService.getAuthorizationHeader()).thenThrow(new RuntimeException("HTTP 401"));
-
-        // When
-        final String result = this.greetService.greet(name);
-
-        // Then
-        assertThat(result).isEqualTo("Error: Session expired. Please log in again.");
-        verify(this.authService).logout();
-    }
-
-    @Test
-    void greet_shouldReturnBackendErrorMessage_whenOtherException() {
+    void greet_shouldPropagateException_whenAuthServiceThrows() {
         // Given
         final String name = "John";
         when(this.authService.getAuthorizationHeader()).thenThrow(new RuntimeException("Connection error"));
 
-        // When
-        final String result = this.greetService.greet(name);
-
-        // Then
-        assertThat(result).isEqualTo("Error: Could not connect to backend service");
+        // When / Then
+        assertThatThrownBy(() -> this.greetService.greet(name))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Connection error");
     }
 }

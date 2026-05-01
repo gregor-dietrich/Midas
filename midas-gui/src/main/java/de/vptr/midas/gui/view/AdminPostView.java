@@ -93,29 +93,16 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
 
         this.buildUi();
         this.loadCategoriesAsync();
-        this.loadPostsAsync();
+        this.setupLazyDataProviderAllPosts();
     }
 
-    private void loadPostsAsync() {
-        LOG.info("Starting async post loading");
-
-        this.loadDataAsync(
-                () -> this.postService.getAllPosts(),
-                posts -> {
-                    LOG.infof("Successfully loaded %s posts", posts.size());
-                    this.grid.setItems(posts);
-                });
+    private void setupLazyDataProviderAllPosts() {
+        this.grid.setItems(query -> this.postService.getAllPosts(query.getPage(), query.getPageSize()).stream());
     }
 
-    private void loadPublishedPostsAsync() {
-        LOG.info("Starting async published post loading");
-
-        this.loadDataAsync(
-                () -> this.postService.getPublishedPosts(),
-                posts -> {
-                    LOG.infof("Successfully loaded %s published posts", posts.size());
-                    this.grid.setItems(posts);
-                });
+    private void setupLazyDataProviderPublishedPosts() {
+        this.grid.setItems(
+                query -> this.postService.getPublishedPosts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadCategoriesAsync() {
@@ -145,7 +132,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.postDialog = new AdminPostDialog(
-                this.postService, this.userService, this::loadPostsAsync, authFailure);
+                this.postService, this.userService, this::setupLazyDataProviderAllPosts, authFailure);
         this.commentPanel = new AdminPostCommentPanel(
                 this.postCommentService, authFailure);
 
@@ -155,9 +142,9 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadPostsAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProviderAllPosts();
+                        }
                 },
                 _ -> this.searchPosts(),
                 "Search by title or content...",
@@ -166,7 +153,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        this.showPublishedButton = new Button("Show Published Only", _ -> this.loadPublishedPostsAsync());
+        this.showPublishedButton = new Button("Show Published Only",
+                _ -> this.setupLazyDataProviderPublishedPosts());
         this.showPublishedButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         // Date range filter
@@ -190,7 +178,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var createButton = new CreateButton(_ -> this.postDialog.open(null, this.availableCategories));
-        final var refreshButton = new RefreshButton(_ -> this.loadPostsAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProviderAllPosts());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -261,7 +249,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         try {
             this.postService.deletePost(post.getId());
             NotificationUtil.showSuccess("Post deleted successfully");
-            this.loadPostsAsync();
+            this.setupLazyDataProviderAllPosts();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));

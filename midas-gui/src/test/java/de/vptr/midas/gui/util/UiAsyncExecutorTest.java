@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,6 +28,7 @@ class UiAsyncExecutorTest {
         final var ui = mock(UI.class);
         final var executed = new AtomicBoolean(false);
 
+        when(ui.isAttached()).thenReturn(true);
         doAnswer(invocation -> {
             invocation.getArgument(0, Command.class).execute();
             return null;
@@ -46,6 +48,7 @@ class UiAsyncExecutorTest {
         final var dispatchedError = new AtomicReference<ErrorEvent>();
         final var failure = new RuntimeException("boom");
 
+        when(ui.isAttached()).thenReturn(true);
         doThrow(new IllegalStateException("detached"))
                 .when(ui)
                 .access(any(Command.class));
@@ -82,6 +85,7 @@ class UiAsyncExecutorTest {
         final var session = mock(VaadinSession.class);
         final var failure = new RuntimeException("boom");
 
+        when(ui.isAttached()).thenReturn(true);
         doThrow(new IllegalStateException("detached"))
                 .when(ui)
                 .access(any(Command.class));

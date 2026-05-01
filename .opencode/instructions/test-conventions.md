@@ -1,9 +1,5 @@
 # Test Conventions — Midas
 
-Covers both API and GUI test patterns, structure, naming, mocking, and utilities.
-
----
-
 ## midas-api (Backend)
 
 ### Framework
@@ -16,8 +12,17 @@ Covers both API and GUI test patterns, structure, naming, mocking, and utilities
 
 ### Naming
 
-- **Test class**: `<ResourceName>Test` or `<ServiceName>Test` (e.g., `PostResourceTest`, `PostServiceTest`)
-- **Test method**: `testMethodName` or `testMethodName_context` (e.g., `testCreatePost`, `testGetPost_unauthorized`)
+- Test class: `<ResourceName>Test` or `<ServiceName>Test` (e.g., `PostResourceTest`, `PostServiceTest`)
+- Test method: `testMethodName` or `testMethodName_context` (e.g., `testCreatePost`, `testGetPost_unauthorized`)
+
+### Running Tests
+
+```shell
+cd midas-api
+./mvnw test                              # all tests (needs Docker)
+./mvnw test -Dtest=PostResourceTest      # single class
+./mvnw test -Dtest=PostResourceTest#testCreatePost  # single method
+```
 
 ### Resource Tests
 
@@ -52,15 +57,6 @@ class PostServiceTest {
 | `ServiceTestDataBuilder` | Service-layer test data |
 | `ServiceTestUtil` | Service-level auth setup |
 
-### Running Tests
-
-```shell
-cd midas-api
-./mvnw test                              # all tests (needs Docker)
-./mvnw test -Dtest=PostResourceTest      # single class
-./mvnw test -Dtest=PostResourceTest#testCreatePost  # single method
-```
-
 ---
 
 ## midas-gui (Frontend)
@@ -73,8 +69,17 @@ cd midas-api
 
 ### Naming
 
-- **Test class**: `<ClassName>Test` (e.g., `PostServiceTest`, `MainLayoutTest`)
-- **Test method**: `methodName_shouldExpectedResult_whenCondition` (e.g., `getAllPosts_shouldReturnPosts_whenAuthHeaderProvided`)
+- Test class: `<ClassName>Test` (e.g., `PostServiceTest`, `MainLayoutTest`)
+- Test method: `methodName_shouldExpectedResult_whenCondition` (e.g., `getAllPosts_shouldReturnPosts_whenAuthHeaderProvided`)
+
+### Running Tests
+
+```shell
+cd midas-gui
+./mvnw test                                    # all tests
+./mvnw test -Dtest=PostServiceTest             # single class
+./mvnw test -Dtest=PostServiceTest#getAllPosts_shouldReturnPosts_whenAuthenticated  # single method
+```
 
 ### Service Tests
 
@@ -136,20 +141,11 @@ Located in `util/`:
 | `ServiceTestUtil` | Auth header setup helpers |
 | `ExceptionTestUtil` | Exception assertion helpers |
 | `TestUtil` | General constants (`TEST_AUTH_HEADER`) and helpers |
-| `ComponentTestUtil` | Vaadin component test helpers (placeholder) |
+| `ComponentTestUtil` | Vaadin component test helpers |
 
 ### Mocking Strategy
 
-- **REST clients**: mock with Mockito `@Mock`. Stub with `when(...).thenReturn(...)` or `when(...).thenThrow(...)`
-- **AuthService**: mock to control authentication state
-- **Vaadin static methods**: use `MockedStatic` sparingly — prefer testing logic in isolation
-- **No real HTTP calls**: all REST client calls are mocked. No Testcontainers needed.
-
-### Running Tests
-
-```shell
-cd midas-gui
-mvn test                                    # all tests
-mvn test -Dtest=PostServiceTest             # single class
-mvn test -Dtest=PostServiceTest#getAllPosts_shouldReturnPosts_whenAuthenticated  # single method
-```
+- REST clients: mock with Mockito `@Mock`. Stub with `when(...).thenReturn(...)` or `when(...).thenThrow(...)`
+- AuthService: mock to control authentication state
+- Vaadin static methods: use `MockedStatic` sparingly — prefer testing logic in isolation
+- No real HTTP calls: all REST client calls are mocked. No Testcontainers needed.

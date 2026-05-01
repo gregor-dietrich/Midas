@@ -452,18 +452,4 @@ public class UserRankDto {
                 || this.canAddUserRank() || this.canDeleteUserRank() || this.canEditUserRank();
     }
 
-    @Override
-    public String toString() {
-        return "UserRank{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", adminView=" + this.adminView
-                + ", postAdd=" + this.postAdd
-                + ", postDelete=" + this.postDelete
-                + ", postEdit=" + this.postEdit
-                + ", userAdd=" + this.userAdd
-                + ", userDelete=" + this.userDelete
-                + ", userEdit=" + this.userEdit
-                + '}';
-    }
 }

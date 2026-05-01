@@ -76,13 +76,12 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         }
 
         this.buildUi();
-        this.loadGroupsAsync();
+        this.setupLazyDataProvider();
     }
 
-    private void loadGroupsAsync() {
-        this.loadDataAsync(
-                () -> this.groupService.getAllGroups(0, UiConstants.DEFAULT_PAGE_SIZE),
-                result -> this.grid.setItems(result));
+    private void setupLazyDataProvider() {
+        this.grid.setItems(
+                query -> this.groupService.getAllGroups(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -95,7 +94,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.groupDialog = new AdminUserGroupDialog(this.groupService,
-                this::loadGroupsAsync, onAuthFailure);
+                this::setupLazyDataProvider, onAuthFailure);
         this.memberPanel = new AdminUserGroupMemberPanel(this.groupService,
                 this.userService, this.authService, onAuthFailure);
 
@@ -105,9 +104,9 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadGroupsAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchGroups(),
                 "Search by name...",
@@ -132,7 +131,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         layout.setSpacing(true);
 
         final var createButton = new CreateButton(_ -> this.groupDialog.open(null));
-        final var refreshButton = new RefreshButton(_ -> this.loadGroupsAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -181,7 +180,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         try {
             if (this.groupService.deleteGroup(group.getId())) {
                 NotificationUtil.showSuccess("Group deleted successfully");
-                this.loadGroupsAsync();
+                this.setupLazyDataProvider();
             } else {
                 NotificationUtil.showError("Failed to delete group");
             }
@@ -199,7 +198,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     private void searchGroups() {
         final String query = this.searchField.getValue();
         if (query == null || query.trim().isEmpty()) {
-            this.loadGroupsAsync();
+            this.setupLazyDataProvider();
             return;
         }
 
@@ -220,7 +219,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     private void filterByUser() {
         final Integer userId = this.userIdField.getValue();
         if (userId == null) {
-            this.loadGroupsAsync();
+            this.setupLazyDataProvider();
             return;
         }
 

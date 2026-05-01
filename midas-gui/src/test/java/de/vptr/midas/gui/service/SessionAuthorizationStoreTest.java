@@ -83,8 +83,6 @@ class SessionAuthorizationStoreTest {
         clock.advance(SessionAuthorizationStore.SESSION_TTL.plusSeconds(1));
         final var activeSessionId = sessionAuthorizationStore.createSession("Basic pqr");
 
-        sessionAuthorizationStore.cleanupExpiredSessions();
-
         assertThat(sessionAuthorizationStore.resolveAuthorization(expiredSessionId)).isNull();
         assertThat(sessionAuthorizationStore.resolveAuthorization(activeSessionId)).isEqualTo("Basic pqr");
         assertThat(sessionAuthorizationStore.storedSessionCount()).isEqualTo(1);

@@ -327,7 +327,7 @@ class UserGroupServiceTest {
         when(this.groupClient.getGroup(groupId, TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertThrowsBackendError(() -> this.userGroupService.getGroupById(groupId), 500);
+        ExceptionTestUtil.assertThrowsServiceException(() -> this.userGroupService.getGroupById(groupId), "Backend request failed");
     }
 
     @Test

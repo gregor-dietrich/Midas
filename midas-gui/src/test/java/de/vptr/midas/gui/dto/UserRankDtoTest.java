@@ -245,35 +245,4 @@ class UserRankDtoTest {
                 assertThat(dto.hasAnyPermission()).isTrue();
         }
 
-        @Test
-        void toString_shouldContainExpectedFields() {
-                // Given
-                final UserRankDto dto = new UserRankDto("Admin");
-                dto.setId(1L);
-                dto.setPostAdd(true);
-
-                // When
-                final String result = dto.toString();
-
-                // Then
-                assertThat(result).startsWith("UserRank{");
-                assertThat(result).contains("id=1");
-                assertThat(result).contains("name='Admin'");
-                assertThat(result).contains("postAdd=true");
-                assertThat(result).endsWith("}");
-        }
-
-        @Test
-        void toString_adminViewField_printsCorrectValue() {
-                // Given
-                final UserRankDto dto = new UserRankDto();
-                dto.setAdminView(true);
-                dto.setPostAdd(false);
-
-                // When
-                final String result = dto.toString();
-
-                // Then — adminView shows its own value
-                assertThat(result).contains("adminView=true");
-        }
 }

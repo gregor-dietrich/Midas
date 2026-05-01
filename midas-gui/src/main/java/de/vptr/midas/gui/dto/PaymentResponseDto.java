@@ -168,15 +168,4 @@ public class PaymentResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "PaymentResponseDto{"
-                + "id=" + this.id
-                + ", targetAccountName='" + this.targetAccountName + '\''
-                + ", sourceAccountName='" + this.sourceAccountName + '\''
-                + ", username='" + this.username + '\''
-                + ", amount=" + this.amount
-                + ", date=" + this.date
-                + '}';
-    }
 }

@@ -54,14 +54,4 @@ public class PageResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "PageResponseDto{"
-                + "id=" + this.id
-                + ", title='" + this.title + '\''
-                + ", content='"
-                + (this.content != null ? this.content.substring(0, Math.min(50, this.content.length())) + "..." : null)
-                + '\''
-                + '}';
-    }
 }

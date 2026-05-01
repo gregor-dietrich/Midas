@@ -344,7 +344,7 @@ class PaymentServiceTest {
 
         assertThatThrownBy(() -> this.paymentService.getPaymentById(paymentId))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("Backend error: 500");
+                .hasMessage("Backend request failed");
     }
 
     @Test

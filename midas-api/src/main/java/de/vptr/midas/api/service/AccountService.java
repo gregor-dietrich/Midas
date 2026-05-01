@@ -50,8 +50,6 @@ public class AccountService {
     /** Creates a new account. */
     @Transactional
     public AccountResponseDto createAccount(final AccountDto accountDto) {
-        this.validateRequiredName(accountDto.name, "creating");
-
         final AccountEntity account = new AccountEntity();
         account.name = accountDto.name;
         account.persistAndFlush();
@@ -62,7 +60,6 @@ public class AccountService {
     @Transactional
     public AccountResponseDto updateAccount(final Long id, final AccountDto accountDto) {
         final AccountEntity existingAccount = this.requireExistingAccount(id);
-        this.validateRequiredName(accountDto.name, "updating");
 
         // Complete replacement (PUT semantics)
         existingAccount.name = accountDto.name;
@@ -129,9 +126,5 @@ public class AccountService {
         return existingAccount;
     }
 
-    private void validateRequiredName(final String name, final String action) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new ValidationException("Name is required for " + action + " an account");
-        }
-    }
+
 }

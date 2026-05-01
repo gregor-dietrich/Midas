@@ -331,7 +331,7 @@ class UserServiceTest {
 
         // When & Then
         ExceptionTestUtil.assertThrowsServiceException(() -> this.userService.getUserById(userId),
-                "Backend error: 500");
+                "Backend request failed");
     }
 
     @Test
@@ -344,7 +344,7 @@ class UserServiceTest {
                 .thenThrow(new jakarta.ws.rs.WebApplicationException(response));
 
         ExceptionTestUtil.assertThrowsServiceException(() -> this.userService.getUserById(userId),
-                "User lookup failed");
+                "Backend request failed");
     }
 
     @Test

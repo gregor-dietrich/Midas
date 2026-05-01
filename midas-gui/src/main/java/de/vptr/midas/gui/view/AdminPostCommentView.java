@@ -71,18 +71,12 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         }
 
         this.buildUi();
-        this.loadCommentsAsync();
+        this.setupLazyDataProvider();
     }
 
-    private void loadCommentsAsync() {
-        LOG.info("Starting async comment loading");
-
-        this.loadDataAsync(
-                () -> this.commentService.getAllComments(0, UiConstants.DEFAULT_PAGE_SIZE),
-                comments -> {
-                    LOG.infof("Successfully loaded %s comments", comments.size());
-                    this.grid.setItems(comments);
-                });
+    private void setupLazyDataProvider() {
+        this.grid.setItems(
+                query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -94,7 +88,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.createGrid();
         this.commentDialog = new AdminPostCommentDialog(
                 this.commentService,
-                this::loadCommentsAsync,
+                this::setupLazyDataProvider,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
         this.add(header, searchLayout, buttonLayout, this.grid);
@@ -103,9 +97,9 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(
                 e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadCommentsAsync();
-                    }
+                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                            this.setupLazyDataProvider();
+                        }
                 },
                 _ -> this.searchComments(),
                 "Search by author or content...",
@@ -134,7 +128,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadCommentsAsync());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(refreshButton);
         return layout;
@@ -193,7 +187,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         try {
             this.commentService.deleteComment(comment.getId());
             NotificationUtil.showSuccess("Comment deleted successfully");
-            this.loadCommentsAsync();
+            this.setupLazyDataProvider();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
@@ -208,7 +202,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     private void searchComments() {
         final String query = this.searchField.getValue();
         if (query == null || query.trim().isEmpty()) {
-            this.loadCommentsAsync();
+            this.setupLazyDataProvider();
             return;
         }
 

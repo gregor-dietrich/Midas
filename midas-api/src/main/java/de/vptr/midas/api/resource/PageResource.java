@@ -8,7 +8,6 @@ import de.vptr.midas.api.service.PageService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import io.quarkus.security.Authenticated;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -39,7 +38,6 @@ public class PageResource {
 
     /** Returns all pages with normalized pagination parameters. */
     @GET
-    @PermitAll
     public List<PageResponseDto> getAllPages(
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
@@ -50,7 +48,6 @@ public class PageResource {
 
     @GET
     @Path("/{id}")
-    @PermitAll
     public Response getPage(@PathParam("id") @Min(1) final Long id) {
         return ResponseUtil.okOrNotFound(this.pageService.findById(id));
     }
@@ -58,7 +55,6 @@ public class PageResource {
     /** Returns all pages matching the search query. */
     @GET
     @Path("/search")
-    @PermitAll
     public List<PageResponseDto> searchPages(@QueryParam("query") final String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return this.pageService.getAllPages(PaginationUtil.DEFAULT_PAGE, PaginationUtil.MAX_SIZE);
@@ -84,7 +80,7 @@ public class PageResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "page:edit" })
-    public Response patchPage(@PathParam("id") @Min(1) final Long id, @Valid final PageDto pageDto) {
+    public Response patchPage(@PathParam("id") @Min(1) final Long id, final PageDto pageDto) {
         final PageResponseDto updated = this.pageService.patchPage(id, pageDto);
         return ResponseUtil.ok(updated);
     }

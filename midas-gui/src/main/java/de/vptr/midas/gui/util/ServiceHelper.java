@@ -249,16 +249,20 @@ public final class ServiceHelper {
             final String failurePrefix) {
         final Response response = exception.getResponse();
         final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
-        log.errorf("HTTP error while %s: %s", operation, statusText);
+        final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);
+        log.warnf("HTTP error while %s: %s — backend message: %s", operation, statusText, backendMessage);
         try {
             if (response != null && response.getStatus() == 401) {
                 authService.logout();
                 return new AuthenticationException("Session expired", exception);
             }
-            if (failurePrefix != null && !failurePrefix.isBlank()) {
-                return responseFailure(failurePrefix, response, exception);
+            if (response != null && response.getStatus() == 422) {
+                if (failurePrefix != null && !failurePrefix.isBlank()) {
+                    return responseFailure(failurePrefix, response, exception);
+                }
+                return backendError(response, exception);
             }
-            return backendError(response, exception);
+            return new ServiceException("Backend request failed", exception);
         } finally {
             closeQuietly(response, log);
         }

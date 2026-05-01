@@ -3,7 +3,6 @@ package de.vptr.midas.api.resource;
 import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,8 +15,8 @@ class PageResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/pages";
 
     @Test
-    void testGetAllPages_permitAll() {
-        TestUtil.testPermitAllGetWithJson(ENDPOINT_URL);
+    void testGetAllPages_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL);
     }
 
     @Test
@@ -26,16 +25,8 @@ class PageResourceTest {
     }
 
     @Test
-    void testGetPageById_permitAll() {
-        // Endpoint is @PermitAll — verify no 401. Page may or may not exist in test
-        // data.
-        final int statusCode = TestUtil.given()
-                .when()
-                .get(ENDPOINT_URL + "/1")
-                .then()
-                .extract().statusCode();
-        assertTrue(statusCode == 200 || statusCode == 404,
-                "Expected 200 or 404 but got " + statusCode);
+    void testGetPageById_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/1");
     }
 
     @Test
@@ -49,13 +40,8 @@ class PageResourceTest {
     }
 
     @Test
-    void testSearchPages_blankQueryReturnsFirstBatch() {
-        TestUtil.given()
-                .queryParam("query", "   ")
-                .when()
-                .get(ENDPOINT_URL + "/search")
-                .then()
-                .statusCode(200);
+    void testSearchPages_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/search");
     }
 
     @Test

@@ -50,11 +50,4 @@ public class PageDto {
         this.content = content;
     }
 
-    @Override
-    public String toString() {
-        return "PageDto{"
-                + "id=" + this.id
-                + ", title='" + this.title + '\''
-                + '}';
-    }
 }

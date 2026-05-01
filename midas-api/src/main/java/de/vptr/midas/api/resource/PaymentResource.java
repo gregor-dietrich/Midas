@@ -136,7 +136,7 @@ public class PaymentResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "user-account:edit" })
-    public Response patchPayment(@PathParam("id") @Min(1) final Long id, @Valid final PaymentDto paymentDto) {
+    public Response patchPayment(@PathParam("id") @Min(1) final Long id, final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PaymentResponseDto updated = this.paymentService.patchPayment(id, paymentDto, currentUsername);
         return ResponseUtil.ok(updated);

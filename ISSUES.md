@@ -59,3 +59,113 @@
 - Replace deprecated `lumoImports` usage in `midas-gui/src/main/frontend/themes/starter-theme/theme.json`.
 - If utility classes required, add `@StyleSheet(Lumo.UTILITY_STYLESHEET)` in `midas-gui/src/main/java/de/vptr/midas/gui/AppConfig.java`.
 - Fix component-style loading warning (`vaadin-text-field.css`) by enabling `themeComponentStyles` or moving styles to supported setup.
+
+---
+
+## Code Review Findings — Security, Bugs, Performance, Architecture
+
+## Cross-Module Consistency & Architecture
+
+### X-CONS-02: PasswordChangeDto exists but no endpoint/feature
+
+- **Issue:** `PasswordChangeDto` exists in API but no GUI client or endpoint uses it.
+- **Fix:** Implement the full password-change flow: API endpoint (`POST /api/v1/users/me/password`), GUI REST client method, GUI service method, GUI view/dialog for password change.
+- **Review instruction:** Ensure the new endpoint follows existing patterns: `@Authenticated`, `@RolesAllowed`, `@Valid` DTO, service-layer validation, response via `ResponseUtil`.
+
+### New Feature: Password Change (API + GUI)
+
+**Goal:** Allow authenticated users to change their own password.
+
+**API Plan:**
+
+1. Add `POST /api/v1/users/me/password` to `UserResource` (or new `MeResource`).
+2. Consume `@Valid PasswordChangeDto`.
+3. Verify `currentPassword` matches stored hash via `PasswordHashingService`.
+4. Validate `newPassword` meets complexity rules (reuse existing validation if any, or add `@Size(min = 8)`).
+5. Hash new password with new random salt via `PasswordHashingService`.
+6. Update `UserEntity.password` and `UserEntity.salt`.
+7. Return `204 No Content` on success, `401` if current password wrong, `422` if validation fails.
+8. Add tests: `UserResourceTest` and `UserServiceTest`.
+
+**GUI Plan:**
+
+1. Add `changePassword` method to `UserClient` REST client.
+2. Add `changePassword` method to `UserService` with standard exception handling.
+3. Add "Change Password" button/dialog to `UserDetailView` or `AdminUserDialog`.
+4. On success, show notification and optionally force re-login.
+5. Add tests for the service method and dialog.
+
+**Review instruction:** Ensure password change does not store plaintext, uses the same PBKDF2-SHA256 params as registration, and invalidates existing sessions if the backend supports it.
+
+---
+
+## API-SMELL-01: AccountResource is a God class
+
+- **File:** `midas-api/src/main/java/.../resource/AccountResource.java` (455 lines)
+- **Issue:** Mixes account CRUD, payment creation, balance queries, user-account associations, and metadata updates.
+- **Fix:** Extract payment-related endpoints to `PaymentResource` (or dedicated sub-resource). Extract user-account association endpoints to `AccountMembershipResource`.
+- **Review instruction:** Audit all resource classes >300 lines for SRP violations. Split any class handling more than one distinct domain concept.
+
+---
+
+## Architecture: GUI Admin CRUD Abstraction Refactor
+
+**Note:** GUI-SMELL-01 (admin views) and GUI-SMELL-02 (admin dialogs) moved here from Phase 3 — they are architectural refactor work, not immediate bug fixes.
+
+**Goal:** Eliminate duplicated CRUD boilerplate across ~17 admin view/dialog files.
+
+### GUI-SMELL-01: Admin views duplicated CRUD boilerplate
+
+- **Files:** `midas-gui/src/main/java/.../view/AdminPostView.java`, `AdminUserView.java`, etc. (~9 files)
+- **Issue:** Each admin view repeats grid, data provider, dialog, action column, search layout, notification.
+- **Fix:** Introduce `AbstractAdminCrudView<T, D extends FormDialog<T>>` with template methods.
+
+### GUI-SMELL-02: Admin dialogs duplicated form logic
+
+- **Files:** `midas-gui/src/main/java/.../component/dialog/AdminPostDialog.java`, etc. (~8 files)
+- **Issue:** Dialogs repeat `Binder<T>` init, field creation, `BeanValidationBinder` config, save/cancel listeners.
+- **Fix:** Create `AbstractAdminFormDialog<T>` with protected `configureBinder()` hook and generic `save()` / `cancel()` handlers.
+
+**Plan:**
+
+1. Create `AbstractAdminCrudView<T extends Serializable, D extends FormDialog<T>>` extending `AbstractAsyncDataView`.
+   - Template methods: `createDialog()`, `getGridColumns()`, `getClientMethod()`, `getDeleteConfirmMessage()`.
+   - Shared logic: grid setup, data provider wiring, action column renderer, search layout, success notification.
+2. Create `AbstractAdminFormDialog<T>` extending `FormDialog<T>`.
+   - Protected hooks: `configureBinder()`, `createFormLayout()`.
+   - Generic `save()` / `cancel()` handlers using a `Consumer<T>` callback.
+3. Migrate one view/dialog pair as a pilot (e.g., `AdminPostView` + `AdminPostDialog`).
+4. Migrate remaining 8 views and 7 dialogs incrementally.
+5. Ensure all existing tests continue to pass; add tests for the abstract base classes.
+
+**Review instruction:** Ensure the abstraction does not force unnatural complexity on simple CRUD views. Keep overrides lightweight. Verify SpotBugs/Checkstyle pass after the refactor.
+
+**Done when:**
+
+- All admin views extend `AbstractAdminCrudView`.
+- All admin dialogs extend `AbstractAdminFormDialog`.
+- No duplicated grid/dialog setup code remains.
+- All existing tests pass.
+- SpotBugs, CheckStyle and all Maven Tests passing for gui.
+
+---
+
+## Review Instructions Summary
+
+For every issue category above, perform the following codebase-wide reviews before fixing:
+
+1. **Unbounded Maps / Caches:** Search all `ConcurrentHashMap`, `HashMap`, `LinkedHashMap` used as caches in both modules. Ensure every cache has eviction (TTL or max-size). Apply Caffeine/Guava consistently.
+2. **Exception Logging:** Search all `LOG.*f(format, ..., throwable)` calls. Verify the throwable is passed as the first argument (JBoss Logging signature) or use a non-varargs overload.
+3. **Anonymous Access:** Search all `@PermitAll` in `midas-api`. Ensure only genuinely public endpoints (health checks) use it. Remove from all business resources.
+4. **Authentication Guards:** Verify all `@Route` views in `midas-gui` use `MainLayout` or `AdminMainLayout` (both already implement `BeforeEnterObserver` with auth checks). Ensure no view bypasses these layouts or has its own inconsistent auth logic.
+5. **Blocking Async:** Search all `CompletableFuture.supplyAsync`, `CompletableFuture.runAsync` in `midas-gui`. Ensure blocking I/O never uses the common pool.
+6. **Backend Error Leakage:** Search all `Notification.show`, `NotificationUtil`, and user-facing error displays in `midas-gui`. Ensure raw backend messages are never shown.
+7. **Database-Specific Column Definitions:** Search all `@Column(columnDefinition = ...)` in `midas-api`. Remove or generalize MySQL-specific types.
+8. **Missing @Test:** Search all test methods named `test*` in both modules for missing `@Test` or `@ParameterizedTest`.
+9. **Unbounded Lists:** Search all service/repository methods returning `List<T>` in `midas-api`. Add pagination or max limits.
+10. **Duplicated Guard Clauses:** Verify all `midas-gui` services use `authService.requireAuthorizationHeader()` (which already centralizes the null-check and throws `AuthenticationException`). Ensure no legacy `getAuthorizationHeader() == null` patterns remain.
+11. **PII in Logs:** Search all `toString()` overrides and log statements in both modules for sensitive data (passwords, emails, financial data, IP addresses). Redact or remove.
+12. **God Classes:** Identify all classes >300 lines. Evaluate for SRP violations and split where appropriate.
+13. **Hardcoded Constants:** Search all numeric literals representing timeouts, retries, limits, page sizes, buffer sizes. Extract to named constants or config.
+14. **DTO Field Mismatches:** Compare every API request/response DTO with its GUI counterpart and with test JSON builders. Fix all drift.
+15. **Patch vs PUT Semantics:** Audit all `patch*` methods to ensure they reject invalid input rather than silently skipping.

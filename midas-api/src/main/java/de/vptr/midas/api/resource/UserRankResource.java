@@ -88,7 +88,7 @@ public class UserRankResource {
     @PATCH
     @Path("/{id}")
     @RolesAllowed({ "user-rank:edit" })
-    public Response patchRank(@PathParam("id") @Min(1) final Long id, @Valid final UserRankDto rankDto) {
+    public Response patchRank(@PathParam("id") @Min(1) final Long id, final UserRankDto rankDto) {
         final UserRankResponseDto updated = this.rankService.patchRank(id, rankDto);
         return ResponseUtil.ok(updated);
     }

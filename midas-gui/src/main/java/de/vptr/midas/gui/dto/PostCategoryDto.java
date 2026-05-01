@@ -88,12 +88,4 @@ public class PostCategoryDto {
         return this.parent == null;
     }
 
-    @Override
-    public String toString() {
-        return "PostCategoryDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", parent=" + (this.parent != null ? this.parent.getId() : null)
-                + '}';
-    }
 }

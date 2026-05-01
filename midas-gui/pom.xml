@@ -147,6 +147,12 @@
             <artifactId>spotbugs-annotations</artifactId>
             <version>${spotbugs-annotations.version}</version>
         </dependency>
+
+        <!-- Caffeine cache -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-caffeine</artifactId>
+        </dependency>
     </dependencies>
 
     <repositories>

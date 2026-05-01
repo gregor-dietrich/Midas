@@ -23,7 +23,7 @@ class RateLimitFilterTest {
     void testReadRequestsRateLimitedByIpAndEndpoint() {
         final String ip = "198.51.100.11";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.given()
+            TestUtil.authenticatedRequest()
                     .header(FORWARDED_FOR_HEADER, ip)
                     .when()
                     .get("/api/v1/posts/published")
@@ -87,7 +87,7 @@ class RateLimitFilterTest {
         final String firstClientChain = "198.51.100.16, 10.0.0.5";
         final String secondClientChain = "198.51.100.17, 10.0.0.5";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.given()
+            TestUtil.authenticatedRequest()
                     .header(FORWARDED_FOR_HEADER, firstClientChain)
                     .when()
                     .get("/api/v1/posts/published")
@@ -97,7 +97,7 @@ class RateLimitFilterTest {
 
         assertRateLimitResponse(firstClientChain, "/api/v1/posts/published", "GET", "Read request limit exceeded");
 
-        TestUtil.given()
+        TestUtil.authenticatedRequest()
                 .header(FORWARDED_FOR_HEADER, secondClientChain)
                 .when()
                 .get("/api/v1/posts/published")
@@ -109,7 +109,7 @@ class RateLimitFilterTest {
     void testMalformedForwardedForFallsBackToRemoteAddress() {
         final String malformedForwardedFor = "198.51.100.18:8443";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.given()
+            TestUtil.authenticatedRequest()
                     .header(FORWARDED_FOR_HEADER, malformedForwardedFor)
                     .when()
                     .get("/api/v1/posts/published")
@@ -142,35 +142,35 @@ class RateLimitFilterTest {
         final String thirdIp = "198.51.100.23";
 
         for (int i = 0; i < 5; ++i) {
-            TestUtil.given()
+            TestUtil.authenticatedRequest()
                     .header(FORWARDED_FOR_HEADER, firstIp)
                     .when()
                     .get("/api/v1/posts/published")
                     .then()
                     .statusCode(200);
         }
-        TestUtil.given()
+        TestUtil.authenticatedRequest()
                 .header(FORWARDED_FOR_HEADER, firstIp)
                 .when()
                 .get("/api/v1/posts/published")
                 .then()
                 .statusCode(429);
 
-        TestUtil.given()
+        TestUtil.authenticatedRequest()
                 .header(FORWARDED_FOR_HEADER, secondIp)
                 .when()
                 .get("/api/v1/posts/published")
                 .then()
                 .statusCode(200);
 
-        TestUtil.given()
+        TestUtil.authenticatedRequest()
                 .header(FORWARDED_FOR_HEADER, thirdIp)
                 .when()
                 .get("/api/v1/posts/published")
                 .then()
                 .statusCode(200);
 
-        TestUtil.given()
+        TestUtil.authenticatedRequest()
                 .header(FORWARDED_FOR_HEADER, firstIp)
                 .when()
                 .get("/api/v1/posts/published")

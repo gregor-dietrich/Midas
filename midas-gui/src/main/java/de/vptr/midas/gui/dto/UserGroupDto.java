@@ -73,13 +73,4 @@ public class UserGroupDto {
         this.created = created;
     }
 
-    @Override
-    public String toString() {
-        return "UserGroupDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", userCount=" + this.userCount
-                + ", created=" + this.created
-                + '}';
-    }
 }

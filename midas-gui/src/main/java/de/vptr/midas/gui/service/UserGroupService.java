@@ -1,12 +1,13 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -22,8 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for user group operations. */
 @ApplicationScoped
 public class UserGroupService {
 
@@ -37,7 +37,7 @@ public class UserGroupService {
     AuthService authService;
 
     /** Returns the all groups. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> getAllGroups(final Integer page, final Integer size) {
         LOG.debug("Fetching all groups");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -49,7 +49,7 @@ public class UserGroupService {
     }
 
     /** Returns the group by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserGroupResponseDto> getGroupById(final Long id) {
         LOG.debugf("Fetching group with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -67,7 +67,7 @@ public class UserGroupService {
     }
 
     /** Returns the users in group. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserDto> getUsersInGroup(final Long groupId) {
         LOG.debugf("Fetching users in group: %s", groupId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -77,7 +77,7 @@ public class UserGroupService {
     }
 
     /** Handles the search groups operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> searchGroups(final String query) {
         LOG.debugf("Searching groups with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -151,7 +151,7 @@ public class UserGroupService {
     }
 
     /** Returns the groups by user. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> getGroupsByUser(final Long userId) {
         LOG.debugf("Fetching groups for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();

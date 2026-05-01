@@ -35,11 +35,4 @@ public class AccountDto {
         this.name = name;
     }
 
-    @Override
-    public String toString() {
-        return "AccountDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + '}';
-    }
 }

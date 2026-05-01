@@ -178,20 +178,4 @@ public class UserDto {
         return this.banned != null && this.banned;
     }
 
-    @Override
-    public String toString() {
-        return "User{"
-                + "id=" + this.id
-                + ", username='" + this.username + '\''
-                + ", email='" + this.email + '\''
-                + ", banned=" + this.banned
-                + ", activated=" + this.activated
-                + ", rankId=" + this.rankId
-                + ", rankName='" + this.rankName + '\''
-                + ", created=" + this.created
-                + ", lastLogin=" + this.lastLogin
-                + ", postsCount=" + this.postsCount
-                + ", commentsCount=" + this.commentsCount
-                + '}';
-    }
 }

@@ -28,11 +28,13 @@ import jakarta.ws.rs.core.Response;
 public interface PostClient {
 
         @GET
-        List<PostResponseDto> getAllPosts(@HeaderParam("Authorization") String authorization);
+        List<PostResponseDto> getAllPosts(@QueryParam("page") Integer page, @QueryParam("size") Integer size,
+                        @HeaderParam("Authorization") String authorization);
 
         @GET
         @Path("/published")
-        List<PostResponseDto> getPublishedPosts(@HeaderParam("Authorization") String authorization);
+        List<PostResponseDto> getPublishedPosts(@QueryParam("page") Integer page, @QueryParam("size") Integer size,
+                        @HeaderParam("Authorization") String authorization);
 
         @GET
         @Path("/{id}")

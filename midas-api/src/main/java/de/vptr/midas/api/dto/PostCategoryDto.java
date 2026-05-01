@@ -1,5 +1,6 @@
 package de.vptr.midas.api.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -12,7 +13,8 @@ import jakarta.validation.constraints.Size;
  */
 public class PostCategoryDto {
 
-    @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters when provided")
+    @NotBlank(message = "Name is required")
+    @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     public String name;
 
     // Optional parentId for setting parent category

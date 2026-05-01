@@ -91,14 +91,6 @@ public class UserService {
     /** Creates a new user. */
     @Transactional
     public UserResponseDto createUser(final UserDto userDto) {
-        // Validate required fields for POST
-        if (userDto.username == null || userDto.username.trim().isEmpty()) {
-            throw new ValidationException("Username is required for creating a user");
-        }
-        if (userDto.password == null || userDto.password.trim().isEmpty()) {
-            throw new ValidationException("Password is required for creating a user");
-        }
-
         // Check for duplicate username
         EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username,
                 "already taken");
@@ -155,11 +147,6 @@ public class UserService {
     /** Updates the user with the given id. */
     @Transactional
     public UserResponseDto updateUser(final Long id, final UserDto userDto) {
-        // Validate required fields for PUT
-        if (userDto.username == null || userDto.username.trim().isEmpty()) {
-            throw new ValidationException("Username is required for updating a user");
-        }
-
         final UserEntity existingUser = UserEntity.findById(id);
         if (existingUser == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
@@ -305,9 +292,7 @@ public class UserService {
     }
 
     private UserResponseDto toResponseDto(final UserEntity user) {
-        final long postsCount = PostEntity.count("user.id", user.id);
-        final long commentsCount = PostCommentEntity.count("user.id", user.id);
-        return new UserResponseDto(user, postsCount, commentsCount);
+        return this.toResponseDtos(List.of(user)).get(0);
     }
 
     private List<UserResponseDto> toResponseDtos(final List<UserEntity> users) {

@@ -164,15 +164,4 @@ public class PostResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "PostResponseDto{"
-                + "id=" + this.id
-                + ", title='" + this.title + '\''
-                + ", username='" + this.username + '\''
-                + ", categoryName='" + this.categoryName + '\''
-                + ", published=" + this.published
-                + ", commentsCount=" + this.commentsCount
-                + '}';
-    }
 }

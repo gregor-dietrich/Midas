@@ -53,12 +53,4 @@ public class UserGroupResponseDto {
         return dto;
     }
 
-    @Override
-    public String toString() {
-        return "UserGroupResponseDto{"
-                + "id=" + this.id
-                + ", name='" + this.name + '\''
-                + ", userCount=" + this.userCount
-                + '}';
-    }
 }

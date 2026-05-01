@@ -93,10 +93,8 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
                         .setParameter("now", LocalDateTime.now())
                         .setParameter("id", user.id)
                         .executeUpdate();
-            } catch (final RuntimeException e) {
-                // Log but don't fail authentication for last_login update issues
-                // (OptimisticLockException, etc.)
-                LOG.debugf("Failed to update last_login for user %s (this is expected during concurrent logins): %s",
+            } catch (final jakarta.persistence.OptimisticLockException e) {
+                LOG.debugf("Failed to update last_login for user %s (concurrent login): %s",
                         user.username, e.getMessage());
             }
 

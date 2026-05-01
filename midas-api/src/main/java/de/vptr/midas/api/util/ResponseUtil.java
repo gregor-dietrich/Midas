@@ -19,6 +19,10 @@ public class ResponseUtil {
                 : Response.status(Response.Status.CREATED).entity(entity).build();
     }
 
+    /**
+     * Returns a 204 No Content response.
+     * Use this for successful deletions or empty results.
+     */
     public static Response noContent() {
         return Response.status(Response.Status.NO_CONTENT).build();
     }
@@ -31,6 +35,10 @@ public class ResponseUtil {
                 .build();
     }
 
+    /**
+     * Returns a 200 OK response with no body.
+     * Use this for simple success acknowledgements.
+     */
     public static Response ok() {
         return Response.status(Response.Status.OK).build();
     }
@@ -51,15 +59,26 @@ public class ResponseUtil {
                 .orElse(notFound());
     }
 
+    /**
+     * Returns a 401 Unauthorized response.
+     * Use this when authentication is required but missing.
+     */
     public static Response unauthorized() {
         return Response.status(Response.Status.UNAUTHORIZED).build();
     }
 
+    /**
+     * Returns a 403 Forbidden response.
+     * Use this when the user lacks permission for the action.
+     */
     public static Response forbidden() {
         return Response.status(Response.Status.FORBIDDEN).build();
     }
 
-    // JAX-RS Response.Status does not include 422 UNPROCESSABLE_ENTITY
+    /**
+     * Returns a 422 Unprocessable Entity response with the given entity body.
+     * Note that JAX-RS Response.Status does not include 422 UNPROCESSABLE_ENTITY.
+     */
     public static Response unprocessable(final Object entity) {
         return Response.status(422).entity(entity).build();
     }

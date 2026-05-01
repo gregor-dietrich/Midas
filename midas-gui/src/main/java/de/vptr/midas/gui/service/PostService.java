@@ -1,11 +1,12 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -14,13 +15,13 @@ import de.vptr.midas.gui.dto.PostDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for post operations. */
 @ApplicationScoped
 public class PostService {
 
@@ -34,27 +35,51 @@ public class PostService {
     AuthService authService;
 
     /** Returns the all posts. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getAllPosts() {
         LOG.debug("Fetching all posts");
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
-                () -> this.postClient.getAllPosts(authHeader),
+                () -> this.postClient.getAllPosts(null, null, authHeader),
+                this.authService, LOG, "fetching posts");
+    }
+
+    /** Returns the all posts paginated. */
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    public List<PostResponseDto> getAllPosts(final Integer page, final Integer size) {
+        LOG.debugf("Fetching all posts page %s size %s", page, size);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        final Integer safePage = PaginationParamUtil.sanitizePage(page);
+        final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
+        return ServiceHelper.execute(
+                () -> this.postClient.getAllPosts(safePage, safeSize, authHeader),
                 this.authService, LOG, "fetching posts");
     }
 
     /** Returns the published posts. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPublishedPosts() {
         LOG.debug("Fetching published posts");
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
-                () -> this.postClient.getPublishedPosts(authHeader),
+                () -> this.postClient.getPublishedPosts(null, null, authHeader),
+                this.authService, LOG, "fetching published posts");
+    }
+
+    /** Returns the published posts paginated. */
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    public List<PostResponseDto> getPublishedPosts(final Integer page, final Integer size) {
+        LOG.debugf("Fetching published posts page %s size %s", page, size);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        final Integer safePage = PaginationParamUtil.sanitizePage(page);
+        final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
+        return ServiceHelper.execute(
+                () -> this.postClient.getPublishedPosts(safePage, safeSize, authHeader),
                 this.authService, LOG, "fetching published posts");
     }
 
     /** Returns the post by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<PostResponseDto> getPostById(final Long id) {
         LOG.debugf("Fetching post with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -71,7 +96,7 @@ public class PostService {
     }
 
     /** Returns the posts by user. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPostsByUser(final Long userId) {
         LOG.debugf("Fetching posts for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -81,7 +106,7 @@ public class PostService {
     }
 
     /** Returns the posts by category. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPostsByCategory(final Long categoryId) {
         LOG.debugf("Fetching posts for category: %s", categoryId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -133,7 +158,7 @@ public class PostService {
     }
 
     /** Handles the search posts operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> searchPosts(final String query) {
         LOG.debugf("Searching posts with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -143,7 +168,7 @@ public class PostService {
     }
 
     /** Returns the posts by date range. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPostsByDateRange(final String startDate, final String endDate) {
         LOG.debugf("Fetching posts by date range: %s to %s", startDate, endDate);
         final var authHeader = this.authService.requireAuthorizationHeader();

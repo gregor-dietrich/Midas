@@ -321,7 +321,7 @@ class AccountServiceTest {
 
         assertThatThrownBy(() -> this.accountService.getAccountById(accountId))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("Backend error: 500");
+                .hasMessage("Backend request failed");
     }
 
     @Test

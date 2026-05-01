@@ -14,7 +14,6 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
-import static de.vptr.midas.api.util.TestUtil.testPermitAllGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
@@ -30,8 +29,8 @@ class PostResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/posts";
 
     @Test
-    void testGetAllPosts_permitAll() {
-        testPermitAllGetWithJson(ENDPOINT_URL);
+    void testGetAllPosts_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL);
     }
 
     @Test
@@ -40,8 +39,8 @@ class PostResourceTest {
     }
 
     @Test
-    void testGetPublishedPosts_permitAll() {
-        testPermitAllGetWithJson(ENDPOINT_URL + "/published");
+    void testGetPublishedPosts_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/published");
     }
 
     @Test
@@ -76,8 +75,8 @@ class PostResourceTest {
     }
 
     @Test
-    void testGetPostsByCategory_permitAll() {
-        testPermitAllGetWithJson(ENDPOINT_URL + "/category/1");
+    void testGetPostsByCategory_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/category/1");
     }
 
     @Test

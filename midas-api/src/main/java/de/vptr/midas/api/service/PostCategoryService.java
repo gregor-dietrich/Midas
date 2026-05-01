@@ -64,9 +64,6 @@ public class PostCategoryService {
     /** Creates a new post category. */
     @Transactional
     public PostCategoryResponseDto createCategory(final PostCategoryDto dto) {
-        if (dto.name == null || dto.name.trim().isEmpty()) {
-            throw new ValidationException("Name is required for creating a category");
-        }
         final PostCategoryEntity category = new PostCategoryEntity();
         category.name = dto.name;
         if (dto.parentId != null) {
@@ -86,9 +83,6 @@ public class PostCategoryService {
         final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(id);
         if (existingCategory == null) {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
-        }
-        if (dto.name == null || dto.name.trim().isEmpty()) {
-            throw new ValidationException("Name is required for updating a category");
         }
         existingCategory.name = dto.name;
         if (dto.parentId != null) {
@@ -138,35 +132,27 @@ public class PostCategoryService {
 
     /**
      * Check if potential parent is a descendant of the category (to prevent
-     * circular references). Uses scalar queries to avoid lazy-loading issues.
+     * circular references). Uses a recursive CTE to traverse ancestors.
      */
     private boolean isDescendantOf(final Long potentialParentId, final Long categoryId) {
         if (potentialParentId.equals(categoryId)) {
             return true;
         }
 
-        // Fetch all parent mappings in one query to prevent O(N) queries
-        // Assuming PostCategory table is not massively large
-        final List<Object[]> paths = PostCategoryEntity.getEntityManager()
-                .createQuery("SELECT c.id, c.parent.id FROM PostCategoryEntity c WHERE c.parent IS NOT NULL",
-                        Object[].class)
+        final List<Long> ancestors = PostCategoryEntity.getEntityManager()
+                .createNativeQuery("""
+                        WITH RECURSIVE ancestors AS (
+                            SELECT id, parent_id FROM post_categories WHERE id = :startId
+                            UNION ALL
+                            SELECT c.id, c.parent_id FROM post_categories c
+                            INNER JOIN ancestors a ON c.id = a.parent_id
+                        )
+                        SELECT id FROM ancestors
+                        """, Long.class)
+                .setParameter("startId", potentialParentId)
                 .getResultList();
 
-        final Map<Long, Long> parentMap = new HashMap<>();
-        for (final Object[] path : paths) {
-            parentMap.put((Long) path[0], (Long) path[1]);
-        }
-
-        Long currentId = potentialParentId;
-        int depth = 0;
-        while (currentId != null && depth < MAX_CATEGORY_DEPTH) {
-            currentId = parentMap.get(currentId);
-            if (currentId != null && currentId.equals(categoryId)) {
-                return true;
-            }
-            depth++;
-        }
-        return false;
+        return ancestors.contains(categoryId);
     }
 
     /** Deletes the category with the given id. */

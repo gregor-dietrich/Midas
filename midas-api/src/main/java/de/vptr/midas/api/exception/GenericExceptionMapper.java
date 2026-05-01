@@ -35,11 +35,10 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
             return buildErrorResponse(409, "Conflict", "A resource with the same identifier already exists");
         }
 
-        LOG.errorf("Unhandled exception on %s %s: %s",
+        LOG.errorf(exception, "Unhandled exception on %s %s: %s",
                 uriInfo != null ? uriInfo.getRequestUri() : "unknown",
                 exception.getClass().getSimpleName(),
-                exception.getMessage(),
-                exception);
+                exception.getMessage());
 
         return buildErrorResponse(500, "Internal Server Error", GENERIC_INTERNAL_MESSAGE);
     }

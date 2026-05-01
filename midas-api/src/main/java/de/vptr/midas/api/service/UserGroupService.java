@@ -74,10 +74,6 @@ public class UserGroupService {
     /** Creates a new user group. */
     @Transactional
     public UserGroupResponseDto createGroup(final UserGroupDto groupDto) {
-        if (groupDto.name == null || groupDto.name.trim().isEmpty()) {
-            throw new ValidationException("Name is required");
-        }
-
         final UserGroupEntity group = new UserGroupEntity();
         group.name = groupDto.name;
         group.persistAndFlush();
@@ -89,10 +85,6 @@ public class UserGroupService {
     /** Updates the group with the given id. */
     @Transactional
     public UserGroupResponseDto updateGroup(final Long id, final UserGroupDto groupDto) {
-        if (groupDto.name == null || groupDto.name.trim().isEmpty()) {
-            throw new ValidationException("Name is required");
-        }
-
         final UserGroupEntity existingGroup = UserGroupEntity.findById(id);
         if (existingGroup == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);

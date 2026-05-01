@@ -47,13 +47,6 @@ public class PageService {
     /** Creates a new page. */
     @Transactional
     public PageResponseDto createPage(final PageDto pageDto) {
-        if (pageDto.title == null || pageDto.title.trim().isEmpty()) {
-            throw new ValidationException("Title is required");
-        }
-        if (pageDto.content == null || pageDto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required");
-        }
-
         final PageEntity page = new PageEntity();
         page.title = pageDto.title;
         page.content = pageDto.content;
@@ -64,13 +57,6 @@ public class PageService {
     /** Updates the page with the given id. */
     @Transactional
     public PageResponseDto updatePage(final Long id, final PageDto pageDto) {
-        if (pageDto.title == null || pageDto.title.trim().isEmpty()) {
-            throw new ValidationException("Title is required");
-        }
-        if (pageDto.content == null || pageDto.content.trim().isEmpty()) {
-            throw new ValidationException("Content is required");
-        }
-
         final PageEntity existingPage = PageEntity.findById(id);
         if (existingPage == null) {
             throw new WebApplicationException("Page not found", Response.Status.NOT_FOUND);
@@ -100,8 +86,7 @@ public class PageService {
         }
 
         existingPage.persistAndFlush();
-        PageEntity.getEntityManager().detach(existingPage);
-        return new PageResponseDto(PageEntity.findById(existingPage.id));
+        return new PageResponseDto(existingPage);
     }
 
     /** Deletes the page with the given id. */

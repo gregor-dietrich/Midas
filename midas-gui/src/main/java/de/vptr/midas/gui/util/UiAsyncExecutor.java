@@ -2,7 +2,10 @@ package de.vptr.midas.gui.util;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -18,10 +21,31 @@ public final class UiAsyncExecutor {
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     private static final Logger LOG = Logger.getLogger(UiAsyncExecutor.class);
+    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(
+            new ThreadFactory());
 
     private UiAsyncExecutor() {
     }
 
+    private static final class ThreadFactory implements java.util.concurrent.ThreadFactory {
+        private final AtomicInteger counter = new AtomicInteger();
+
+        @Override
+        public Thread newThread(final Runnable r) {
+            final Thread thread = new Thread(r, "midas-async-" + this.counter.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        }
+    }
+
+    /**
+     * Executes a background task using the default timeout.
+     *
+     * @param <T>            the result type
+     * @param backgroundTask the supplier performing the background work
+     * @param onSuccess      callback invoked with the result on the UI thread
+     * @param onError        callback invoked with any throwable on the UI thread
+     */
     public static <T> void execute(final Supplier<T> backgroundTask, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError) {
         execute(backgroundTask, onSuccess, onError, DEFAULT_TIMEOUT_SECONDS);
@@ -34,7 +58,7 @@ public final class UiAsyncExecutor {
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask))
+        CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask), ASYNC_EXECUTOR)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {
@@ -45,6 +69,14 @@ public final class UiAsyncExecutor {
                 }, throwable));
     }
 
+    /**
+     * Executes an async stage supplier using the default timeout.
+     *
+     * @param <T>           the result type
+     * @param stageSupplier the supplier returning a completion stage
+     * @param onSuccess     callback invoked with the result on the UI thread
+     * @param onError       callback invoked with any throwable on the UI thread
+     */
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError) {
         executeStage(stageSupplier, onSuccess, onError, DEFAULT_TIMEOUT_SECONDS);
@@ -57,7 +89,7 @@ public final class UiAsyncExecutor {
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()))
+        CompletableFuture.supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()), ASYNC_EXECUTOR)
                 .thenCompose(stage -> stage)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
@@ -71,7 +103,7 @@ public final class UiAsyncExecutor {
 
     static void dispatch(final UI ui, final VaadinSession session, final SerializableRunnable callback,
             final Throwable throwable) {
-        if (ui == null) {
+        if (ui == null || !ui.isAttached()) {
             handleDetachedDispatch(throwable, session);
             return;
         }

@@ -1,11 +1,12 @@
 package de.vptr.midas.gui.service;
 
+import de.vptr.midas.gui.util.UiConstants;
+
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -18,8 +19,7 @@ import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-/** Component. */
-@Timeout(value = 5, unit = ChronoUnit.SECONDS)
+/** Service for user operations. */
 @ApplicationScoped
 public class UserService {
 
@@ -33,7 +33,7 @@ public class UserService {
     AuthService authService;
 
     /** Returns the all users. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserResponseDto> getAllUsers(final Integer page, final Integer size) {
         LOG.debug("Fetching all users");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -45,7 +45,7 @@ public class UserService {
     }
 
     /** Returns the current user. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getCurrentUser() {
         LOG.debug("Fetching current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -63,7 +63,7 @@ public class UserService {
     }
 
     /** Returns the user by id. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserById(final Long id) {
         LOG.debugf("Fetching user with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -80,7 +80,7 @@ public class UserService {
     }
 
     /** Returns the user by username. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserByUsername(final String username) {
         LOG.debugf("Fetching user with username: %s", username);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -146,7 +146,7 @@ public class UserService {
     }
 
     /** Handles the search users operation. */
-    @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserResponseDto> searchUsers(final String query) {
         LOG.debugf("Searching users with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();

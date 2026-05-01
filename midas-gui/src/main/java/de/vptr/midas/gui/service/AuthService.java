@@ -6,9 +6,12 @@ import java.util.Base64;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
+import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.AuthClient;
+
+import jakarta.servlet.http.HttpServletRequest;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -110,6 +113,15 @@ public class AuthService {
                 this.clearAuthenticationState(session);
                 session.close();
             });
+        }
+
+        // Invalidate underlying HTTP session to prevent session fixation
+        final var httpRequest = VaadinServletRequest.getCurrent();
+        if (httpRequest != null) {
+            final var httpSession = httpRequest.getSession(false);
+            if (httpSession != null) {
+                httpSession.invalidate();
+            }
         }
 
         LOG.trace("User logged out");

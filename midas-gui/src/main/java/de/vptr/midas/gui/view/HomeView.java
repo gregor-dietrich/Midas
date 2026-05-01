@@ -11,8 +11,10 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.GreetService;
+import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
 /** Landing/home view for authenticated users. */
@@ -54,7 +56,12 @@ public class HomeView extends VerticalLayout implements BeforeEnterObserver {
         textField.setWidth("300px");
 
         final var button = new Button("Say hello 👋", e -> {
-            content.add(new Paragraph(this.greetService.greet(textField.getValue())));
+            try {
+                content.add(new Paragraph(this.greetService.greet(textField.getValue())));
+            } catch (final AuthenticationException ex) {
+                NotificationUtil.showError("Please log in to use this feature.");
+                this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+            }
         });
 
         button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
