@@ -1,8 +1,3 @@
----
-description: "Code quality, maintainability, and security standards. Applies to all developers, reviewers, and architects. Focus: clean code, DRY principle, code duplication elimination, security, and performance."
-applyTo: "**"
----
-
 # Code Quality, Maintainability & Security Standards — Midas
 
 This document defines expectations for all contributors: **developers** (when writing code), **reviewers** (when reviewing PRs), and **architects** (when designing features).
@@ -208,13 +203,21 @@ When reviewing designs, RFCs, or major PRs:
 - **SpotBugs**: Finds common bugs (null pointers, resource leaks, etc.). Run: `./mvnw spotbugs:check` (API) or `mvn spotbugs:check` (GUI)
 - **OWASP Dependency Check**: Scans dependencies for known vulnerabilities. Run: `NVD_API_KEY=<key> ./mvnw verify -Ddependency-check.skip=false` (API)
 
-### Copilot CLI Hooks
+### Quality Gates (Manual Enforcement)
 
-Hooks in `.github/hooks/` — active automatically when using the Copilot CLI agent, no installation needed.
+**Always run these before committing:**
 
-- **lint-guard** (`PreToolUse`): blocks Maven commands that try to skip checkstyle or SpotBugs.
-- **test-guard** (`Stop`): runs checkstyle + SpotBugs + tests per module before the session ends if Java files were modified.
-- **format-on-save** (`PostToolUse`): auto-formats Java files after edits.
+```
+# API (midas-api/)
+./mvnw checkstyle:check spotbugs:check        # lint
+./mvnw test                                    # tests (needs Docker)
+
+# GUI (midas-gui/)
+mvn checkstyle:check spotbugs:check            # lint
+mvn test                                       # tests
+```
+
+**Never skip checkstyle or SpotBugs.** If violations exist, fix them — do not bypass.
 
 ### IDE Integration
 
