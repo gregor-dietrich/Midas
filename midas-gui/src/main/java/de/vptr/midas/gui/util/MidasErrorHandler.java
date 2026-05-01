@@ -17,11 +17,11 @@ import de.vptr.midas.gui.view.LoginView;
 import jakarta.ws.rs.ProcessingException;
 
 /** Handler for error events. */
-public final class ErrorHandler {
+public final class MidasErrorHandler {
 
-    private static final Logger LOG = Logger.getLogger(ErrorHandler.class);
+    private static final Logger LOG = Logger.getLogger(MidasErrorHandler.class);
 
-    private ErrorHandler() {
+    private MidasErrorHandler() {
     }
 
     /**

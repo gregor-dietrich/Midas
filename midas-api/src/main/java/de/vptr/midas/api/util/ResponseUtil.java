@@ -2,6 +2,7 @@ package de.vptr.midas.api.util;
 
 import java.util.Optional;
 
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import jakarta.ws.rs.core.Response;
 
 /** ResponseUtil class. */
@@ -30,7 +31,7 @@ public class ResponseUtil {
     /** Returns 404 Not Found with a structured error body. */
     public static Response notFound() {
         return Response.status(Response.Status.NOT_FOUND)
-                .entity(new de.vptr.midas.api.exception.ApiErrorResponse(
+                .entity(new ApiErrorResponse(
                         404, "Not Found", "The requested resource was not found."))
                 .build();
     }
@@ -51,7 +52,8 @@ public class ResponseUtil {
     }
 
     /**
-     * Returns 200 OK with the entity if present, or 404 Not Found with a structured error body if absent.
+     * Returns 200 OK with the entity if present, or 404 Not Found with a structured
+     * error body if absent.
      */
     public static <T> Response okOrNotFound(final Optional<T> entity) {
         return entity.map(Response::ok)

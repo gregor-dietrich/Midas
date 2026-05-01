@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
+import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.util.PaginationUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -144,7 +145,7 @@ class AccountServiceTest {
         final var results = this.accountService.searchAccounts(searchToken);
         assertEquals(2, results.size());
 
-        final Map<Long, de.vptr.midas.api.dto.AccountResponseDto> resultsById = results.stream()
+        final Map<Long, AccountResponseDto> resultsById = results.stream()
                 .collect(Collectors.toMap(account -> account.id, account -> account));
 
         assertTrue(resultsById.containsKey(createdFirst.id));

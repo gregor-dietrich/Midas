@@ -19,7 +19,7 @@ import com.vaadin.flow.component.UI;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 class AccountPaymentViewTest {
@@ -45,7 +45,7 @@ class AccountPaymentViewTest {
         final var cause = new AuthenticationException("Session expired");
         final var wrapped = new CompletionException(new ExecutionException(cause));
 
-        assertThat(ErrorHandler.unwrapAsyncThrowable(wrapped)).isSameAs(cause);
+        assertThat(MidasErrorHandler.unwrapAsyncThrowable(wrapped)).isSameAs(cause);
     }
 
     @Test

@@ -3,7 +3,9 @@ package de.vptr.midas.gui.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
@@ -101,7 +103,7 @@ class SessionAuthorizationStoreTest {
         }
 
         @Override
-        public Clock withZone(final java.time.ZoneId zone) {
+        public Clock withZone(final ZoneId zone) {
             return this;
         }
 
@@ -110,7 +112,7 @@ class SessionAuthorizationStoreTest {
             return this.currentInstant;
         }
 
-        private void advance(final java.time.Duration duration) {
+        private void advance(final Duration duration) {
             this.currentInstant = this.currentInstant.plus(duration);
         }
     }

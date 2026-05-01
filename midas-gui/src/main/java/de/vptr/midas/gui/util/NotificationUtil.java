@@ -39,7 +39,7 @@ public final class NotificationUtil {
      * @param fallbackMessage The safe fallback message to show for non-auth errors
      */
     public static void showError(final Throwable throwable, final String fallbackMessage) {
-        ErrorHandler.showSanitizedError(throwable, fallbackMessage);
+        MidasErrorHandler.showSanitizedError(throwable, fallbackMessage);
     }
 
     /**

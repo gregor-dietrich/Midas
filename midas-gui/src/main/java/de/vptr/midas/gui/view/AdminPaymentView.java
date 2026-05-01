@@ -35,7 +35,7 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
@@ -102,7 +102,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 throwable -> {
                     LOG.error("Error loading accounts", throwable);
                     this.availableAccounts = List.of();
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 },
                 15);
     }
@@ -296,7 +296,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");
                     LOG.errorf(throwable, "Error searching payments: %s", throwable.getMessage());
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 }

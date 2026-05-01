@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -63,7 +64,8 @@ public class PostEntity extends PanacheEntityBase {
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
-    @OneToMany(mappedBy = "post", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = { CascadeType.PERSIST, CascadeType.MERGE,
+            CascadeType.REMOVE }, orphanRemoval = true)
     @JsonIgnore
     public List<PostCommentEntity> comments;
 
@@ -81,6 +83,6 @@ public class PostEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hashCode(this.id);
+        return Objects.hashCode(this.id);
     }
 }

@@ -34,7 +34,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -287,7 +287,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
 
     void handleSearchError(final Throwable throwable) {
         this.resetSearchButton();
-        ErrorHandler.handleInUiContext(throwable);
+        MidasErrorHandler.handleInUiContext(throwable);
     }
 
     private void resetSearchButton() {

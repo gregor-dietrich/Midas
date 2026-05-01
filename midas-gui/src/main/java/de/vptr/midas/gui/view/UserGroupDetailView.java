@@ -22,7 +22,7 @@ import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -98,7 +98,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
                     this.buildUi();
                     this.loadMembersAsync();
                 },
-                ErrorHandler::handleInUiContext,
+                MidasErrorHandler::handleInUiContext,
                 30);
     }
 
@@ -152,7 +152,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
                     LOG.infof("Successfully loaded %s members", members.size());
                     this.membersGrid.setItems(members);
                 },
-                ErrorHandler::handleInUiContext,
+                MidasErrorHandler::handleInUiContext,
                 30);
     }
 }

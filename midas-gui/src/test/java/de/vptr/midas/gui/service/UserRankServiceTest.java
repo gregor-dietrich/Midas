@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vaadin.flow.server.VaadinSession;
@@ -55,7 +56,7 @@ class UserRankServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.vaadinSession = org.mockito.Mockito.mock(VaadinSession.class);
+        this.vaadinSession = Mockito.mock(VaadinSession.class);
         this.vaadinSessionMock = mockStatic(VaadinSession.class);
         this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(this.vaadinSession);
     }
@@ -88,7 +89,8 @@ class UserRankServiceTest {
 
     @Test
     void getAllRanks_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userRankService.getAllRanks());
     }
@@ -176,7 +178,8 @@ class UserRankServiceTest {
     void getRankById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var rankId = 1L;
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.getRankById(rankId));
@@ -223,7 +226,8 @@ class UserRankServiceTest {
     void createRank_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newRank = MockDataUtil.createUserRankDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.createRank(newRank));
@@ -314,7 +318,8 @@ class UserRankServiceTest {
     void deleteRank_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var rankId = 1L;
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.deleteRank(rankId));

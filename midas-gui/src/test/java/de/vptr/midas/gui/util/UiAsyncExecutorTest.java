@@ -16,9 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
+
 import com.vaadin.flow.server.VaadinSession;
 
 class UiAsyncExecutorTest {
@@ -56,7 +56,7 @@ class UiAsyncExecutorTest {
             dispatchedError.set(invocation.getArgument(0));
             return null;
         }).when(sessionErrorHandler).error(any(ErrorEvent.class));
-        doAnswer(invocation -> sessionErrorHandler).when(session).getErrorHandler();
+        doAnswer(_ -> sessionErrorHandler).when(session).getErrorHandler();
 
         UiAsyncExecutor.dispatch(ui, session, () -> callbackExecuted.set(true), failure);
 
@@ -71,11 +71,11 @@ class UiAsyncExecutorTest {
         final var session = mock(VaadinSession.class);
         final var failure = new RuntimeException("boom");
 
-        try (MockedStatic<ErrorHandler> errorHandlerMock = mockStatic(ErrorHandler.class)) {
+        try (MockedStatic<MidasErrorHandler> errorHandlerMock = mockStatic(MidasErrorHandler.class)) {
             UiAsyncExecutor.dispatch(null, session, () -> {
             }, failure);
 
-            errorHandlerMock.verify(() -> ErrorHandler.handleDetached(failure, session));
+            errorHandlerMock.verify(() -> MidasErrorHandler.handleDetached(failure, session));
         }
     }
 
@@ -90,11 +90,11 @@ class UiAsyncExecutorTest {
                 .when(ui)
                 .access(any(Command.class));
 
-        try (MockedStatic<ErrorHandler> errorHandlerMock = mockStatic(ErrorHandler.class)) {
+        try (MockedStatic<MidasErrorHandler> errorHandlerMock = mockStatic(MidasErrorHandler.class)) {
             UiAsyncExecutor.dispatch(ui, session, () -> {
             }, failure);
 
-            errorHandlerMock.verify(() -> ErrorHandler.handleDetached(failure, session));
+            errorHandlerMock.verify(() -> MidasErrorHandler.handleDetached(failure, session));
         }
     }
 }

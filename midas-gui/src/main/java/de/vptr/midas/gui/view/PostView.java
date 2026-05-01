@@ -27,7 +27,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -253,7 +253,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
                 throwable -> {
                     LOG.error("Error loading categories", throwable);
                     this.availableCategories = List.of();
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 },
                 CATEGORY_LOAD_TIMEOUT_SECONDS);
     }

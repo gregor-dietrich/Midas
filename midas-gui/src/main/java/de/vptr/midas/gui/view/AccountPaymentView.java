@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.jboss.logging.Logger;
+import org.vaadin.lineawesome.LineAwesomeIcon;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -31,8 +33,6 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 
-import org.vaadin.lineawesome.LineAwesomeIcon;
-
 import de.vptr.midas.gui.component.button.CreateButton;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
@@ -46,7 +46,7 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 import jakarta.inject.Inject;
@@ -169,11 +169,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     void handleAccountAccessError(final Throwable throwable) {
-        this.handleAccountAccessError(throwable, com.vaadin.flow.component.UI.getCurrent());
+        this.handleAccountAccessError(throwable, UI.getCurrent());
     }
 
-    void handleAccountAccessError(final Throwable throwable, final com.vaadin.flow.component.UI ui) {
-        final Throwable cause = ErrorHandler.unwrapAsyncThrowable(throwable);
+    void handleAccountAccessError(final Throwable throwable, final UI ui) {
+        final Throwable cause = MidasErrorHandler.unwrapAsyncThrowable(throwable);
         LOG.error("Error verifying account access", cause);
         if (cause instanceof AuthenticationException) {
             NotificationUtil.showError("Session expired. Please log in again.");
@@ -190,11 +190,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     void handleAccountDataLoadError(final Throwable throwable) {
-        this.handleAccountDataLoadError(throwable, com.vaadin.flow.component.UI.getCurrent());
+        this.handleAccountDataLoadError(throwable, UI.getCurrent());
     }
 
-    void handleAccountDataLoadError(final Throwable throwable, final com.vaadin.flow.component.UI ui) {
-        final Throwable cause = ErrorHandler.unwrapAsyncThrowable(throwable);
+    void handleAccountDataLoadError(final Throwable throwable, final UI ui) {
+        final Throwable cause = MidasErrorHandler.unwrapAsyncThrowable(throwable);
         if (cause instanceof AuthenticationException) {
             NotificationUtil.showError("Session expired. Please log in again.");
             ui.navigate(LoginView.class);

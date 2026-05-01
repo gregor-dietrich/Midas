@@ -2,6 +2,7 @@ package de.vptr.midas.api.security;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -17,6 +18,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 
 /** Type definition. */
@@ -93,7 +95,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
                         .setParameter("now", LocalDateTime.now())
                         .setParameter("id", user.id)
                         .executeUpdate();
-            } catch (final jakarta.persistence.OptimisticLockException e) {
+            } catch (final OptimisticLockException e) {
                 LOG.debugf("Failed to update last_login for user %s (concurrent login): %s",
                         user.username, e.getMessage());
             }
@@ -118,7 +120,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
     @Transactional
     SecurityIdentity authenticateUser(final String username, final String password) {
-        return authenticateUser(username, password, username);
+        return this.authenticateUser(username, password, username);
     }
 
     private static void clearPassword(final char[] password) {

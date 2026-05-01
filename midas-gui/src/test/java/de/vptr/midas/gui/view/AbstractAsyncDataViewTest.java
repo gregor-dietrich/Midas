@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
 
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,6 +147,6 @@ class AbstractAsyncDataViewTest {
                 1);
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
-        assertThat(ErrorHandler.unwrapAsyncThrowable(errorRef.get())).isInstanceOf(TimeoutException.class);
+        assertThat(MidasErrorHandler.unwrapAsyncThrowable(errorRef.get())).isInstanceOf(TimeoutException.class);
     }
 }

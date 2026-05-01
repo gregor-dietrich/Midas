@@ -2,6 +2,8 @@ package de.vptr.midas.api.util;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.jboss.logging.Logger;
+
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.service.UserService;
@@ -11,8 +13,7 @@ import de.vptr.midas.api.service.UserService;
  */
 public class ServiceTestUtil {
 
-    private static final org.jboss.logging.Logger LOG =
-            org.jboss.logging.Logger.getLogger(ServiceTestUtil.class);
+    private static final Logger LOG = Logger.getLogger(ServiceTestUtil.class);
 
     private ServiceTestUtil() {
         // Utility class

@@ -13,7 +13,7 @@ import com.vaadin.flow.router.Route;
 import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import jakarta.inject.Inject;
@@ -115,7 +115,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
                 },
                 throwable -> {
                     this.searchLayout.setSearching(false);
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 }

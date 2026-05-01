@@ -40,7 +40,7 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -117,7 +117,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
                 throwable -> {
                     LOG.error("Error loading categories", throwable);
                     this.availableCategories = List.of();
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 },
                 15);
     }
@@ -280,7 +280,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
                 throwable -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 

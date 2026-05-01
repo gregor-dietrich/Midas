@@ -2,11 +2,13 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -89,6 +91,6 @@ public class PostCategoryEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hashCode(this.id);
+        return Objects.hashCode(this.id);
     }
 }

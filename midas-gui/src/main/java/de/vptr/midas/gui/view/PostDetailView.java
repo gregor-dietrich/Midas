@@ -24,7 +24,7 @@ import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -107,7 +107,7 @@ public class PostDetailView extends AbstractAsyncDataView
             }
         }, throwable -> {
             LOG.errorf(throwable, "Error loading post: %s", throwable.getMessage());
-            ErrorHandler.handleInUiContext(throwable);
+            MidasErrorHandler.handleInUiContext(throwable);
         }, 30);
     }
 
@@ -173,7 +173,7 @@ public class PostDetailView extends AbstractAsyncDataView
 
     void handleCommentLoadError(final Throwable throwable) {
         LOG.errorf(throwable, "Error loading comments: %s", throwable.getMessage());
-        ErrorHandler.handleInUiContext(throwable);
+        MidasErrorHandler.handleInUiContext(throwable);
     }
 
     private void buildCommentsSection(final List<PostCommentResponseDto> comments) {

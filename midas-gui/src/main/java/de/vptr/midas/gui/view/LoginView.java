@@ -19,7 +19,7 @@ import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 import jakarta.inject.Inject;
@@ -136,7 +136,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     private void handleAuthenticationError(final Throwable throwable, final PasswordField passwordField,
             final Button loginButton) {
         try {
-            final Throwable cause = ErrorHandler.unwrapAsyncThrowable(throwable);
+            final Throwable cause = MidasErrorHandler.unwrapAsyncThrowable(throwable);
             LOG.error("Exception during authentication", cause);
             if (cause instanceof TimeoutException) {
                 NotificationUtil.showError("Authentication timed out. Please try again.");

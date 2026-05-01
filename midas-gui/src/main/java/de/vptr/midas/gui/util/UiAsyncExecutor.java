@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -22,12 +23,12 @@ public final class UiAsyncExecutor {
 
     private static final Logger LOG = Logger.getLogger(UiAsyncExecutor.class);
     private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(
-            new ThreadFactory());
+            new UiThreadFactory());
 
     private UiAsyncExecutor() {
     }
 
-    private static final class ThreadFactory implements java.util.concurrent.ThreadFactory {
+    private static final class UiThreadFactory implements ThreadFactory {
         private final AtomicInteger counter = new AtomicInteger();
 
         @Override
@@ -51,7 +52,10 @@ public final class UiAsyncExecutor {
         execute(backgroundTask, onSuccess, onError, DEFAULT_TIMEOUT_SECONDS);
     }
 
-    /** Executes a background task with timeout, session propagation, and detached-safe UI dispatch. */
+    /**
+     * Executes a background task with timeout, session propagation, and
+     * detached-safe UI dispatch.
+     */
     public static <T> void execute(final Supplier<T> backgroundTask, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
@@ -82,14 +86,19 @@ public final class UiAsyncExecutor {
         executeStage(stageSupplier, onSuccess, onError, DEFAULT_TIMEOUT_SECONDS);
     }
 
-    /** Executes an async stage supplier with timeout, session propagation, and detached-safe UI dispatch. */
+    /**
+     * Executes an async stage supplier with timeout, session propagation, and
+     * detached-safe UI dispatch.
+     */
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()), ASYNC_EXECUTOR)
+        CompletableFuture
+                .supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()),
+                        ASYNC_EXECUTOR)
                 .thenCompose(stage -> stage)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
@@ -113,7 +122,7 @@ public final class UiAsyncExecutor {
             ui.access(() -> callback.run());
         } catch (final RuntimeException e) {
             if (throwable != null) {
-                ErrorHandler.handleDetached(throwable, session);
+                MidasErrorHandler.handleDetached(throwable, session);
             } else {
                 LOG.debug("Dropped async UI update after detach", e);
             }
@@ -136,7 +145,7 @@ public final class UiAsyncExecutor {
 
     private static void handleDetachedDispatch(final Throwable throwable, final VaadinSession session) {
         if (throwable != null) {
-            ErrorHandler.handleDetached(throwable, session);
+            MidasErrorHandler.handleDetached(throwable, session);
         } else {
             LOG.debug("Dropped async UI update after detach");
         }

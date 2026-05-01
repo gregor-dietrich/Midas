@@ -20,7 +20,7 @@ import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
@@ -99,7 +99,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
                     this.buildUi();
                     this.loadPostsAsync();
                 },
-                ErrorHandler::handleInUiContext,
+                MidasErrorHandler::handleInUiContext,
                 30);
     }
 
@@ -150,7 +150,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
                     LOG.infof("Successfully loaded %s posts", posts.size());
                     this.postGrid.setItems(posts);
                 },
-                ErrorHandler::handleInUiContext,
+                MidasErrorHandler::handleInUiContext,
                 30);
     }
 }

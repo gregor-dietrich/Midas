@@ -1,5 +1,7 @@
 package de.vptr.midas.api.util;
 
+import java.util.LinkedHashMap;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -19,7 +21,7 @@ public class TestDataBuilder {
      */
     public static String createUserJson(final String username, final String email, final String password) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("username", username);
             data.put("email", email);
             data.put("password", password);
@@ -46,7 +48,7 @@ public class TestDataBuilder {
     public static String createPostJson(final String title, final String content, final boolean published,
             final Long userId) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
             data.put("published", published);
@@ -63,7 +65,7 @@ public class TestDataBuilder {
     public static String createPostJson(final String title, final String content, final boolean published,
             final boolean commentable, final Long userId, final Long categoryId) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
             data.put("published", published);
@@ -95,7 +97,7 @@ public class TestDataBuilder {
      */
     public static String createAccountJson(final String name) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("name", name);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
@@ -122,7 +124,7 @@ public class TestDataBuilder {
      */
     public static String createPaymentJson(final String description, final double amount, final String currency) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("description", description);
             data.put("amount", amount);
             data.put("currency", currency);
@@ -137,7 +139,7 @@ public class TestDataBuilder {
      */
     public static String createPostCategoryJson(final String name, final String description) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("name", name);
             data.put("description", description);
             return MAPPER.writeValueAsString(data);
@@ -165,7 +167,7 @@ public class TestDataBuilder {
      */
     public static String createUserGroupJson(final String name) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("name", name);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
@@ -232,7 +234,7 @@ public class TestDataBuilder {
             final boolean userRankAdd, final boolean userRankEdit, final boolean userRankDelete,
             final boolean userAccountAdd, final boolean userAccountEdit, final boolean userAccountDelete) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("name", name);
             data.put("pageAdd", pageAdd);
             data.put("pageEdit", pageEdit);
@@ -267,7 +269,7 @@ public class TestDataBuilder {
     // PostComment builders
     public static String createPostCommentJson(final String content, final Long postId) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("content", content);
             data.put("postId", postId);
             return MAPPER.writeValueAsString(data);
@@ -299,7 +301,7 @@ public class TestDataBuilder {
     // Page builders
     public static String createPageJson(final String title, final String content) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
             return MAPPER.writeValueAsString(data);
@@ -320,7 +322,7 @@ public class TestDataBuilder {
     public static String createPaymentJson(final Long targetAccountId, final Long sourceAccountId, final Long userId,
             final String amount, final String comment, final String date) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("targetAccountId", targetAccountId);
             data.put("sourceAccountId", sourceAccountId);
             data.put("userId", userId);
@@ -369,7 +371,7 @@ public class TestDataBuilder {
      */
     public static String createUserAccountMetaJson(final boolean isNegative) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("isNegative", isNegative);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
@@ -382,7 +384,7 @@ public class TestDataBuilder {
      */
     public static String createUserUpdateJson(final String username, final String email) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("username", username);
             data.put("email", email);
             return MAPPER.writeValueAsString(data);
@@ -396,7 +398,7 @@ public class TestDataBuilder {
      */
     public static String createPostPatchJson(final String title) {
         try {
-            final var data = new java.util.LinkedHashMap<String, Object>();
+            final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {

@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -76,15 +77,15 @@ public class UserAccountMetaEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final UserAccountMetaEntity that = (UserAccountMetaEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hashCode(this.id);
+        return Objects.hashCode(this.id);
     }
 }

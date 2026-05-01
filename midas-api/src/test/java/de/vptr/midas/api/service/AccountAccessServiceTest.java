@@ -37,7 +37,7 @@ class AccountAccessServiceTest {
     void testGetAssociatedUsersForNonExistentAccount() {
         try {
             this.accountAccessService.getAssociatedUsers(999999L);
-        } catch (final jakarta.ws.rs.WebApplicationException e) {
+        } catch (final WebApplicationException e) {
             assertNotNull(e);
         }
     }

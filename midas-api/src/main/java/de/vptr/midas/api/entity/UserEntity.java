@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -78,11 +79,13 @@ public class UserEntity extends PanacheEntityBase {
     @Column(name = "last_edit")
     public LocalDateTime lastEdit;
 
-    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE,
+            CascadeType.REMOVE }, orphanRemoval = true)
     @JsonIgnore
     public List<PostEntity> posts;
 
-    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE,
+            CascadeType.REMOVE }, orphanRemoval = true)
     @JsonIgnore
     public List<PostCommentEntity> comments;
 
@@ -91,15 +94,15 @@ public class UserEntity extends PanacheEntityBase {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final UserEntity that = (UserEntity) o;
-        return id != null && id.equals(that.id);
+        return this.id != null && this.id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hashCode(this.id);
+        return Objects.hashCode(this.id);
     }
 }

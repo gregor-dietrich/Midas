@@ -321,7 +321,7 @@ public class PaymentService {
         }
         if (paymentDto.comment != null) {
             if (paymentDto.comment.trim().isEmpty()) {
-                throw new jakarta.validation.ValidationException("Comment cannot be blank");
+                throw new ValidationException("Comment cannot be blank");
             }
             existingPayment.comment = paymentDto.comment;
         }
@@ -330,7 +330,7 @@ public class PaymentService {
         }
         if (paymentDto.amount != null) {
             if (paymentDto.amount.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new jakarta.validation.ValidationException("Amount must be positive");
+                throw new ValidationException("Amount must be positive");
             }
             existingPayment.amount = paymentDto.amount;
         }

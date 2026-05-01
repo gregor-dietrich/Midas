@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
+
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
@@ -34,7 +36,7 @@ import de.vptr.midas.gui.view.LoginView;
 import jakarta.ws.rs.ProcessingException;
 
 @ExtendWith(MockitoExtension.class)
-class ErrorHandlerTest {
+class MidasErrorHandlerTest {
 
     private UI ui;
     private MockedStatic<UI> uiMock;
@@ -66,7 +68,7 @@ class ErrorHandlerTest {
     void handle_shouldNavigateToLogin_whenAuthenticationException() {
         final var ex = new AuthenticationException("Session expired");
 
-        ErrorHandler.handle(ex, this.ui);
+        MidasErrorHandler.handle(ex, this.ui);
 
         verify(this.ui).navigate(LoginView.class);
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
@@ -76,7 +78,7 @@ class ErrorHandlerTest {
     void handle_shouldShowError_whenServiceException() {
         final var ex = new ServiceException("Something went wrong");
 
-        ErrorHandler.handle(ex, this.ui);
+        MidasErrorHandler.handle(ex, this.ui);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Operation failed. Please try again."));
         verify(this.ui, never()).navigate(LoginView.class);
@@ -87,7 +89,7 @@ class ErrorHandlerTest {
     void handle_shouldNavigateToBackendError_whenServiceExceptionWithConnectionFailure() {
         final var ex = new ServiceException("Backend connection failed", new ProcessingException("Connection refused"));
 
-        ErrorHandler.handle(ex, this.ui);
+        MidasErrorHandler.handle(ex, this.ui);
 
         verify(this.ui).navigate(BackendErrorView.class);
         this.notificationMock.verify(() -> NotificationUtil.showError(any()), never());
@@ -97,7 +99,7 @@ class ErrorHandlerTest {
     void handle_shouldShowGenericError_whenUnexpectedException() {
         final var ex = new RuntimeException("unexpected");
 
-        ErrorHandler.handle(ex, this.ui);
+        MidasErrorHandler.handle(ex, this.ui);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("An unexpected error occurred"));
         verify(this.ui, never()).navigate(LoginView.class);
@@ -107,7 +109,7 @@ class ErrorHandlerTest {
     void handle_shouldShowTimeoutMessage_whenTimeoutException() {
         final var ex = new TimeoutException("slow");
 
-        ErrorHandler.handle(ex, this.ui);
+        MidasErrorHandler.handle(ex, this.ui);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Operation timed out. Please try again."));
         verify(this.ui, never()).navigate(LoginView.class);
@@ -118,7 +120,7 @@ class ErrorHandlerTest {
         final var cause = new AuthenticationException("expired");
         final var wrapped = new CompletionException(cause);
 
-        ErrorHandler.handle(wrapped, this.ui);
+        MidasErrorHandler.handle(wrapped, this.ui);
 
         verify(this.ui).navigate(LoginView.class);
     }
@@ -129,7 +131,7 @@ class ErrorHandlerTest {
         final var inner = new CompletionException(cause);
         final var outer = new CompletionException(inner);
 
-        ErrorHandler.handle(outer, this.ui);
+        MidasErrorHandler.handle(outer, this.ui);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Operation failed. Please try again."));
     }
@@ -138,7 +140,7 @@ class ErrorHandlerTest {
     void handleInUiContext_shouldNavigateToLogin_whenAuthenticationException() {
         final var ex = new AuthenticationException("Session expired");
 
-        ErrorHandler.handleInUiContext(ex);
+        MidasErrorHandler.handleInUiContext(ex);
 
         verify(this.ui).navigate(LoginView.class);
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
@@ -148,7 +150,7 @@ class ErrorHandlerTest {
     void handleInUiContext_shouldShowError_whenServiceException() {
         final var ex = new ServiceException("fail");
 
-        ErrorHandler.handleInUiContext(ex);
+        MidasErrorHandler.handleInUiContext(ex);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Operation failed. Please try again."));
     }
@@ -157,7 +159,7 @@ class ErrorHandlerTest {
     void handleInUiContext_shouldShowGenericError_whenUnexpectedException() {
         final var ex = new NullPointerException("oops");
 
-        ErrorHandler.handleInUiContext(ex);
+        MidasErrorHandler.handleInUiContext(ex);
 
         this.notificationMock.verify(() -> NotificationUtil.showError("An unexpected error occurred"));
     }
@@ -167,7 +169,7 @@ class ErrorHandlerTest {
         final var cause = new AuthenticationException("expired");
         final var wrapped = new CompletionException(cause);
 
-        ErrorHandler.handleInUiContext(wrapped);
+        MidasErrorHandler.handleInUiContext(wrapped);
 
         verify(this.ui).navigate(LoginView.class);
     }
@@ -180,7 +182,7 @@ class ErrorHandlerTest {
 
         lenient().when(session.getErrorHandler()).thenReturn(sessionErrorHandler);
 
-        ErrorHandler.handleDetached(ex, session);
+        MidasErrorHandler.handleDetached(ex, session);
 
         verify(sessionErrorHandler).error(any(ErrorEvent.class));
     }
@@ -189,7 +191,7 @@ class ErrorHandlerTest {
     void handleDetached_shouldUnwrapCompletionExceptionBeforeDispatching() {
         final var session = mock(VaadinSession.class);
         final var sessionErrorHandler = mock(com.vaadin.flow.server.ErrorHandler.class);
-        final var dispatchedEvent = new java.util.concurrent.atomic.AtomicReference<ErrorEvent>();
+        final var dispatchedEvent = new AtomicReference<ErrorEvent>();
         final var rootCause = new ServiceException("detached");
 
         when(session.getErrorHandler()).thenReturn(sessionErrorHandler);
@@ -198,7 +200,7 @@ class ErrorHandlerTest {
             return null;
         }).when(sessionErrorHandler).error(any(ErrorEvent.class));
 
-        ErrorHandler.handleDetached(new CompletionException(rootCause), session);
+        MidasErrorHandler.handleDetached(new CompletionException(rootCause), session);
 
         assertThat(dispatchedEvent.get()).isNotNull();
         assertThat(dispatchedEvent.get().getThrowable()).isSameAs(rootCause);
@@ -212,14 +214,14 @@ class ErrorHandlerTest {
         when(session.getErrorHandler()).thenReturn(sessionErrorHandler);
         doThrow(new IllegalStateException("handler failed")).when(sessionErrorHandler).error(any(ErrorEvent.class));
 
-        assertThatCode(() -> ErrorHandler.handleDetached(new RuntimeException("detached"), session))
+        assertThatCode(() -> MidasErrorHandler.handleDetached(new RuntimeException("detached"), session))
                 .doesNotThrowAnyException();
         verify(sessionErrorHandler).error(any(ErrorEvent.class));
     }
 
     @Test
     void showSanitizedError_shouldUseFallbackMessage_whenUnexpectedExceptionContainsSensitiveText() {
-        ErrorHandler.showSanitizedError(new RuntimeException("password=secret"),
+        MidasErrorHandler.showSanitizedError(new RuntimeException("password=secret"),
                 "Saving user failed. Please try again.");
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Saving user failed. Please try again."));
@@ -227,7 +229,7 @@ class ErrorHandlerTest {
 
     @Test
     void showSanitizedError_shouldKeepAuthMessage_whenAuthenticationException() {
-        ErrorHandler.showSanitizedError(new AuthenticationException("token expired"),
+        MidasErrorHandler.showSanitizedError(new AuthenticationException("token expired"),
                 "Saving user failed. Please try again.");
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));

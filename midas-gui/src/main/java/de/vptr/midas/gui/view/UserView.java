@@ -16,7 +16,7 @@ import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
@@ -115,7 +115,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
                 },
                 throwable -> {
                     this.searchLayout.setSearching(false);
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 }

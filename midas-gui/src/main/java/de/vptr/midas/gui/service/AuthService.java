@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.function.Supplier;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -10,8 +11,6 @@ import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.AuthClient;
-
-import jakarta.servlet.http.HttpServletRequest;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -228,7 +227,7 @@ public class AuthService {
         }
     }
 
-    private static <T> T withSessionLock(final VaadinSession session, final java.util.function.Supplier<T> supplier) {
+    private static <T> T withSessionLock(final VaadinSession session, final Supplier<T> supplier) {
         session.lock();
         try {
             return supplier.get();

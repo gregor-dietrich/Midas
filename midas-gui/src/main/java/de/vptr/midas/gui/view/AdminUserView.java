@@ -30,7 +30,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
@@ -95,7 +95,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
                 },
                 throwable -> {
                     LOG.error("Error loading ranks", throwable);
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 
@@ -231,7 +231,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
                 throwable -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 }

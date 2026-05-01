@@ -29,6 +29,7 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -65,7 +66,8 @@ class UserServiceTest {
 
     @Test
     void getAllUsers_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getAllUsers(0, 50));
     }
 
@@ -84,7 +86,8 @@ class UserServiceTest {
     void getAllUsers_shouldThrowAuthenticationException_when401Error() {
         // Given
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER)).thenThrow(ExceptionTestUtil.create401Exception());
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER))
+                .thenThrow(ExceptionTestUtil.create401Exception());
 
         // When & Then
         ExceptionTestUtil.assertHandles401WithLogout(() -> this.userService.getAllUsers(0, 50),
@@ -112,7 +115,8 @@ class UserServiceTest {
     @Test
     void getCurrentUser_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getCurrentUser());
     }
 
@@ -182,7 +186,8 @@ class UserServiceTest {
 
     @Test
     void getUserByUsername_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(
                 () -> this.userService.getUserByUsername("testuser"));
@@ -295,7 +300,8 @@ class UserServiceTest {
     @Test
     void getUserById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getUserById(1L));
     }
 
@@ -303,7 +309,8 @@ class UserServiceTest {
     void createUser_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newUser = TestDataBuilder.createUser("newuser", "new@example.com");
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.createUser(newUser));
@@ -341,7 +348,7 @@ class UserServiceTest {
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userClient.getUser(userId, TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(new jakarta.ws.rs.WebApplicationException(response));
+                .thenThrow(new WebApplicationException(response));
 
         ExceptionTestUtil.assertThrowsServiceException(() -> this.userService.getUserById(userId),
                 "Backend request failed");
@@ -417,7 +424,8 @@ class UserServiceTest {
         userToUpdate.setPassword("newPassword123");
 
         // When & Then
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.updateUserPassword(userToUpdate));
     }
 

@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
@@ -56,7 +57,7 @@ class ServiceHelperTest {
                 this.authService,
                 LOG,
                 "reading payload",
-                currentResponse -> "ignored"))
+                _ -> "ignored"))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("Session expired");
 
@@ -66,7 +67,7 @@ class ServiceHelperTest {
 
     @Test
     void executeWithResponse_shouldTranslateWebApplicationExceptionWithBackendBody() {
-        final var statusInfo = org.mockito.Mockito.mock(Response.StatusType.class);
+        final var statusInfo = Mockito.mock(Response.StatusType.class);
         when(this.response.getStatus()).thenReturn(400);
         when(this.response.getStatusInfo()).thenReturn(statusInfo);
         when(statusInfo.getStatusCode()).thenReturn(400);
@@ -81,7 +82,7 @@ class ServiceHelperTest {
                 LOG,
                 "creating account",
                 "Failed to create account",
-                currentResponse -> "ignored"))
+                _ -> "ignored"))
                 .isInstanceOf(ServiceException.class)
                 .hasMessage("Backend request failed");
 
@@ -91,7 +92,7 @@ class ServiceHelperTest {
 
     @Test
     void execute_shouldTranslateWebApplicationExceptionWithoutPrefixUsingBackendBody() {
-        final var statusInfo = org.mockito.Mockito.mock(Response.StatusType.class);
+        final var statusInfo = Mockito.mock(Response.StatusType.class);
         when(this.response.getStatus()).thenReturn(500);
         when(this.response.getStatusInfo()).thenReturn(statusInfo);
         when(statusInfo.getStatusCode()).thenReturn(500);

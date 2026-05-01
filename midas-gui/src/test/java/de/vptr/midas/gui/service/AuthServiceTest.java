@@ -12,6 +12,7 @@ import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import org.assertj.core.api.Assertions;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -349,7 +350,7 @@ class AuthServiceTest {
     void requireAuthorizationHeader_shouldThrowAuthenticationException_whenAuthorizationMissing() {
         when(this.vaadinSession.getAttribute("authenticated.status")).thenReturn(false);
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> this.authService.requireAuthorizationHeader())
+        Assertions.assertThatThrownBy(() -> this.authService.requireAuthorizationHeader())
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("Authentication required");
     }

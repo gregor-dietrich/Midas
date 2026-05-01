@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -79,6 +80,6 @@ public class PostCommentEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hashCode(this.id);
+        return Objects.hashCode(this.id);
     }
 }

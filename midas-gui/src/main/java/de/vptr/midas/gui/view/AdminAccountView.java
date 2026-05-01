@@ -30,7 +30,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
@@ -184,7 +184,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
                 throwable -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search Accounts");
-                    ErrorHandler.handleInUiContext(throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
                 });
     }
 

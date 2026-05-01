@@ -2,6 +2,7 @@ package de.vptr.midas.api.util;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
@@ -26,7 +27,7 @@ public class TestUtil {
      * scenarios
      */
     public static RequestSpecification given() {
-        return io.restassured.RestAssured.given();
+        return RestAssured.given();
     }
 
     /**

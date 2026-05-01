@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 
 /** View for base async data. */
@@ -14,7 +14,7 @@ public abstract class AbstractAsyncDataView extends VerticalLayout {
     /**
      * Runs dataLoader off the UI thread, then dispatches result to onSuccess on the
      * UI thread.
-     * Errors are handled centrally via ErrorHandler.
+     * Errors are handled centrally via MidasErrorHandler.
      */
     protected <T> void loadDataAsync(final Supplier<T> dataLoader, final Consumer<T> onSuccess) {
         this.loadDataAsync(dataLoader, onSuccess, UiAsyncExecutor.DEFAULT_TIMEOUT_SECONDS);
@@ -25,7 +25,7 @@ public abstract class AbstractAsyncDataView extends VerticalLayout {
      */
     protected <T> void loadDataAsync(final Supplier<T> dataLoader, final Consumer<T> onSuccess,
             final int timeoutSeconds) {
-        UiAsyncExecutor.execute(dataLoader, onSuccess, ErrorHandler::handleInUiContext, timeoutSeconds);
+        UiAsyncExecutor.execute(dataLoader, onSuccess, MidasErrorHandler::handleInUiContext, timeoutSeconds);
     }
 
     /**

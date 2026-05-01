@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
@@ -42,7 +43,7 @@ class AsyncAuthAlignmentViewTest {
                 UI.setCurrent(null);
             }
             return null;
-        }).when(this.ui).access(org.mockito.ArgumentMatchers.any(Command.class));
+        }).when(this.ui).access(ArgumentMatchers.any(Command.class));
     }
 
     @AfterEach
@@ -61,7 +62,7 @@ class AsyncAuthAlignmentViewTest {
         view.pageService = pageService;
         when(pageService.searchPages(anyString()))
                 .thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(invocation -> {
+        doAnswer(_ -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);
@@ -80,9 +81,9 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.userGroupService = userGroupService;
-        when(userGroupService.getGroupsByUser(org.mockito.ArgumentMatchers.anyLong()))
+        when(userGroupService.getGroupsByUser(ArgumentMatchers.anyLong()))
                 .thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(invocation -> {
+        doAnswer(_ -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);
@@ -103,7 +104,7 @@ class AsyncAuthAlignmentViewTest {
         view.accountService = accountService;
         when(accountService.getMyAccountsWithBalances())
                 .thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(invocation -> {
+        doAnswer(_ -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);

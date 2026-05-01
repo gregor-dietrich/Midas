@@ -23,7 +23,7 @@ import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
-import de.vptr.midas.gui.util.ErrorHandler;
+import de.vptr.midas.gui.util.MidasErrorHandler;
 import jakarta.inject.Inject;
 
 /** View for managing user accounts. */
@@ -84,7 +84,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
             LOG.infof("Grid updated with %s accounts", result.accounts.size());
         }, throwable -> {
             LOG.error("Error in async account loading", throwable);
-            ErrorHandler.handleInUiContext(throwable);
+            MidasErrorHandler.handleInUiContext(throwable);
         });
     }
 
