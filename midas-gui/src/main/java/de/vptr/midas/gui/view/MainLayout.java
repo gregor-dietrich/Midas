@@ -16,7 +16,6 @@ import de.vptr.midas.gui.component.button.LogoutButton;
 import de.vptr.midas.gui.component.button.ThemeToggleButton;
 import de.vptr.midas.gui.component.tabs.NavigationTabs;
 import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.BackendAvailabilityService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
 import jakarta.inject.Inject;
@@ -33,9 +32,6 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
 
     @Inject
     AuthService authService;
-
-    @Inject
-    BackendAvailabilityService backendAvailabilityService;
 
     @Inject
     ThemeService themeService;
@@ -79,19 +75,6 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
             LOG.trace("Navigating to backend error view, skipping all checks");
             this.removeButtonsFromTopBar(); // Hide logout button on error view
             this.hideNavigationTabs(); // Hide navigation tabs on error view
-            return;
-        }
-
-        // Check backend availability (fault tolerance handles retry/timeout/fallback)
-        try {
-            if (!this.backendAvailabilityService.isBackendAvailable()) {
-                LOG.error("Backend unavailable, redirecting to error page");
-                event.forwardTo(BackendErrorView.class);
-                return;
-            }
-        } catch (final RuntimeException e) {
-            LOG.error("Backend health check failed", e);
-            event.forwardTo(BackendErrorView.class);
             return;
         }
 

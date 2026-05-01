@@ -21,7 +21,6 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.BackendAvailabilityService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
 
@@ -30,9 +29,6 @@ class AdminMainLayoutTest {
 
     @Mock
     AuthService authService;
-
-    @Mock
-    BackendAvailabilityService backendAvailabilityService;
 
     @Mock
     ThemeService themeService;
@@ -62,26 +58,13 @@ class AdminMainLayoutTest {
 
         this.adminMainLayout.beforeEnter(this.event);
 
-        verify(this.backendAvailabilityService, never()).isBackendAvailable();
         verify(this.authService, never()).isAuthenticated();
-    }
-
-    @Test
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    void beforeEnter_shouldForwardToError_whenBackendUnavailable() {
-        when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
-        when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(false);
-
-        this.adminMainLayout.beforeEnter(this.event);
-
-        verify(this.event).forwardTo(BackendErrorView.class);
     }
 
     @Test
     @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToLogin_whenNotAuthenticated() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
-        when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
         when(this.authService.isAuthenticated()).thenReturn(false);
 
         this.adminMainLayout.beforeEnter(this.event);
@@ -93,7 +76,6 @@ class AdminMainLayoutTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldForwardToHome_whenNoAdminPermission() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
-        when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
         when(this.authService.isAuthenticated()).thenReturn(true);
 
         final var rank = new UserRankResponseDto();
@@ -108,7 +90,6 @@ class AdminMainLayoutTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldAllowAccess_whenAdminPermissionGranted() {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
-        when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
         when(this.authService.isAuthenticated()).thenReturn(true);
 
         final var rank = mock(UserRankResponseDto.class);
@@ -125,7 +106,6 @@ class AdminMainLayoutTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     void beforeEnter_shouldSkipAuthCheck_whenTargetIsLoginView() {
         when(this.event.getNavigationTarget()).thenReturn((Class) LoginView.class);
-        when(this.backendAvailabilityService.isBackendAvailable()).thenReturn(true);
 
         this.adminMainLayout.beforeEnter(this.event);
 

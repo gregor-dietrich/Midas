@@ -12,7 +12,9 @@ import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
+import jakarta.ws.rs.ProcessingException;
 
 /** Handler for error events. */
 public final class ErrorHandler {
@@ -82,6 +84,9 @@ public final class ErrorHandler {
         } else if (cause instanceof TimeoutException) {
             LOG.warn("Async operation timed out", cause);
             NotificationUtil.showError("Operation timed out. Please try again.");
+        } else if (cause instanceof ServiceException && isConnectionFailure(cause)) {
+            LOG.error("Backend connection failed, redirecting to error page", cause);
+            ui.navigate(BackendErrorView.class);
         } else if (cause instanceof ServiceException) {
             LOG.error("Service error during async operation", cause);
             NotificationUtil.showError("Operation failed. Please try again.");
@@ -89,6 +94,17 @@ public final class ErrorHandler {
             LOG.error("Unexpected error during async operation", cause);
             NotificationUtil.showError("An unexpected error occurred");
         }
+    }
+
+    private static boolean isConnectionFailure(final Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof ProcessingException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private static void logDetached(final Throwable cause) {

@@ -29,7 +29,9 @@ import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
+import jakarta.ws.rs.ProcessingException;
 
 @ExtendWith(MockitoExtension.class)
 class ErrorHandlerTest {
@@ -78,6 +80,17 @@ class ErrorHandlerTest {
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Operation failed. Please try again."));
         verify(this.ui, never()).navigate(LoginView.class);
+        verify(this.ui, never()).navigate(BackendErrorView.class);
+    }
+
+    @Test
+    void handle_shouldNavigateToBackendError_whenServiceExceptionWithConnectionFailure() {
+        final var ex = new ServiceException("Backend connection failed", new ProcessingException("Connection refused"));
+
+        ErrorHandler.handle(ex, this.ui);
+
+        verify(this.ui).navigate(BackendErrorView.class);
+        this.notificationMock.verify(() -> NotificationUtil.showError(any()), never());
     }
 
     @Test
