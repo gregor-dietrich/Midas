@@ -92,8 +92,7 @@ public class PostDetailView extends AbstractAsyncDataView
             }
 
             // Fallback: search by title
-            final var authHeader = this.authService.getAuthorizationHeader();
-            final var results = this.postService.searchPosts(this.identifier, authHeader);
+            final var results = this.postService.searchPosts(this.identifier);
             if (results != null && !results.isEmpty()) {
                 return results.get(0);
             }

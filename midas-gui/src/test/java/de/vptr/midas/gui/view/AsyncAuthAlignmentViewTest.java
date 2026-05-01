@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
@@ -18,7 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.function.SerializableRunnable;
+import com.vaadin.flow.server.Command;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AccountService;
@@ -34,19 +32,16 @@ class AsyncAuthAlignmentViewTest {
     void setUp() {
         this.ui = mock(UI.class);
         UI.setCurrent(this.ui);
-        lenient().when(this.ui.accessLater(org.mockito.ArgumentMatchers.any(SerializableRunnable.class),
-                org.mockito.ArgumentMatchers.any(SerializableRunnable.class)))
-                .thenAnswer(invocation -> {
-                    final var callback = invocation.getArgument(0, SerializableRunnable.class);
-                    return (SerializableRunnable) () -> {
-                        UI.setCurrent(this.ui);
-                        try {
-                            callback.run();
-                        } finally {
-                            UI.setCurrent(null);
-                        }
-                    };
-                });
+        lenient().doAnswer(invocation -> {
+            final var command = invocation.getArgument(0, Command.class);
+            UI.setCurrent(this.ui);
+            try {
+                command.execute();
+            } finally {
+                UI.setCurrent(null);
+            }
+            return null;
+        }).when(this.ui).access(org.mockito.ArgumentMatchers.any(Command.class));
     }
 
     @AfterEach
@@ -63,7 +58,7 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.pageService = pageService;
-        when(authService.requireAuthorizationHeader())
+        when(pageService.searchPages(anyString()))
                 .thenThrow(new AuthenticationException("Authentication required"));
         doAnswer(invocation -> {
             latch.countDown();
@@ -73,7 +68,6 @@ class AsyncAuthAlignmentViewTest {
         this.invoke(view, "loadPageByTitle", new Class<?>[] { String.class }, "missing-page");
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
-        verify(pageService, never()).searchPages(anyString(), anyString());
     }
 
     @Test
@@ -85,7 +79,7 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.userGroupService = userGroupService;
-        when(authService.requireAuthorizationHeader())
+        when(userGroupService.getGroupsByUser(org.mockito.ArgumentMatchers.anyLong()))
                 .thenThrow(new AuthenticationException("Authentication required"));
         doAnswer(invocation -> {
             latch.countDown();
@@ -95,7 +89,6 @@ class AsyncAuthAlignmentViewTest {
         this.invoke(view, "loadGroupsAsync", new Class<?>[] { Long.class }, Long.valueOf(7));
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
-        verify(userGroupService, never()).getGroupsByUser(org.mockito.ArgumentMatchers.anyLong(), anyString());
     }
 
     @Test
@@ -107,7 +100,7 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.accountService = accountService;
-        when(authService.requireAuthorizationHeader())
+        when(accountService.getMyAccountsWithBalances())
                 .thenThrow(new AuthenticationException("Authentication required"));
         doAnswer(invocation -> {
             latch.countDown();
@@ -117,7 +110,6 @@ class AsyncAuthAlignmentViewTest {
         this.invoke(view, "loadAccountsAsync", new Class<?>[0]);
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
-        verify(accountService, never()).getMyAccountsWithBalances(anyString());
     }
 
     private void invoke(final Object target, final String methodName, final Class<?>[] parameterTypes,

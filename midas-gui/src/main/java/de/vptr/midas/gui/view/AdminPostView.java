@@ -99,19 +99,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadPostsAsync() {
         LOG.info("Starting async post loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.postService.getAllPosts(authHeader),
+                () -> this.postService.getAllPosts(),
                 posts -> {
                     LOG.infof("Successfully loaded %s posts", posts.size());
                     this.grid.setItems(posts);
@@ -121,19 +110,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadPublishedPostsAsync() {
         LOG.info("Starting async published post loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header for published posts", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.postService.getPublishedPosts(authHeader),
+                () -> this.postService.getPublishedPosts(),
                 posts -> {
                     LOG.infof("Successfully loaded %s published posts", posts.size());
                     this.grid.setItems(posts);
@@ -143,17 +121,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header for categories", e);
-            this.availableCategories = List.of();
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.postCategoryService.getAllCategories(authHeader),
+                () -> this.postCategoryService.getAllCategories(),
                 categories -> {
                     LOG.infof("Successfully loaded %s categories", categories.size());
                     this.availableCategories = categories;
@@ -290,12 +259,9 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void deletePost(final PostResponseDto post) {
         try {
-            if (this.postService.deletePost(post.getId())) {
-                NotificationUtil.showSuccess("Post deleted successfully");
-                this.loadPostsAsync();
-            } else {
-                NotificationUtil.showError("Failed to delete post");
-            }
+            this.postService.deletePost(post.getId());
+            NotificationUtil.showSuccess("Post deleted successfully");
+            this.loadPostsAsync();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
@@ -313,18 +279,11 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
         this.loadDataAsync(
-                () -> this.postService.searchPosts(query.trim(), authHeader),
+                () -> this.postService.searchPosts(query.trim()),
                 posts -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");
@@ -351,16 +310,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString(), authHeader),
+                () -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
                 posts -> this.grid.setItems(posts));
     }
 

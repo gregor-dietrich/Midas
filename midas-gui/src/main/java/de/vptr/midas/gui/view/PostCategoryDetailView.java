@@ -83,8 +83,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
                         LOG.debugf("Identifier '%s' is not numeric, searching by name", identifier);
                     }
 
-                    final var allCategories = this.categoryService
-                            .getAllCategories(this.authService.getAuthorizationHeader());
+                    final var allCategories = this.categoryService.getAllCategories();
                     return allCategories.stream()
                             .filter(cat -> cat.getName().equalsIgnoreCase(identifier))
                             .findFirst()

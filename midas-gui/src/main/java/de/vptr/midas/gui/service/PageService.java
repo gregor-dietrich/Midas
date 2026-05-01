@@ -36,12 +36,9 @@ public class PageService {
 
     /** Returns the all pages. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PageResponseDto> getAllPages(final String authHeader) throws AuthenticationException, ServiceException {
+    public List<PageResponseDto> getAllPages() throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all pages");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.pageClient.getAllPages(PaginationParamUtil.DEFAULT_PAGE, PaginationParamUtil.MAX_SIZE,
                         authHeader),
@@ -52,12 +49,8 @@ public class PageService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<PageResponseDto> getPageById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting page by id: %s", id);
-        if (!this.authService.isAuthenticated()) {
-            LOG.warn("User is not authenticated");
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.getPage(id, authHeader);
         }, this.authService, LOG, "getting page " + id, response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -76,11 +69,8 @@ public class PageService {
     /** Creates a new page. */
     public PageDto createPage(final PageDto page) throws AuthenticationException, ServiceException {
         LOG.infof("Creating page: %s", page.getTitle());
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.createPage(page, authHeader);
         }, this.authService, LOG, "creating page", "Failed to create page", response -> {
             if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
@@ -97,11 +87,8 @@ public class PageService {
     /** Updates the page. */
     public PageDto updatePage(final PageDto page) throws AuthenticationException, ServiceException {
         LOG.infof("Updating page: %s (%s)", page.getTitle(), page.getId());
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.updatePage(page.getId(), page, authHeader);
         }, this.authService, LOG, "updating page " + page.getId(), "Failed to update page", response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -116,22 +103,19 @@ public class PageService {
     }
 
     /** Handles the delete page operation. */
-    public boolean deletePage(final Long id) throws AuthenticationException, ServiceException {
+    public void deletePage(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Deleting page: %s", id);
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+        ServiceHelper.executeWithResponse(() -> {
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.deletePage(id, authHeader);
         }, this.authService, LOG, "deleting page " + id, response -> {
-            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()
-                    || response.getStatus() == Response.Status.OK.getStatusCode()) {
+            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
                 LOG.infof("Successfully deleted page: %s", id);
-                return true;
-            } else {
-                return false;
+                return null;
+            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ServiceException("Page not found");
             }
+            throw ServiceHelper.responseFailure("Failed to delete page", response);
         });
     }
 
@@ -140,23 +124,16 @@ public class PageService {
     public List<PageResponseDto> searchContent(final String searchTerm) {
         LOG.debugf("Searching page content: %s", searchTerm);
         return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.searchPages(searchTerm, authHeader);
         }, this.authService, LOG, "searching page content");
     }
 
     /** Handles the search pages operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PageResponseDto> searchPages(final String query, final String authHeader) {
+    public List<PageResponseDto> searchPages(final String query) {
         LOG.debugf("Searching pages with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.pageClient.searchPages(query, authHeader),
                 this.authService, LOG, "searching pages");

@@ -89,6 +89,6 @@ public class PostCategoryEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return this.getClass().hashCode();
+        return java.util.Objects.hashCode(this.id);
     }
 }

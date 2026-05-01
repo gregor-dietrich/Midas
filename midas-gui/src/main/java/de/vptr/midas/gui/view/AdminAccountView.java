@@ -74,15 +74,8 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void loadAccountsAsync() {
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
         this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.accountService.getAllAccounts(0, UiConstants.DEFAULT_PAGE_SIZE),
                 accounts -> this.grid.setItems(accounts));
     }
 
@@ -180,17 +173,10 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
         this.loadDataAsync(
-                () -> this.accountService.searchAccounts(query.trim(), authHeader),
+                () -> this.accountService.searchAccounts(query.trim()),
                 accounts -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search Accounts");

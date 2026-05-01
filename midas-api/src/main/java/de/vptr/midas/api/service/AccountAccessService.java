@@ -224,9 +224,7 @@ public class AccountAccessService {
         meta.user = user;
         meta.account = account;
         meta.persistAndFlush();
-        UserAccountMetaEntity.getEntityManager().detach(meta);
-
-        return UserAccountMetaEntity.findById(meta.id);
+        return meta;
     }
 
     /** Removes a user from an account. */

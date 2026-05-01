@@ -137,8 +137,7 @@ public class PostService {
 
         final PostEntity post = this.buildPostEntity(postDto);
         post.persistAndFlush();
-        PostEntity.getEntityManager().detach(post);
-        return this.toResponseDto(PostEntity.findById(post.id));
+        return this.toResponseDto(post);
     }
 
     @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
@@ -206,8 +205,7 @@ public class PostService {
         }
 
         existingPost.persistAndFlush();
-        PostEntity.getEntityManager().detach(existingPost);
-        return this.toResponseDto(PostEntity.findById(existingPost.id));
+        return this.toResponseDto(existingPost);
     }
 
     /** Partially updates the post with the given id. */
@@ -246,8 +244,7 @@ public class PostService {
         }
 
         existingPost.persistAndFlush();
-        PostEntity.getEntityManager().detach(existingPost);
-        return this.toResponseDto(PostEntity.findById(existingPost.id));
+        return this.toResponseDto(existingPost);
     }
 
     /** Deletes the post with the given id. */

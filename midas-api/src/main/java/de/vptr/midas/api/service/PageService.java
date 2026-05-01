@@ -58,9 +58,7 @@ public class PageService {
         page.title = pageDto.title;
         page.content = pageDto.content;
         page.persistAndFlush();
-        PageEntity.getEntityManager().detach(page);
-
-        return new PageResponseDto(PageEntity.findById(page.id));
+        return new PageResponseDto(page);
     }
 
     /** Updates the page with the given id. */
@@ -82,9 +80,7 @@ public class PageService {
         existingPage.title = pageDto.title;
         existingPage.content = pageDto.content;
         existingPage.persistAndFlush();
-        PageEntity.getEntityManager().detach(existingPage);
-
-        return new PageResponseDto(PageEntity.findById(existingPage.id));
+        return new PageResponseDto(existingPage);
     }
 
     /** Partially updates the page with the given id. */

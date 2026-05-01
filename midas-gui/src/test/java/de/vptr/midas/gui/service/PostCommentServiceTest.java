@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.PostCommentClient;
 import de.vptr.midas.gui.dto.PostCommentDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
@@ -45,56 +46,55 @@ class PostCommentServiceTest {
         @Test
         void getAllComments_shouldReturnCommentList_whenAuthenticationProvided() {
                 // Given
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-
                 final var comment1 = MockDataUtil.createPostCommentResponseDto(1L, "First comment", 1L,
                                 "Test Post", 1L, "testuser");
                 final var comment2 = MockDataUtil.createPostCommentResponseDto(2L, "Second comment", 1L,
                                 "Test Post", 1L, "testuser");
                 final var expectedComments = Arrays.asList(comment1, comment2);
 
-                when(this.commentClient.getAllComments(0, 50, authHeader)).thenReturn(expectedComments);
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getAllComments(0, 50, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedComments);
 
                 // When
-                final var result = this.postCommentService.getAllComments(authHeader, 0, 50);
+                final var result = this.postCommentService.getAllComments(0, 50);
 
                 // Then
                 assertThat(result).hasSize(2);
                 assertThat(result).containsExactly(comment1, comment2);
-                verify(this.commentClient).getAllComments(0, 50, authHeader);
+                verify(this.commentClient).getAllComments(0, 50, TestUtil.TEST_AUTH_HEADER);
         }
 
         @Test
-        void getAllComments_shouldThrowServiceException_whenAuthHeaderIsNull() {
-                // When & Then
+        void getAllComments_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+                when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
                 ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                                () -> this.postCommentService.getAllComments(null, 0, 50));
+                                () -> this.postCommentService.getAllComments(0, 50));
         }
 
         @Test
         void getAllComments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
                 // Given
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.getAllComments(0, 50, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getAllComments(0, 50, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
                 // When & Then
                 ExceptionTestUtil
                                 .assertThrowsBackendConnectionFailed(
-                                                () -> this.postCommentService.getAllComments(authHeader, 0, 50));
+                                                () -> this.postCommentService.getAllComments(0, 50));
         }
 
         @Test
         void getAllComments_shouldThrowAuthenticationException_when401Error() {
                 // Given
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
                 final var webException = ExceptionTestUtil.create401Exception();
 
-                when(this.commentClient.getAllComments(0, 50, authHeader)).thenThrow(webException);
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getAllComments(0, 50, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
 
                 // When & Then
                 ExceptionTestUtil.assertHandles401WithLogout(
-                                () -> this.postCommentService.getAllComments(authHeader, 0, 50),
+                                () -> this.postCommentService.getAllComments(0, 50),
                                 this.authService);
         }
 
@@ -124,7 +124,7 @@ class PostCommentServiceTest {
         void getCommentsByPost_shouldThrowAuthenticationException_whenNotAuthenticated() {
                 // Given
                 final var postId = 1L;
-                when(this.authService.getAuthorizationHeader()).thenReturn(null);
+                when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
                 // When & Then
                 ExceptionTestUtil.assertThrowsUserNotAuthenticated(
@@ -250,7 +250,7 @@ class PostCommentServiceTest {
         }
 
         @Test
-        void deleteComment_shouldReturnTrue_whenDeletionSuccessful() {
+        void deleteComment_shouldSucceed_whenDeletionSuccessful() {
                 // Given
                 final var commentId = 1L;
                 final var mockResponse = ResponseTestUtil.createMockResponse(204);
@@ -259,15 +259,14 @@ class PostCommentServiceTest {
                 when(this.commentClient.deleteComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
                 // When
-                final boolean result = this.postCommentService.deleteComment(commentId);
+                this.postCommentService.deleteComment(commentId);
 
                 // Then
-                assertThat(result).isTrue();
                 verify(this.commentClient).deleteComment(commentId, TestUtil.TEST_AUTH_HEADER);
         }
 
         @Test
-        void deleteComment_shouldReturnFalse_whenDeletionFails() {
+        void deleteComment_shouldThrowServiceException_whenDeletionFails() {
                 // Given
                 final var commentId = 1L;
                 final var mockResponse = ResponseTestUtil.createBadRequestResponse();
@@ -275,11 +274,9 @@ class PostCommentServiceTest {
                 ServiceTestUtil.setupAuthHeader(this.authService);
                 when(this.commentClient.deleteComment(commentId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
-                // When
-                final boolean result = this.postCommentService.deleteComment(commentId);
-
-                // Then
-                assertThat(result).isFalse();
+                // When & Then
+                assertThatThrownBy(() -> this.postCommentService.deleteComment(commentId))
+                        .isInstanceOf(ServiceException.class);
         }
 
         @Test
@@ -312,13 +309,13 @@ class PostCommentServiceTest {
         @Test
         void getAllComments_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
                 // Given
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.getAllComments(0, 50, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getAllComments(0, 50, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(new RuntimeException("Unexpected error"));
 
                 // When & Then
                 ExceptionTestUtil.assertThrowsUnexpectedError(
-                                () -> this.postCommentService.getAllComments(authHeader, 0, 50));
+                                () -> this.postCommentService.getAllComments(0, 50));
         }
 
         // ===================== getCommentsByUser tests =====================
@@ -341,7 +338,7 @@ class PostCommentServiceTest {
 
         @Test
         void getCommentsByUser_shouldThrowServiceException_whenAuthHeaderIsNull() {
-                when(this.authService.getAuthorizationHeader()).thenReturn(null);
+                when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
                 ExceptionTestUtil.assertThrowsAuthenticationRequired(
                                 () -> this.postCommentService.getCommentsByUser(1L));
@@ -374,45 +371,46 @@ class PostCommentServiceTest {
         @Test
         void searchComments_shouldReturnComments_whenQueryProvided() {
                 final String query = "test";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
                 final var comment = MockDataUtil.createPostCommentResponseDto(1L, "Search result", 1L,
                                 "Test Post", 1L, "testuser");
                 final var expected = Collections.singletonList(comment);
 
-                when(this.commentClient.searchComments(query, authHeader)).thenReturn(expected);
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.searchComments(query, TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
 
-                final var result = this.postCommentService.searchComments(query, authHeader);
+                final var result = this.postCommentService.searchComments(query);
 
                 assertThat(result).hasSize(1);
                 assertThat(result.get(0).getContent()).isEqualTo("Search result");
         }
 
         @Test
-        void searchComments_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
+        void searchComments_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+                when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
                 ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                                () -> this.postCommentService.searchComments("test", null));
+                                () -> this.postCommentService.searchComments("test"));
         }
 
         @Test
         void searchComments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
                 final String query = "test";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.searchComments(query, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.searchComments(query, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
                 ExceptionTestUtil.assertThrowsBackendConnectionFailed(
-                                () -> this.postCommentService.searchComments(query, authHeader));
+                                () -> this.postCommentService.searchComments(query));
         }
 
         @Test
         void searchComments_shouldThrowAuthenticationException_when401Error() {
                 final String query = "test";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.searchComments(query, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.searchComments(query, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(ExceptionTestUtil.create401Exception());
 
                 ExceptionTestUtil.assertHandles401WithLogout(
-                                () -> this.postCommentService.searchComments(query, authHeader), this.authService);
+                                () -> this.postCommentService.searchComments(query), this.authService);
         }
 
         // ===================== getCommentsByDateRange tests =====================
@@ -421,47 +419,48 @@ class PostCommentServiceTest {
         void getCommentsByDateRange_shouldReturnComments_whenValidDates() {
                 final String startDate = "2023-01-01";
                 final String endDate = "2023-12-31";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
                 final var comment = MockDataUtil.createPostCommentResponseDto(1L, "Date range comment", 1L,
                                 "Test Post", 1L, "testuser");
                 final var expected = Collections.singletonList(comment);
 
-                when(this.commentClient.getCommentsByDateRange(startDate, endDate, authHeader)).thenReturn(expected);
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getCommentsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
 
-                final var result = this.postCommentService.getCommentsByDateRange(startDate, endDate, authHeader);
+                final var result = this.postCommentService.getCommentsByDateRange(startDate, endDate);
 
                 assertThat(result).hasSize(1);
                 assertThat(result.get(0).getContent()).isEqualTo("Date range comment");
         }
 
         @Test
-        void getCommentsByDateRange_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
+        void getCommentsByDateRange_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+                when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
                 ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                                () -> this.postCommentService.getCommentsByDateRange("2023-01-01", "2023-12-31", null));
+                                () -> this.postCommentService.getCommentsByDateRange("2023-01-01", "2023-12-31"));
         }
 
         @Test
         void getCommentsByDateRange_shouldThrowServiceException_whenProcessingExceptionOccurs() {
                 final String startDate = "2023-01-01";
                 final String endDate = "2023-12-31";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.getCommentsByDateRange(startDate, endDate, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getCommentsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
                 ExceptionTestUtil.assertThrowsBackendConnectionFailed(
-                                () -> this.postCommentService.getCommentsByDateRange(startDate, endDate, authHeader));
+                                () -> this.postCommentService.getCommentsByDateRange(startDate, endDate));
         }
 
         @Test
         void getCommentsByDateRange_shouldThrowAuthenticationException_when401Error() {
                 final String startDate = "2023-01-01";
                 final String endDate = "2023-12-31";
-                final var authHeader = TestUtil.TEST_AUTH_HEADER;
-                when(this.commentClient.getCommentsByDateRange(startDate, endDate, authHeader))
+                ServiceTestUtil.setupAuthHeader(this.authService);
+                when(this.commentClient.getCommentsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER))
                                 .thenThrow(ExceptionTestUtil.create401Exception());
 
                 ExceptionTestUtil.assertHandles401WithLogout(
-                                () -> this.postCommentService.getCommentsByDateRange(startDate, endDate, authHeader),
+                                () -> this.postCommentService.getCommentsByDateRange(startDate, endDate),
                                 this.authService);
         }
 }

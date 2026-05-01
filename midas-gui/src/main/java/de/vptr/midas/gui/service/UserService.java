@@ -34,12 +34,9 @@ public class UserService {
 
     /** Returns the all users. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserResponseDto> getAllUsers(final String authHeader, final Integer page, final Integer size) {
+    public List<UserResponseDto> getAllUsers(final Integer page, final Integer size) {
         LOG.debug("Fetching all users");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(
@@ -51,11 +48,7 @@ public class UserService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getCurrentUser() {
         LOG.debug("Fetching current user");
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getCurrentUser(authHeader),
                 this.authService, LOG, "fetching current user", response -> {
                     if (response.getStatus() == 200) {
@@ -73,11 +66,7 @@ public class UserService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserById(final Long id) {
         LOG.debugf("Fetching user with ID: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getUser(id, authHeader),
                 this.authService, LOG, "fetching user " + id, response -> {
                     if (response.getStatus() == 200) {
@@ -94,11 +83,7 @@ public class UserService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserByUsername(final String username) {
         LOG.debugf("Fetching user with username: %s", username);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getUserByUsername(username, authHeader),
                 this.authService, LOG, "fetching user by username " + username, response -> {
                     if (response.getStatus() == 200) {
@@ -114,11 +99,7 @@ public class UserService {
     /** Creates a new user. */
     public UserResponseDto createUser(final UserDto user) {
         LOG.debugf("Creating new user: %s", user.getUsername());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.createUser(user, authHeader),
                 this.authService, LOG, "creating user", "Failed to create user", response -> {
                     if (response.getStatus() == 201) {
@@ -131,11 +112,7 @@ public class UserService {
     /** Updates the user. */
     public UserResponseDto updateUser(final UserDto user) {
         LOG.debugf("Updating user: %s", user.getId());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.updateUser(user.getId(), user, authHeader),
                 this.authService, LOG, "updating user " + user.getId(), "Failed to update user", response -> {
                     if (response.getStatus() == 200) {
@@ -148,11 +125,7 @@ public class UserService {
     /** Updates the user password. */
     public UserResponseDto updateUserPassword(final UserDto user) {
         LOG.debugf("Updating password for user: %s", user.getId());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(user.getId(), user, authHeader),
                 this.authService, LOG, "updating user password " + user.getId(),
                 "Failed to update user password", response -> {
@@ -167,23 +140,16 @@ public class UserService {
     /** Handles the delete user operation. */
     public boolean deleteUser(final Long id) {
         LOG.debugf("Deleting user: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.deleteUser(id, authHeader),
                 this.authService, LOG, "deleting user " + id, response -> response.getStatus() == 204);
     }
 
     /** Handles the search users operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserResponseDto> searchUsers(final String query, final String authHeader) {
+    public List<UserResponseDto> searchUsers(final String query) {
         LOG.debugf("Searching users with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.userClient.searchUsers(query, authHeader),
                 this.authService, LOG, "searching users");

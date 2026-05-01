@@ -48,13 +48,10 @@ public class AccountService {
 
     /** Returns the all accounts. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<AccountResponseDto> getAllAccounts(final String authHeader, final Integer page, final Integer size)
+    public List<AccountResponseDto> getAllAccounts(final Integer page, final Integer size)
             throws ServiceException, AuthenticationException {
-        LOG.debug("Fetching all accounts with provided auth header");
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        LOG.debug("Fetching all accounts");
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(
@@ -66,11 +63,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountById(final Long id) {
         LOG.debugf("Fetching account with ID: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccount(id, authHeader),
                 this.authService, LOG, "fetching account " + id, response -> {
                     if (response.getStatus() == 200) {
@@ -90,11 +83,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountByName(final String name) {
         LOG.debugf("Fetching account with name: %s", name);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountByName(name, authHeader),
                 this.authService, LOG, "fetching account by name " + name, response -> {
                     if (response.getStatus() == 200) {
@@ -114,11 +103,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getAccountsByUser(final Long userId) {
         LOG.debugf("Fetching accounts for user: %s", userId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getAccountsByUser(userId, authHeader),
                 this.authService, LOG, "fetching accounts for user " + userId);
@@ -127,12 +112,9 @@ public class AccountService {
     // User-facing method that doesn't require admin permissions
     /** Returns the my accounts. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<AccountResponseDto> getMyAccounts(final String authHeader) {
+    public List<AccountResponseDto> getMyAccounts() {
         LOG.debug("Fetching accounts for current user");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getMyAccounts(authHeader),
                 this.authService, LOG, "fetching my accounts");
@@ -141,12 +123,9 @@ public class AccountService {
     // Optimized method to get accounts with balances in a single call
     /** Returns the my accounts with balances. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<AccountResponseDto> getMyAccountsWithBalances(final String authHeader) {
+    public List<AccountResponseDto> getMyAccountsWithBalances() {
         LOG.debug("Fetching accounts with balances for current user");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getMyAccountsWithBalances(authHeader),
                 this.authService, LOG, "fetching my accounts with balances");
@@ -154,12 +133,9 @@ public class AccountService {
 
     /** Handles the search accounts operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<AccountResponseDto> searchAccounts(final String query, final String authHeader) {
+    public List<AccountResponseDto> searchAccounts(final String query) {
         LOG.debugf("Searching accounts with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.searchAccounts(query, authHeader),
                 this.authService, LOG, "searching accounts");
@@ -169,11 +145,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentDto> getOutgoingPayments(final Long accountId) {
         LOG.debugf("Fetching outgoing payments for account: %s", accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getOutgoingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching outgoing payments for account " + accountId, response -> {
                     if (response.getStatus() == 200) {
@@ -189,11 +161,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PaymentDto> getIncomingPayments(final Long accountId) {
         LOG.debugf("Fetching incoming payments for account: %s", accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getIncomingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching incoming payments for account " + accountId, response -> {
                     if (response.getStatus() == 200) {
@@ -209,11 +177,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserResponseDto> getAssociatedUsers(final Long accountId) {
         LOG.debugf("Fetching users associated with account: %s", accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getAssociatedUsers(accountId, authHeader),
                 this.authService, LOG, "fetching users for account " + accountId);
@@ -222,11 +186,7 @@ public class AccountService {
     /** Creates a new account. */
     public AccountDto createAccount(final AccountDto account) {
         LOG.debugf("Creating new account: %s", account);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.createAccount(account, authHeader),
                 this.authService, LOG, "creating account", "Failed to create account", response -> {
                     if (response.getStatus() == 201) {
@@ -241,11 +201,7 @@ public class AccountService {
     /** Updates the account. */
     public AccountDto updateAccount(final AccountDto account) {
         LOG.debugf("Updating account: %s", account);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
                 () -> this.accountClient.updateAccount(account.getId(), account, authHeader),
                 this.authService, LOG, "updating account " + account.getId(), "Failed to update account", response -> {
@@ -261,11 +217,7 @@ public class AccountService {
     /** Handles the delete account operation. */
     public boolean deleteAccount(final Long id) {
         LOG.debugf("Deleting account with ID: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.deleteAccount(id, authHeader),
                 this.authService, LOG, "deleting account " + id, response -> response.getStatus() == 204);
     }
@@ -273,11 +225,7 @@ public class AccountService {
     /** Handles the associate user with account operation. */
     public boolean associateUserWithAccount(final Long accountId, final Long userId) {
         LOG.debugf("Associating user %s with account %s", userId, accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> {
             try {
                 return this.accountClient.associateUserWithAccount(accountId, userId, authHeader);
@@ -294,11 +242,7 @@ public class AccountService {
     /** Removes the user from account. */
     public boolean removeUserFromAccount(final Long accountId, final Long userId) {
         LOG.debugf("Removing user %s from account %s", userId, accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.removeUserFromAccount(accountId, userId,
                 authHeader), this.authService, LOG, "removing user " + userId + " from account " + accountId,
                 response -> response.getStatus() == 204);
@@ -310,10 +254,7 @@ public class AccountService {
             throws ServiceException, AuthenticationException {
         LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s",
                 accountId, userId, Boolean.valueOf(isNegative));
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final var dto = new UserAccountMetaDto();
         dto.setIsNegative(isNegative);
         ServiceHelper.executeWithResponse(
@@ -330,11 +271,7 @@ public class AccountService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public BigDecimal getAccountBalance(final Long accountId) {
         LOG.debugf("Fetching balance for account: %s", accountId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountBalance(accountId, authHeader),
                 this.authService, LOG, "fetching balance for account " + accountId, response -> {
                     if (response.getStatus() == 200) {
@@ -347,12 +284,9 @@ public class AccountService {
 
     // User-facing method that checks account access before returning balance
     /** Returns the my account balance. */
-    public BigDecimal getMyAccountBalance(final Long accountId, final String authHeader) {
+    public BigDecimal getMyAccountBalance(final Long accountId) {
         LOG.debugf("Fetching balance for my account: %s", accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getMyAccountBalance(accountId, authHeader),
                 this.authService, LOG, "fetching balance for my account " + accountId, response -> {
                     if (response.getStatus() == 200) {
@@ -380,12 +314,9 @@ public class AccountService {
 
     // User-facing method that checks account access before returning payments
     /** Returns the my account payments. */
-    public List<PaymentResponseDto> getMyAccountPayments(final Long accountId, final String authHeader) {
+    public List<PaymentResponseDto> getMyAccountPayments(final Long accountId) {
         LOG.debugf("Fetching payments for my account: %s", accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getMyAccountPayments(accountId, authHeader),
                 this.authService, LOG, "fetching payments for my account " + accountId);
@@ -394,12 +325,9 @@ public class AccountService {
     // User-facing method that checks account access before returning outgoing
     // payments
     /** Returns the my account outgoing payments. */
-    public List<PaymentResponseDto> getMyAccountOutgoingPayments(final Long accountId, final String authHeader) {
+    public List<PaymentResponseDto> getMyAccountOutgoingPayments(final Long accountId) {
         LOG.debugf("Fetching outgoing payments for my account: %s", accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getMyAccountOutgoingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching outgoing payments for my account " + accountId);
@@ -408,12 +336,9 @@ public class AccountService {
     // User-facing method that checks account access before returning incoming
     // payments
     /** Returns the my account incoming payments. */
-    public List<PaymentResponseDto> getMyAccountIncomingPayments(final Long accountId, final String authHeader) {
+    public List<PaymentResponseDto> getMyAccountIncomingPayments(final Long accountId) {
         LOG.debugf("Fetching incoming payments for my account: %s", accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.accountClient.getMyAccountIncomingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching incoming payments for my account " + accountId);
@@ -421,12 +346,9 @@ public class AccountService {
 
     // User-facing method that checks account access before creating payment
     /** Creates a new my account payment. */
-    public PaymentDto createMyAccountPayment(final Long accountId, final PaymentDto payment, final String authHeader) {
+    public PaymentDto createMyAccountPayment(final Long accountId, final PaymentDto payment) {
         LOG.debugf("Creating payment for my account: %s", accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.createMyAccountPayment(accountId, payment,
                 authHeader), this.authService, LOG, "creating payment for my account " + accountId,
                 "Failed to create payment", response -> {
@@ -441,13 +363,9 @@ public class AccountService {
 
     // User-facing method that checks account access before updating payment
     /** Updates the my account payment. */
-    public PaymentDto updateMyAccountPayment(final Long accountId, final Long paymentId, final PaymentDto payment,
-            final String authHeader) {
+    public PaymentDto updateMyAccountPayment(final Long accountId, final Long paymentId, final PaymentDto payment) {
         LOG.debugf("Updating payment %s for my account: %s", paymentId, accountId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header provided");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.updateMyAccountPayment(accountId, paymentId,
                 payment, authHeader), this.authService, LOG,
                 "updating payment " + paymentId + " for my account " + accountId,

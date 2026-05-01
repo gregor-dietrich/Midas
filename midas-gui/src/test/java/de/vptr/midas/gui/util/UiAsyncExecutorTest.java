@@ -16,6 +16,7 @@ import org.mockito.MockedStatic;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.SerializableRunnable;
+import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
 import com.vaadin.flow.server.VaadinSession;
 
@@ -26,9 +27,10 @@ class UiAsyncExecutorTest {
         final var ui = mock(UI.class);
         final var executed = new AtomicBoolean(false);
 
-        doAnswer(invocation -> invocation.getArgument(0, SerializableRunnable.class))
-                .when(ui)
-                .accessLater(any(SerializableRunnable.class), any(SerializableRunnable.class));
+        doAnswer(invocation -> {
+            invocation.getArgument(0, Command.class).execute();
+            return null;
+        }).when(ui).access(any(Command.class));
 
         UiAsyncExecutor.dispatch(ui, null, () -> executed.set(true), null);
 
@@ -44,9 +46,9 @@ class UiAsyncExecutorTest {
         final var dispatchedError = new AtomicReference<ErrorEvent>();
         final var failure = new RuntimeException("boom");
 
-        doAnswer(invocation -> invocation.getArgument(1, SerializableRunnable.class))
+        doThrow(new IllegalStateException("detached"))
                 .when(ui)
-                .accessLater(any(SerializableRunnable.class), any(SerializableRunnable.class));
+                .access(any(Command.class));
         doAnswer(invocation -> {
             dispatchedError.set(invocation.getArgument(0));
             return null;
@@ -82,7 +84,7 @@ class UiAsyncExecutorTest {
 
         doThrow(new IllegalStateException("detached"))
                 .when(ui)
-                .accessLater(any(SerializableRunnable.class), any(SerializableRunnable.class));
+                .access(any(Command.class));
 
         try (MockedStatic<ErrorHandler> errorHandlerMock = mockStatic(ErrorHandler.class)) {
             UiAsyncExecutor.dispatch(ui, session, () -> {

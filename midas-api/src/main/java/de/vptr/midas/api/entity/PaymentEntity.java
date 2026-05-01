@@ -95,10 +95,14 @@ public class PaymentEntity extends PanacheEntityBase {
     // Helper method to calculate total amount for a user
     /** Returns the total payment amount for the given user. */
     public static BigDecimal getTotalAmountByUser(final Long userId) {
-        return getEntityManager()
-                .createQuery("SELECT SUM(p.amount) FROM PaymentEntity p WHERE p.user.id = :userId", BigDecimal.class)
-                .setParameter("userId", userId)
-                .getSingleResult();
+        try {
+            return getEntityManager()
+                    .createQuery("SELECT SUM(p.amount) FROM PaymentEntity p WHERE p.user.id = :userId", BigDecimal.class)
+                    .setParameter("userId", userId)
+                    .getSingleResult();
+        } catch (final jakarta.persistence.NoResultException e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     @Override
@@ -115,6 +119,6 @@ public class PaymentEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return this.getClass().hashCode();
+        return java.util.Objects.hashCode(this.id);
     }
 }

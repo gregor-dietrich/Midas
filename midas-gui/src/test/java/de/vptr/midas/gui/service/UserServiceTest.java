@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.vptr.midas.gui.client.UserClient;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
@@ -46,47 +47,47 @@ class UserServiceTest {
     @Test
     void getAllUsers_shouldReturnUserList_whenAuthenticationProvided() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
         final var user1 = MockDataUtil.createUserResponseDto(1L, "user1", "user1@example.com");
         final var user2 = MockDataUtil.createUserResponseDto(2L, "user2", "user2@example.com");
         final var expectedUsers = Arrays.asList(user1, user2);
 
-        when(this.userClient.getAllUsers(0, 50, authHeader)).thenReturn(expectedUsers);
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedUsers);
 
         // When
-        final var result = this.userService.getAllUsers(authHeader, 0, 50);
+        final var result = this.userService.getAllUsers(0, 50);
 
         // Then
         assertThat(result).hasSize(2);
         assertThat(result).containsExactly(user1, user2);
-        verify(this.userClient).getAllUsers(0, 50, authHeader);
+        verify(this.userClient).getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
-    void getAllUsers_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
-        // When & Then
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getAllUsers(null, 0, 50));
+    void getAllUsers_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getAllUsers(0, 50));
     }
 
     @Test
     void getAllUsers_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
-        when(this.userClient.getAllUsers(0, 50, authHeader))
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
         // When & Then
-        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.userService.getAllUsers(authHeader, 0, 50));
+        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.userService.getAllUsers(0, 50));
     }
 
     @Test
     void getAllUsers_shouldThrowAuthenticationException_when401Error() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
-        when(this.userClient.getAllUsers(0, 50, authHeader)).thenThrow(ExceptionTestUtil.create401Exception());
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER)).thenThrow(ExceptionTestUtil.create401Exception());
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userService.getAllUsers(authHeader, 0, 50),
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userService.getAllUsers(0, 50),
                 this.authService);
     }
 
@@ -111,6 +112,7 @@ class UserServiceTest {
     @Test
     void getCurrentUser_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getCurrentUser());
     }
 
@@ -180,7 +182,7 @@ class UserServiceTest {
 
     @Test
     void getUserByUsername_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(
                 () -> this.userService.getUserByUsername("testuser"));
@@ -293,6 +295,7 @@ class UserServiceTest {
     @Test
     void getUserById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getUserById(1L));
     }
 
@@ -300,7 +303,7 @@ class UserServiceTest {
     void createUser_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newUser = TestDataBuilder.createUser("newuser", "new@example.com");
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.createUser(newUser));
@@ -309,12 +312,12 @@ class UserServiceTest {
     @Test
     void getAllUsers_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
-        when(this.userClient.getAllUsers(0, 50, authHeader))
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // When & Then
-        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.userService.getAllUsers(authHeader, 0, 50));
+        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.userService.getAllUsers(0, 50));
     }
 
     @Test
@@ -358,13 +361,13 @@ class UserServiceTest {
     @Test
     void getAllUsers_shouldReturnEmptyList_whenNoUsersExist() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
         final List<UserResponseDto> emptyList = Collections.emptyList();
 
-        when(this.userClient.getAllUsers(0, 50, authHeader)).thenReturn(emptyList);
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.userClient.getAllUsers(0, 50, TestUtil.TEST_AUTH_HEADER)).thenReturn(emptyList);
 
         // When
-        final var result = this.userService.getAllUsers(authHeader, 0, 50);
+        final var result = this.userService.getAllUsers(0, 50);
 
         // Then
         assertThat(result).isEmpty();
@@ -414,6 +417,7 @@ class UserServiceTest {
         userToUpdate.setPassword("newPassword123");
 
         // When & Then
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.updateUserPassword(userToUpdate));
     }
 

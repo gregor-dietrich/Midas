@@ -45,13 +45,10 @@ public class UserRankService {
 
     /** Returns the all ranks. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> getAllRanks(final String authHeader)
+    public List<UserRankResponseDto> getAllRanks()
             throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all ranks");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.userRankClient.getAllRanks(authHeader),
                 this.authService, LOG, "fetching ranks");
@@ -62,38 +59,38 @@ public class UserRankService {
     public UserRankResponseDto getCurrentUserRank() {
         final var emptyRank = new UserRankResponseDto();
 
+        // Check session cache first to avoid repeated REST calls
+        final var session = VaadinSession.getCurrent();
+        if (session != null) {
+            final var cachedRank = CURRENT_USER_RANK_ATTRIBUTE.read(session, LOG).orElse(null);
+            final var lastCacheTime = CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.read(session, LOG).orElse(null);
+            final var currentTime = System.currentTimeMillis();
+
+            if (cachedRank != null && lastCacheTime != null
+                    && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
+                LOG.debugf("Using cached user rank data (%sms old)", currentTime - lastCacheTime);
+                return cachedRank;
+            }
+            if (cachedRank != null || lastCacheTime != null) {
+                CURRENT_USER_RANK_ATTRIBUTE.clear(session);
+                CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.clear(session);
+            }
+        }
+
+        LOG.debug("Fetching fresh user rank data");
+        final var currentUser = this.userService.getCurrentUser();
+        if (currentUser.isEmpty()) {
+            LOG.warn("Could not get current user for permission check");
+            return emptyRank;
+        }
+
+        final var user = currentUser.get();
+        if (user.getRankId() == null) {
+            LOG.warn("User has no rank assigned for permission check");
+            return emptyRank;
+        }
+
         try {
-            // Check session cache first to avoid repeated REST calls
-            final var session = VaadinSession.getCurrent();
-            if (session != null) {
-                final var cachedRank = CURRENT_USER_RANK_ATTRIBUTE.read(session, LOG).orElse(null);
-                final var lastCacheTime = CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.read(session, LOG).orElse(null);
-                final var currentTime = System.currentTimeMillis();
-
-                if (cachedRank != null && lastCacheTime != null
-                        && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
-                    LOG.debugf("Using cached user rank data (%sms old)", currentTime - lastCacheTime);
-                    return cachedRank;
-                }
-                if (cachedRank != null || lastCacheTime != null) {
-                    CURRENT_USER_RANK_ATTRIBUTE.clear(session);
-                    CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.clear(session);
-                }
-            }
-
-            LOG.debug("Fetching fresh user rank data");
-            final var currentUser = this.userService.getCurrentUser();
-            if (currentUser.isEmpty()) {
-                LOG.warn("Could not get current user for permission check");
-                return emptyRank;
-            }
-
-            final var user = currentUser.get();
-            if (user.getRankId() == null) {
-                LOG.warn("User has no rank assigned for permission check");
-                return emptyRank;
-            }
-
             final var userRank = this.getRankById(user.getRankId());
 
             // Cache the result in session
@@ -104,8 +101,8 @@ public class UserRankService {
             }
 
             return userRank;
-        } catch (final RuntimeException e) {
-            LOG.error("Error checking admin:view permission", e);
+        } catch (final AuthenticationException | ServiceException e) {
+            LOG.errorf(e, "Error fetching user rank for permission check: %s", e.getMessage());
             return emptyRank;
         }
     }
@@ -127,11 +124,8 @@ public class UserRankService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public UserRankResponseDto getRankById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting user rank by id: %s", id);
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.userRankClient.getRank(id, authHeader);
         }, this.authService, LOG, "getting user rank " + id, response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -147,11 +141,8 @@ public class UserRankService {
     /** Creates a new rank. */
     public UserRankDto createRank(final UserRankDto rank) throws AuthenticationException, ServiceException {
         LOG.infof("Creating user rank: %s", rank.getName());
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.userRankClient.createRank(rank, authHeader);
         }, this.authService, LOG, "creating user rank", "Failed to create user rank", response -> {
             if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
@@ -166,11 +157,8 @@ public class UserRankService {
     /** Updates the rank. */
     public UserRankDto updateRank(final UserRankDto rank) throws AuthenticationException, ServiceException {
         LOG.infof("Updating user rank: %s (%s)", rank.getName(), rank.getId());
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.userRankClient.updateRank(rank.getId(), rank, authHeader);
         }, this.authService, LOG, "updating user rank " + rank.getId(), "Failed to update user rank", response -> {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -184,35 +172,29 @@ public class UserRankService {
 
     /** Handles the search ranks operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> searchRanks(final String query, final String authHeader)
+    public List<UserRankResponseDto> searchRanks(final String query)
             throws AuthenticationException, ServiceException {
         LOG.debugf("Searching ranks with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.userRankClient.searchRanks(query, authHeader),
                 this.authService, LOG, "searching ranks");
     }
 
     /** Handles the delete rank operation. */
-    public boolean deleteRank(final Long id) throws AuthenticationException, ServiceException {
+    public void deleteRank(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Deleting user rank: %s", id);
-        if (!this.authService.isAuthenticated()) {
-            throw new AuthenticationException("Authentication required");
-        }
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
+        ServiceHelper.executeWithResponse(() -> {
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.userRankClient.deleteRank(id, authHeader);
         }, this.authService, LOG, "deleting user rank " + id, response -> {
-            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()
-                    || response.getStatus() == Response.Status.OK.getStatusCode()) {
+            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
                 LOG.infof("Successfully deleted user rank: %s", id);
-                return true;
-            } else {
-                return false;
+                return null;
+            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ServiceException("User rank not found");
             }
+            throw ServiceHelper.responseFailure("Failed to delete user rank", response);
         });
     }
 

@@ -64,7 +64,14 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
             final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
 
-            if (user == null || !this.passwordHashingService.verifyPasswordChars(password, user.password, user.salt)) {
+            if (user == null) {
+                // Run dummy hash to prevent timing-based username enumeration
+                this.passwordHashingService.verifyPasswordChars(password, "dummy", "dummySalt");
+                this.authFailureRateLimitService.recordFailure(clientKey);
+                throw new AuthenticationFailedException("Invalid credentials");
+            }
+
+            if (!this.passwordHashingService.verifyPasswordChars(password, user.password, user.salt)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 throw new AuthenticationFailedException("Invalid credentials");
             }

@@ -123,11 +123,7 @@ public class PostCommentService {
                 .orElseThrow(() -> new WebApplicationException(
                         "User with username '" + currentUsername + "' not found", Response.Status.NOT_FOUND));
         comment.persistAndFlush();
-        PostCommentEntity.getEntityManager().detach(comment);
-        return new PostCommentResponseDto(PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
-                        comment.id)
-                .<PostCommentEntity>firstResult());
+        return new PostCommentResponseDto(comment);
     }
 
     /** Updates the comment with the given id. */
@@ -144,11 +140,7 @@ public class PostCommentService {
         }
         existingComment.content = dto.content;
         existingComment.persistAndFlush();
-        PostCommentEntity.getEntityManager().detach(existingComment);
-        return new PostCommentResponseDto(PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
-                        existingComment.id)
-                .<PostCommentEntity>firstResult());
+        return new PostCommentResponseDto(existingComment);
     }
 
     /** Partially updates the comment with the given id. */
@@ -164,11 +156,7 @@ public class PostCommentService {
             existingComment.content = dto.content;
         }
         existingComment.persistAndFlush();
-        PostCommentEntity.getEntityManager().detach(existingComment);
-        return new PostCommentResponseDto(PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
-                        existingComment.id)
-                .<PostCommentEntity>firstResult());
+        return new PostCommentResponseDto(existingComment);
     }
 
     /** Deletes the comment with the given id. */

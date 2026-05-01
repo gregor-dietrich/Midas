@@ -71,17 +71,8 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.categoryService.getAllCategories(authHeader),
+                () -> this.categoryService.getAllCategories(),
                 categories -> {
                     LOG.infof("Successfully loaded %s categories", categories.size());
                     this.allCategories = categories;
@@ -252,18 +243,10 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchButton.setEnabled(false);
 
         this.loadDataAsync(
-                () -> this.categoryService.searchCategories(query.trim(), authHeader),
+                () -> this.categoryService.searchCategories(query.trim()),
                 categories -> {
                     this.searchButton.setEnabled(true);
                     this.updateSearchTreeGrid(categories);

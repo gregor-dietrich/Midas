@@ -88,17 +88,8 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> NotificationUtil.showError("Authentication failed")));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.categoryService.getAllCategories(authHeader),
+                () -> this.categoryService.getAllCategories(),
                 categories -> {
                     LOG.infof("Successfully loaded %s categories", categories.size());
                     this.allCategories = categories;

@@ -64,13 +64,16 @@ public class AuthService {
                 LOG.warn("No VaadinSession available after successful credential validation");
                 return AuthResultDto.backendUnavailable();
             }
-            final var previousSessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-            this.sessionAuthorizationStore.revokeSession(previousSessionId);
-            final var sessionId = this.sessionAuthorizationStore.createSession(authHeader);
 
-            USERNAME_ATTRIBUTE.write(session, username);
-            SESSION_ID_ATTRIBUTE.write(session, sessionId);
-            AUTHENTICATED_ATTRIBUTE.write(session, Boolean.TRUE);
+            withSessionLock(session, () -> {
+                final var previousSessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
+                this.sessionAuthorizationStore.revokeSession(previousSessionId);
+                final var sessionId = this.sessionAuthorizationStore.createSession(authHeader);
+
+                USERNAME_ATTRIBUTE.write(session, username);
+                SESSION_ID_ATTRIBUTE.write(session, sessionId);
+                AUTHENTICATED_ATTRIBUTE.write(session, Boolean.TRUE);
+            });
 
             LOG.trace("User authenticated successfully");
             return AuthResultDto.success();
@@ -101,10 +104,12 @@ public class AuthService {
 
         final var session = VaadinSession.getCurrent();
         if (session != null) {
-            final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-            this.sessionAuthorizationStore.revokeSession(sessionId);
-            this.clearAuthenticationState(session);
-            session.close();
+            withSessionLock(session, () -> {
+                final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
+                this.sessionAuthorizationStore.revokeSession(sessionId);
+                this.clearAuthenticationState(session);
+                session.close();
+            });
         }
 
         LOG.trace("User logged out");
@@ -117,25 +122,28 @@ public class AuthService {
             LOG.trace("No VaadinSession available, returning not authenticated");
             return false;
         }
-        final var authenticated = AUTHENTICATED_ATTRIBUTE.read(session, LOG).orElse(Boolean.FALSE);
-        if (!authenticated) {
-            LOG.trace("Checking authentication status: false");
-            return false;
-        }
-        final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-        if (sessionId == null) {
-            LOG.warn("Session marked authenticated but has no session id");
-            this.clearAuthenticationState(session);
-            return false;
-        }
-        final var hasAuthorization = this.sessionAuthorizationStore.resolveAuthorization(sessionId) != null;
-        if (!hasAuthorization) {
-            LOG.warn("Session marked authenticated but has no authorization mapping");
-            this.clearAuthenticationState(session);
-        }
-        final var result = hasAuthorization;
-        LOG.tracef("Checking authentication status: %s", result);
-        return result;
+
+        return withSessionLock(session, () -> {
+            final var authenticated = AUTHENTICATED_ATTRIBUTE.read(session, LOG).orElse(Boolean.FALSE);
+            if (!authenticated) {
+                LOG.trace("Checking authentication status: false");
+                return false;
+            }
+            final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
+            if (sessionId == null) {
+                LOG.warn("Session marked authenticated but has no session id");
+                this.clearAuthenticationState(session);
+                return false;
+            }
+            final var hasAuthorization = this.sessionAuthorizationStore.resolveAuthorization(sessionId) != null;
+            if (!hasAuthorization) {
+                LOG.warn("Session marked authenticated but has no authorization mapping");
+                this.clearAuthenticationState(session);
+            }
+            final var result = hasAuthorization;
+            LOG.tracef("Checking authentication status: %s", result);
+            return result;
+        });
     }
 
     /** Returns the authorization header for the current authenticated session. */
@@ -150,20 +158,23 @@ public class AuthService {
             LOG.warn("No VaadinSession available, cannot read authorization");
             return null;
         }
-        final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-        if (sessionId == null) {
-            LOG.warn("No session id available for authenticated session");
-            this.clearAuthenticationState(session);
-            return null;
-        }
-        final var header = this.sessionAuthorizationStore.resolveAuthorization(sessionId);
-        if (header == null) {
-            LOG.warn("Authorization mapping missing for current session");
-            this.clearAuthenticationState(session);
-            return null;
-        }
 
-        return header;
+        return withSessionLock(session, () -> {
+            final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
+            if (sessionId == null) {
+                LOG.warn("No session id available for authenticated session");
+                this.clearAuthenticationState(session);
+                return null;
+            }
+            final var header = this.sessionAuthorizationStore.resolveAuthorization(sessionId);
+            if (header == null) {
+                LOG.warn("Authorization mapping missing for current session");
+                this.clearAuthenticationState(session);
+                return null;
+            }
+
+            return header;
+        });
     }
 
     /**
@@ -184,12 +195,33 @@ public class AuthService {
      */
     public String getUsername() {
         final var session = VaadinSession.getCurrent();
-        return USERNAME_ATTRIBUTE.read(session, LOG).orElse(null);
+        if (session == null) {
+            return null;
+        }
+        return withSessionLock(session, () -> USERNAME_ATTRIBUTE.read(session, LOG).orElse(null));
     }
 
     private void clearAuthenticationState(final VaadinSession session) {
         USERNAME_ATTRIBUTE.clear(session);
         SESSION_ID_ATTRIBUTE.clear(session);
         AUTHENTICATED_ATTRIBUTE.write(session, Boolean.FALSE);
+    }
+
+    private static void withSessionLock(final VaadinSession session, final Runnable action) {
+        session.lock();
+        try {
+            action.run();
+        } finally {
+            session.unlock();
+        }
+    }
+
+    private static <T> T withSessionLock(final VaadinSession session, final java.util.function.Supplier<T> supplier) {
+        session.lock();
+        try {
+            return supplier.get();
+        } finally {
+            session.unlock();
+        }
     }
 }

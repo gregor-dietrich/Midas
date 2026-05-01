@@ -3,7 +3,6 @@ package de.vptr.midas.gui.view;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 import org.jboss.logging.Logger;
@@ -123,19 +122,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void verifyAccountAccess(final BeforeEnterEvent event) {
-        // Capture the auth header in the UI thread where VaadinSession is available
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            event.forwardTo(LoginView.class);
-            return;
-        }
-
         UiAsyncExecutor.execute(
                 () -> {
-                    final var userAccounts = this.accountService.getMyAccounts(authHeader);
+                    final var userAccounts = this.accountService.getMyAccounts();
                     final var account = userAccounts.stream()
                             .filter(acc -> acc.getId().equals(this.accountId))
                             .findFirst()
@@ -155,39 +144,13 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private void loadPaymentsAsync() {
         LOG.infof("Starting async payment and balance loading for account: %s", this.accountId);
 
-        // Capture the auth header in the UI thread where VaadinSession is available
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-            return;
-        }
-
-        if (authHeader == null) {
-            LOG.warn("No auth header available");
-            NotificationUtil.showError("Session expired. Please log in again.");
-            this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-            return;
-        }
-
-        // Load payments and balance concurrently
-        UiAsyncExecutor.executeStage(
+        UiAsyncExecutor.execute(
                 () -> {
-                    final CompletableFuture<List<PaymentResponseDto>> paymentsTask = CompletableFuture
-                            .supplyAsync(() -> {
-                                LOG.info("Making optimized REST call to load account payments");
-                                return this.accountService.getMyAccountPayments(this.accountId, authHeader);
-                            });
-
-                    final CompletableFuture<BigDecimal> balanceTask = CompletableFuture.supplyAsync(() -> {
-                        LOG.info("Loading account balance");
-                        return this.accountService.getMyAccountBalance(this.accountId, authHeader);
-                    });
-
-                    return paymentsTask.thenCombine(balanceTask, AccountPaymentData::new);
+                    LOG.info("Making REST call to load account payments");
+                    final var payments = this.accountService.getMyAccountPayments(this.accountId);
+                    LOG.info("Loading account balance");
+                    final var balance = this.accountService.getMyAccountBalance(this.accountId);
+                    return new AccountPaymentData(payments, balance);
                 },
                 result -> {
                     LOG.infof("Successfully loaded %s payments and balance: %s",
@@ -625,14 +588,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                 return;
             }
 
-            final String authHeader;
-            try {
-                authHeader = this.authService.getAuthorizationHeader();
-            } catch (final RuntimeException e) {
-                NotificationUtil.showError("Authentication failed");
-                return;
-            }
-
             if (this.currentPayment.getId() == null) {
                 if (this.currentPayment.getUserId() == null) {
                     final var currentUser = this.userService.getCurrentUser();
@@ -643,12 +598,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                         return;
                     }
                 }
-                this.accountService.createMyAccountPayment(this.accountId, this.currentPayment, authHeader);
+                this.accountService.createMyAccountPayment(this.accountId, this.currentPayment);
                 NotificationUtil.showSuccess("Payment created successfully");
             } else {
                 this.accountService.updateMyAccountPayment(this.accountId, this.currentPayment.getId(),
-                        this.currentPayment,
-                        authHeader);
+                        this.currentPayment);
                 NotificationUtil.showSuccess("Payment updated successfully");
             }
 

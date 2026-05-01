@@ -18,6 +18,7 @@ public class SessionAuthorizationStore {
     static final Duration SESSION_TTL = Duration.ofMinutes(30);
 
     private static final int CLEANUP_INTERVAL = 64;
+    private static final int MAX_SESSIONS = 10_000;
 
     private final Clock clock;
     private final AtomicInteger operationCount;
@@ -35,12 +36,19 @@ public class SessionAuthorizationStore {
 
     /**
      * Creates a new session id and stores the authorization header behind it.
-     * 
+     *
      * @param authorizationHeader the backend authorization header
      * @return generated opaque session id
+     * @throws IllegalStateException if the session store is full
      */
     public String createSession(final String authorizationHeader) {
         this.cleanupExpiredSessionsIfNeeded();
+        if (this.authorizationsBySessionId.size() >= MAX_SESSIONS) {
+            this.cleanupExpiredSessions();
+            if (this.authorizationsBySessionId.size() >= MAX_SESSIONS) {
+                throw new IllegalStateException("Session store is full (max " + MAX_SESSIONS + " sessions)");
+            }
+        }
         final String sessionId = UUID.randomUUID().toString();
         this.authorizationsBySessionId.put(sessionId,
                 new AuthorizationEntry(authorizationHeader, this.clock.instant().plus(SESSION_TTL)));
@@ -49,7 +57,7 @@ public class SessionAuthorizationStore {
 
     /**
      * Returns authorization header for the given session id.
-     * 
+     *
      * @param sessionId opaque session id
      * @return authorization header or null
      */
@@ -71,7 +79,7 @@ public class SessionAuthorizationStore {
 
     /**
      * Removes stored authorization for the given session id.
-     * 
+     *
      * @param sessionId opaque session id
      */
     public void revokeSession(final String sessionId) {

@@ -54,19 +54,8 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadPagesAsync() {
         LOG.info("Starting async page loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.pageService.getAllPages(authHeader),
+                () -> this.pageService.getAllPages(),
                 pages -> {
                     LOG.infof("Successfully loaded %s pages", pages.size());
                     this.grid.setItems(pages);
@@ -115,18 +104,10 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void searchPages(final String query) {
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchLayout.setSearching(true);
 
         this.loadDataAsync(
-                () -> this.pageService.searchPages(query, authHeader),
+                () -> this.pageService.searchPages(query),
                 pages -> {
                     this.searchLayout.setSearching(false);
                     LOG.infof("Search found %s pages", pages.size());

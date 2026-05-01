@@ -13,9 +13,11 @@ import de.vptr.midas.gui.client.PostClient;
 import de.vptr.midas.gui.dto.PostDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 
 /** Component. */
 @Timeout(value = 5, unit = ChronoUnit.SECONDS)
@@ -33,12 +35,9 @@ public class PostService {
 
     /** Returns the all posts. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostResponseDto> getAllPosts(final String authHeader) {
+    public List<PostResponseDto> getAllPosts() {
         LOG.debug("Fetching all posts");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.getAllPosts(authHeader),
                 this.authService, LOG, "fetching posts");
@@ -46,12 +45,9 @@ public class PostService {
 
     /** Returns the published posts. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostResponseDto> getPublishedPosts(final String authHeader) {
-        LOG.debug("Fetching published posts with provided auth header");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+    public List<PostResponseDto> getPublishedPosts() {
+        LOG.debug("Fetching published posts");
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.getPublishedPosts(authHeader),
                 this.authService, LOG, "fetching published posts");
@@ -61,11 +57,7 @@ public class PostService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<PostResponseDto> getPostById(final Long id) {
         LOG.debugf("Fetching post with ID: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.getPost(id, authHeader),
                 this.authService, LOG, "fetching post " + id, response -> {
                     if (response.getStatus() == 200) {
@@ -82,11 +74,7 @@ public class PostService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPostsByUser(final Long userId) {
         LOG.debugf("Fetching posts for user: %s", userId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.getPostsByUser(userId, authHeader),
                 this.authService, LOG, "fetching posts for user " + userId);
@@ -96,11 +84,7 @@ public class PostService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPostsByCategory(final Long categoryId) {
         LOG.debugf("Fetching posts for category: %s", categoryId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.getPostsByCategory(categoryId, authHeader),
                 this.authService, LOG, "fetching posts for category " + categoryId);
@@ -109,11 +93,7 @@ public class PostService {
     /** Creates a new post. */
     public PostDto createPost(final PostDto post) {
         LOG.debugf("Creating new post: %s", post.getTitle());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.createPost(post, authHeader),
                 this.authService, LOG, "creating post", "Failed to create post", response -> {
                     if (response.getStatus() == 201) {
@@ -126,11 +106,7 @@ public class PostService {
     /** Updates the post. */
     public PostDto updatePost(final PostDto post) {
         LOG.debugf("Updating post: %s", post.getId());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(post.getId(), post, authHeader),
                 this.authService, LOG, "updating post " + post.getId(), "Failed to update post", response -> {
                     if (response.getStatus() == 200) {
@@ -141,25 +117,26 @@ public class PostService {
     }
 
     /** Handles the delete post operation. */
-    public boolean deletePost(final Long id) {
+    public void deletePost(final Long id) {
         LOG.debugf("Deleting post: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
-        return ServiceHelper.executeWithResponse(() -> this.postClient.deletePost(id, authHeader),
-                this.authService, LOG, "deleting post " + id, response -> response.getStatus() == 204);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        ServiceHelper.executeWithResponse(() -> this.postClient.deletePost(id, authHeader),
+                this.authService, LOG, "deleting post " + id, response -> {
+            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
+                LOG.infof("Successfully deleted post: %s", id);
+                return null;
+            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ServiceException("Post not found");
+            }
+            throw ServiceHelper.responseFailure("Failed to delete post", response);
+        });
     }
 
     /** Handles the search posts operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostResponseDto> searchPosts(final String query, final String authHeader) {
+    public List<PostResponseDto> searchPosts(final String query) {
         LOG.debugf("Searching posts with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.searchPosts(query, authHeader),
                 this.authService, LOG, "searching posts");
@@ -167,13 +144,9 @@ public class PostService {
 
     /** Returns the posts by date range. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostResponseDto> getPostsByDateRange(final String startDate, final String endDate,
-            final String authHeader) {
+    public List<PostResponseDto> getPostsByDateRange(final String startDate, final String endDate) {
         LOG.debugf("Fetching posts by date range: %s to %s", startDate, endDate);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.postClient.getPostsByDateRange(startDate, endDate, authHeader),
                 this.authService, LOG, "fetching posts by date range");

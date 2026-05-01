@@ -141,6 +141,6 @@ public class UserRankEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return java.util.Objects.hashCode(this.id);
     }
 }

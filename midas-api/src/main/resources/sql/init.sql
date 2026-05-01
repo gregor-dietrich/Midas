@@ -291,3 +291,40 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_groups_meta_group_id ON user_gr
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_active 
 ON users (id) 
 WHERE activated = true AND banned = false;
+
+-- --------------------------------------------------------
+-- Full-text search indexes for commonly searched columns
+-- --------------------------------------------------------
+
+-- Trigram indexes support fast LIKE / ILIKE queries
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Post search indexes (title, content, username)
+CREATE INDEX IF NOT EXISTS idx_post_title_trgm ON posts USING gin (LOWER(title) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_post_content_trgm ON posts USING gin (LOWER(content) gin_trgm_ops);
+
+-- Post comment search indexes
+CREATE INDEX IF NOT EXISTS idx_post_comment_content_trgm ON post_comments USING gin (LOWER(content) gin_trgm_ops);
+
+-- Post category search index
+CREATE INDEX IF NOT EXISTS idx_post_category_name_trgm ON post_categories USING gin (LOWER(name) gin_trgm_ops);
+
+-- User search indexes
+CREATE INDEX IF NOT EXISTS idx_user_username_trgm ON users USING gin (LOWER(username) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_user_email_trgm ON users USING gin (LOWER(email) gin_trgm_ops);
+
+-- User group search index
+CREATE INDEX IF NOT EXISTS idx_user_group_name_trgm ON user_groups USING gin (LOWER(name) gin_trgm_ops);
+
+-- User rank search index
+CREATE INDEX IF NOT EXISTS idx_user_rank_name_trgm ON user_ranks USING gin (LOWER(name) gin_trgm_ops);
+
+-- Account search index
+CREATE INDEX IF NOT EXISTS idx_account_name_trgm ON user_accounts USING gin (LOWER(name) gin_trgm_ops);
+
+-- Payment search indexes (comment, account names joined)
+CREATE INDEX IF NOT EXISTS idx_payment_comment_trgm ON user_payments USING gin (LOWER(comment) gin_trgm_ops);
+
+-- Page search indexes
+CREATE INDEX IF NOT EXISTS idx_page_title_trgm ON pages USING gin (LOWER(title) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_page_content_trgm ON pages USING gin (LOWER(content) gin_trgm_ops);

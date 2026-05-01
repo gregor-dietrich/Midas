@@ -77,8 +77,7 @@ public class PostCategoryService {
             category.parent = existingParent;
         }
         category.persistAndFlush();
-        PostCategoryEntity.getEntityManager().detach(category);
-        return this.toCategoryResponseDto(PostCategoryEntity.findById(category.id));
+        return this.toCategoryResponseDto(category);
     }
 
     /** Updates the category with the given id. */
@@ -107,8 +106,7 @@ public class PostCategoryService {
             existingCategory.parent = null;
         }
         existingCategory.persistAndFlush();
-        PostCategoryEntity.getEntityManager().detach(existingCategory);
-        return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));
+        return this.toCategoryResponseDto(existingCategory);
     }
 
     /** Partially updates the category with the given id. */
@@ -135,8 +133,7 @@ public class PostCategoryService {
         }
         // null parentId in PATCH = "don't change parent" (not "make root")
         existingCategory.persistAndFlush();
-        PostCategoryEntity.getEntityManager().detach(existingCategory);
-        return this.toCategoryResponseDto(PostCategoryEntity.findById(existingCategory.id));
+        return this.toCategoryResponseDto(existingCategory);
     }
 
     /**

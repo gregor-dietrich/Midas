@@ -81,7 +81,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadDataAsync(
                 () -> {
                     LOG.info("Making REST call to load pages");
-                    return this.pageService.getAllPages(this.authService.getAuthorizationHeader());
+                    return this.pageService.getAllPages();
                 },
                 pages -> {
                     LOG.infof("Successfully loaded %s pages", pages.size());
@@ -260,12 +260,9 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void deletePage(final PageDto page) {
         try {
-            if (this.pageService.deletePage(page.getId())) {
-                NotificationUtil.showSuccess("Page deleted successfully");
-                this.loadPagesAsync();
-            } else {
-                NotificationUtil.showError("Failed to delete page");
-            }
+            this.pageService.deletePage(page.getId());
+            NotificationUtil.showSuccess("Page deleted successfully");
+            this.loadPagesAsync();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
@@ -288,7 +285,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchButton.setText("Searching...");
 
         this.loadDataAsync(
-                () -> this.pageService.searchPages(query.trim(), this.authService.getAuthorizationHeader()),
+                () -> this.pageService.searchPages(query.trim()),
                 pages -> {
                     this.resetSearchButton();
                     LOG.infof("Search found %s pages", pages.size());

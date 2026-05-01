@@ -75,19 +75,8 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private void loadRanksAsync() {
         LOG.info("Starting async rank loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.rankService.getAllRanks(authHeader),
+                () -> this.rankService.getAllRanks(),
                 ranks -> {
                     LOG.infof("Successfully loaded %s ranks", ranks.size());
                     this.grid.setItems(ranks);
@@ -258,12 +247,9 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
 
     private void deleteRank(final UserRankResponseDto rank) {
         try {
-            if (this.rankService.deleteRank(rank.getId())) {
-                NotificationUtil.showSuccess("Rank deleted successfully");
-                this.loadRanksAsync();
-            } else {
-                NotificationUtil.showError("Failed to delete rank");
-            }
+            this.rankService.deleteRank(rank.getId());
+            NotificationUtil.showSuccess("Rank deleted successfully");
+            this.loadRanksAsync();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
@@ -282,19 +268,11 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchButton.setEnabled(false);
         LOG.infof("Starting async rank search with query: %s", query);
 
         this.loadDataAsync(
-                () -> this.rankService.searchRanks(query, authHeader),
+                () -> this.rankService.searchRanks(query),
                 ranks -> {
                     this.searchButton.setEnabled(true);
                     LOG.infof("Successfully found %s ranks", ranks.size());

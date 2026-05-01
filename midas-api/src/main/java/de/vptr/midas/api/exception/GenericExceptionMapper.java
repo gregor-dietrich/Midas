@@ -6,7 +6,9 @@ import org.jboss.logging.Logger;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
@@ -19,6 +21,9 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
     private static final Logger LOG = Logger.getLogger(GenericExceptionMapper.class);
     private static final String GENERIC_INTERNAL_MESSAGE = "An unexpected error occurred";
 
+    @Context
+    UriInfo uriInfo;
+
     @Override
     public Response toResponse(final Exception exception) {
         if (exception instanceof final WebApplicationException wae) {
@@ -30,7 +35,11 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
             return buildErrorResponse(409, "Conflict", "A resource with the same identifier already exists");
         }
 
-        LOG.error("Unhandled exception", exception);
+        LOG.errorf("Unhandled exception on %s %s: %s",
+                uriInfo != null ? uriInfo.getRequestUri() : "unknown",
+                exception.getClass().getSimpleName(),
+                exception.getMessage(),
+                exception);
 
         return buildErrorResponse(500, "Internal Server Error", GENERIC_INTERNAL_MESSAGE);
     }

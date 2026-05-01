@@ -111,8 +111,7 @@ public class UserService {
 
         final UserEntity user = this.buildUserEntity(userDto, normalizedEmail);
         user.persistAndFlush();
-        UserEntity.getEntityManager().detach(user);
-        return this.toResponseDto(UserEntity.findById(user.id));
+        return this.toResponseDto(user);
     }
 
     @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
@@ -213,8 +212,7 @@ public class UserService {
         }
 
         existingUser.persistAndFlush();
-        UserEntity.getEntityManager().detach(existingUser);
-        return this.toResponseDto(UserEntity.findById(existingUser.id));
+        return this.toResponseDto(existingUser);
     }
 
     /** Partially updates the user with the given id. */
@@ -276,8 +274,7 @@ public class UserService {
         }
 
         existingUser.persistAndFlush();
-        UserEntity.getEntityManager().detach(existingUser);
-        return this.toResponseDto(UserEntity.findById(existingUser.id));
+        return this.toResponseDto(existingUser);
     }
 
     /** Deletes the user with the given id. */

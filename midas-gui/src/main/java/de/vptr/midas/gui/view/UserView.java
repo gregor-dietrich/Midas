@@ -58,19 +58,8 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadUsersAsync() {
         LOG.info("Starting async user loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.userService.getAllUsers(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE),
                 users -> {
                     LOG.infof("Successfully loaded %s users", users.size());
                     this.grid.setItems(users);
@@ -115,18 +104,10 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void searchUsers(final String query) {
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchLayout.setSearching(true);
 
         this.loadDataAsync(
-                () -> this.userService.searchUsers(query, authHeader),
+                () -> this.userService.searchUsers(query),
                 users -> {
                     this.searchLayout.setSearching(false);
                     LOG.infof("Search found %s users", users.size());

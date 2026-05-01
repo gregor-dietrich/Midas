@@ -55,9 +55,7 @@ public class AccountService {
         final AccountEntity account = new AccountEntity();
         account.name = accountDto.name;
         account.persistAndFlush();
-        AccountEntity.getEntityManager().detach(account);
-
-        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(account.id));
+        return this.accountResponseAssembler.toAccountResponseDto(account);
     }
 
     /** Updates the account with the given id. */
@@ -70,9 +68,7 @@ public class AccountService {
         existingAccount.name = accountDto.name;
 
         existingAccount.persistAndFlush();
-        AccountEntity.getEntityManager().detach(existingAccount);
-
-        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(existingAccount.id));
+        return this.accountResponseAssembler.toAccountResponseDto(existingAccount);
     }
 
     /** Partially updates the account with the given id. */

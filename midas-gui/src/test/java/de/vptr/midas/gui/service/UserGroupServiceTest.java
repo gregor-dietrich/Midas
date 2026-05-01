@@ -20,10 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.vptr.midas.gui.client.UserGroupClient;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
+import de.vptr.midas.gui.util.ServiceTestUtil;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
@@ -46,54 +48,38 @@ class UserGroupServiceTest {
     @Test
     void getAllGroups_shouldReturnGroupList_whenAuthenticationProvided() {
         // Given
-        final var authHeader = TEST_AUTH_HEADER;
         final var group1 = new UserGroupResponseDto();
         final var group2 = new UserGroupResponseDto();
         final var expectedGroups = Arrays.asList(group1, group2);
 
-        when(this.groupClient.getAllGroups(0, 50, authHeader)).thenReturn(expectedGroups);
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.groupClient.getAllGroups(0, 50, TEST_AUTH_HEADER)).thenReturn(expectedGroups);
 
         // When
-        final var result = this.userGroupService.getAllGroups(authHeader, 0, 50);
+        final var result = this.userGroupService.getAllGroups(0, 50);
 
         // Then
         assertThat(result).hasSize(2);
         assertThat(result).containsExactly(group1, group2);
-        verify(this.groupClient).getAllGroups(0, 50, authHeader);
+        verify(this.groupClient).getAllGroups(0, 50, TEST_AUTH_HEADER);
     }
 
     @Test
-    void getAllGroups_shouldThrowServiceException_whenAuthHeaderIsNull() {
-        // Given: null auth header
-
-        // When & Then: service call should throw exception
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.userGroupService.getAllGroups(null, 0, 50));
-    }
-
-    @Test
-    void getAllGroups_shouldReturnEmptyList_whenAuthHeaderIsEmpty() {
-        // Given
-        final List<UserGroupResponseDto> emptyList = Collections.emptyList();
-        when(this.groupClient.getAllGroups(0, 50, "")).thenReturn(emptyList);
-
-        // When
-        final var result = this.userGroupService.getAllGroups("", 0, 50);
-
-        // Then
-        assertThat(result).isEmpty();
-        verify(this.groupClient).getAllGroups(0, 50, "");
+    void getAllGroups_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
     @Test
     void getAllGroups_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         // Given
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getAllGroups(0, 50, TEST_AUTH_HEADER))
                 .thenThrow(new ProcessingException("Connection failed"));
 
         // When & Then
         ExceptionTestUtil
-                .assertThrowsBackendConnectionFailed(() -> this.userGroupService.getAllGroups(TEST_AUTH_HEADER, 0, 50));
+                .assertThrowsBackendConnectionFailed(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
     @Test
@@ -102,10 +88,11 @@ class UserGroupServiceTest {
         final Response mockResponse = ResponseTestUtil.createUnauthorizedResponse();
         final WebApplicationException webException = new WebApplicationException(mockResponse);
 
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getAllGroups(0, 50, TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userGroupService.getAllGroups(TEST_AUTH_HEADER, 0, 50),
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userGroupService.getAllGroups(0, 50),
                 this.authService);
     }
 
@@ -119,7 +106,7 @@ class UserGroupServiceTest {
         expectedGroup.setUserCount(5L);
         final Response mockResponse = ResponseTestUtil.createOkResponse(expectedGroup);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getGroup(groupId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -137,7 +124,7 @@ class UserGroupServiceTest {
         final var groupId = 999L;
         final Response mockResponse = ResponseTestUtil.createNotFoundResponse();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getGroup(groupId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -159,7 +146,7 @@ class UserGroupServiceTest {
         user2.setUsername("user2");
         final var expectedUsers = Arrays.asList(user1, user2);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getUsersInGroup(groupId, TEST_AUTH_HEADER)).thenReturn(expectedUsers);
 
         // When
@@ -181,7 +168,7 @@ class UserGroupServiceTest {
         createdGroup.setUserCount(1L);
         final Response mockResponse = ResponseTestUtil.createCreatedResponse(createdGroup);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.createGroup(newGroup, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -199,7 +186,7 @@ class UserGroupServiceTest {
         final var newGroup = MockDataUtil.createUserGroupDto();
         final Response mockResponse = ResponseTestUtil.createBadRequestResponse();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.createGroup(newGroup, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
@@ -219,7 +206,7 @@ class UserGroupServiceTest {
         updatedGroup.setUserCount(2L);
         final Response mockResponse = ResponseTestUtil.createOkResponse(updatedGroup);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.updateGroup(1L, groupToUpdate, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -237,7 +224,7 @@ class UserGroupServiceTest {
         final var groupId = 1L;
         final Response mockResponse = ResponseTestUtil.createNoContentResponse();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.deleteGroup(groupId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -254,7 +241,7 @@ class UserGroupServiceTest {
         final var groupId = 1L;
         final Response mockResponse = ResponseTestUtil.createBadRequestResponse();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.deleteGroup(groupId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -271,7 +258,7 @@ class UserGroupServiceTest {
         final var userId = 1L;
         final Response mockResponse = ResponseTestUtil.createCreatedResponse(null);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.addUserToGroup(groupId, userId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -289,7 +276,7 @@ class UserGroupServiceTest {
         final var userId = 1L;
         final Response mockResponse = ResponseTestUtil.createNoContentResponse();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.removeUserFromGroup(groupId, userId, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
@@ -303,6 +290,7 @@ class UserGroupServiceTest {
     @Test
     void getGroupById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getGroupById(1L));
     }
 
@@ -310,7 +298,7 @@ class UserGroupServiceTest {
     void createGroup_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newGroup = MockDataUtil.createUserGroupDto();
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.createGroup(newGroup));
@@ -319,12 +307,13 @@ class UserGroupServiceTest {
     @Test
     void getAllGroups_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
         // Given
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getAllGroups(0, 50, TEST_AUTH_HEADER))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // When & Then
         ExceptionTestUtil
-                .assertThrowsUnexpectedError(() -> this.userGroupService.getAllGroups(TEST_AUTH_HEADER, 0, 50));
+                .assertThrowsUnexpectedError(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
     @Test
@@ -334,7 +323,7 @@ class UserGroupServiceTest {
         final Response mockResponse = ResponseTestUtil.createInternalServerErrorResponse();
         final WebApplicationException webException = new WebApplicationException(mockResponse);
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getGroup(groupId, TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
@@ -347,7 +336,7 @@ class UserGroupServiceTest {
         final var groupId = 1L;
         final List<UserDto> emptyList = Collections.emptyList();
 
-        when(this.authService.getAuthorizationHeader()).thenReturn(TEST_AUTH_HEADER);
+        ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.groupClient.getUsersInGroup(groupId, TEST_AUTH_HEADER)).thenReturn(emptyList);
 
         // When

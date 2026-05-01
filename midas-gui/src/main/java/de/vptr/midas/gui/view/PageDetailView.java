@@ -106,7 +106,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
 
     private void loadPageByTitle(final String title) {
         this.loadDataAsync(
-                () -> this.pageService.searchPages(title, this.authService.requireAuthorizationHeader()),
+                () -> this.pageService.searchPages(title),
                 pages -> {
                     if (pages != null && !pages.isEmpty()) {
                         final var page = pages.get(0);

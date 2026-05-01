@@ -82,19 +82,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadUsersAsync() {
         LOG.info("Starting async user loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.userService.getAllUsers(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE),
                 users -> {
                     LOG.infof("Successfully loaded %s users", users.size());
                     this.grid.setItems(users);
@@ -104,16 +93,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadRanksAsync() {
         LOG.info("Starting async rank loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header for ranks", e);
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.userRankService.getAllRanks(authHeader),
+                () -> this.userRankService.getAllRanks(),
                 ranks -> {
                     LOG.infof("Successfully loaded %s ranks", ranks.size());
                     this.availableRanks = ranks;
@@ -243,18 +224,11 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
         this.loadDataAsync(
-                () -> this.userService.searchUsers(query.trim(), authHeader),
+                () -> this.userService.searchUsers(query.trim()),
                 users -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");

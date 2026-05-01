@@ -58,4 +58,24 @@ public class BackendAvailabilityService {
         LOG.error("Backend availability check failed after retries, assuming unavailable");
         return false;
     }
+
+    /**
+     * Raw health check without SmallRye Fault Tolerance decorators.
+     *
+     * <p>Safe for use from non-Quarkus threads (e.g. ForkJoinPool) where timeout
+     * and retry interceptors fail due to missing config context.
+     */
+    public boolean isBackendAvailableRaw() {
+        LOG.trace("Checking backend availability (raw)");
+        try (var response = this.backendHealthClient.checkHealth()) {
+            final var available = response.getStatus() == 200;
+            if (!available) {
+                LOG.warnf("Backend returned non-200 status: %s", response.getStatus());
+            }
+            return available;
+        } catch (final RuntimeException e) {
+            LOG.debugf("Raw health check failed: %s", e.getMessage());
+            return false;
+        }
+    }
 }

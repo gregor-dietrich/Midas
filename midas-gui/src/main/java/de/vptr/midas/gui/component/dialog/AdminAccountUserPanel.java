@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.component.dialog;
 
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
@@ -13,6 +14,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.provider.CallbackDataProvider.FetchCallback;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.function.ValueProvider;
 
@@ -38,7 +40,6 @@ public class AdminAccountUserPanel extends FormDialog {
     private static final Logger LOG = Logger.getLogger(AdminAccountUserPanel.class);
 
     private final AccountService accountService;
-    private final AuthService authService;
     private final UserService userService;
     private final Runnable onAuthFailure;
 
@@ -53,7 +54,6 @@ public class AdminAccountUserPanel extends FormDialog {
             final Runnable onAuthFailure) {
         super();
         this.accountService = accountService;
-        this.authService = authService;
         this.userService = userService;
         this.onAuthFailure = onAuthFailure;
     }
@@ -142,32 +142,29 @@ public class AdminAccountUserPanel extends FormDialog {
     }
 
     private void loadAvailableUsers() {
+        this.availableUsersCombo.setItems((FetchCallback<UserResponseDto, String>) this::fetchAvailableUsers);
+    }
+
+    private Stream<UserResponseDto> fetchAvailableUsers(final Query<UserResponseDto, String> query) {
         try {
-            final String authHeader;
-            try {
-                authHeader = this.authService.getAuthorizationHeader();
-            } catch (final RuntimeException e) {
-                LOG.error("Failed to get auth header", e);
-                NotificationUtil.showError("Authentication failed");
-                return;
-            }
-
-            final var allUsers = this.userService.getAllUsers(authHeader, 0, 100);
-
+            final var filter = query.getFilter().orElse("").trim();
             final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
                     .collect(Collectors.toList());
             final var currentUserIds = currentUsers.stream()
                     .map(UserResponseDto::getId)
                     .collect(Collectors.toSet());
 
-            final var availableUsers = allUsers.stream()
-                    .filter(user -> !currentUserIds.contains(user.getId()))
-                    .collect(Collectors.toList());
+            final var users = filter.isEmpty()
+                    ? this.userService.getAllUsers(query.getOffset() / query.getLimit(), query.getLimit())
+                    : this.userService.searchUsers(filter);
 
-            this.availableUsersCombo.setItems(availableUsers);
+            return users.stream()
+                    .filter(user -> !currentUserIds.contains(user.getId()))
+                    .skip(query.getOffset())
+                    .limit(query.getLimit());
         } catch (final RuntimeException e) {
             LOG.error("Error loading available users", e);
-            NotificationUtil.showError("Error loading available users");
+            return Stream.empty();
         }
     }
 

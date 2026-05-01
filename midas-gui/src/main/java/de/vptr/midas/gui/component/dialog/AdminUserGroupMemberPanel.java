@@ -37,7 +37,6 @@ public class AdminUserGroupMemberPanel extends FormDialog {
 
     private final UserGroupService groupService;
     private final UserService userService;
-    private final AuthService authService;
     private final Runnable onAuthFailure;
 
     private Grid<UserDto> userGrid;
@@ -52,7 +51,6 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         super();
         this.groupService = groupService;
         this.userService = userService;
-        this.authService = authService;
         this.onAuthFailure = onAuthFailure;
     }
 
@@ -133,16 +131,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
 
     private void loadAvailableUsers() {
         try {
-            final String authHeader;
-            try {
-                authHeader = this.authService.getAuthorizationHeader();
-            } catch (final RuntimeException e) {
-                LOG.error("Failed to get auth header", e);
-                NotificationUtil.showError("Authentication failed");
-                return;
-            }
-
-            final var allUsers = this.userService.getAllUsers(authHeader, 0, 100);
+            final var allUsers = this.userService.getAllUsers(0, 100);
 
             final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
                     .collect(Collectors.toList());

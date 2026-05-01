@@ -80,17 +80,8 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     }
 
     private void loadGroupsAsync() {
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.groupService.getAllGroups(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.groupService.getAllGroups(0, UiConstants.DEFAULT_PAGE_SIZE),
                 result -> this.grid.setItems(result));
     }
 
@@ -214,18 +205,8 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
 
         this.searchButton.setEnabled(false);
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.searchButton.setEnabled(true);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.groupService.searchGroups(query, authHeader),
+                () -> this.groupService.searchGroups(query),
                 result -> {
                     this.searchButton.setEnabled(true);
                     this.grid.setItems(result);
@@ -243,17 +224,8 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.groupService.getGroupsByUser(userId.longValue(), authHeader),
+                () -> this.groupService.getGroupsByUser(userId.longValue()),
                 result -> this.grid.setItems(result));
     }
 }

@@ -38,12 +38,9 @@ public class UserGroupService {
 
     /** Returns the all groups. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserGroupResponseDto> getAllGroups(final String authHeader, final Integer page, final Integer size) {
+    public List<UserGroupResponseDto> getAllGroups(final Integer page, final Integer size) {
         LOG.debug("Fetching all groups");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(
@@ -55,11 +52,7 @@ public class UserGroupService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public Optional<UserGroupResponseDto> getGroupById(final Long id) {
         LOG.debugf("Fetching group with ID: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(id, authHeader),
                 this.authService, LOG, "fetching group " + id, response -> {
                     if (response.getStatus() == 200) {
@@ -77,11 +70,7 @@ public class UserGroupService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public List<UserDto> getUsersInGroup(final Long groupId) {
         LOG.debugf("Fetching users in group: %s", groupId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            return Collections.emptyList();
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.groupClient.getUsersInGroup(groupId, authHeader),
                 this.authService, LOG, "fetching users in group " + groupId);
@@ -89,12 +78,9 @@ public class UserGroupService {
 
     /** Handles the search groups operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserGroupResponseDto> searchGroups(final String query, final String authHeader) {
+    public List<UserGroupResponseDto> searchGroups(final String query) {
         LOG.debugf("Searching groups with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.groupClient.searchGroups(query, authHeader),
                 this.authService, LOG, "searching groups");
@@ -103,11 +89,7 @@ public class UserGroupService {
     /** Creates a new group. */
     public UserGroupDto createGroup(final UserGroupDto group) {
         LOG.debugf("Creating new group: %s", group.getName());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.createGroup(group, authHeader),
                 this.authService, LOG, "creating group", "Failed to create group", response -> {
                     if (response.getStatus() == 201) {
@@ -122,11 +104,7 @@ public class UserGroupService {
     /** Updates the group. */
     public UserGroupDto updateGroup(final UserGroupDto group) {
         LOG.debugf("Updating group: %s", group.getId());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.updateGroup(group.getId(), group, authHeader),
                 this.authService, LOG, "updating group " + group.getId(), "Failed to update group", response -> {
                     if (response.getStatus() == 200) {
@@ -141,11 +119,7 @@ public class UserGroupService {
     /** Handles the delete group operation. */
     public boolean deleteGroup(final Long id) {
         LOG.debugf("Deleting group: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.deleteGroup(id, authHeader),
                 this.authService, LOG, "deleting group " + id, response -> response.getStatus() == 204);
     }
@@ -153,11 +127,7 @@ public class UserGroupService {
     /** Adds the user to group. */
     public boolean addUserToGroup(final Long groupId, final Long userId) {
         LOG.debugf("Adding user %s to group %s", userId, groupId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> {
             try {
                 return this.groupClient.addUserToGroup(groupId, userId, authHeader);
@@ -174,11 +144,7 @@ public class UserGroupService {
     /** Removes the user from group. */
     public boolean removeUserFromGroup(final Long groupId, final Long userId) {
         LOG.debugf("Removing user %s from group %s", userId, groupId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.removeUserFromGroup(groupId, userId,
                 authHeader), this.authService, LOG, "removing user " + userId + " from group " + groupId,
                 response -> response.getStatus() == 204);
@@ -186,12 +152,9 @@ public class UserGroupService {
 
     /** Returns the groups by user. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserGroupResponseDto> getGroupsByUser(final Long userId, final String authHeader) {
+    public List<UserGroupResponseDto> getGroupsByUser(final Long userId) {
         LOG.debugf("Fetching groups for user: %s", userId);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.groupClient.getGroupsForUser(userId, authHeader),
                 this.authService, LOG, "fetching groups for user " + userId);

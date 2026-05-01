@@ -3,7 +3,6 @@ package de.vptr.midas.gui.view;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
@@ -23,6 +22,8 @@ import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
@@ -54,7 +55,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     private DatePicker startDatePicker;
     private DatePicker endDatePicker;
 
-    private List<PostResponseDto> allPosts;
     private List<PostCategoryResponseDto> availableCategories;
 
     /** Initializes PostView. */
@@ -99,10 +99,10 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.categoryFilter.setItemLabelGenerator(PostCategoryResponseDto::getName);
         this.categoryFilter.setClearButtonVisible(true);
         this.categoryFilter.setWidth("200px");
-        this.categoryFilter.addValueChangeListener(e -> this.applyFilters());
+        this.categoryFilter.addValueChangeListener(e -> this.loadPostsAsync());
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.applyFilters());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.loadPostsAsync());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -192,22 +192,52 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadPostsAsync() {
         LOG.info("Starting async published post loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> NotificationUtil.showError("Authentication failed")));
-            return;
-        }
+        final var selectedCategory = this.categoryFilter.getValue();
+        final LocalDate startDate = this.startDatePicker.getValue();
+        final LocalDate endDate = this.endDatePicker.getValue();
 
-        this.loadDataAsync(
-                () -> this.postService.getPublishedPosts(authHeader),
-                posts -> {
-                    LOG.infof("Successfully loaded %s published posts", posts.size());
-                    this.allPosts = posts;
-                    this.grid.setItems(posts);
-                });
+        if (selectedCategory != null) {
+            this.loadDataAsync(
+                    () -> this.postService.getPostsByCategory(selectedCategory.getId()),
+                    posts -> {
+                        LOG.infof("Successfully loaded %s posts for category %s", posts.size(), selectedCategory.getName());
+                        this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+                    });
+        } else {
+            this.loadDataAsync(
+                    () -> this.postService.getPublishedPosts(),
+                    posts -> {
+                        LOG.infof("Successfully loaded %s published posts", posts.size());
+                        this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+                    });
+        }
+    }
+
+    private List<PostResponseDto> applyDateFilter(final List<PostResponseDto> posts,
+            final LocalDate startDate, final LocalDate endDate) {
+        if (startDate == null && endDate == null) {
+            return posts;
+        }
+        return posts.stream()
+                .filter(post -> {
+                    if (post.getCreated() == null) {
+                        return false;
+                    }
+                    if (startDate != null) {
+                        final LocalDateTime startDateTime = startDate.atStartOfDay();
+                        if (post.getCreated().isBefore(startDateTime)) {
+                            return false;
+                        }
+                    }
+                    if (endDate != null) {
+                        final LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+                        if (post.getCreated().isAfter(endDateTime)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .toList();
     }
 
     private void loadCategoriesAsync() {
@@ -229,55 +259,20 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void searchPosts(final String query) {
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header for search", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.postService.searchPosts(query, authHeader),
+                () -> this.postService.searchPosts(query),
                 posts -> {
-                    this.allPosts = posts;
-                    this.applyClientSideFilters(posts);
+                    final var selectedCategory = this.categoryFilter.getValue();
+                    var filtered = posts;
+                    if (selectedCategory != null) {
+                        final Long categoryId = selectedCategory.getId();
+                        filtered = posts.stream()
+                                .filter(post -> post.getCategoryId() != null && post.getCategoryId().equals(categoryId))
+                                .toList();
+                    }
+                    final LocalDate startDate = this.startDatePicker.getValue();
+                    final LocalDate endDate = this.endDatePicker.getValue();
+                    this.grid.setItems(this.applyDateFilter(filtered, startDate, endDate));
                 });
     }
-
-    private void applyFilters() {
-        if (this.allPosts == null) {
-            return;
-        }
-        this.applyClientSideFilters(this.allPosts);
-    }
-
-    private void applyClientSideFilters(final List<PostResponseDto> posts) {
-        final var filtered = new ArrayList<>(posts);
-
-        // Category filter
-        final var selectedCategory = this.categoryFilter.getValue();
-        if (selectedCategory != null) {
-            filtered.removeIf(
-                    post -> post.getCategoryId() == null || !post.getCategoryId().equals(selectedCategory.getId()));
-        }
-
-        // Date range filter
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
-
-        if (startDate != null) {
-            final LocalDateTime startDateTime = startDate.atStartOfDay();
-            filtered.removeIf(post -> post.getCreated() == null || post.getCreated().isBefore(startDateTime));
-        }
-
-        if (endDate != null) {
-            final LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
-            filtered.removeIf(post -> post.getCreated() == null || post.getCreated().isAfter(endDateTime));
-        }
-
-        this.grid.setItems(filtered);
-    }
-
 }

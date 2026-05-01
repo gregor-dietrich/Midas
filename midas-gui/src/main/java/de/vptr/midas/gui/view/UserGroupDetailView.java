@@ -80,8 +80,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
                         return this.groupService.getGroupById(id).orElse(null);
                     } catch (final NumberFormatException e) {
                         LOG.infof("Identifier is not numeric, searching by name: %s", identifier);
-                        final var results = this.groupService.searchGroups(identifier,
-                                this.authService.getAuthorizationHeader());
+                        final var results = this.groupService.searchGroups(identifier);
                         return results.stream()
                                 .filter(group -> identifier.equalsIgnoreCase(group.getName()))
                                 .findFirst()

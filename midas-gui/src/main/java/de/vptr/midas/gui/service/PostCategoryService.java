@@ -34,12 +34,9 @@ public class PostCategoryService {
 
     /** Returns the all categories. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostCategoryResponseDto> getAllCategories(final String authHeader) {
+    public List<PostCategoryResponseDto> getAllCategories() {
         LOG.debug("Fetching all categories");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.categoryClient.getAllCategories(PaginationParamUtil.DEFAULT_PAGE,
                         PaginationParamUtil.MAX_SIZE, authHeader),
@@ -51,11 +48,7 @@ public class PostCategoryService {
     public List<PostCategoryResponseDto> getRootCategories() {
         LOG.debug("Fetching root categories");
         return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getRootCategories(authHeader);
         }, this.authService, LOG, "fetching root categories");
     }
@@ -65,11 +58,7 @@ public class PostCategoryService {
     public Optional<PostCategoryResponseDto> getCategoryById(final Long id) {
         LOG.debugf("Fetching category with ID: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getCategory(id, authHeader);
         }, this.authService, LOG, "fetching category " + id, response -> {
             if (response.getStatus() == 200) {
@@ -88,11 +77,7 @@ public class PostCategoryService {
     public List<PostCategoryResponseDto> getCategoriesByParent(final Long parentId) {
         LOG.debugf("Fetching categories for parent: %s", parentId);
         return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getCategoriesByParent(parentId, authHeader);
         }, this.authService, LOG, "fetching categories for parent " + parentId);
     }
@@ -101,11 +86,7 @@ public class PostCategoryService {
     public PostCategoryDto createCategory(final PostCategoryDto category) {
         LOG.debugf("Creating new category: %s", category.getName());
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
 
             if (category.getParent() != null && category.getParentId() == null) {
                 category.setParentId(category.getParent().getId());
@@ -126,11 +107,7 @@ public class PostCategoryService {
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
         LOG.debugf("Updating category: %s", category.getId());
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
 
             if (category.getParent() != null && category.getParentId() == null) {
                 category.setParentId(category.getParent().getId());
@@ -151,11 +128,7 @@ public class PostCategoryService {
     public boolean deleteCategory(final Long id) {
         LOG.debugf("Deleting category: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.getAuthorizationHeader();
-            if (authHeader == null) {
-                LOG.warn("No authentication header available");
-                throw new AuthenticationException("Authentication required");
-            }
+        final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.deleteCategory(id, authHeader);
         }, this.authService, LOG, "deleting category " + id, response -> response.getStatus() == 204);
     }
@@ -169,12 +142,9 @@ public class PostCategoryService {
 
     /** Handles the search categories operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostCategoryResponseDto> searchCategories(final String query, final String authHeader) {
+    public List<PostCategoryResponseDto> searchCategories(final String query) {
         LOG.debugf("Searching categories with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.categoryClient.searchCategories(query, authHeader),
                 this.authService, LOG, "searching categories");

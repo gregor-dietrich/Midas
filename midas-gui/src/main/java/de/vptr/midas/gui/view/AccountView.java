@@ -69,8 +69,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
         this.loadDataAsync(() -> {
             LOG.info("Making optimized REST call to load user accounts with balances");
-            final var accounts = this.accountService
-                    .getMyAccountsWithBalances(this.authService.requireAuthorizationHeader());
+            final var accounts = this.accountService.getMyAccountsWithBalances();
             final Map<Long, BigDecimal> balances = accounts.stream()
                     .collect(Collectors.toMap(
                             AccountResponseDto::getId,

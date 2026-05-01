@@ -21,7 +21,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.function.SerializableRunnable;
+import com.vaadin.flow.server.Command;
 
 import de.vptr.midas.gui.util.ErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
@@ -46,8 +46,10 @@ class AbstractAsyncDataViewTest {
     @BeforeEach
     void setUp() {
         this.ui = mock(UI.class);
-        lenient().when(this.ui.accessLater(any(SerializableRunnable.class), any(SerializableRunnable.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().doAnswer(invocation -> {
+            invocation.getArgument(0, Command.class).execute();
+            return null;
+        }).when(this.ui).access(any(Command.class));
 
         this.uiMock = mockStatic(UI.class);
         this.uiMock.when(UI::getCurrent).thenReturn(this.ui);

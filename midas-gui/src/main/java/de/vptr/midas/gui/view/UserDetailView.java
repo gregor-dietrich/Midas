@@ -173,7 +173,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
     private void loadGroupsAsync(final Long userId) {
         this.loadDataAsync(() -> {
             LOG.infof("Loading groups for user: %s", userId);
-            return this.userGroupService.getGroupsByUser(userId, this.authService.requireAuthorizationHeader());
+            return this.userGroupService.getGroupsByUser(userId);
         }, groups -> {
             LOG.infof("Successfully loaded %s groups for user", groups.size());
             this.groupsGrid.setItems(groups);

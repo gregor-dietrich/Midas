@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.PostCategoryClient;
+import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
@@ -42,52 +43,53 @@ class PostCategoryServiceTest {
     @Test
     void getAllCategories_shouldReturnCategoryList_whenAuthenticationProvided() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
         final var categoryResponse1 = MockDataUtil.createPostCategoryResponseDto(1L, "Category 1", null, 0,
                 0, true);
         final var categoryResponse2 = MockDataUtil.createPostCategoryResponseDto(2L, "Category 2", null, 0,
                 0, true);
         final var expectedCategories = Arrays.asList(categoryResponse1, categoryResponse2);
 
-        when(this.categoryClient.getAllCategories(0, 100, authHeader)).thenReturn(expectedCategories);
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.getAllCategories(0, 100, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedCategories);
 
         // When
-        final var result = this.postCategoryService.getAllCategories(authHeader);
+        final var result = this.postCategoryService.getAllCategories();
 
         // Then
         assertThat(result).hasSize(2);
         assertThat(result).containsExactly(categoryResponse1, categoryResponse2);
-        verify(this.categoryClient).getAllCategories(0, 100, authHeader);
+        verify(this.categoryClient).getAllCategories(0, 100, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
-    @DisplayName("Should throw authentication exception when auth header is null")
-    void getAllCategories_shouldThrowAuthenticationException_whenAuthHeaderIsNull() {
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getAllCategories(null));
+    @DisplayName("Should throw authentication exception when auth header unavailable")
+    void getAllCategories_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getAllCategories());
     }
 
     @Test
     void getAllCategories_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
-        when(this.categoryClient.getAllCategories(0, 100, authHeader))
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.getAllCategories(0, 100, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
         // When & Then
         ExceptionTestUtil
-                .assertThrowsBackendConnectionFailed(() -> this.postCategoryService.getAllCategories(authHeader));
+                .assertThrowsBackendConnectionFailed(() -> this.postCategoryService.getAllCategories());
     }
 
     @Test
     void getAllCategories_shouldThrowAuthenticationException_when401Error() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
         final var webException = ExceptionTestUtil.create401Exception();
 
-        when(this.categoryClient.getAllCategories(0, 100, authHeader)).thenThrow(webException);
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.getAllCategories(0, 100, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.postCategoryService.getAllCategories(authHeader),
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.postCategoryService.getAllCategories(),
                 this.authService);
     }
 
@@ -112,7 +114,7 @@ class PostCategoryServiceTest {
 
     @Test
     void getRootCategories_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getRootCategories());
     }
@@ -140,7 +142,7 @@ class PostCategoryServiceTest {
 
     @Test
     void getCategoryById_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getCategoryById(1L));
     }
@@ -185,7 +187,7 @@ class PostCategoryServiceTest {
 
     @Test
     void getCategoriesByParent_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.getAuthorizationHeader()).thenReturn(null);
+        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(
                 () -> this.postCategoryService.getCategoriesByParent(1L));
@@ -285,11 +287,11 @@ class PostCategoryServiceTest {
     @Test
     void getAllCategories_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
         // Given
-        final var authHeader = TestUtil.TEST_AUTH_HEADER;
-        when(this.categoryClient.getAllCategories(0, 100, authHeader))
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.getAllCategories(0, 100, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // When & Then
-        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.postCategoryService.getAllCategories(authHeader));
+        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.postCategoryService.getAllCategories());
     }
 }

@@ -150,9 +150,7 @@ public class UserGroupService {
         meta.user = user;
         meta.group = group;
         meta.persistAndFlush();
-        UserGroupMetaEntity.getEntityManager().detach(meta);
-
-        return UserGroupMetaEntity.findById(meta.id);
+        return meta;
     }
 
     /** Removes a user from a group. */

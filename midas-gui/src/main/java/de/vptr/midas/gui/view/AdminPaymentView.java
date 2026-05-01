@@ -88,17 +88,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     private void loadPaymentsAsync() {
         LOG.info("Starting async payment loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.paymentService.getAllPayments(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.paymentService.getAllPayments(0, UiConstants.DEFAULT_PAGE_SIZE),
                 payments -> {
                     LOG.infof("Successfully loaded %s payments", payments.size());
                     this.grid.setItems(payments);
@@ -108,17 +99,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     private void loadAccountsAsync() {
         LOG.info("Starting async account loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header for accounts", e);
-            this.availableAccounts = List.of();
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(authHeader, 0, UiConstants.LARGE_PAGE_SIZE),
+                () -> this.accountService.getAllAccounts(0, UiConstants.LARGE_PAGE_SIZE),
                 accounts -> {
                     LOG.infof("Successfully loaded %s accounts", accounts.size());
                     this.availableAccounts = accounts;
@@ -306,19 +288,11 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
         this.loadDataAsync(
-                () -> this.paymentService.searchPayments(query.trim(), authHeader),
+                () -> this.paymentService.searchPayments(query.trim()),
                 payments -> {
                     this.searchButton.setEnabled(true);
                     this.searchButton.setText("Search");

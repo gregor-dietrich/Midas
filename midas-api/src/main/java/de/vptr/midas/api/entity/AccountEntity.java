@@ -80,6 +80,6 @@ public class AccountEntity extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        return this.getClass().hashCode();
+        return java.util.Objects.hashCode(this.id);
     }
 }

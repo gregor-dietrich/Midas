@@ -193,8 +193,7 @@ public class PaymentService {
 
         validatePaymentAccounts(payment);
         payment.persistAndFlush();
-        PaymentEntity.getEntityManager().detach(payment);
-        return new PaymentResponseDto(PaymentEntity.findById(payment.id));
+        return new PaymentResponseDto(payment);
     }
 
     /** Updates the payment with the given id. */
@@ -240,8 +239,7 @@ public class PaymentService {
 
         validatePaymentAccounts(existingPayment);
         existingPayment.persistAndFlush();
-        PaymentEntity.getEntityManager().detach(existingPayment);
-        return new PaymentResponseDto(PaymentEntity.findById(existingPayment.id));
+        return new PaymentResponseDto(existingPayment);
     }
 
     /** Partially updates the payment with the given id. */
@@ -281,8 +279,7 @@ public class PaymentService {
         // Validate that at least one account is still present after the patch
         validatePaymentAccounts(existingPayment);
         existingPayment.persistAndFlush();
-        PaymentEntity.getEntityManager().detach(existingPayment);
-        return new PaymentResponseDto(PaymentEntity.findById(existingPayment.id));
+        return new PaymentResponseDto(existingPayment);
     }
 
     /** Deletes the payment with the given id. */

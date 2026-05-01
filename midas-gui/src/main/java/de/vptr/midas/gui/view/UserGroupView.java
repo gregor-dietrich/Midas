@@ -145,26 +145,15 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadGroupsAsync() {
         LOG.info("Starting async group loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         this.loadDataAsync(
                 () -> {
                     LOG.info("Making REST calls to load groups and current user");
                     final var currentUser = this.userService.getCurrentUser().orElse(null);
-                    final var allGroups = this.groupService.getAllGroups(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE);
+                    final var allGroups = this.groupService.getAllGroups(0, UiConstants.DEFAULT_PAGE_SIZE);
 
                     List<UserGroupResponseDto> myGroups = Collections.emptyList();
                     if (currentUser != null) {
-                        myGroups = this.groupService.getGroupsByUser(currentUser.getId(), authHeader);
+                        myGroups = this.groupService.getGroupsByUser(currentUser.getId());
                     }
 
                     return new GroupLoadResult(allGroups, myGroups, currentUser);
@@ -199,28 +188,16 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchLayout.setSearching(true);
         LOG.infof("Starting async group search with query: %s", query);
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            this.searchLayout.setSearching(false);
-            this.getUI().ifPresent(ui -> ui.access(() -> {
-                NotificationUtil.showError("Authentication failed");
-            }));
-            return;
-        }
-
         final Long capturedUserId = this.currentUserId;
 
         this.loadDataAsync(
                 () -> {
                     LOG.info("Making REST call to search groups");
-                    final var searchResults = this.groupService.searchGroups(query, authHeader);
+                    final var searchResults = this.groupService.searchGroups(query);
 
                     List<UserGroupResponseDto> myGroups = Collections.emptyList();
                     if (capturedUserId != null) {
-                        myGroups = this.groupService.getGroupsByUser(capturedUserId, authHeader);
+                        myGroups = this.groupService.getGroupsByUser(capturedUserId);
                     }
 
                     return new GroupLoadResult(searchResults, myGroups, null);

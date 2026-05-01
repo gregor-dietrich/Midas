@@ -35,13 +35,10 @@ public class PostCommentService {
 
     /** Returns the all comments. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getAllComments(final String authHeader, final Integer page, final Integer size)
+    public List<PostCommentResponseDto> getAllComments(final Integer page, final Integer size)
             throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all comments");
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(
@@ -54,11 +51,7 @@ public class PostCommentService {
     public List<PostCommentResponseDto> getCommentsByPost(final Long postId)
             throws AuthenticationException, ServiceException {
         LOG.infof("Getting comments for post: %s", postId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> {
             final var response = this.commentClient.getCommentsByPost(postId, authHeader);
             LOG.infof("Successfully retrieved %s comments for post %s", response.size(), postId);
@@ -71,11 +64,7 @@ public class PostCommentService {
     public List<PostCommentResponseDto> getCommentsByUser(final Long userId)
             throws AuthenticationException, ServiceException {
         LOG.debugf("Fetching comments for user: %s", userId);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.commentClient.getCommentsByUser(userId, authHeader),
                 this.authService, LOG, "fetching comments for user " + userId);
@@ -83,12 +72,9 @@ public class PostCommentService {
 
     /** Handles the search comments operation. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> searchComments(final String query, final String authHeader) {
+    public List<PostCommentResponseDto> searchComments(final String query) {
         LOG.debugf("Searching comments with query: %s", query);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.commentClient.searchComments(query, authHeader),
                 this.authService, LOG, "searching comments");
@@ -98,11 +84,7 @@ public class PostCommentService {
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
     public PostCommentDto getCommentById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting comment by id: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
                 () -> this.commentClient.getComment(id, authHeader),
                 this.authService, LOG, "getting comment " + id, response -> {
@@ -121,11 +103,7 @@ public class PostCommentService {
     /** Creates a new comment. */
     public PostCommentDto createComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
         LOG.infof("Creating comment for post: %s", comment.getPostId() != null ? comment.getPostId() : "unknown");
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
         apiComment.setPostId(comment.getPostId());
@@ -146,11 +124,7 @@ public class PostCommentService {
     /** Updates the comment. */
     public PostCommentDto updateComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
         LOG.infof("Updating comment: %s", comment.getId());
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
         return ServiceHelper.executeWithResponse(
@@ -168,35 +142,27 @@ public class PostCommentService {
     }
 
     /** Handles the delete comment operation. */
-    public boolean deleteComment(final Long id) throws AuthenticationException, ServiceException {
+    public void deleteComment(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Deleting comment: %s", id);
-        final var authHeader = this.authService.getAuthorizationHeader();
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
-        return ServiceHelper.executeWithResponse(
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        ServiceHelper.executeWithResponse(
                 () -> this.commentClient.deleteComment(id, authHeader),
                 this.authService, LOG, "deleting comment " + id, response -> {
-            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()
-                    || response.getStatus() == Response.Status.OK.getStatusCode()) {
+            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
                 LOG.infof("Successfully deleted comment: %s", id);
-                return true;
-            } else {
-                return false;
+                return null;
+            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new ServiceException("Comment not found");
             }
+            throw ServiceHelper.responseFailure("Failed to delete comment", response);
         });
     }
 
     /** Returns the comments by date range. */
     @Retry(maxRetries = 2, delay = 500, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getCommentsByDateRange(final String startDate, final String endDate,
-            final String authHeader) {
+    public List<PostCommentResponseDto> getCommentsByDateRange(final String startDate, final String endDate) {
         LOG.debugf("Fetching comments by date range: %s to %s", startDate, endDate);
-        if (authHeader == null) {
-            LOG.warn("No authentication header available");
-            throw new AuthenticationException("Authentication required");
-        }
+        final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(
                 () -> this.commentClient.getCommentsByDateRange(startDate, endDate, authHeader),
                 this.authService, LOG, "fetching comments by date range");

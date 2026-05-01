@@ -77,17 +77,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     private void loadCommentsAsync() {
         LOG.info("Starting async comment loading");
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to get auth header", e);
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.commentService.getAllComments(authHeader, 0, UiConstants.DEFAULT_PAGE_SIZE),
+                () -> this.commentService.getAllComments(0, UiConstants.DEFAULT_PAGE_SIZE),
                 comments -> {
                     LOG.infof("Successfully loaded %s comments", comments.size());
                     this.grid.setItems(comments);
@@ -200,12 +191,9 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
 
     private void deleteComment(final PostCommentResponseDto comment) {
         try {
-            if (this.commentService.deleteComment(comment.getId())) {
-                NotificationUtil.showSuccess("Comment deleted successfully");
-                this.loadCommentsAsync();
-            } else {
-                NotificationUtil.showError("Failed to delete comment");
-            }
+            this.commentService.deleteComment(comment.getId());
+            NotificationUtil.showSuccess("Comment deleted successfully");
+            this.loadCommentsAsync();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
@@ -224,19 +212,11 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.searchButton.setEnabled(false);
         LOG.infof("Starting async comment search with query: %s", query);
 
         this.loadDataAsync(
-                () -> this.commentService.searchComments(query.trim(), authHeader),
+                () -> this.commentService.searchComments(query.trim()),
                 comments -> {
                     this.searchButton.setEnabled(true);
                     LOG.infof("Successfully found %s comments", comments.size());
@@ -262,16 +242,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             return;
         }
 
-        final String authHeader;
-        try {
-            authHeader = this.authService.getAuthorizationHeader();
-        } catch (final RuntimeException e) {
-            NotificationUtil.showError("Authentication failed");
-            return;
-        }
-
         this.loadDataAsync(
-                () -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString(), authHeader),
+                () -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
                 comments -> this.grid.setItems(comments));
     }
 

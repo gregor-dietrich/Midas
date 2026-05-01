@@ -3,6 +3,7 @@ package de.vptr.midas.gui.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -153,7 +154,8 @@ public class ServiceTestUtil {
      * Setup authentication header in AuthService mock
      */
     public static void setupAuthHeader(final AuthService authService, final String authHeader) {
-        when(authService.getAuthorizationHeader()).thenReturn(authHeader);
+        lenient().when(authService.getAuthorizationHeader()).thenReturn(authHeader);
+        lenient().when(authService.requireAuthorizationHeader()).thenReturn(authHeader);
     }
 
     /**

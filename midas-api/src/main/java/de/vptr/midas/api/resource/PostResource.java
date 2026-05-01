@@ -108,7 +108,11 @@ public class PostResource {
     @PermitAll
     public List<PostResponseDto> searchPosts(@QueryParam("query") final String query) {
         if (query == null || query.trim().isEmpty()) {
-            return this.postService.getAllPosts();
+            // Unauthenticated callers only see published posts; authenticated callers see all.
+            if (this.securityContext.getUserPrincipal() != null) {
+                return this.postService.getAllPosts();
+            }
+            return this.postService.findPublishedPosts();
         }
         return this.postService.searchPosts(query);
     }

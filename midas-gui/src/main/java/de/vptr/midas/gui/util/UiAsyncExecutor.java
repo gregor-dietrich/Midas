@@ -32,8 +32,9 @@ public final class UiAsyncExecutor {
             final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
         final VaadinSession session = VaadinSession.getCurrent();
+        final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, backgroundTask))
+        CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask))
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {
@@ -54,8 +55,9 @@ public final class UiAsyncExecutor {
             final Consumer<T> onSuccess, final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
         final VaadinSession session = VaadinSession.getCurrent();
+        final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, () -> stageSupplier.get().toCompletableFuture()))
+        CompletableFuture.supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()))
                 .thenCompose(stage -> stage)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
@@ -75,7 +77,8 @@ public final class UiAsyncExecutor {
         }
 
         try {
-            ui.accessLater(callback, () -> handleDetachedDispatch(throwable, session)).run();
+            // access() acquires the VaadinSession lock and enqueues on the UI thread.
+            ui.access(() -> callback.run());
         } catch (final RuntimeException e) {
             if (throwable != null) {
                 ErrorHandler.handleDetached(throwable, session);
@@ -85,13 +88,17 @@ public final class UiAsyncExecutor {
         }
     }
 
-    private static <T> T withSession(final VaadinSession session, final Supplier<T> supplier) {
+    private static <T> T withSession(final VaadinSession session, final ClassLoader tccl,
+            final Supplier<T> supplier) {
         final VaadinSession previousSession = VaadinSession.getCurrent();
+        final ClassLoader previousTccl = Thread.currentThread().getContextClassLoader();
         VaadinSession.setCurrent(session);
+        Thread.currentThread().setContextClassLoader(tccl);
         try {
             return supplier.get();
         } finally {
             VaadinSession.setCurrent(previousSession);
+            Thread.currentThread().setContextClassLoader(previousTccl);
         }
     }
 
