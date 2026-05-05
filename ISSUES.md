@@ -54,12 +54,6 @@
 - Compose/dev setup persists key material via mounted volume.
 - SpotBugs, CheckStyle and all Maven Tests passing for api and gui.
 
-## Vaadin 25 theme migration fixes (GUI)
-
-- Replace deprecated `lumoImports` usage in `midas-gui/src/main/frontend/themes/starter-theme/theme.json`.
-- If utility classes required, add `@StyleSheet(Lumo.UTILITY_STYLESHEET)` in `midas-gui/src/main/java/de/vptr/midas/gui/AppConfig.java`.
-- Fix component-style loading warning (`vaadin-text-field.css`) by enabling `themeComponentStyles` or moving styles to supported setup.
-
 ---
 
 ## Code Review Findings — Security, Bugs, Performance, Architecture
