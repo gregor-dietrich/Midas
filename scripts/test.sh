@@ -8,15 +8,17 @@ REVISION=${REVISION:-1.0.0-SNAPSHOT}
 
 set -e
 
+echo "Starting tests..."
+
 # Function to test a specific module
 test_module() {
     local module_dir="$1"
     local module_name="$2"
-    
+
     echo "=== Testing $module_name ==="
     cd "$PROJECT_ROOT/$module_dir"
-    
-    ${MVN_CMD} test -Drevision=${REVISION}
+
+    ${MVN_CMD} -q verify -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}"
     echo
 }
 
@@ -32,5 +34,7 @@ case $MODULE in
         test_module "midas-gui" "Midas GUI"
         ;;
 esac
+
+echo "Tests completed."
 
 cd "$PROJECT_ROOT" > /dev/null

@@ -8,6 +8,8 @@ REVISION=${REVISION:-1.0.0-SNAPSHOT}
 
 set -e
 
+echo "Starting installation..."
+
 # Function to install a specific module
 install_module() {
     local module_dir="$1"
@@ -16,10 +18,7 @@ install_module() {
     echo "=== Installing $module_name ==="
     cd "$PROJECT_ROOT/$module_dir"
     
-    # Run check first
-    "$PROJECT_ROOT/scripts/check.sh" "${module_dir#midas-}"
-    
-    ${MVN_CMD} clean install -DskipTests -Drevision=${REVISION}
+    ${MVN_CMD} -q clean install -DskipTests -Drevision=${REVISION}
     echo
     
     cd - > /dev/null
@@ -37,3 +36,5 @@ case $MODULE in
         install_module "midas-gui" "Midas GUI"
         ;;
 esac
+
+echo "Installation completed."

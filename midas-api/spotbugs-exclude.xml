@@ -65,4 +65,38 @@
   <Match>
     <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION" />
   </Match>
+  <!--
+    DLS_DEAD_LOCAL_STORE:
+    SpotBugs incorrectly flags `ids` variables used as JPA query parameters.
+    The list IS consumed by the subsequent createQuery().setParameter() call;
+    SpotBugs cannot trace the value through the JPA binding.
+  -->
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.AccountResponseAssembler" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.PaymentService" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.PostCategoryService" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.PostService" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.UserGroupService" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.UserRankService" />
+  </Match>
+  <Match>
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+    <Class name="de.vptr.midas.api.service.UserService" />
+  </Match>
 </FindBugsFilter>

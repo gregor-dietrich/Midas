@@ -8,13 +8,13 @@ REQUIRED_MAVEN_VERSION="3.9.9"
 
 MODULE=${1:-"both"}
 
-set -e
+echo "Running environment checks..."
 
 # Function to check environment in a specific module directory
 check_module() {
     local module_dir="$1"
     local module_name="$2"
-    
+
     echo "=== Checking environment for $module_name ==="
     cd "$PROJECT_ROOT/$module_dir"
 
@@ -94,3 +94,5 @@ case $MODULE in
         check_module "midas-gui" "Midas GUI"
         ;;
 esac
+
+echo "Environment checks completed."

@@ -4,6 +4,8 @@
 
 set -e
 
+echo "Starting rebase operation..."
+
 cd "$PROJECT_ROOT"
 
 git fetch
@@ -16,5 +18,7 @@ git rebase "$REBASE_TARGET"
 
 echo "Force pushing..."
 git push --force-with-lease
+
+echo "Rebase operation completed."
 
 cd - > /dev/null

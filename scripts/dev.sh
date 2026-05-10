@@ -7,6 +7,8 @@ MODULE=${1:-"api"}
 
 set -e
 
+echo "Starting development mode..."
+
 case $MODULE in
     "api")
         echo "=== Starting Midas API in dev mode ==="
@@ -27,3 +29,5 @@ case $MODULE in
         exit 1
         ;;
 esac
+
+echo "Development mode stopped."

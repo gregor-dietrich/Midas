@@ -4,6 +4,8 @@
 
 set -e
 
+echo "Starting tagging operation..."
+
 cd "$PROJECT_ROOT"
 
 git fetch
@@ -61,5 +63,7 @@ if [ $? -ne 0 ]; then
     cd - > /dev/null
     exit 3
 fi
+
+echo "Tagging operation completed."
 
 cd - > /dev/null

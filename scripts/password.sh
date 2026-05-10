@@ -7,6 +7,8 @@ MODULE=${1:-"api"}
 
 set -e
 
+echo "Starting password hash generation..."
+
 case $MODULE in
     "api")
         echo "=== Generating password hash for Midas API ==="
@@ -48,3 +50,5 @@ case $MODULE in
         exit 1
         ;;
 esac
+
+echo "Password hash generation completed."

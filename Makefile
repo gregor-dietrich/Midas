@@ -1,4 +1,4 @@
-.PHONY: help branch build check clean dev install kill password rebase release tag test untag
+.PHONY: help branch build check clean coverage dev dev-api dev-gui install kill lint password rebase release tag test untag
 
 MAKEFLAGS += --no-print-directory
 
@@ -8,12 +8,14 @@ help:
 	@echo "  make build            - make check, mvn package, docker buildx (both modules)"
 	@echo "  make check            - verify local environment (both modules)"
 	@echo "  make clean            - run mvn clean, and remove build artifacts (both modules)"
+	@echo "  make coverage         - run tests with JaCoCo and generate combined coverage report"
 	@echo "  make dev              - start Quarkus in dev mode (specify: make dev-api or make dev-gui)"
 	@echo "  make install          - make check, mvn clean install -DskipTests (both modules)"
 	@echo "  make kill             - stop/kill Quarkus and Maven processes and remove Docker containers"
+	@echo "  make lint             - run spotless, checkstyle, spotbugs, pmd and cpd (both modules)"
 	@echo "  make password         - generate a salt+hash for a password (for API init.sql)"
 	@echo "  make rebase           - interactive git rebase against a target (defaults to origin/main)"
-	@echo "  make release          - (deprecated - will show error)"
+	@echo "  make release          - pull from origin/main, make build, make tag, and push Docker images"
 	@echo "  make tag              - create, sign and push a new git tag (auto-increments latest tag suggestion)"
 	@echo "  make test             - execute the Maven test suite (both modules)"
 	@echo "  make untag            - delete a local and remote git tag (prompts for tag to delete)"
@@ -21,18 +23,21 @@ help:
 	@echo "Module-specific targets:"
 	@echo "  make dev-api          - start Midas API in dev mode"
 	@echo "  make dev-gui          - start Midas GUI in dev mode"
- 
+
 branch:
 	@scripts/branch.sh
 
 build:
 	@scripts/build.sh
- 
+
 check:
 	@scripts/check.sh
- 
+
 clean:
 	@scripts/clean.sh
+
+coverage:
+	@scripts/coverage.sh -o
 
 dev:
 	@echo "Please specify which module to run in dev mode:"
@@ -44,12 +49,15 @@ dev-api:
 
 dev-gui:
 	@scripts/dev.sh gui
- 
+
 install:
 	@scripts/install.sh
- 
+
 kill:
 	@scripts/kill.sh
+
+lint:
+	@scripts/lint.sh
 
 password:
 	@scripts/password.sh api
@@ -62,7 +70,7 @@ release:
 
 tag:
 	@scripts/tag.sh
- 
+
 test:
 	@scripts/test.sh
 

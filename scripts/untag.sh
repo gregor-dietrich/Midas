@@ -4,6 +4,8 @@
 
 set -e
 
+echo "Starting untagging operation..."
+
 cd "$PROJECT_ROOT"
 
 git fetch
@@ -35,5 +37,7 @@ if git ls-remote --tags origin | grep -q "refs/tags/${VERSION}$"; then
 else
     echo "Tag ${VERSION} not found on remote."
 fi
+
+echo "Untagging operation completed."
 
 cd - > /dev/null

@@ -7,20 +7,22 @@ MODULE=${1:-"both"}
 
 set -e
 
+echo "Starting cleanup..."
+
 # Function to clean a specific module
 clean_module() {
     local module_dir="$1"
     local module_name="$2"
-    
+
     echo "=== Cleaning $module_name ==="
     cd "$PROJECT_ROOT/$module_dir"
-    
-    ${MVN_CMD} clean
-    
+
+    ${MVN_CMD} -q clean
+
     # Remove additional build artifacts
     rm -rf logs/ node_modules/ || true
     echo
-    
+
     cd - > /dev/null
 }
 
@@ -36,3 +38,5 @@ case $MODULE in
         clean_module "midas-gui" "Midas GUI"
         ;;
 esac
+
+echo "Cleanup completed."
