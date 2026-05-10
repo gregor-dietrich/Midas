@@ -71,8 +71,8 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
     private void buildUi() {
         this.removeAll();
 
-        final var backButton = new Button("← Back to Users",
-                _ -> this.getUI().ifPresent(ui -> ui.navigate(UserView.class)));
+        final var backButton =
+                new Button("← Back to Users", _ -> this.getUI().ifPresent(ui -> ui.navigate(UserView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);
@@ -135,17 +135,16 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
         final var titleHeader = new H2(user.getUsername());
 
         final var createdDate = user.getCreated();
-        final var memberSince = new Span("Member since: "
-                + (createdDate != null ? createdDate.format(DATE_FORMATTER) : "Unknown"));
+        final var memberSince =
+                new Span("Member since: " + (createdDate != null ? createdDate.format(DATE_FORMATTER) : "Unknown"));
         memberSince.getStyle().set("color", "var(--lumo-secondary-text-color)");
 
         // Account activity summary
         final var activityHeader = new H3("Activity");
 
-        final var postsCount = new Span("Posts: "
-                + (user.getPostsCount() != null ? user.getPostsCount() : 0));
-        final var commentsCount = new Span("Comments: "
-                + (user.getCommentsCount() != null ? user.getCommentsCount() : 0));
+        final var postsCount = new Span("Posts: " + (user.getPostsCount() != null ? user.getPostsCount() : 0));
+        final var commentsCount =
+                new Span("Comments: " + (user.getCommentsCount() != null ? user.getCommentsCount() : 0));
 
         final var statsLayout = new HorizontalLayout(postsCount, commentsCount);
         statsLayout.setSpacing(true);
@@ -165,9 +164,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
         this.groupsGrid.setPageSize(20);
         this.groupsGrid.setHeight("400px");
 
-        this.groupsGrid.addColumn(UserGroupResponseDto::getName)
-                .setHeader("Group Name")
-                .setFlexGrow(1);
+        this.groupsGrid.addColumn(UserGroupResponseDto::getName).setHeader("Group Name").setFlexGrow(1);
     }
 
     private void loadGroupsAsync(final Long userId) {

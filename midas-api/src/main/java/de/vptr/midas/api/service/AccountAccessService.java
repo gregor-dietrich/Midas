@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
@@ -38,44 +37,40 @@ public class AccountAccessService {
         if (account == null) {
             throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
         }
-        final List<UserEntity> users = UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN "
-                        + "(SELECT m.user.id FROM UserAccountMetaEntity m WHERE m.account.id = ?1)", accountId)
-                .list();
+        final List<UserEntity> users = UserEntity.find("""
+                SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN \
+                (SELECT m.user.id FROM UserAccountMetaEntity m WHERE m.account.id = ?1)""", accountId).list();
         if (users.isEmpty()) {
             return List.of();
         }
         final List<Long> userIds = users.stream().map(u -> u.id).toList();
 
         final List<Object[]> postResults = PostEntity.getEntityManager()
-                .createQuery(
-                        "SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
+                .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
                         Object[].class)
-                .setParameter("ids", userIds)
-                .getResultList();
+                .setParameter("ids", userIds).getResultList();
         final Map<Long, Long> postCounts = QueryAggregationUtil.toLongCountMap(postResults);
 
-        final List<Object[]> commentResults = PostCommentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
-                        Object[].class)
-                .setParameter("ids", userIds)
-                .getResultList();
+        final List<Object[]> commentResults = PostCommentEntity.getEntityManager().createQuery(
+                "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
+                Object[].class).setParameter("ids", userIds).getResultList();
         final Map<Long, Long> commentCounts = QueryAggregationUtil.toLongCountMap(commentResults);
 
         final List<UserAccountMetaEntity> metas = UserAccountMetaEntity.findByAccountId(accountId);
-        final Map<Long, Boolean> isNegativeByUser = metas.stream()
-                .collect(Collectors.toMap(m -> m.user.id, m -> m.isNegative));
+        final Map<Long, Boolean> isNegativeByUser = new HashMap<>();
+        for (final UserAccountMetaEntity m : metas) {
+            final de.vptr.midas.api.entity.UserEntity u = m.user;
+            if (u != null && u.id != null) {
+                isNegativeByUser.put(u.id, m.isNegative);
+            }
+        }
 
-        return users.stream()
-                .map(u -> {
-                    final UserResponseDto dto = new UserResponseDto(u,
-                            postCounts.getOrDefault(u.id, 0L),
-                            commentCounts.getOrDefault(u.id, 0L));
-                    dto.isNegative = isNegativeByUser.getOrDefault(u.id, false);
-                    return dto;
-                })
-                .toList();
+        return users.stream().map(u -> {
+            final UserResponseDto dto =
+                    new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L));
+            dto.isNegative = isNegativeByUser.getOrDefault(u.id, false);
+            return dto;
+        }).toList();
     }
 
     /** Returns all accounts for the given user. */
@@ -86,10 +81,9 @@ public class AccountAccessService {
                 throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
             }
 
-            final List<AccountEntity> accounts = AccountEntity
-                    .find("SELECT a FROM AccountEntity a WHERE a.id IN "
-                            + "(SELECT m.account.id FROM UserAccountMetaEntity m WHERE m.user.id = ?1)", userId)
-                    .list();
+            final List<AccountEntity> accounts = AccountEntity.find("""
+                    SELECT a FROM AccountEntity a WHERE a.id IN \
+                    (SELECT m.account.id FROM UserAccountMetaEntity m WHERE m.user.id = ?1)""", userId).list();
             return this.accountResponseAssembler.toAccountResponseDtos(accounts);
         });
     }
@@ -98,18 +92,13 @@ public class AccountAccessService {
     public List<PaymentResponseDto> getAccountPayments(final Long accountId) {
         return PerformanceMonitor.time("getAccountPayments(" + accountId + ")", () -> {
             @SuppressWarnings("unchecked")
-            final List<PaymentEntity> payments = PaymentEntity.getEntityManager()
-                    .createQuery(
-                            "SELECT p FROM PaymentEntity p "
-                                    + "LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user "
-                                    + "WHERE p.sourceAccount.id = :accountId OR p.targetAccount.id = :accountId "
-                                    + "ORDER BY p.date DESC")
-                    .setParameter("accountId", accountId)
-                    .getResultList();
+            final List<PaymentEntity> payments = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT p FROM PaymentEntity p \
+                    LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user \
+                    WHERE p.sourceAccount.id = :accountId OR p.targetAccount.id = :accountId \
+                    ORDER BY p.date DESC""").setParameter("accountId", accountId).getResultList();
 
-            return payments.stream()
-                    .map(PaymentResponseDto::new)
-                    .toList();
+            return payments.stream().map(PaymentResponseDto::new).toList();
         });
     }
 
@@ -117,41 +106,31 @@ public class AccountAccessService {
 
     /** Returns all outgoing payments for the given account. */
     public List<PaymentResponseDto> getOutgoingPayments(final Long accountId) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
-                        accountId)
-                .page(0, MAX_PAYMENTS)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
+                accountId).page(0, MAX_PAYMENTS).list().stream()
+                .map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all incoming payments for the given account. */
     public List<PaymentResponseDto> getIncomingPayments(final Long accountId) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
-                        accountId)
-                .page(0, MAX_PAYMENTS)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
+                accountId).page(0, MAX_PAYMENTS).list().stream()
+                .map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns the current balance for the given account. */
     @Transactional(Transactional.TxType.SUPPORTS)
     public BigDecimal getAccountBalance(final Long accountId) {
-        return PerformanceMonitor.time("getAccountBalance(" + accountId + ")", () -> PaymentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT "
-                                + "COALESCE(SUM(CASE WHEN p.targetAccount.id = :accountId THEN p.amount ELSE 0 END), 0) - "
-                                +
-                                "COALESCE(SUM(CASE WHEN p.sourceAccount.id = :accountId THEN p.amount ELSE 0 END), 0) "
-                                +
-                                "FROM PaymentEntity p "
-                                + "WHERE p.targetAccount.id = :accountId OR p.sourceAccount.id = :accountId",
-                        BigDecimal.class)
-                .setParameter("accountId", accountId)
-                .getSingleResult());
+        return PerformanceMonitor.time("getAccountBalance(" + accountId + ")",
+                () -> PaymentEntity.getEntityManager().createQuery("""
+                        SELECT \
+                        COALESCE(SUM(CASE WHEN p.targetAccount.id = :accountId THEN p.amount ELSE 0 END), 0) - \
+                        COALESCE(SUM(CASE WHEN p.sourceAccount.id = :accountId THEN p.amount ELSE 0 END), 0) \
+                        FROM PaymentEntity p \
+                        WHERE p.targetAccount.id = :accountId OR p.sourceAccount.id = :accountId""", BigDecimal.class)
+                        .setParameter("accountId", accountId).getSingleResult());
     }
 
     /** Returns balances for the given list of account ids. */
@@ -166,40 +145,30 @@ public class AccountAccessService {
             accountIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
 
             // Compute incoming payments (target) aggregated by account
-            final List<Object[]> incomingResults = PaymentEntity.getEntityManager()
-                    .createQuery(
-                            "SELECT p.targetAccount.id, COALESCE(SUM(p.amount), 0) "
-                                    + "FROM PaymentEntity p "
-                                    + "WHERE p.targetAccount.id IN :accountIds "
-                                    + "GROUP BY p.targetAccount.id",
-                            Object[].class)
-                    .setParameter("accountIds", accountIds)
-                    .getResultList();
+            final List<Object[]> incomingResults = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT p.targetAccount.id, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    WHERE p.targetAccount.id IN :accountIds GROUP BY p.targetAccount.id""", Object[].class)
+                    .setParameter("accountIds", accountIds).getResultList();
 
             for (final Object[] row : incomingResults) {
                 final Long accountId = (Long) row[0];
                 final BigDecimal amount = (BigDecimal) row[1];
                 if (accountId != null) {
-                    balances.put(accountId, balances.get(accountId).add(amount));
+                    balances.put(accountId, balances.getOrDefault(accountId, BigDecimal.ZERO).add(amount));
                 }
             }
 
             // Compute outgoing payments (source) aggregated by account
-            final List<Object[]> outgoingResults = PaymentEntity.getEntityManager()
-                    .createQuery(
-                            "SELECT p.sourceAccount.id, COALESCE(SUM(p.amount), 0) "
-                                    + "FROM PaymentEntity p "
-                                    + "WHERE p.sourceAccount.id IN :accountIds "
-                                    + "GROUP BY p.sourceAccount.id",
-                            Object[].class)
-                    .setParameter("accountIds", accountIds)
-                    .getResultList();
+            final List<Object[]> outgoingResults = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT p.sourceAccount.id, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    WHERE p.sourceAccount.id IN :accountIds GROUP BY p.sourceAccount.id""", Object[].class)
+                    .setParameter("accountIds", accountIds).getResultList();
 
             for (final Object[] row : outgoingResults) {
                 final Long accountId = (Long) row[0];
                 final BigDecimal amount = (BigDecimal) row[1];
                 if (accountId != null) {
-                    balances.put(accountId, balances.get(accountId).subtract(amount));
+                    balances.put(accountId, balances.getOrDefault(accountId, BigDecimal.ZERO).subtract(amount));
                 }
             }
 
@@ -251,14 +220,12 @@ public class AccountAccessService {
         final List<AccountEntity> entities = AccountEntity
                 .find("SELECT a FROM AccountEntity a JOIN a.userAccountMetas uam WHERE uam.user.id = ?1 ORDER BY a.id",
                         user.id)
-                .page(page, size)
-                .list();
+                .page(page, size).list();
         return this.accountResponseAssembler.toAccountResponseDtos(entities);
     }
 
     /**
-     * Returns all accounts for the current user identified by username (no
-     * pagination support backward compat).
+     * Returns all accounts for the current user identified by username (no pagination support backward compat).
      */
     // NOTE: Results are capped at MAX_ACCOUNTS_LIMIT. Pagination not yet
     // implemented.
@@ -270,6 +237,9 @@ public class AccountAccessService {
     public boolean hasUserAccessToAccount(final String username, final Long accountId) {
         final UserEntity user = UserEntity.find("username", username).firstResult();
         if (user == null) {
+            return false;
+        }
+        if (user.id == null) {
             return false;
         }
         return this.isUserAssociatedWithAccount(user.id, accountId);
@@ -286,9 +256,12 @@ public class AccountAccessService {
     /**
      * Updates the isNegative flag for the user-account association.
      *
-     * @param userId     the user whose association to update
-     * @param accountId  the account in the association
-     * @param isNegative the new flag value
+     * @param userId
+     *            the user whose association to update
+     * @param accountId
+     *            the account in the association
+     * @param isNegative
+     *            the new flag value
      */
     @Transactional
     public void updateUserAccountMeta(final Long userId, final Long accountId, final boolean isNegative) {
@@ -301,21 +274,27 @@ public class AccountAccessService {
     }
 
     /**
-     * Returns a map of accountId to isNegative flag for the given user and
-     * account list.
+     * Returns a map of accountId to isNegative flag for the given user and account list.
      *
-     * @param userId     the user whose flags to look up
-     * @param accountIds the accounts to query
+     * @param userId
+     *            the user whose flags to look up
+     * @param accountIds
+     *            the accounts to query
      * @return map of accountId to isNegative
      */
     public Map<Long, Boolean> getIsNegativeFlagsForUser(final Long userId, final List<Long> accountIds) {
         if (accountIds == null || accountIds.isEmpty()) {
             return Map.of();
         }
-        final List<UserAccountMetaEntity> metas = UserAccountMetaEntity
-                .find("user.id = ?1 AND account.id IN ?2", userId, accountIds)
-                .list();
-        return metas.stream()
-                .collect(Collectors.toMap(m -> m.account.id, m -> m.isNegative));
+        final List<UserAccountMetaEntity> metas =
+                UserAccountMetaEntity.find("user.id = ?1 AND account.id IN ?2", userId, accountIds).list();
+        final Map<Long, Boolean> result = new HashMap<>();
+        for (final UserAccountMetaEntity m : metas) {
+            final de.vptr.midas.api.entity.AccountEntity a = m.account;
+            if (a != null && a.id != null) {
+                result.put(a.id, m.isNegative);
+            }
+        }
+        return result;
     }
 }

@@ -27,8 +27,7 @@ class RateLimitFilterClientKeyTest {
 
     @Test
     void testResolveTrustedClientAddressFallsBackToValidatedRealIp() {
-        assertEquals("2001:db8::32",
-                RateLimitFilter.resolveTrustedClientAddress("spoofed-hop", "[2001:db8::32]"));
+        assertEquals("2001:db8::32", RateLimitFilter.resolveTrustedClientAddress("spoofed-hop", "[2001:db8::32]"));
     }
 
     @Test

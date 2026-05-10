@@ -1,10 +1,7 @@
 package de.vptr.midas.gui.util;
 
-import java.time.temporal.ChronoUnit;
-
 /**
- * Named constants for timeouts, retries, limits, and buffer sizes
- * scattered across the GUI module.
+ * Named constants for timeouts, retries, limits, and buffer sizes scattered across the GUI module.
  */
 public final class UiConstants {
 

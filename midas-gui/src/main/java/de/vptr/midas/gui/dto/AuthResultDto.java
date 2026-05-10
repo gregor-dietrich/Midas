@@ -7,10 +7,7 @@ public class AuthResultDto {
 
     /** Status component. */
     public enum Status {
-        SUCCESS,
-        INVALID_CREDENTIALS,
-        BACKEND_UNAVAILABLE,
-        INVALID_INPUT
+        SUCCESS, INVALID_CREDENTIALS, BACKEND_UNAVAILABLE, INVALID_INPUT
     }
 
     private final Status status;

@@ -38,8 +38,7 @@ public class PageResource {
 
     /** Returns all pages with normalized pagination parameters. */
     @GET
-    public List<PageResponseDto> getAllPages(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PageResponseDto> getAllPages(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);

@@ -17,6 +17,7 @@ import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -31,11 +32,11 @@ public class PostService {
     @Inject
     AdminAccessService adminAccessService;
 
-    private void verifyPostOwnership(final String currentUsername, final PostEntity post) {
+    private void verifyPostOwnership(@Nullable final String currentUsername, final PostEntity post) {
         if (currentUsername == null) {
             throw new ValidationException("Authentication required to modify posts.");
         }
-        if (post.user != null && !post.user.username.equals(currentUsername)
+        if (post.user != null && !currentUsername.equals(post.user.username)
                 && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
             throw new WebApplicationException("Access denied to edit post", Response.Status.FORBIDDEN);
         }
@@ -48,10 +49,9 @@ public class PostService {
 
     /** Returns all posts with the given pagination. */
     public List<PostResponseDto> getAllPosts(final int page, final int size) {
-        final List<PostEntity> posts = PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category ORDER BY p.created DESC")
-                .page(page, size)
-                .list();
+        final List<PostEntity> posts = PostEntity.find(
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category ORDER BY p.created DESC")
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -60,8 +60,7 @@ public class PostService {
         return PostEntity
                 .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.id = ?1",
                         id)
-                .<PostEntity>firstResultOptional()
-                .map(this::toResponseDto);
+                .<PostEntity>firstResultOptional().map(this::toResponseDto);
     }
 
     /** Returns all published posts with default pagination. */
@@ -71,10 +70,9 @@ public class PostService {
 
     /** Returns all published posts with the given pagination. */
     public List<PostResponseDto> findPublishedPosts(final int page, final int size) {
-        final List<PostEntity> posts = PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.published = true ORDER BY p.created DESC")
-                .page(page, size)
-                .list();
+        final List<PostEntity> posts = PostEntity.find(
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.published = true ORDER BY p.created DESC")
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -85,10 +83,9 @@ public class PostService {
 
     /** Returns all posts by the given user with pagination. */
     public List<PostResponseDto> findByUserId(final Long userId, final int page, final int size) {
-        final List<PostEntity> posts = PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.id = ?1 ORDER BY p.created DESC",
-                        userId)
-                .page(page, size).list();
+        final List<PostEntity> posts = PostEntity.find(
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.id = ?1 ORDER BY p.created DESC",
+                userId).page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -99,11 +96,9 @@ public class PostService {
 
     /** Returns published posts by the given user with pagination. */
     public List<PostResponseDto> findPublishedByUserId(final Long userId, final int page, final int size) {
-        final List<PostEntity> posts = PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
-                        + "WHERE p.user.id = ?1 AND p.published = true ORDER BY p.created DESC",
-                        userId)
-                .page(page, size).list();
+        final List<PostEntity> posts = PostEntity.find("""
+                SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                WHERE p.user.id = ?1 AND p.published = true ORDER BY p.created DESC""", userId).page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -114,10 +109,9 @@ public class PostService {
 
     /** Returns all posts in the given category with pagination. */
     public List<PostResponseDto> findByCategoryId(final Long categoryId, final int page, final int size) {
-        final List<PostEntity> posts = PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.category.id = ?1 ORDER BY p.created DESC",
-                        categoryId)
-                .page(page, size).list();
+        final List<PostEntity> posts = PostEntity.find(
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.category.id = ?1 ORDER BY p.created DESC",
+                categoryId).page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -129,7 +123,8 @@ public class PostService {
         return this.toResponseDto(post);
     }
 
-    @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
+    @SuppressFBWarnings(value = "UC_USELESS_OBJECT",
+            justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
     private PostEntity buildPostEntity(final PostDto postDto) {
         final PostEntity post = new PostEntity();
         post.title = postDto.title;
@@ -158,7 +153,7 @@ public class PostService {
 
     /** Updates the post with the given id. */
     @Transactional
-    public PostResponseDto updatePost(final Long id, final PostDto postDto, final String currentUsername) {
+    public PostResponseDto updatePost(final Long id, final PostDto postDto, @Nullable final String currentUsername) {
         final PostEntity existingPost = PostEntity.findById(id);
         if (existingPost == null) {
             throw new WebApplicationException("Post not found", Response.Status.NOT_FOUND);
@@ -191,7 +186,7 @@ public class PostService {
 
     /** Partially updates the post with the given id. */
     @Transactional
-    public PostResponseDto patchPost(final Long id, final PostDto postDto, final String currentUsername) {
+    public PostResponseDto patchPost(final Long id, final PostDto postDto, @Nullable final String currentUsername) {
         final PostEntity existingPost = PostEntity.findById(id);
         if (existingPost == null) {
             throw new WebApplicationException("Post not found", Response.Status.NOT_FOUND);
@@ -230,7 +225,7 @@ public class PostService {
 
     /** Deletes the post with the given id. */
     @Transactional
-    public boolean deletePost(final Long id, final String currentUsername) {
+    public boolean deletePost(final Long id, @Nullable final String currentUsername) {
         final PostEntity existingPost = PostEntity.findById(id);
         if (existingPost == null) {
             return false;
@@ -242,23 +237,22 @@ public class PostService {
     }
 
     /** Returns all posts matching the given query. */
-    public List<PostResponseDto> searchPosts(final String query) {
+    public List<PostResponseDto> searchPosts(@Nullable final String query) {
         final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
         if (searchTerm == null) {
             return this.getAllPosts();
         }
-        final List<PostEntity> posts = SearchQueryUtil.applyDefaultSearchLimit(PostEntity.find(
-                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
-                        + "WHERE LOWER(p.title) LIKE ?1 ESCAPE '\\' "
-                        + "OR LOWER(p.content) LIKE ?1 ESCAPE '\\' "
-                        + "OR LOWER(p.user.username) LIKE ?1 ESCAPE '\\' "
-                        + "ORDER BY p.created DESC",
-                searchTerm)).list();
+        final List<PostEntity> posts = SearchQueryUtil.applyDefaultSearchLimit(PostEntity.find("""
+                SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                WHERE LOWER(p.title) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.content) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.user.username) LIKE ?1 ESCAPE '\\' \
+                ORDER BY p.created DESC""", searchTerm)).list();
         return this.toResponseDtos(posts);
     }
 
     /** Returns posts within the given date range. */
-    public List<PostResponseDto> findByDateRange(final String startDate, final String endDate) {
+    public List<PostResponseDto> findByDateRange(@Nullable final String startDate, @Nullable final String endDate) {
         if (startDate == null || endDate == null) {
             return this.getAllPosts();
         }
@@ -270,10 +264,9 @@ public class PostService {
             final LocalDateTime startDateTime = start.atStartOfDay();
             final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
 
-            final List<PostEntity> posts = PostEntity
-                    .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
-                            + "WHERE p.created >= ?1 AND p.created <= ?2 ORDER BY p.created DESC",
-                            startDateTime, endDateTime)
+            final List<PostEntity> posts = PostEntity.find("""
+                    SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                    WHERE p.created >= ?1 AND p.created <= ?2 ORDER BY p.created DESC""", startDateTime, endDateTime)
                     .list();
             return this.toResponseDtos(posts);
         } catch (final DateTimeParseException e) {
@@ -282,7 +275,8 @@ public class PostService {
     }
 
     /** Returns published posts within the given date range. */
-    public List<PostResponseDto> findPublishedByDateRange(final String startDate, final String endDate) {
+    public List<PostResponseDto> findPublishedByDateRange(@Nullable final String startDate,
+            @Nullable final String endDate) {
         if (startDate == null || endDate == null) {
             return this.findPublishedPosts();
         }
@@ -294,12 +288,10 @@ public class PostService {
             final LocalDateTime startDateTime = start.atStartOfDay();
             final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
 
-            final List<PostEntity> posts = PostEntity
-                    .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category "
-                            + "WHERE p.created >= ?1 AND p.created <= ?2 AND p.published = true "
-                            + "ORDER BY p.created DESC",
-                            startDateTime, endDateTime)
-                    .list();
+            final List<PostEntity> posts = PostEntity.find("""
+                    SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                    WHERE p.created >= ?1 AND p.created <= ?2 AND p.published = true \
+                    ORDER BY p.created DESC""", startDateTime, endDateTime).list();
             return this.toResponseDtos(posts);
         } catch (final DateTimeParseException e) {
             throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
@@ -317,19 +309,14 @@ public class PostService {
         }
         final List<Long> ids = posts.stream().map(p -> p.id).toList();
 
-        final List<Object[]> countResults = PostCommentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT c.post.id, COUNT(c) FROM PostCommentEntity c WHERE c.post.id IN :ids GROUP BY c.post.id",
-                        Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+        final List<Object[]> countResults = PostCommentEntity.getEntityManager().createQuery(
+                "SELECT c.post.id, COUNT(c) FROM PostCommentEntity c WHERE c.post.id IN :ids GROUP BY c.post.id",
+                Object[].class).setParameter("ids", ids).getResultList();
         final Map<Long, Long> commentCounts = new HashMap<>();
         for (final Object[] row : countResults) {
             commentCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return posts.stream()
-                .map(p -> new PostResponseDto(p, commentCounts.getOrDefault(p.id, 0L)))
-                .toList();
+        return posts.stream().map(p -> new PostResponseDto(p, commentCounts.getOrDefault(p.id, 0L))).toList();
     }
 }

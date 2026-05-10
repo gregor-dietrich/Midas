@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,32 +29,36 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a user. */
 @Entity
-@Table(name = "users", indexes = {
-        @Index(name = "idx_user_rank_id", columnList = "rank_id")
-})
+@Table(name = "users", indexes = { @Index(name = "idx_user_rank_id", columnList = "rank_id") })
 public class UserEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @NotBlank
     @Column(unique = true)
+    @Nullable
     public String username;
 
     @NotBlank
+    @Nullable
     public String password;
 
     @NotBlank
+    @Nullable
     public String salt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rank_id", nullable = false)
     @JsonIgnoreProperties({ "users" })
+    @Nullable
     public UserRankEntity rank;
 
     @Email
     @Column(unique = true)
+    @Nullable
     public String email;
 
     @Column(nullable = false)
@@ -63,30 +68,37 @@ public class UserEntity extends PanacheEntityBase {
     public boolean activated;
 
     @Column(name = "activation_key")
+    @Nullable
     public String activationKey;
 
     @Column(name = "last_ip", length = 45)
+    @Nullable
     public String lastIp;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.INSERT)
     @Column(name = "last_login")
+    @Nullable
     public LocalDateTime lastLogin;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
-    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE,
-            CascadeType.REMOVE }, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
+            orphanRemoval = true)
     @JsonIgnore
+    @Nullable
     public List<PostEntity> posts;
 
-    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE,
-            CascadeType.REMOVE }, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
+            orphanRemoval = true)
     @JsonIgnore
+    @Nullable
     public List<PostCommentEntity> comments;
 
     @Override

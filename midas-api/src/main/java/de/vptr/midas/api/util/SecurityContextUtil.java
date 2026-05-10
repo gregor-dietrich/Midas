@@ -2,6 +2,7 @@ package de.vptr.midas.api.util;
 
 import java.security.Principal;
 
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
@@ -13,10 +14,9 @@ public final class SecurityContextUtil {
     }
 
     /**
-     * Returns the current username or fails closed when the auth context is
-     * incomplete.
+     * Returns the current username or fails closed when the auth context is incomplete.
      */
-    public static String requireCurrentUsername(final SecurityContext securityContext) {
+    public static String requireCurrentUsername(@Nullable final SecurityContext securityContext) {
         if (securityContext == null) {
             throw missingAuthenticatedUser();
         }

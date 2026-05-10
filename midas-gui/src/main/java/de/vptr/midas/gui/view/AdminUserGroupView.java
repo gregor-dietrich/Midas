@@ -32,7 +32,6 @@ import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
 /** Admin view for managing user groups. */
@@ -80,8 +79,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(
-                query -> this.groupService.getAllGroups(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.groupService.getAllGroups(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -93,33 +91,26 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
-        this.groupDialog = new AdminUserGroupDialog(this.groupService,
-                this::setupLazyDataProvider, onAuthFailure);
-        this.memberPanel = new AdminUserGroupMemberPanel(this.groupService,
-                this.userService, this.authService, onAuthFailure);
+        this.groupDialog = new AdminUserGroupDialog(this.groupService, this::setupLazyDataProvider, onAuthFailure);
+        this.memberPanel =
+                new AdminUserGroupMemberPanel(this.groupService, this.userService, this.authService, onAuthFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchGroups(),
-                "Search by name...",
-                "Search Groups");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchGroups(), "Search by name...", "Search Groups");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // User ID filter
-        final var userFilterLayout = new IntegerFilterLayout(
-                _ -> this.filterByUser(),
-                "Enter User ID...",
-                "Filter by User");
+        final var userFilterLayout =
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(userFilterLayout);
@@ -204,16 +195,13 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
 
         this.searchButton.setEnabled(false);
 
-        this.loadDataAsync(
-                () -> this.groupService.searchGroups(query),
-                result -> {
-                    this.searchButton.setEnabled(true);
-                    this.grid.setItems(result);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.groupService.searchGroups(query), result -> {
+            this.searchButton.setEnabled(true);
+            this.grid.setItems(result);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private void filterByUser() {
@@ -223,8 +211,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.groupService.getGroupsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.groupService.getGroupsByUser(userId.longValue()),
                 result -> this.grid.setItems(result));
     }
 }

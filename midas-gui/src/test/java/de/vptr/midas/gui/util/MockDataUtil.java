@@ -187,9 +187,9 @@ public class MockDataUtil {
     /**
      * Create a PaymentResponseDto with specific values
      */
-    public static PaymentResponseDto createPaymentResponseDto(final Long id, final String username,
-            final Long sourceId, final String sourceAccountName, final Long targetId,
-            final String targetAccountName, final BigDecimal amount, final String comment) {
+    public static PaymentResponseDto createPaymentResponseDto(final Long id, final String username, final Long sourceId,
+            final String sourceAccountName, final Long targetId, final String targetAccountName,
+            final BigDecimal amount, final String comment) {
         final var payment = new PaymentResponseDto();
         payment.setId(id);
         payment.setUserId(TestConstants.TEST_ID);
@@ -286,8 +286,7 @@ public class MockDataUtil {
      * Create a PostCommentDto for testing
      */
     public static PostCommentResponseDto createPostCommentResponseDto(final Long id, final String content,
-            final Long postId,
-            final String postTitle, final Long userId, final String username) {
+            final Long postId, final String postTitle, final Long userId, final String username) {
         final var dto = new PostCommentResponseDto();
         dto.setId(id);
         dto.setContent(content);

@@ -86,25 +86,20 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(
-                query -> this.paymentService.getAllPayments(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.paymentService.getAllPayments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadAccountsAsync() {
         LOG.info("Starting async account loading");
 
-        this.loadDataAsync(
-                () -> this.accountService.getAllAccounts(0, UiConstants.LARGE_PAGE_SIZE),
-                accounts -> {
-                    LOG.infof("Successfully loaded %s accounts", accounts.size());
-                    this.availableAccounts = accounts;
-                },
-                throwable -> {
-                    LOG.error("Error loading accounts", throwable);
-                    this.availableAccounts = List.of();
-                    MidasErrorHandler.handleInUiContext(throwable);
-                },
-                15);
+        this.loadDataAsync(() -> this.accountService.getAllAccounts(0, UiConstants.LARGE_PAGE_SIZE), accounts -> {
+            LOG.infof("Successfully loaded %s accounts", accounts.size());
+            this.availableAccounts = accounts;
+        }, throwable -> {
+            LOG.error("Error loading accounts", throwable);
+            this.availableAccounts = List.of();
+            MidasErrorHandler.handleInUiContext(throwable);
+        }, 15);
     }
 
     private void buildUi() {
@@ -116,33 +111,26 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.createGrid();
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-        this.paymentDialog = new AdminPaymentDialog(
-                this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
+        this.paymentDialog =
+                new AdminPaymentDialog(this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
         this.availableAccounts = List.of();
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchPayments(),
-                "Search by comment or other account...",
-                "Search Payments");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // Recent payments filter
-        final var recentFilterLayout = new IntegerFilterLayout(
-                _ -> this.loadRecentPayments(),
-                "How many?",
-                "Load Recent",
-                "100px");
+        final var recentFilterLayout =
+                new IntegerFilterLayout(_ -> this.loadRecentPayments(), "How many?", "Load Recent", "100px");
         this.limitField = recentFilterLayout.getIntegerField();
         this.limitField.setMin(1);
         this.limitField.setMax(1000);
@@ -154,10 +142,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
-        final var userFilterLayout = new IntegerFilterLayout(
-                _ -> this.filterByUser(),
-                "Enter User ID...",
-                "Filter by User");
+        final var userFilterLayout =
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(recentFilterLayout, dateFilterLayout, userFilterLayout);
@@ -169,8 +155,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         buttonLayout.setSpacing(true);
 
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
-        final var createButton = new CreateButton(
-                _ -> this.paymentDialog.open(null, this.availableAccounts), "Create Payment");
+        final var createButton =
+                new CreateButton(_ -> this.paymentDialog.open(null, this.availableAccounts), "Create Payment");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
@@ -187,14 +173,11 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getUsername).setHeader("User")
                 .setWidth("100px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getSourceAccountName)
-                .setHeader("Sender").setWidth("150px")
-                .setFlexGrow(0);
+                .setHeader("Sender").setWidth("150px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getTargetAccountName)
-                .setHeader("Recipient").setWidth("150px")
-                .setFlexGrow(0);
+                .setHeader("Recipient").setWidth("150px").setFlexGrow(0);
         this.grid.addColumn(payment -> payment.getAmount() != null ? payment.getAmount().toString() : "")
-                .setHeader("Amount")
-                .setWidth("120px").setFlexGrow(0);
+                .setHeader("Amount").setWidth("120px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getDate).setHeader("Date")
                 .setWidth("120px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getComment).setHeader("Comment")
@@ -210,8 +193,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(
-                _ -> this.paymentDialog.open(payment.toPaymentDto(), this.availableAccounts));
+        final var editButton =
+                new EditButton(_ -> this.paymentDialog.open(payment.toPaymentDto(), this.availableAccounts));
         final var deleteButton = new DeleteButton(_ -> this.deletePayment(payment.toPaymentDto()));
 
         layout.add(editButton, deleteButton);
@@ -239,8 +222,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
 
     private void loadRecentPayments() {
         final int limit = this.limitField.getValue() != null ? this.limitField.getValue() : 10;
-        this.loadDataAsync(
-                () -> this.paymentService.getRecentPayments(limit),
+        this.loadDataAsync(() -> this.paymentService.getRecentPayments(limit),
                 payments -> this.grid.setItems(payments));
     }
 
@@ -258,8 +240,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.paymentService.getPaymentsByDateRange(startDate, endDate),
+        this.loadDataAsync(() -> this.paymentService.getPaymentsByDateRange(startDate, endDate),
                 payments -> this.grid.setItems(payments));
     }
 
@@ -270,8 +251,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.paymentService.getPaymentsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.paymentService.getPaymentsByUser(userId.longValue()),
                 payments -> this.grid.setItems(payments));
     }
 
@@ -285,18 +265,15 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
-        this.loadDataAsync(
-                () -> this.paymentService.searchPayments(query.trim()),
-                payments -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    this.grid.setItems(payments);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    LOG.errorf(throwable, "Error searching payments: %s", throwable.getMessage());
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.paymentService.searchPayments(query.trim()), payments -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            this.grid.setItems(payments);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            LOG.errorf(throwable, "Error searching payments: %s", throwable.getMessage());
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

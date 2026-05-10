@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,8 @@ class AccountServiceTest {
 
         final var updateAccount = this.createUniqueAccountDto();
 
-        final var updatedAccountDto = this.accountService.updateAccount(createdAccountDto.id, updateAccount);
+        final var updatedAccountDto =
+                this.accountService.updateAccount(Objects.requireNonNull(createdAccountDto.id, "id"), updateAccount);
 
         assertNotNull(updatedAccountDto);
         assertEquals(updateAccount.name, updatedAccountDto.name);
@@ -78,7 +80,8 @@ class AccountServiceTest {
         final var createdAccountDto = this.accountService.createAccount(newAccount);
         final var patchDto = new AccountDto();
 
-        final var patchedAccountDto = this.accountService.patchAccount(createdAccountDto.id, patchDto);
+        final var patchedAccountDto =
+                this.accountService.patchAccount(Objects.requireNonNull(createdAccountDto.id, "id"), patchDto);
 
         assertNotNull(patchedAccountDto);
         assertEquals(newAccount.name, patchedAccountDto.name);
@@ -91,7 +94,7 @@ class AccountServiceTest {
         final var newAccount = this.createUniqueAccountDto();
         final var createdAccount = this.accountService.createAccount(newAccount);
 
-        final Long accountId = createdAccount.id;
+        final Long accountId = Objects.requireNonNull(createdAccount.id, "id");
 
         final var deleted = this.accountService.deleteAccount(accountId);
 
@@ -113,10 +116,11 @@ class AccountServiceTest {
         final var newAccount = this.createUniqueAccountDto();
         final var createdAccount = this.accountService.createAccount(newAccount);
 
-        final var foundAccount = this.accountService.findById(createdAccount.id);
+        final Long createdId = Objects.requireNonNull(createdAccount.id, "id");
+        final var foundAccount = this.accountService.findById(createdId);
 
         assertTrue(foundAccount.isPresent());
-        assertEquals(createdAccount.id, foundAccount.get().id);
+        assertEquals(createdId, foundAccount.get().id);
         assertEquals(newAccount.name, foundAccount.get().name);
     }
 
@@ -139,21 +143,29 @@ class AccountServiceTest {
         final var firstUser = this.userService.createUser(createUniqueUserDto());
         final var secondUser = this.userService.createUser(createUniqueUserDto());
 
-        this.accountAccessService.associateUserWithAccount(firstUser.id, createdFirst.id);
-        this.accountAccessService.associateUserWithAccount(secondUser.id, createdSecond.id);
+        final Long firstUserId = Objects.requireNonNull(firstUser.id, "firstUser.id");
+        final Long secondUserId = Objects.requireNonNull(secondUser.id, "secondUser.id");
+        final Long createdFirstId = Objects.requireNonNull(createdFirst.id, "createdFirst.id");
+        final Long createdSecondId = Objects.requireNonNull(createdSecond.id, "createdSecond.id");
+        this.accountAccessService.associateUserWithAccount(firstUserId, createdFirstId);
+        this.accountAccessService.associateUserWithAccount(secondUserId, createdSecondId);
 
         final var results = this.accountService.searchAccounts(searchToken);
         assertEquals(2, results.size());
 
-        final Map<Long, AccountResponseDto> resultsById = results.stream()
-                .collect(Collectors.toMap(account -> account.id, account -> account));
+        final Map<Long, AccountResponseDto> resultsById = results.stream().collect(
+                Collectors.toMap(account -> Objects.requireNonNull(account.id, "account.id"), account -> account));
 
-        assertTrue(resultsById.containsKey(createdFirst.id));
-        assertTrue(resultsById.containsKey(createdSecond.id));
-        assertEquals(1, resultsById.get(createdFirst.id).userCount);
-        assertEquals(1, resultsById.get(createdSecond.id).userCount);
-        assertTrue(resultsById.get(createdFirst.id).associatedUserIds.contains(firstUser.id));
-        assertTrue(resultsById.get(createdSecond.id).associatedUserIds.contains(secondUser.id));
+        assertTrue(resultsById.containsKey(createdFirstId));
+        assertTrue(resultsById.containsKey(createdSecondId));
+        assertEquals(1, Objects.requireNonNull(resultsById.get(createdFirstId), "result").userCount);
+        assertEquals(1, Objects.requireNonNull(resultsById.get(createdSecondId), "result").userCount);
+        assertTrue(Objects
+                .requireNonNull(Objects.requireNonNull(resultsById.get(createdFirstId), "result").associatedUserIds)
+                .contains(firstUserId));
+        assertTrue(Objects
+                .requireNonNull(Objects.requireNonNull(resultsById.get(createdSecondId), "result").associatedUserIds)
+                .contains(secondUserId));
     }
 
     @Test
@@ -178,7 +190,8 @@ class AccountServiceTest {
 
         final var results = this.accountService.searchAccounts(token + "-%");
 
-        assertEquals(List.of(createdLiteralMatch.id), results.stream().map(account -> account.id).toList());
+        assertEquals(List.of(Objects.requireNonNull(createdLiteralMatch.id, "id")),
+                results.stream().map(account -> account.id).toList());
     }
 
     @Test

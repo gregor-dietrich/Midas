@@ -36,10 +36,7 @@ public class TestDataBuilder {
      */
     public static String createUniqueUserJson() {
         final var suffix = TestUtil.generateUniqueSuffix();
-        return createUserJson(
-                "testuser_" + suffix,
-                "test_" + suffix + "@example.com",
-                "password123");
+        return createUserJson("testuser_" + suffix, "test_" + suffix + "@example.com", "password123");
     }
 
     /**
@@ -225,14 +222,13 @@ public class TestDataBuilder {
      */
     // UserRank builders
     public static String createUserRankJson(final String name, final boolean pageAdd, final boolean pageEdit,
-            final boolean pageDelete,
-            final boolean postAdd, final boolean postEdit, final boolean postDelete,
+            final boolean pageDelete, final boolean postAdd, final boolean postEdit, final boolean postDelete,
             final boolean postCategoryAdd, final boolean postCategoryEdit, final boolean postCategoryDelete,
             final boolean postCommentAdd, final boolean postCommentEdit, final boolean postCommentDelete,
-            final boolean userAdd, final boolean userEdit, final boolean userDelete,
-            final boolean userGroupAdd, final boolean userGroupEdit, final boolean userGroupDelete,
-            final boolean userRankAdd, final boolean userRankEdit, final boolean userRankDelete,
-            final boolean userAccountAdd, final boolean userAccountEdit, final boolean userAccountDelete) {
+            final boolean userAdd, final boolean userEdit, final boolean userDelete, final boolean userGroupAdd,
+            final boolean userGroupEdit, final boolean userGroupDelete, final boolean userRankAdd,
+            final boolean userRankEdit, final boolean userRankDelete, final boolean userAccountAdd,
+            final boolean userAccountEdit, final boolean userAccountDelete) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("name", name);
@@ -347,26 +343,24 @@ public class TestDataBuilder {
      * Creates a default test user rank JSON
      */
     public static String createDefaultUserRankJson() {
-        return createUserRankJson("Test Rank", true, true, true, true, true, true,
-                true, true, true, true, true, true,
-                true, true, true, true, true, true,
-                true, true, true, true, true, true);
+        return createUserRankJson("Test Rank", true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true, true, true, true, true, true, true, true, true, true);
     }
 
     /**
      * Creates an updated user rank JSON for testing updates
      */
     public static String createUpdatedUserRankJson() {
-        return createUserRankJson("Updated Test Rank", false, false, false, false, false, false,
-                false, false, false, false, false, false,
-                false, false, false, false, false, false,
-                false, false, false, false, false, false);
+        return createUserRankJson("Updated Test Rank", false, false, false, false, false, false, false, false, false,
+                false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+                false);
     }
 
     /**
      * Creates a user-account meta JSON for testing the PATCH meta endpoint.
      *
-     * @param isNegative the isNegative flag value
+     * @param isNegative
+     *            the isNegative flag value
      * @return JSON string
      */
     public static String createUserAccountMetaJson(final boolean isNegative) {

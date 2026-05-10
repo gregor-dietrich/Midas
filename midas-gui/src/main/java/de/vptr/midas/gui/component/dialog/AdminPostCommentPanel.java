@@ -20,8 +20,7 @@ import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for adding comments to posts in the admin view.
- * Encapsulates the comment form, binder, and save logic.
+ * Dialog for adding comments to posts in the admin view. Encapsulates the comment form, binder, and save logic.
  */
 public class AdminPostCommentPanel extends FormDialog {
 
@@ -35,8 +34,7 @@ public class AdminPostCommentPanel extends FormDialog {
     private PostResponseDto selectedPost;
 
     /** Initializes AdminPostCommentPanel. */
-    public AdminPostCommentPanel(final PostCommentService postCommentService,
-            final Runnable onAuthFailure) {
+    public AdminPostCommentPanel(final PostCommentService postCommentService, final Runnable onAuthFailure) {
         super();
         this.postCommentService = postCommentService;
         this.onAuthFailure = onAuthFailure;

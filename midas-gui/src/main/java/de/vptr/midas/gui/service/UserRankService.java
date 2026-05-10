@@ -1,7 +1,5 @@
 package de.vptr.midas.gui.service;
 
-import de.vptr.midas.gui.util.UiConstants;
-
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -17,6 +15,7 @@ import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ServiceHelper;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -26,10 +25,10 @@ import jakarta.ws.rs.core.Response;
 public class UserRankService {
 
     private static final Logger LOG = Logger.getLogger(UserRankService.class);
-    private static final SessionAttribute<UserRankResponseDto> CURRENT_USER_RANK_ATTRIBUTE = SessionAttribute
-            .of("current.user.rank", UserRankResponseDto.class);
-    private static final SessionAttribute<Long> CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE = SessionAttribute
-            .of("current.user.rank.timestamp", Long.class);
+    private static final SessionAttribute<UserRankResponseDto> CURRENT_USER_RANK_ATTRIBUTE =
+            SessionAttribute.of("current.user.rank", UserRankResponseDto.class);
+    private static final SessionAttribute<Long> CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE =
+            SessionAttribute.of("current.user.rank.timestamp", Long.class);
 
     private static final int CACHE_VALIDITY_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -44,18 +43,18 @@ public class UserRankService {
     AuthService authService;
 
     /** Returns the all ranks. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> getAllRanks()
-            throws AuthenticationException, ServiceException {
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
+    public List<UserRankResponseDto> getAllRanks() throws AuthenticationException, ServiceException {
         LOG.debug("Fetching all ranks");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.userRankClient.getAllRanks(authHeader),
-                this.authService, LOG, "fetching ranks");
+        return ServiceHelper.execute(() -> this.userRankClient.getAllRanks(authHeader), this.authService, LOG,
+                "fetching ranks");
     }
 
     /** Returns the current user rank. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public UserRankResponseDto getCurrentUserRank() {
         final var emptyRank = new UserRankResponseDto();
 
@@ -66,8 +65,7 @@ public class UserRankService {
             final var lastCacheTime = CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.read(session, LOG).orElse(null);
             final var currentTime = System.currentTimeMillis();
 
-            if (cachedRank != null && lastCacheTime != null
-                    && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
+            if (cachedRank != null && lastCacheTime != null && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
                 LOG.debugf("Using cached user rank data (%sms old)", currentTime - lastCacheTime);
                 return cachedRank;
             }
@@ -108,8 +106,7 @@ public class UserRankService {
     }
 
     /**
-     * Clear the cached user rank from session. Call this when user data might have
-     * changed.
+     * Clear the cached user rank from session. Call this when user data might have changed.
      */
     public void clearCachedUserRank() {
         final var session = VaadinSession.getCurrent();
@@ -121,7 +118,8 @@ public class UserRankService {
     }
 
     /** Returns the rank by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public UserRankResponseDto getRankById(final Long id) throws AuthenticationException, ServiceException {
         LOG.infof("Getting user rank by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -171,14 +169,13 @@ public class UserRankService {
     }
 
     /** Handles the search ranks operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> searchRanks(final String query)
-            throws AuthenticationException, ServiceException {
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
+    public List<UserRankResponseDto> searchRanks(final String query) throws AuthenticationException, ServiceException {
         LOG.debugf("Searching ranks with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.userRankClient.searchRanks(query, authHeader),
-                this.authService, LOG, "searching ranks");
+        return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query, authHeader), this.authService, LOG,
+                "searching ranks");
     }
 
     /** Handles the delete rank operation. */

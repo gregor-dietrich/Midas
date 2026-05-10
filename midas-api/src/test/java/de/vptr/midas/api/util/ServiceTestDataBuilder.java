@@ -17,6 +17,7 @@ import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
+import jakarta.annotation.Nullable;
 
 /**
  * Builder utility for creating test data objects for service tests
@@ -54,7 +55,7 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a unique PostDto for testing
      */
-    public static PostDto createUniquePostDto(final Long userId, final Long categoryId) {
+    public static PostDto createUniquePostDto(@Nullable final Long userId, @Nullable final Long categoryId) {
         final var suffix = ServiceTestUtil.generateUniqueTestSuffix();
         final var post = new PostDto();
         post.title = "Test Post " + suffix;
@@ -166,9 +167,9 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a PaymentDto for update operations
      */
-    public static PaymentDto createPaymentUpdateDto(final Long sourceAccountId,
-            final Long targetAccountId, final Long userId, final String comment, final LocalDate date,
-            final BigDecimal amount) {
+    public static PaymentDto createPaymentUpdateDto(@Nullable final Long sourceAccountId,
+            @Nullable final Long targetAccountId, @Nullable final Long userId, final String comment,
+            final LocalDate date, final BigDecimal amount) {
         final var dto = new PaymentDto();
         dto.sourceAccountId = sourceAccountId;
         dto.targetAccountId = targetAccountId;
@@ -220,8 +221,9 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a PaymentDto with all fields set
      */
-    public static PaymentDto createPaymentDto(final Long sourceAccountId, final Long targetAccountId, final Long userId,
-            final String comment, final LocalDate date, final BigDecimal amount) {
+    public static PaymentDto createPaymentDto(@Nullable final Long sourceAccountId,
+            @Nullable final Long targetAccountId, @Nullable final Long userId, final String comment,
+            final LocalDate date, final BigDecimal amount) {
         final var dto = new PaymentDto();
         dto.sourceAccountId = sourceAccountId;
         dto.targetAccountId = targetAccountId;
@@ -235,8 +237,8 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a PostCommentEntity with all fields set
      */
-    public static PostCommentEntity createPostCommentEntity(final String content,
-            final UserEntity user, final PostEntity post) {
+    public static PostCommentEntity createPostCommentEntity(final String content, final UserEntity user,
+            final PostEntity post) {
         final var entity = new PostCommentEntity();
         entity.content = content;
         entity.user = user;
@@ -247,9 +249,8 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a UserRankDto with all main permissions set
      */
-    public static UserRankDto createUserRankDto(final String name, final boolean userAdd,
-            final boolean userEdit, final boolean userDelete, final boolean postAdd, final boolean postEdit,
-            final boolean postDelete) {
+    public static UserRankDto createUserRankDto(final String name, final boolean userAdd, final boolean userEdit,
+            final boolean userDelete, final boolean postAdd, final boolean postEdit, final boolean postDelete) {
         final var dto = new UserRankDto();
         dto.name = name;
         dto.userAdd = userAdd;
@@ -264,8 +265,7 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a PostDto with all fields set
      */
-    public static PostDto createPostDto(final String title, final String content,
-            final boolean published,
+    public static PostDto createPostDto(final String title, final String content, final boolean published,
             final boolean commentable, final Long userId, final Long categoryId) {
         final var dto = new PostDto();
         dto.title = title;
@@ -310,7 +310,7 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a unique PostCommentDto for testing
      */
-    public static PostCommentDto createUniquePostCommentDto(final String content, final Long postId) {
+    public static PostCommentDto createUniquePostCommentDto(final String content, @Nullable final Long postId) {
         final var dto = new PostCommentDto();
         dto.content = content;
         dto.postId = postId;

@@ -73,8 +73,8 @@ class AuthServiceTest {
         final String password = "testpass";
         final String oldSessionId = "old-session";
         final String newSessionId = "new-session";
-        final String expectedHeader = "Basic " + Base64.getEncoder()
-                .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+        final String expectedHeader = "Basic "
+                + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
         when(this.vaadinSession.getAttribute("authenticated.session-id")).thenReturn(oldSessionId);
         when(this.sessionAuthorizationStore.createSession(expectedHeader)).thenReturn(newSessionId);
 
@@ -155,8 +155,8 @@ class AuthServiceTest {
         final String username = "testuser";
         final String password = "testpass";
 
-        final ProcessingException exception = new ProcessingException("Connection failed",
-                new ConnectException("Connection refused"));
+        final ProcessingException exception =
+                new ProcessingException("Connection failed", new ConnectException("Connection refused"));
         doThrow(exception).when(this.authClient).validateCredentials(anyString());
 
         // When
@@ -351,8 +351,7 @@ class AuthServiceTest {
         when(this.vaadinSession.getAttribute("authenticated.status")).thenReturn(false);
 
         Assertions.assertThatThrownBy(() -> this.authService.requireAuthorizationHeader())
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage("Authentication required");
+                .isInstanceOf(AuthenticationException.class).hasMessage("Authentication required");
     }
 
     @Test

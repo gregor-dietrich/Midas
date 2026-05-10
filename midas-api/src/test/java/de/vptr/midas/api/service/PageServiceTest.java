@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.PageDto;
@@ -50,7 +52,7 @@ class PageServiceTest {
     @TestTransaction
     void testCreatePageWithBlankTitle() {
         final var pageDto = new PageDto();
-        pageDto.title = ""; // blank title
+        pageDto.title = "";
         pageDto.content = "Test content";
 
         assertThrows(ValidationException.class, () -> {
@@ -75,7 +77,7 @@ class PageServiceTest {
     void testCreatePageWithBlankContent() {
         final var pageDto = new PageDto();
         pageDto.title = "Test Title";
-        pageDto.content = ""; // blank content
+        pageDto.content = "";
 
         assertThrows(ValidationException.class, () -> {
             this.pageService.createPage(pageDto);
@@ -97,14 +99,14 @@ class PageServiceTest {
     @Test
     @TestTransaction
     void testFindById() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final var foundPage = this.pageService.findById(createdPage.id);
+        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final var foundPage = this.pageService.findById(pageId);
 
         assertTrue(foundPage.isPresent());
-        assertEquals(createdPage.id, foundPage.get().id);
+        assertEquals(pageId, foundPage.get().id);
         assertEquals(createdPage.title, foundPage.get().title);
         assertEquals(createdPage.content, foundPage.get().content);
     }
@@ -118,16 +120,15 @@ class PageServiceTest {
     @Test
     @TestTransaction
     void testUpdatePage() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        // Update the page
+        final Long pageId = Objects.requireNonNull(createdPage.id);
         final var updateDto = ServiceTestDataBuilder.createPageDto("Updated Title", "Updated Content");
-        final var updatedPage = this.pageService.updatePage(createdPage.id, updateDto);
+        final var updatedPage = this.pageService.updatePage(pageId, updateDto);
 
         assertNotNull(updatedPage);
-        assertEquals(createdPage.id, updatedPage.id);
+        assertEquals(pageId, updatedPage.id);
         assertEquals("Updated Title", updatedPage.title);
         assertEquals("Updated Content", updatedPage.content);
     }
@@ -135,34 +136,32 @@ class PageServiceTest {
     @Test
     @TestTransaction
     void testUpdatePageWithBlankTitle() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        // Try to update with blank title
+        final Long pageId = Objects.requireNonNull(createdPage.id);
         final var updateDto = new PageDto();
         updateDto.title = "";
         updateDto.content = "Updated Content";
 
         assertThrows(ValidationException.class, () -> {
-            this.pageService.updatePage(createdPage.id, updateDto);
+            this.pageService.updatePage(pageId, updateDto);
         });
     }
 
     @Test
     @TestTransaction
     void testUpdatePageWithBlankContent() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        // Try to update with blank content
+        final Long pageId = Objects.requireNonNull(createdPage.id);
         final var updateDto = new PageDto();
         updateDto.title = "Updated Title";
         updateDto.content = "";
 
         assertThrows(ValidationException.class, () -> {
-            this.pageService.updatePage(createdPage.id, updateDto);
+            this.pageService.updatePage(pageId, updateDto);
         });
     }
 
@@ -179,40 +178,36 @@ class PageServiceTest {
     @Test
     @TestTransaction
     void testPatchPage() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        // Patch only the title
+        final Long pageId = Objects.requireNonNull(createdPage.id);
         final var patchDto = new PageDto();
         patchDto.title = "Patched Title";
-        // content remains null, should not be updated
 
-        final var patchedPage = this.pageService.patchPage(createdPage.id, patchDto);
+        final var patchedPage = this.pageService.patchPage(pageId, patchDto);
 
         assertNotNull(patchedPage);
-        assertEquals(createdPage.id, patchedPage.id);
+        assertEquals(pageId, patchedPage.id);
         assertEquals("Patched Title", patchedPage.title);
-        assertEquals(createdPage.content, patchedPage.content); // should remain unchanged
+        assertEquals(createdPage.content, patchedPage.content);
     }
 
     @Test
     @TestTransaction
     void testPatchPageContent() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        // Patch only the content
+        final Long pageId = Objects.requireNonNull(createdPage.id);
         final var patchDto = new PageDto();
         patchDto.content = "Patched Content";
-        // title remains null, should not be updated
 
-        final var patchedPage = this.pageService.patchPage(createdPage.id, patchDto);
+        final var patchedPage = this.pageService.patchPage(pageId, patchDto);
 
         assertNotNull(patchedPage);
-        assertEquals(createdPage.id, patchedPage.id);
-        assertEquals(createdPage.title, patchedPage.title); // should remain unchanged
+        assertEquals(pageId, patchedPage.id);
+        assertEquals(createdPage.title, patchedPage.title);
         assertEquals("Patched Content", patchedPage.content);
     }
 
@@ -230,16 +225,15 @@ class PageServiceTest {
     @Test
     @TestTransaction
     void testDeletePage() {
-        // Create a page first
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final boolean deleted = this.pageService.deletePage(createdPage.id);
+        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final boolean deleted = this.pageService.deletePage(pageId);
 
         assertTrue(deleted);
 
-        // Verify the page is deleted
-        final var deletedPage = this.pageService.findById(createdPage.id);
+        final var deletedPage = this.pageService.findById(pageId);
         assertTrue(deletedPage.isEmpty());
     }
 

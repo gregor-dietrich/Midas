@@ -20,8 +20,8 @@ import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing user groups in the admin view.
- * Encapsulates form fields, binder, and save/cancel logic.
+ * Dialog for creating and editing user groups in the admin view. Encapsulates form fields, binder, and save/cancel
+ * logic.
  */
 public class AdminUserGroupDialog extends FormDialog {
 
@@ -35,8 +35,7 @@ public class AdminUserGroupDialog extends FormDialog {
     private UserGroupDto currentGroup;
 
     /** Initializes AdminUserGroupDialog. */
-    public AdminUserGroupDialog(final UserGroupService groupService,
-            final Runnable onSave,
+    public AdminUserGroupDialog(final UserGroupService groupService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.groupService = groupService;

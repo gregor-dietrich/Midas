@@ -17,8 +17,8 @@ public class ErrorMessageUtil {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
-     * Extracts error message from HTTP response body.
-     * Attempts to parse structured error response, falls back to status text.
+     * Extracts error message from HTTP response body. Attempts to parse structured error response, falls back to status
+     * text.
      */
     public static String extractErrorMessage(final Response response) {
         if (response == null) {

@@ -66,7 +66,8 @@ class UserGroupServiceTest {
 
     @Test
     void getAllGroups_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
@@ -78,8 +79,7 @@ class UserGroupServiceTest {
                 .thenThrow(new ProcessingException("Connection failed"));
 
         // When & Then
-        ExceptionTestUtil
-                .assertThrowsBackendConnectionFailed(() -> this.userGroupService.getAllGroups(0, 50));
+        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
     @Test
@@ -92,8 +92,7 @@ class UserGroupServiceTest {
         when(this.groupClient.getAllGroups(0, 50, TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userGroupService.getAllGroups(0, 50),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userGroupService.getAllGroups(0, 50), this.authService);
     }
 
     @Test
@@ -190,8 +189,7 @@ class UserGroupServiceTest {
         when(this.groupClient.createGroup(newGroup, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.userGroupService.createGroup(newGroup))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userGroupService.createGroup(newGroup)).isInstanceOf(ServiceException.class);
     }
 
     @Test
@@ -290,7 +288,8 @@ class UserGroupServiceTest {
     @Test
     void getGroupById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // When & Then
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getGroupById(1L));
     }
 
@@ -298,7 +297,8 @@ class UserGroupServiceTest {
     void createGroup_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newGroup = MockDataUtil.createUserGroupDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.createGroup(newGroup));
@@ -312,8 +312,7 @@ class UserGroupServiceTest {
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // When & Then
-        ExceptionTestUtil
-                .assertThrowsUnexpectedError(() -> this.userGroupService.getAllGroups(0, 50));
+        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.userGroupService.getAllGroups(0, 50));
     }
 
     @Test
@@ -327,7 +326,8 @@ class UserGroupServiceTest {
         when(this.groupClient.getGroup(groupId, TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertThrowsServiceException(() -> this.userGroupService.getGroupById(groupId), "Backend request failed");
+        ExceptionTestUtil.assertThrowsServiceException(() -> this.userGroupService.getGroupById(groupId),
+                "Backend request failed");
     }
 
     @Test

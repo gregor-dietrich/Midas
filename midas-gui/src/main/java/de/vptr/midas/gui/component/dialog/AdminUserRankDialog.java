@@ -24,9 +24,8 @@ import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing user ranks in the admin view.
- * Encapsulates form fields, binder, permission checkboxes, and save/cancel
- * logic.
+ * Dialog for creating and editing user ranks in the admin view. Encapsulates form fields, binder, permission
+ * checkboxes, and save/cancel logic.
  */
 public class AdminUserRankDialog extends FormDialog {
 
@@ -40,9 +39,7 @@ public class AdminUserRankDialog extends FormDialog {
     private UserRankDto currentRank;
 
     /** Initializes AdminUserRankDialog. */
-    public AdminUserRankDialog(final UserRankService rankService,
-            final Runnable onSave,
-            final Runnable onAuthFailure) {
+    public AdminUserRankDialog(final UserRankService rankService, final Runnable onSave, final Runnable onAuthFailure) {
         super();
         this.rankService = rankService;
         this.onSave = onSave;
@@ -78,45 +75,42 @@ public class AdminUserRankDialog extends FormDialog {
         form.add(new H3("View Permissions"));
         form.add(adminViewField);
 
-        this.addPermissionSection(form, "Page Permissions",
-                "Can Add Pages", UserRankDto::getPageAdd, UserRankDto::setPageAdd,
-                "Can Edit Pages", UserRankDto::getPageEdit, UserRankDto::setPageEdit,
+        this.addPermissionSection(form, "Page Permissions", "Can Add Pages", UserRankDto::getPageAdd,
+                UserRankDto::setPageAdd, "Can Edit Pages", UserRankDto::getPageEdit, UserRankDto::setPageEdit,
                 "Can Delete Pages", UserRankDto::getPageDelete, UserRankDto::setPageDelete);
 
-        this.addPermissionSection(form, "Post Permissions",
-                "Can Add Posts", UserRankDto::getPostAdd, UserRankDto::setPostAdd,
-                "Can Edit Posts", UserRankDto::getPostEdit, UserRankDto::setPostEdit,
+        this.addPermissionSection(form, "Post Permissions", "Can Add Posts", UserRankDto::getPostAdd,
+                UserRankDto::setPostAdd, "Can Edit Posts", UserRankDto::getPostEdit, UserRankDto::setPostEdit,
                 "Can Delete Posts", UserRankDto::getPostDelete, UserRankDto::setPostDelete);
 
-        this.addPermissionSection(form, "Post Category Permissions",
-                "Can Add Post Categories", UserRankDto::getPostCategoryAdd, UserRankDto::setPostCategoryAdd,
-                "Can Edit Post Categories", UserRankDto::getPostCategoryEdit, UserRankDto::setPostCategoryEdit,
-                "Can Delete Post Categories", UserRankDto::getPostCategoryDelete, UserRankDto::setPostCategoryDelete);
+        this.addPermissionSection(form, "Post Category Permissions", "Can Add Post Categories",
+                UserRankDto::getPostCategoryAdd, UserRankDto::setPostCategoryAdd, "Can Edit Post Categories",
+                UserRankDto::getPostCategoryEdit, UserRankDto::setPostCategoryEdit, "Can Delete Post Categories",
+                UserRankDto::getPostCategoryDelete, UserRankDto::setPostCategoryDelete);
 
-        this.addPermissionSection(form, "Post Comment Permissions",
-                "Can Add Post Comments", UserRankDto::getPostCommentAdd, UserRankDto::setPostCommentAdd,
-                "Can Edit Post Comments", UserRankDto::getPostCommentEdit, UserRankDto::setPostCommentEdit,
-                "Can Delete Post Comments", UserRankDto::getPostCommentDelete, UserRankDto::setPostCommentDelete);
+        this.addPermissionSection(form, "Post Comment Permissions", "Can Add Post Comments",
+                UserRankDto::getPostCommentAdd, UserRankDto::setPostCommentAdd, "Can Edit Post Comments",
+                UserRankDto::getPostCommentEdit, UserRankDto::setPostCommentEdit, "Can Delete Post Comments",
+                UserRankDto::getPostCommentDelete, UserRankDto::setPostCommentDelete);
 
-        this.addPermissionSection(form, "User Permissions",
-                "Can Add Users", UserRankDto::getUserAdd, UserRankDto::setUserAdd,
-                "Can Edit Users", UserRankDto::getUserEdit, UserRankDto::setUserEdit,
+        this.addPermissionSection(form, "User Permissions", "Can Add Users", UserRankDto::getUserAdd,
+                UserRankDto::setUserAdd, "Can Edit Users", UserRankDto::getUserEdit, UserRankDto::setUserEdit,
                 "Can Delete Users", UserRankDto::getUserDelete, UserRankDto::setUserDelete);
 
-        this.addPermissionSection(form, "User Group Permissions",
-                "Can Add User Groups", UserRankDto::getUserGroupAdd, UserRankDto::setUserGroupAdd,
-                "Can Edit User Groups", UserRankDto::getUserGroupEdit, UserRankDto::setUserGroupEdit,
-                "Can Delete User Groups", UserRankDto::getUserGroupDelete, UserRankDto::setUserGroupDelete);
+        this.addPermissionSection(form, "User Group Permissions", "Can Add User Groups", UserRankDto::getUserGroupAdd,
+                UserRankDto::setUserGroupAdd, "Can Edit User Groups", UserRankDto::getUserGroupEdit,
+                UserRankDto::setUserGroupEdit, "Can Delete User Groups", UserRankDto::getUserGroupDelete,
+                UserRankDto::setUserGroupDelete);
 
-        this.addPermissionSection(form, "Account Permissions",
-                "Can Add User Accounts", UserRankDto::getUserAccountAdd, UserRankDto::setUserAccountAdd,
-                "Can Edit User Accounts", UserRankDto::getUserAccountEdit, UserRankDto::setUserAccountEdit,
-                "Can Delete User Accounts", UserRankDto::getUserAccountDelete, UserRankDto::setUserAccountDelete);
+        this.addPermissionSection(form, "Account Permissions", "Can Add User Accounts", UserRankDto::getUserAccountAdd,
+                UserRankDto::setUserAccountAdd, "Can Edit User Accounts", UserRankDto::getUserAccountEdit,
+                UserRankDto::setUserAccountEdit, "Can Delete User Accounts", UserRankDto::getUserAccountDelete,
+                UserRankDto::setUserAccountDelete);
 
-        this.addPermissionSection(form, "User Rank Permissions",
-                "Can Add User Ranks", UserRankDto::getUserRankAdd, UserRankDto::setUserRankAdd,
-                "Can Edit User Ranks", UserRankDto::getUserRankEdit, UserRankDto::setUserRankEdit,
-                "Can Delete User Ranks", UserRankDto::getUserRankDelete, UserRankDto::setUserRankDelete);
+        this.addPermissionSection(form, "User Rank Permissions", "Can Add User Ranks", UserRankDto::getUserRankAdd,
+                UserRankDto::setUserRankAdd, "Can Edit User Ranks", UserRankDto::getUserRankEdit,
+                UserRankDto::setUserRankEdit, "Can Delete User Ranks", UserRankDto::getUserRankDelete,
+                UserRankDto::setUserRankDelete);
 
         form.getStyle().set("overflow-y", "auto");
         form.setMaxHeight("400px");
@@ -142,13 +136,11 @@ public class AdminUserRankDialog extends FormDialog {
         super.open();
     }
 
-    private void addPermissionSection(final FormLayout form, final String sectionTitle,
-            final String addLabel, final Function<UserRankDto, Boolean> addGetter,
-            final BiConsumer<UserRankDto, Boolean> addSetter,
+    private void addPermissionSection(final FormLayout form, final String sectionTitle, final String addLabel,
+            final Function<UserRankDto, Boolean> addGetter, final BiConsumer<UserRankDto, Boolean> addSetter,
             final String editLabel, final Function<UserRankDto, Boolean> editGetter,
-            final BiConsumer<UserRankDto, Boolean> editSetter,
-            final String deleteLabel, final Function<UserRankDto, Boolean> deleteGetter,
-            final BiConsumer<UserRankDto, Boolean> deleteSetter) {
+            final BiConsumer<UserRankDto, Boolean> editSetter, final String deleteLabel,
+            final Function<UserRankDto, Boolean> deleteGetter, final BiConsumer<UserRankDto, Boolean> deleteSetter) {
         final var addField = new Checkbox(addLabel);
         final var editField = new Checkbox(editLabel);
         final var deleteField = new Checkbox(deleteLabel);
@@ -161,15 +153,12 @@ public class AdminUserRankDialog extends FormDialog {
         form.add(addField, editField, deleteField);
     }
 
-    private void bindCheckbox(final Checkbox checkbox,
-            final Function<UserRankDto, Boolean> getter,
+    private void bindCheckbox(final Checkbox checkbox, final Function<UserRankDto, Boolean> getter,
             final BiConsumer<UserRankDto, Boolean> setter) {
-        this.binder.bind(checkbox,
-                rank -> {
-                    final Boolean value = getter.apply(rank);
-                    return value != null ? value : false;
-                },
-                setter::accept);
+        this.binder.bind(checkbox, rank -> {
+            final Boolean value = getter.apply(rank);
+            return value != null ? value : false;
+        }, setter::accept);
     }
 
     private void saveRank() {

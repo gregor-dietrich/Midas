@@ -11,21 +11,16 @@ import javax.crypto.spec.PBEKeySpec;
 import de.vptr.midas.api.security.PasswordHashingService;
 
 /**
- * Standalone CLI utility for generating password salts and hashes during
- * initialization.
- * Invoked by {@code scripts/password.sh} to generate credentials for
- * {@code sql/init.sql}.
+ * Standalone CLI utility for generating password salts and hashes during initialization. Invoked by
+ * {@code scripts/password.sh} to generate credentials for {@code sql/init.sql}.
  *
  * <p>
- * Note: This class replicates PBKDF2-SHA256 hashing logic from
- * {@link PasswordHashingService} because it must be usable as a
- * standalone CLI tool without loading the full application context. Not for
- * production use.
+ * Note: This class replicates PBKDF2-SHA256 hashing logic from {@link PasswordHashingService} because it must be usable
+ * as a standalone CLI tool without loading the full application context. Not for production use.
  *
- * Usage: generate &lt;password&gt;
- * Outputs: salt and hash suitable for insertion into init.sql.
+ * Usage: generate &lt;password&gt; Outputs: salt and hash suitable for insertion into init.sql.
  */
-public class PasswordUtility {
+public class PasswordUtil {
 
     private static final SecureRandom random = new SecureRandom();
 
@@ -33,15 +28,18 @@ public class PasswordUtility {
     private static final int SALT_LENGTH = 32;
     private static final int HASH_LENGTH = 8 * SALT_LENGTH;
 
-    private PasswordUtility() {
+    private PasswordUtil() {
     }
 
     /**
      * CLI entrypoint for password salt and hash generation.
      *
-     * @param args CLI arguments; expected: {@code generate <password>}
-     * @throws NoSuchAlgorithmException when the PBKDF2 algorithm is unavailable
-     * @throws InvalidKeySpecException  when the key spec cannot be processed
+     * @param args
+     *            CLI arguments; expected: {@code generate <password>}
+     * @throws NoSuchAlgorithmException
+     *             when the PBKDF2 algorithm is unavailable
+     * @throws InvalidKeySpecException
+     *             when the key spec cannot be processed
      */
     public static void main(final String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
         if (args.length < 2 || !"generate".equals(args[0])) {

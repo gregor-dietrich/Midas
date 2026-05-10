@@ -1,6 +1,7 @@
 package de.vptr.midas.api.util;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import jakarta.annotation.Nullable;
 
 /** Shared search query normalization helpers. */
 public final class SearchQueryUtil {
@@ -11,10 +12,10 @@ public final class SearchQueryUtil {
     }
 
     /**
-     * Returns a normalized contains-pattern for LIKE queries, or null for blank
-     * input.
+     * Returns a normalized contains-pattern for LIKE queries, or null for blank input.
      */
-    public static String toContainsLikePattern(final String query) {
+    @Nullable
+    public static String toContainsLikePattern(@Nullable final String query) {
         if (query == null) {
             return null;
         }
@@ -31,9 +32,7 @@ public final class SearchQueryUtil {
     }
 
     private static String escapeLike(final String query) {
-        return query
-                .replace(LIKE_ESCAPE, ESCAPED_LIKE_ESCAPE)
-                .replace("%", LIKE_ESCAPE + "%")
-                .replace("_", LIKE_ESCAPE + "_");
+        return query.replace(LIKE_ESCAPE, ESCAPED_LIKE_ESCAPE).replace("%", LIKE_ESCAPE + "%").replace("_",
+                LIKE_ESCAPE + "_");
     }
 }

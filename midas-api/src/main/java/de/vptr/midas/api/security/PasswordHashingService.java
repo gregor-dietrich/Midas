@@ -13,6 +13,7 @@ import javax.crypto.spec.PBEKeySpec;
 
 import org.jboss.logging.Logger;
 
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /** Type definition. */
@@ -40,11 +41,13 @@ public class PasswordHashingService {
     /**
      * Hashes a password using PBKDF2 with SHA-256
      * 
-     * @param password the plain text password
-     * @param salt     the salt as a Base64 encoded string
+     * @param password
+     *            the plain text password
+     * @param salt
+     *            the salt as a Base64 encoded string
      * @return the hashed password as a Base64 encoded string
      */
-    public String hashPassword(final String password, final String salt)
+    public String hashPassword(@Nullable final String password, final String salt)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         final var passwordChars = password != null ? password.toCharArray() : null;
         try {
@@ -59,22 +62,20 @@ public class PasswordHashingService {
     /**
      * Hashes a password char array using PBKDF2 with SHA-256.
      * 
-     * @param password the plain text password chars
-     * @param salt     the salt as a Base64 encoded string
+     * @param password
+     *            the plain text password chars
+     * @param salt
+     *            the salt as a Base64 encoded string
      * @return the hashed password as a Base64 encoded string
      */
-    public String hashPasswordChars(final char[] password, final String salt)
+    public String hashPasswordChars(@Nullable final char[] password, final String salt)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
         if (password == null) {
             throw new InvalidKeySpecException("Password must not be null");
         }
         final var saltBytes = Base64.getDecoder().decode(salt);
 
-        final var spec = new PBEKeySpec(
-                password,
-                saltBytes,
-                PBKDF2_ITERATIONS,
-                HASH_LENGTH);
+        final var spec = new PBEKeySpec(password, saltBytes, PBKDF2_ITERATIONS, HASH_LENGTH);
 
         try {
             final var factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
@@ -88,12 +89,16 @@ public class PasswordHashingService {
     /**
      * Verifies a password against a stored hash
      * 
-     * @param providedPassword the plain text password to verify
-     * @param storedHash       the stored password hash
-     * @param salt             the salt used for hashing
+     * @param providedPassword
+     *            the plain text password to verify
+     * @param storedHash
+     *            the stored password hash
+     * @param salt
+     *            the salt used for hashing
      * @return true if the password matches, false otherwise
      */
-    public boolean verifyPassword(final String providedPassword, final String storedHash, final String salt) {
+    public boolean verifyPassword(@Nullable final String providedPassword, @Nullable final String storedHash,
+            @Nullable final String salt) {
         if (providedPassword == null || storedHash == null || salt == null) {
             return false;
         }
@@ -113,12 +118,16 @@ public class PasswordHashingService {
     /**
      * Verifies password chars against a stored hash.
      * 
-     * @param providedPassword the plain text password chars to verify
-     * @param storedHash       the stored password hash
-     * @param salt             the salt used for hashing
+     * @param providedPassword
+     *            the plain text password chars to verify
+     * @param storedHash
+     *            the stored password hash
+     * @param salt
+     *            the salt used for hashing
      * @return true if the password matches, false otherwise
      */
-    public boolean verifyPasswordChars(final char[] providedPassword, final String storedHash, final String salt) {
+    public boolean verifyPasswordChars(@Nullable final char[] providedPassword, final String storedHash,
+            final String salt) {
         if (providedPassword == null || storedHash == null || salt == null) {
             return false;
         }

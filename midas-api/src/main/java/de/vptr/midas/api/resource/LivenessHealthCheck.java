@@ -7,9 +7,8 @@ import org.eclipse.microprofile.health.Liveness;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Liveness probe for the API service.
- * Confirms the application is running and able to serve requests.
- * The datasource readiness check is auto-registered by Quarkus.
+ * Liveness probe for the API service. Confirms the application is running and able to serve requests. The datasource
+ * readiness check is auto-registered by Quarkus.
  */
 @Liveness
 @ApplicationScoped

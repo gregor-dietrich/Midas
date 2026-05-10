@@ -75,12 +75,10 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private void loadRanksAsync() {
         LOG.info("Starting async rank loading");
 
-        this.loadDataAsync(
-                () -> this.rankService.getAllRanks(),
-                ranks -> {
-                    LOG.infof("Successfully loaded %s ranks", ranks.size());
-                    this.grid.setItems(ranks);
-                });
+        this.loadDataAsync(() -> this.rankService.getAllRanks(), ranks -> {
+            LOG.infof("Successfully loaded %s ranks", ranks.size());
+            this.grid.setItems(ranks);
+        });
     }
 
     private void buildUi() {
@@ -90,22 +88,17 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         this.createGrid();
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-        this.rankDialog = new AdminUserRankDialog(
-                this.rankService, this::loadRanksAsync, authFailure);
+        this.rankDialog = new AdminUserRankDialog(this.rankService, this::loadRanksAsync, authFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.loadRanksAsync();
-                    }
-                },
-                _ -> this.searchRanks(),
-                "Search by name...",
-                "Search Ranks");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.loadRanksAsync();
+            }
+        }, _ -> this.searchRanks(), "Search by name...", "Search Ranks");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -147,8 +140,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             layout.setSpacing(true);
             layout.setPadding(false);
 
-            final SvgIcon icon = Boolean.TRUE.equals(rank.getAdminView())
-                    ? LineAwesomeIcon.CHECK_SOLID.create()
+            final SvgIcon icon = Boolean.TRUE.equals(rank.getAdminView()) ? LineAwesomeIcon.CHECK_SOLID.create()
                     : LineAwesomeIcon.BAN_SOLID.create();
             icon.getElement().getStyle().set("width", "16px").set("height", "16px").set("flex-shrink", "0");
             icon.setTooltipText("Admin View");
@@ -158,67 +150,54 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         }).setHeader("Admin View").setWidth("110px").setFlexGrow(0);
 
         // CRUD permission columns
-        this.addCrudPermissionColumn("Pages",
-                UserRankResponseDto::getPageAdd, "Add Pages",
-                UserRankResponseDto::getPageEdit, "Edit Pages",
-                UserRankResponseDto::getPageDelete, "Delete Pages");
+        this.addCrudPermissionColumn("Pages", UserRankResponseDto::getPageAdd, "Add Pages",
+                UserRankResponseDto::getPageEdit, "Edit Pages", UserRankResponseDto::getPageDelete, "Delete Pages");
 
-        this.addCrudPermissionColumn("Posts",
-                UserRankResponseDto::getPostAdd, "Add Posts",
-                UserRankResponseDto::getPostEdit, "Edit Posts",
-                UserRankResponseDto::getPostDelete, "Delete Posts");
+        this.addCrudPermissionColumn("Posts", UserRankResponseDto::getPostAdd, "Add Posts",
+                UserRankResponseDto::getPostEdit, "Edit Posts", UserRankResponseDto::getPostDelete, "Delete Posts");
 
-        this.addCrudPermissionColumn("Post Categories",
-                UserRankResponseDto::getPostCategoryAdd, "Add Post Categories",
+        this.addCrudPermissionColumn("Post Categories", UserRankResponseDto::getPostCategoryAdd, "Add Post Categories",
                 UserRankResponseDto::getPostCategoryEdit, "Edit Post Categories",
                 UserRankResponseDto::getPostCategoryDelete, "Delete Post Categories");
 
-        this.addCrudPermissionColumn("Post Comments",
-                UserRankResponseDto::getPostCommentAdd, "Add Comments",
-                UserRankResponseDto::getPostCommentEdit, "Edit Comments",
-                UserRankResponseDto::getPostCommentDelete, "Delete Comments");
+        this.addCrudPermissionColumn("Post Comments", UserRankResponseDto::getPostCommentAdd, "Add Comments",
+                UserRankResponseDto::getPostCommentEdit, "Edit Comments", UserRankResponseDto::getPostCommentDelete,
+                "Delete Comments");
 
-        this.addCrudPermissionColumn("Users",
-                UserRankResponseDto::getUserAdd, "Add Users",
-                UserRankResponseDto::getUserEdit, "Edit Users",
-                UserRankResponseDto::getUserDelete, "Delete Users");
+        this.addCrudPermissionColumn("Users", UserRankResponseDto::getUserAdd, "Add Users",
+                UserRankResponseDto::getUserEdit, "Edit Users", UserRankResponseDto::getUserDelete, "Delete Users");
 
-        this.addCrudPermissionColumn("User Groups",
-                UserRankResponseDto::getUserGroupAdd, "Add User Groups",
-                UserRankResponseDto::getUserGroupEdit, "Edit User Groups",
-                UserRankResponseDto::getUserGroupDelete, "Delete User Groups");
+        this.addCrudPermissionColumn("User Groups", UserRankResponseDto::getUserGroupAdd, "Add User Groups",
+                UserRankResponseDto::getUserGroupEdit, "Edit User Groups", UserRankResponseDto::getUserGroupDelete,
+                "Delete User Groups");
 
-        this.addCrudPermissionColumn("Accounts",
-                UserRankResponseDto::getUserAccountAdd, "Add Accounts",
-                UserRankResponseDto::getUserAccountEdit, "Edit Accounts",
-                UserRankResponseDto::getUserAccountDelete, "Delete Accounts");
+        this.addCrudPermissionColumn("Accounts", UserRankResponseDto::getUserAccountAdd, "Add Accounts",
+                UserRankResponseDto::getUserAccountEdit, "Edit Accounts", UserRankResponseDto::getUserAccountDelete,
+                "Delete Accounts");
 
-        this.addCrudPermissionColumn("User Ranks",
-                UserRankResponseDto::getUserRankAdd, "Add Ranks",
-                UserRankResponseDto::getUserRankEdit, "Edit Ranks",
-                UserRankResponseDto::getUserRankDelete, "Delete Ranks");
+        this.addCrudPermissionColumn("User Ranks", UserRankResponseDto::getUserRankAdd, "Add Ranks",
+                UserRankResponseDto::getUserRankEdit, "Edit Ranks", UserRankResponseDto::getUserRankDelete,
+                "Delete Ranks");
 
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
     }
 
-    private void addCrudPermissionColumn(final String header,
-            final Function<UserRankResponseDto, Boolean> canAdd, final String addTooltip,
-            final Function<UserRankResponseDto, Boolean> canEdit, final String editTooltip,
+    private void addCrudPermissionColumn(final String header, final Function<UserRankResponseDto, Boolean> canAdd,
+            final String addTooltip, final Function<UserRankResponseDto, Boolean> canEdit, final String editTooltip,
             final Function<UserRankResponseDto, Boolean> canDelete, final String deleteTooltip) {
         this.grid.addComponentColumn(rank -> {
             final var layout = new HorizontalLayout();
             layout.setSpacing(true);
             layout.setPadding(false);
-            layout.add(
-                    this.createPermissionIcon(canAdd.apply(rank), LineAwesomeIcon.PLUS_SOLID, addTooltip),
+            layout.add(this.createPermissionIcon(canAdd.apply(rank), LineAwesomeIcon.PLUS_SOLID, addTooltip),
                     this.createPermissionIcon(canEdit.apply(rank), LineAwesomeIcon.EDIT_SOLID, editTooltip),
                     this.createPermissionIcon(canDelete.apply(rank), LineAwesomeIcon.TRASH_ALT_SOLID, deleteTooltip));
             return layout;
         }).setHeader(header).setWidth("150px").setFlexGrow(0);
     }
 
-    private Component createPermissionIcon(final Boolean hasPermission,
-            final LineAwesomeIcon icon, final String tooltip) {
+    private Component createPermissionIcon(final Boolean hasPermission, final LineAwesomeIcon icon,
+            final String tooltip) {
         final Component component;
         if (Boolean.TRUE.equals(hasPermission)) {
             final SvgIcon permissionIcon = icon.create();
@@ -227,10 +206,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         } else {
             component = new Span("");
         }
-        component.getElement().getStyle()
-                .set("width", "16px")
-                .set("height", "16px")
-                .set("flex-shrink", "0");
+        component.getElement().getStyle().set("width", "16px").set("height", "16px").set("flex-shrink", "0");
         return component;
     }
 
@@ -271,16 +247,13 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         this.searchButton.setEnabled(false);
         LOG.infof("Starting async rank search with query: %s", query);
 
-        this.loadDataAsync(
-                () -> this.rankService.searchRanks(query),
-                ranks -> {
-                    this.searchButton.setEnabled(true);
-                    LOG.infof("Successfully found %s ranks", ranks.size());
-                    this.grid.setItems(ranks);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.rankService.searchRanks(query), ranks -> {
+            this.searchButton.setEnabled(true);
+            LOG.infof("Successfully found %s ranks", ranks.size());
+            this.grid.setItems(ranks);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

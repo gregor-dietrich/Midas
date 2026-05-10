@@ -8,6 +8,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,31 +23,34 @@ import jakarta.persistence.UniqueConstraint;
 
 /** JPA entity representing the association between a user and an account. */
 @Entity
-@Table(name = "user_accounts_meta", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "account_id" })
-}, indexes = {
-        @Index(name = "idx_user_account_meta_user_id", columnList = "user_id"),
-        @Index(name = "idx_user_account_meta_account_id", columnList = "account_id")
-})
+@Table(name = "user_accounts_meta",
+        uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "account_id" }) },
+        indexes = { @Index(name = "idx_user_account_meta_user_id", columnList = "user_id"),
+                @Index(name = "idx_user_account_meta_account_id", columnList = "account_id") })
 public class UserAccountMetaEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @Nullable
     public UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
+    @Nullable
     public AccountEntity account;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     @Column(name = "is_negative", nullable = false)

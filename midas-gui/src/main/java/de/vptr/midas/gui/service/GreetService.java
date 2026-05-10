@@ -24,7 +24,8 @@ public class GreetService {
     /**
      * Returns a greeting for the given name.
      *
-     * @throws AuthenticationException if the user is not authenticated
+     * @throws AuthenticationException
+     *             if the user is not authenticated
      */
     public String greet(final String name) {
         LOG.debugf("GreetService.greet called with name: %s", name);

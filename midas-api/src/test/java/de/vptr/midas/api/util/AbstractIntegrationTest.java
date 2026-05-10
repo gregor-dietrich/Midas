@@ -10,7 +10,7 @@ public abstract class AbstractIntegrationTest {
     EntityManager entityManager;
 
     protected void runInIsolatedTransaction(final Runnable action) {
-        QuarkusTransaction.requiringNew().run(action::run);
+        QuarkusTransaction.requiringNew().run(action);
     }
 
     protected void runCleanup(final Runnable cleanupAction) {

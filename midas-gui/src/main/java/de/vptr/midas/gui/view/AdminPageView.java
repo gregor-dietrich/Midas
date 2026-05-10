@@ -93,15 +93,11 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchPages(),
-                "Search by title or content...",
-                "Search Pages");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchPages(), "Search by title or content...", "Search Pages");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -275,14 +271,11 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
-        this.loadDataAsync(
-                () -> this.pageService.searchPages(query.trim()),
-                pages -> {
-                    this.resetSearchButton();
-                    LOG.infof("Search found %s pages", pages.size());
-                    this.grid.setItems(pages);
-                },
-                this::handleSearchError);
+        this.loadDataAsync(() -> this.pageService.searchPages(query.trim()), pages -> {
+            this.resetSearchButton();
+            LOG.infof("Search found %s pages", pages.size());
+            this.grid.setItems(pages);
+        }, this::handleSearchError);
     }
 
     void handleSearchError(final Throwable throwable) {

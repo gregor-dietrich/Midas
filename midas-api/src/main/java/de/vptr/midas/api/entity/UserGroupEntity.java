@@ -1,6 +1,7 @@
 package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,6 +11,7 @@ import org.hibernate.generator.EventType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,20 +29,25 @@ public class UserGroupEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @NotBlank
+    @Nullable
     public String name;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     @JsonIgnore
     @OneToMany(mappedBy = "group", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @Nullable
     public List<UserGroupMetaEntity> userGroupMetas;
 
     // Helper method to find group by name
@@ -54,9 +61,13 @@ public class UserGroupEntity extends PanacheEntityBase {
         if (this.userGroupMetas == null) {
             return List.of();
         }
-        return this.userGroupMetas.stream()
-                .map(meta -> meta.user)
-                .toList();
+        final List<UserEntity> users = new ArrayList<>();
+        for (final UserGroupMetaEntity meta : this.userGroupMetas) {
+            if (meta.user != null) {
+                users.add(meta.user);
+            }
+        }
+        return users;
     }
 
     // Helper method to get user count in this group

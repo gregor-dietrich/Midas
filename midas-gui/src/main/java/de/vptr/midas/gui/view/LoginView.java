@@ -79,8 +79,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 // Disable button during authentication
                 loginButton.setEnabled(false);
                 loginButton.setText("Authenticating...");
-                UiAsyncExecutor.execute(
-                        () -> this.authService.authenticate(username, password),
+                UiAsyncExecutor.execute(() -> this.authService.authenticate(username, password),
                         result -> this.handleAuthenticationResult(result, passwordField, loginButton),
                         throwable -> this.handleAuthenticationError(throwable, passwordField, loginButton));
             } catch (final RuntimeException ex) {
@@ -98,8 +97,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         usernameField.focus();
     }
 
-    private void handleAuthenticationResult(final AuthResultDto result,
-            final PasswordField passwordField, final Button loginButton) {
+    private void handleAuthenticationResult(final AuthResultDto result, final PasswordField passwordField,
+            final Button loginButton) {
         try {
             LOG.tracef("Authentication result - Status: %s, Message: %s", result.getStatus(), result.getMessage());
 

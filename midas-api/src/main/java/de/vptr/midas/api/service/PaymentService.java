@@ -11,6 +11,7 @@ import de.vptr.midas.api.entity.AccountEntity;
 import de.vptr.midas.api.entity.PaymentEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,7 +24,8 @@ import jakarta.ws.rs.core.Response;
 public class PaymentService {
 
     private static final String PAYMENT_ACCESS_DENIED_MESSAGE = "Access denied to payment";
-    private static final String PAYMENT_ACCOUNT_REQUIRED_MESSAGE = "At least one account (source or target) must be specified";
+    private static final String PAYMENT_ACCOUNT_REQUIRED_MESSAGE =
+            "At least one account (source or target) must be specified";
 
     @Inject
     AccountAccessService accountAccessService;
@@ -31,7 +33,7 @@ public class PaymentService {
     @Inject
     AdminAccessService adminAccessService;
 
-    private void verifyPaymentAccess(final String currentUsername, final PaymentEntity payment) {
+    private void verifyPaymentAccess(@Nullable final String currentUsername, final PaymentEntity payment) {
         if (currentUsername == null || currentUsername.isBlank()) {
             throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
         }
@@ -39,11 +41,11 @@ public class PaymentService {
             throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
         }
         boolean hasAccess = false;
-        if (payment.sourceAccount != null
+        if (payment.sourceAccount != null && payment.sourceAccount.id != null
                 && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.sourceAccount.id)) {
             hasAccess = true;
         }
-        if (!hasAccess && payment.targetAccount != null
+        if (!hasAccess && payment.targetAccount != null && payment.targetAccount.id != null
                 && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.targetAccount.id)) {
             hasAccess = true;
         }
@@ -64,7 +66,8 @@ public class PaymentService {
         }
     }
 
-    private static AccountEntity resolveAccount(final Long accountId, final String accountType) {
+    @Nullable
+    private static AccountEntity resolveAccount(@Nullable final Long accountId, final String accountType) {
         if (accountId == null) {
             return null;
         }
@@ -82,21 +85,17 @@ public class PaymentService {
 
     /** Returns all payments with the given pagination. */
     public List<PaymentResponseDto> getAllPayments(final int page, final int size) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user ORDER BY p.date DESC")
-                .page(page, size)
-                .list()
-                .stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user ORDER BY p.date DESC")
+                .page(page, size).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity))
                 .toList();
     }
 
     /** Returns the payment with the given id. */
-    public Optional<PaymentResponseDto> findById(final Long id, final String currentUsername) {
-        final PaymentEntity entity = PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.id = ?1",
-                        id)
-                .firstResult();
+    public Optional<PaymentResponseDto> findById(final Long id, @Nullable final String currentUsername) {
+        final PaymentEntity entity = PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.id = ?1",
+                id).firstResult();
         if (entity == null) {
             return Optional.empty();
         }
@@ -106,51 +105,38 @@ public class PaymentService {
 
     /** Returns all payments for the given user. */
     public List<PaymentResponseDto> findByUserId(final Long userId) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.user.id = ?1",
-                        userId)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.user.id = ?1",
+                userId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all payments for the given source account. */
     public List<PaymentResponseDto> findBySourceAccountId(final Long sourceId) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
-                        sourceId)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
+                sourceId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all payments for the given target account. */
     public List<PaymentResponseDto> findByTargetAccountId(final Long targetId) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
-                        targetId)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
+                targetId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all payments within the given date range. */
     public List<PaymentResponseDto> findByDateRange(final LocalDate startDate, final LocalDate endDate) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.date BETWEEN ?1 AND ?2 ORDER BY p.date DESC",
-                        startDate, endDate)
-                .list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.date BETWEEN ?1 AND ?2 ORDER BY p.date DESC",
+                startDate, endDate).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity))
                 .toList();
     }
 
     /** Returns the most recent payments up to the given limit. */
     public List<PaymentResponseDto> findRecentPayments(final int limit) {
-        return PaymentEntity
-                .find("SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user ORDER BY p.date DESC")
-                .page(0, limit).list().stream()
-                .map(entity -> new PaymentResponseDto((PaymentEntity) entity))
-                .toList();
+        return PaymentEntity.find(
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user ORDER BY p.date DESC")
+                .page(0, limit).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns the total payment amount for the given user. */
@@ -187,7 +173,7 @@ public class PaymentService {
     /** Updates the payment with the given id. */
     @Transactional
     public PaymentResponseDto updatePayment(final Long id, final PaymentDto paymentDto,
-            final String currentUsername) {
+            @Nullable final String currentUsername) {
         validatePaymentAccountIds(paymentDto);
 
         final PaymentEntity existingPayment = PaymentEntity.findById(id);
@@ -219,12 +205,12 @@ public class PaymentService {
     }
 
     /**
-     * Creates a payment scoped to the given user and account.
-     * Validates that the user has access to all accounts involved.
+     * Creates a payment scoped to the given user and account. Validates that the user has access to all accounts
+     * involved.
      */
     @Transactional
-    public PaymentResponseDto createPaymentForUser(final PaymentDto paymentDto,
-            final String username, final Long accountId) {
+    public PaymentResponseDto createPaymentForUser(final PaymentDto paymentDto, final String username,
+            final Long accountId) {
         this.verifyAccountAccessForPayment(username, accountId, paymentDto);
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
         paymentDto.userId = currentUser != null ? currentUser.id : null;
@@ -232,9 +218,8 @@ public class PaymentService {
     }
 
     /**
-     * Updates a payment scoped to the given user and account.
-     * Validates that the user has access to the account and that
-     * the payment belongs to it.
+     * Updates a payment scoped to the given user and account. Validates that the user has access to the account and
+     * that the payment belongs to it.
      */
     @Transactional
     public PaymentResponseDto updatePaymentForUser(final Long paymentId, final PaymentDto paymentDto,
@@ -291,14 +276,14 @@ public class PaymentService {
     }
 
     private static boolean paymentBelongsToAccount(final PaymentEntity payment, final Long accountId) {
-        return (payment.sourceAccount != null && payment.sourceAccount.id.equals(accountId))
-                || (payment.targetAccount != null && payment.targetAccount.id.equals(accountId));
+        return (payment.sourceAccount != null && accountId.equals(payment.sourceAccount.id))
+                || (payment.targetAccount != null && accountId.equals(payment.targetAccount.id));
     }
 
     /** Partially updates the payment with the given id. */
     @Transactional
     public PaymentResponseDto patchPayment(final Long id, final PaymentDto paymentDto,
-            final String currentUsername) {
+            @Nullable final String currentUsername) {
         final PaymentEntity existingPayment = PaymentEntity.findById(id);
         if (existingPayment == null) {
             throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
@@ -315,7 +300,8 @@ public class PaymentService {
         }
         if (paymentDto.userId != null) {
             // Block re-attribution of payments to a different user
-            if (!paymentDto.userId.equals(existingPayment.user.id)) {
+            final Long existingUserId = existingPayment.user != null ? existingPayment.user.id : null;
+            if (!paymentDto.userId.equals(existingUserId)) {
                 throw new ValidationException("Payment user re-attribution is not allowed.");
             }
         }
@@ -343,7 +329,7 @@ public class PaymentService {
 
     /** Deletes the payment with the given id. */
     @Transactional
-    public boolean deletePayment(final Long id, final String currentUsername) {
+    public boolean deletePayment(final Long id, @Nullable final String currentUsername) {
         final PaymentEntity existingPayment = PaymentEntity.findById(id);
         if (existingPayment == null) {
             return false;
@@ -353,22 +339,20 @@ public class PaymentService {
     }
 
     /** Returns all payments matching the given query. */
-    public List<PaymentResponseDto> searchPayments(final String query) {
+    public List<PaymentResponseDto> searchPayments(@Nullable final String query) {
         final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
         if (searchTerm == null) {
             return this.getAllPayments();
         }
 
-        final List<PaymentEntity> payments = SearchQueryUtil.applyDefaultSearchLimit(PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user "
-                        + "WHERE LOWER(p.comment) LIKE ?1 ESCAPE '\\' "
-                        + "OR LOWER(p.sourceAccount.name) LIKE ?1 ESCAPE '\\' "
-                        + "OR LOWER(p.targetAccount.name) LIKE ?1 ESCAPE '\\' "
-                        + "ORDER BY p.date DESC",
-                searchTerm)).list();
+        final List<PaymentEntity> payments = SearchQueryUtil.applyDefaultSearchLimit(PaymentEntity.find("""
+                SELECT p FROM PaymentEntity p \
+                LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user \
+                WHERE LOWER(p.comment) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.sourceAccount.name) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.targetAccount.name) LIKE ?1 ESCAPE '\\' \
+                ORDER BY p.date DESC""", searchTerm)).list();
 
-        return payments.stream()
-                .map(PaymentResponseDto::new)
-                .toList();
+        return payments.stream().map(PaymentResponseDto::new).toList();
     }
 }

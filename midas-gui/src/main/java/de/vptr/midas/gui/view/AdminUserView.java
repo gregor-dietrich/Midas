@@ -32,7 +32,6 @@ import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
 /** Admin view for managing application users. */
@@ -80,23 +79,19 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(
-                query -> this.userService.getAllUsers(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.userService.getAllUsers(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadRanksAsync() {
         LOG.info("Starting async rank loading");
 
-        this.loadDataAsync(
-                () -> this.userRankService.getAllRanks(),
-                ranks -> {
-                    LOG.infof("Successfully loaded %s ranks", ranks.size());
-                    this.availableRanks = ranks;
-                },
-                throwable -> {
-                    LOG.error("Error loading ranks", throwable);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.userRankService.getAllRanks(), ranks -> {
+            LOG.infof("Successfully loaded %s ranks", ranks.size());
+            this.availableRanks = ranks;
+        }, throwable -> {
+            LOG.error("Error loading ranks", throwable);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private void buildUi() {
@@ -106,22 +101,17 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.createGrid();
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-        this.userDialog = new AdminUserDialog(
-                this.userService, this::setupLazyDataProvider, authFailure);
+        this.userDialog = new AdminUserDialog(this.userService, this::setupLazyDataProvider, authFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchUsers(),
-                "Search by username or email...",
-                "Search Users");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchUsers(), "Search by username or email...", "Search Users");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -163,15 +153,16 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getEmail).setHeader("Email")
                 .setFlexGrow(1);
         this.grid.addColumn(user -> user.getRankName() != null ? user.getRankName() : "").setHeader("Rank")
-                .setWidth("120px")
-                .setFlexGrow(0);
-        this.grid.addColumn(LitRenderer.<UserResponseDto>of(
-                "<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                .withProperty("checked", user -> Boolean.TRUE.equals(user.getActivated())))
+                .setWidth("120px").setFlexGrow(0);
+        this.grid
+                .addColumn(LitRenderer
+                        .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
+                        .withProperty("checked", user -> Boolean.TRUE.equals(user.getActivated())))
                 .setHeader("Activated").setWidth("100px").setFlexGrow(0);
-        this.grid.addColumn(LitRenderer.<UserResponseDto>of(
-                "<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                .withProperty("checked", user -> Boolean.TRUE.equals(user.getBanned())))
+        this.grid
+                .addColumn(LitRenderer
+                        .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
+                        .withProperty("checked", user -> Boolean.TRUE.equals(user.getBanned())))
                 .setHeader("Banned").setWidth("100px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getCreated).setHeader("Created")
                 .setWidth("150px").setFlexGrow(0);
@@ -221,17 +212,14 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
-        this.loadDataAsync(
-                () -> this.userService.searchUsers(query.trim()),
-                users -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    this.grid.setItems(users);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.userService.searchUsers(query.trim()), users -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            this.grid.setItems(users);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

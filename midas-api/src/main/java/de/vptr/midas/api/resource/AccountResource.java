@@ -12,7 +12,6 @@ import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserAccountMetaDto;
 import de.vptr.midas.api.dto.UserResponseDto;
-import de.vptr.midas.api.entity.PaymentEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.service.AccountAccessService;
 import de.vptr.midas.api.service.AccountService;
@@ -21,6 +20,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -59,13 +59,13 @@ public class AccountResource {
     PaymentService paymentService;
 
     @Context
+    @Nullable
     SecurityContext securityContext;
 
     /** Returns all accounts with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<AccountResponseDto> getAllAccounts(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<AccountResponseDto> getAllAccounts(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -189,23 +189,19 @@ public class AccountResource {
     /** Returns all accounts with normalized pagination and balance information. */
     @GET
     @Path("/my/with-balances")
-    public List<AccountResponseDto> getMyAccountsWithBalances(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<AccountResponseDto> getMyAccountsWithBalances(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final String username = this.requireCurrentUsername();
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        final List<AccountResponseDto> accounts = this.accountAccessService.getAccountsForCurrentUser(username,
-                safePage,
-                safeSize);
+        final List<AccountResponseDto> accounts =
+                this.accountAccessService.getAccountsForCurrentUser(username, safePage, safeSize);
 
         if (accounts.isEmpty()) {
             return accounts;
         }
 
-        final List<Long> accountIds = accounts.stream()
-                .map(account -> account.id)
-                .toList();
+        final List<Long> accountIds = accounts.stream().map(account -> account.id).toList();
 
         final Map<Long, BigDecimal> balances = this.accountAccessService.getAccountBalances(accountIds);
 
@@ -216,9 +212,9 @@ public class AccountResource {
 
         // Set isNegative flag per account for the current user
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-        if (currentUser != null) {
-            final Map<Long, Boolean> isNegativeFlags = this.accountAccessService
-                    .getIsNegativeFlagsForUser(currentUser.id, accountIds);
+        if (currentUser != null && currentUser.id != null) {
+            final Map<Long, Boolean> isNegativeFlags =
+                    this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountIds);
             accounts.forEach(account -> {
                 account.isNegative = isNegativeFlags.getOrDefault(account.id, false);
             });
@@ -310,18 +306,19 @@ public class AccountResource {
     /**
      * Updates the user-account meta (e.g. isNegative flag) for the association.
      *
-     * @param accountId the account in the association
-     * @param userId    the user in the association
-     * @param metaDto   the meta properties to update
+     * @param accountId
+     *            the account in the association
+     * @param userId
+     *            the user in the association
+     * @param metaDto
+     *            the meta properties to update
      * @return 204 No Content on success
      */
     @PATCH
     @Path("/{accountId}/users/{userId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response updateUserAccountMeta(
-            @PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("userId") @Min(1) final Long userId,
-            final UserAccountMetaDto metaDto) {
+    public Response updateUserAccountMeta(@PathParam("accountId") @Min(1) final Long accountId,
+            @PathParam("userId") @Min(1) final Long userId, final UserAccountMetaDto metaDto) {
         this.accountAccessService.updateUserAccountMeta(userId, accountId, metaDto.isNegative);
         return ResponseUtil.noContent();
     }
@@ -349,11 +346,10 @@ public class AccountResource {
     @PUT
     @Path("/my/{accountId}/payments/{paymentId}")
     public Response updateMyAccountPayment(@PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("paymentId") @Min(1) final Long paymentId,
-            @Valid final PaymentDto paymentDto) {
+            @PathParam("paymentId") @Min(1) final Long paymentId, @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
-        final PaymentResponseDto updated = this.paymentService.updatePaymentForUser(paymentId, paymentDto, username,
-                accountId);
+        final PaymentResponseDto updated =
+                this.paymentService.updatePaymentForUser(paymentId, paymentDto, username, accountId);
         return ResponseUtil.ok(updated);
     }
 

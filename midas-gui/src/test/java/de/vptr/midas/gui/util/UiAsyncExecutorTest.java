@@ -18,7 +18,6 @@ import org.mockito.MockedStatic;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
-
 import com.vaadin.flow.server.VaadinSession;
 
 class UiAsyncExecutorTest {
@@ -49,9 +48,7 @@ class UiAsyncExecutorTest {
         final var failure = new RuntimeException("boom");
 
         when(ui.isAttached()).thenReturn(true);
-        doThrow(new IllegalStateException("detached"))
-                .when(ui)
-                .access(any(Command.class));
+        doThrow(new IllegalStateException("detached")).when(ui).access(any(Command.class));
         doAnswer(invocation -> {
             dispatchedError.set(invocation.getArgument(0));
             return null;
@@ -86,9 +83,7 @@ class UiAsyncExecutorTest {
         final var failure = new RuntimeException("boom");
 
         when(ui.isAttached()).thenReturn(true);
-        doThrow(new IllegalStateException("detached"))
-                .when(ui)
-                .access(any(Command.class));
+        doThrow(new IllegalStateException("detached")).when(ui).access(any(Command.class));
 
         try (MockedStatic<MidasErrorHandler> errorHandlerMock = mockStatic(MidasErrorHandler.class)) {
             UiAsyncExecutor.dispatch(ui, session, () -> {

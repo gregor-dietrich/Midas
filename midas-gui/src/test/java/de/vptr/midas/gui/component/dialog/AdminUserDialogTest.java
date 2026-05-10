@@ -91,8 +91,8 @@ class AdminUserDialogTest {
     void openPasswordDialog_shouldUseMaskedPasswordFields() throws Exception {
         final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
         final var rank = this.createRank(1L, "Administrator");
-        final UserResponseDto existingUser = MockDataUtil.createUserResponseDto(1L, "existinguser",
-                "existing@example.com");
+        final UserResponseDto existingUser =
+                MockDataUtil.createUserResponseDto(1L, "existinguser", "existing@example.com");
 
         dialog.open(existingUser, List.of(rank));
         this.findButton(dialog, "Change Password").click();
@@ -102,9 +102,8 @@ class AdminUserDialogTest {
         final FormDialog passwordDialog = (FormDialog) passwordDialogField.get(dialog);
 
         final List<PasswordField> passwordFields = this.findComponents(passwordDialog, PasswordField.class);
-        assertThat(passwordFields)
-                .extracting(PasswordField::getLabel)
-                .containsExactlyInAnyOrder("New Password", "Confirm Password");
+        assertThat(passwordFields).extracting(PasswordField::getLabel).containsExactlyInAnyOrder("New Password",
+                "Confirm Password");
     }
 
     private UserRankResponseDto createRank(final Long id, final String name) {
@@ -126,21 +125,16 @@ class AdminUserDialogTest {
 
     private <T extends Component> T findComponent(final Component root, final Class<T> type,
             final Predicate<T> predicate) {
-        return this.findComponents(root, type).stream()
-                .filter(predicate)
-                .findFirst()
+        return this.findComponents(root, type).stream().filter(predicate).findFirst()
                 .orElseThrow(() -> new AssertionError("Component not found: " + type.getSimpleName()));
     }
 
     @SuppressWarnings("unchecked")
     private <T extends Component> List<T> findComponents(final Component root, final Class<T> type) {
-        final List<T> directMatches = root.getChildren()
-                .filter(type::isInstance)
-                .map(component -> (T) component)
-                .toList();
-        final List<T> nestedMatches = root.getChildren()
-                .flatMap(component -> this.findComponents(component, type).stream())
-                .toList();
+        final List<T> directMatches =
+                root.getChildren().filter(type::isInstance).map(component -> (T) component).toList();
+        final List<T> nestedMatches =
+                root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
 }

@@ -207,8 +207,8 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
             this.cachedAdminPermissionValid = true;
         }
         if (this.cachedAdminPermission) {
-            this.adminViewButton = new AdminViewButton(
-                    _ -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
+            this.adminViewButton =
+                    new AdminViewButton(_ -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
         }
 
         // Add buttons

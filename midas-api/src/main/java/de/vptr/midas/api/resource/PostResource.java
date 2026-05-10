@@ -9,6 +9,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -40,12 +41,12 @@ public class PostResource {
     PostService postService;
 
     @Context
+    @Nullable
     SecurityContext securityContext;
 
     /** Returns all posts with normalized pagination parameters. */
     @GET
-    public List<PostResponseDto> getAllPosts(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PostResponseDto> getAllPosts(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -55,8 +56,7 @@ public class PostResource {
     /** Returns published posts with normalized pagination parameters. */
     @GET
     @Path("/published")
-    public List<PostResponseDto> getPublishedPosts(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PostResponseDto> getPublishedPosts(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -73,8 +73,7 @@ public class PostResource {
     @GET
     @Path("/user/{userId}")
     // TODO: add an admin-only path that returns all posts (including drafts) for a user.
-    public List<PostResponseDto> getPostsByUser(
-            @PathParam("userId") @Min(1) final Long userId,
+    public List<PostResponseDto> getPostsByUser(@PathParam("userId") @Min(1) final Long userId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
@@ -85,8 +84,7 @@ public class PostResource {
     /** Returns published posts by category with pagination. */
     @GET
     @Path("/category/{categoryId}")
-    public List<PostResponseDto> getPostsByCategory(
-            @PathParam("categoryId") @Min(1) final Long categoryId,
+    public List<PostResponseDto> getPostsByCategory(@PathParam("categoryId") @Min(1) final Long categoryId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
@@ -107,8 +105,7 @@ public class PostResource {
     @GET
     @Path("/date-range")
     // TODO: add an admin-only path that returns all posts (including drafts) within a date range.
-    public List<PostResponseDto> getPostsByDateRange(
-            @QueryParam("startDate") final String startDate,
+    public List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") final String startDate,
             @QueryParam("endDate") final String endDate) {
         return this.postService.findPublishedByDateRange(startDate, endDate);
     }

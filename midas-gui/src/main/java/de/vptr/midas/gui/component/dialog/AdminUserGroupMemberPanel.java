@@ -28,8 +28,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog panel for managing user group membership.
- * Shows a grid of current members and allows adding/removing users.
+ * Dialog panel for managing user group membership. Shows a grid of current members and allows adding/removing users.
  */
 public class AdminUserGroupMemberPanel extends FormDialog {
 
@@ -44,10 +43,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     private UserGroupResponseDto selectedGroup;
 
     /** Initializes AdminUserGroupMemberPanel. */
-    public AdminUserGroupMemberPanel(final UserGroupService groupService,
-            final UserService userService,
-            final AuthService authService,
-            final Runnable onAuthFailure) {
+    public AdminUserGroupMemberPanel(final UserGroupService groupService, final UserService userService,
+            final AuthService authService, final Runnable onAuthFailure) {
         super();
         this.groupService = groupService;
         this.userService = userService;
@@ -65,12 +62,11 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.userGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.userGrid.setHeight("300px");
 
-        this.userGrid.addColumn((ValueProvider<UserDto, ?>) UserDto::getId)
-                .setHeader("ID").setWidth("80px").setFlexGrow(0);
-        this.userGrid.addColumn((ValueProvider<UserDto, ?>) UserDto::getUsername)
-                .setHeader("Username").setFlexGrow(1);
-        this.userGrid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email")
-                .setHeader("Email").setFlexGrow(1);
+        this.userGrid.addColumn((ValueProvider<UserDto, ?>) UserDto::getId).setHeader("ID").setWidth("80px")
+                .setFlexGrow(0);
+        this.userGrid.addColumn((ValueProvider<UserDto, ?>) UserDto::getUsername).setHeader("Username").setFlexGrow(1);
+        this.userGrid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
+                .setFlexGrow(1);
 
         this.userGrid.addComponentColumn(user -> {
             final var removeButton = new RemoveUserButton(_ -> this.removeUserFromGroup(user));
@@ -133,14 +129,10 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         try {
             final var allUsers = this.userService.getAllUsers(0, 100);
 
-            final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
-                    .collect(Collectors.toList());
-            final var currentUserIds = currentUsers.stream()
-                    .map(UserDto::getId)
-                    .collect(Collectors.toSet());
+            final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+            final var currentUserIds = currentUsers.stream().map(UserDto::getId).collect(Collectors.toSet());
 
-            final var availableUsers = allUsers.stream()
-                    .filter(user -> !currentUserIds.contains(user.getId()))
+            final var availableUsers = allUsers.stream().filter(user -> !currentUserIds.contains(user.getId()))
                     .collect(Collectors.toList());
 
             this.availableUsersCombo.setItems(availableUsers);
@@ -157,10 +149,9 @@ public class AdminUserGroupMemberPanel extends FormDialog {
             return;
         }
 
-        final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
-                .collect(Collectors.toList());
-        final boolean alreadyInGroup = currentUsers.stream()
-                .anyMatch(user -> user.getId().equals(selectedUser.getId()));
+        final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+        final boolean alreadyInGroup =
+                currentUsers.stream().anyMatch(user -> user.getId().equals(selectedUser.getId()));
 
         if (alreadyInGroup) {
             NotificationUtil.showWarning("User is already a member of this group");

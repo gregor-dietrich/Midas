@@ -3,6 +3,7 @@ package de.vptr.midas.api.exception;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.logging.Logger;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.WebApplicationException;
@@ -22,6 +23,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
     private static final String GENERIC_INTERNAL_MESSAGE = "An unexpected error occurred";
 
     @Context
+    @Nullable
     UriInfo uriInfo;
 
     @Override
@@ -35,10 +37,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
             return buildErrorResponse(409, "Conflict", "A resource with the same identifier already exists");
         }
 
-        LOG.errorf(exception, "Unhandled exception on %s %s: %s",
-                uriInfo != null ? uriInfo.getRequestUri() : "unknown",
-                exception.getClass().getSimpleName(),
-                exception.getMessage());
+        LOG.errorf(exception, "Unhandled exception on %s %s: %s", uriInfo != null ? uriInfo.getRequestUri() : "unknown",
+                exception.getClass().getSimpleName(), exception.getMessage());
 
         return buildErrorResponse(500, "Internal Server Error", GENERIC_INTERNAL_MESSAGE);
     }
@@ -66,16 +66,15 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
         return buildErrorResponse(status, reason, message);
     }
 
-    private static String resolveClientMessage(final String rawMessage, final int status, final String fallback) {
+    private static String resolveClientMessage(@Nullable final String rawMessage, final int status,
+            final String fallback) {
         if (rawMessage == null) {
             return fallback;
         }
 
         final String message = rawMessage.trim();
-        if (message.isEmpty()
-                || message.equalsIgnoreCase(fallback)
-                || message.startsWith(WebApplicationException.class.getName())
-                || message.contains("HTTP " + status)) {
+        if (message.isEmpty() || message.equalsIgnoreCase(fallback)
+                || message.startsWith(WebApplicationException.class.getName()) || message.contains("HTTP " + status)) {
             return fallback;
         }
 
@@ -88,8 +87,6 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
     }
 
     private static Response buildErrorResponse(final int status, final String error, final String message) {
-        return Response.status(status)
-                .entity(new ApiErrorResponse(status, error, message))
-                .build();
+        return Response.status(status).entity(new ApiErrorResponse(status, error, message)).build();
     }
 }

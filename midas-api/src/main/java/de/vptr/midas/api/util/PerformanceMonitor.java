@@ -16,8 +16,10 @@ public class PerformanceMonitor {
     /**
      * Executes a supplier and logs the execution time
      * 
-     * @param operation Description of the operation being timed
-     * @param supplier  The operation to execute
+     * @param operation
+     *            Description of the operation being timed
+     * @param supplier
+     *            The operation to execute
      * @return The result of the supplier
      */
     public static <T> T time(final String operation, final Supplier<T> supplier) {
@@ -47,8 +49,10 @@ public class PerformanceMonitor {
     /**
      * Executes a runnable and logs the execution time
      * 
-     * @param operation Description of the operation being timed
-     * @param runnable  The operation to execute
+     * @param operation
+     *            Description of the operation being timed
+     * @param runnable
+     *            The operation to execute
      */
     public static void time(final String operation, final Runnable runnable) {
         time(operation, () -> {

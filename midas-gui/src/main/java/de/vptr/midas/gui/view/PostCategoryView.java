@@ -15,7 +15,6 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
-import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
 /** View for browsing post categories. */
@@ -69,13 +68,9 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
         this.treeGrid.setSizeFull();
         this.treeGrid.removeAllColumns();
 
-        this.treeGrid.addHierarchyColumn(PostCategoryResponseDto::getName)
-                .setHeader("Category Name")
-                .setFlexGrow(3);
+        this.treeGrid.addHierarchyColumn(PostCategoryResponseDto::getName).setHeader("Category Name").setFlexGrow(3);
 
-        this.treeGrid.addColumn(PostCategoryResponseDto::getPostsCount)
-                .setHeader("Posts")
-                .setFlexGrow(1);
+        this.treeGrid.addColumn(PostCategoryResponseDto::getPostsCount).setHeader("Posts").setFlexGrow(1);
 
         this.treeGrid.addItemClickListener(event -> {
             final var category = event.getItem();
@@ -88,19 +83,15 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        this.loadDataAsync(
-                () -> this.categoryService.getAllCategories(),
-                categories -> {
-                    LOG.infof("Successfully loaded %s categories", categories.size());
-                    this.allCategories = categories;
-                    this.updateTreeGrid();
-                });
+        this.loadDataAsync(() -> this.categoryService.getAllCategories(), categories -> {
+            LOG.infof("Successfully loaded %s categories", categories.size());
+            this.allCategories = categories;
+            this.updateTreeGrid();
+        });
     }
 
     private void updateTreeGrid() {
-        final var rootCategories = this.allCategories.stream()
-                .filter(PostCategoryResponseDto::isRootCategory)
-                .toList();
+        final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
 
         this.treeGrid.setItems(rootCategories, this::loadChildren);
         this.treeGrid.expandRecursively(rootCategories, 1);
@@ -108,7 +99,6 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
 
     private List<PostCategoryResponseDto> loadChildren(final PostCategoryResponseDto parent) {
         return this.allCategories.stream()
-                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(parent.getId()))
-                .toList();
+                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(parent.getId())).toList();
     }
 }

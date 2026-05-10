@@ -17,8 +17,8 @@ public class AdminAccessCacheClearingFilter implements ContainerResponseFilter {
     AdminAccessService adminAccessService;
 
     @Override
-    public void filter(final ContainerRequestContext requestContext,
-            final ContainerResponseContext responseContext) throws IOException {
+    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+            throws IOException {
         this.adminAccessService.clearCache();
     }
 }

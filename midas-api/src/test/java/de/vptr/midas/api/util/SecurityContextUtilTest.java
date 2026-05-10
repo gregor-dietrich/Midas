@@ -20,8 +20,8 @@ class SecurityContextUtilTest {
 
     @Test
     void requireCurrentUsernameRejectsMissingSecurityContext() {
-        final WebApplicationException exception = assertThrows(WebApplicationException.class,
-                () -> SecurityContextUtil.requireCurrentUsername(null));
+        final WebApplicationException exception =
+                assertThrows(WebApplicationException.class, () -> SecurityContextUtil.requireCurrentUsername(null));
         assertEquals(403, exception.getResponse().getStatus());
     }
 

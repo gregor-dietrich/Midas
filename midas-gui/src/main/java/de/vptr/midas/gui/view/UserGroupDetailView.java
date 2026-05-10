@@ -72,34 +72,28 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     }
 
     private void resolveGroupAndLoad(final String identifier) {
-        this.loadDataAsync(
-                () -> {
-                    LOG.infof("Resolving group with identifier: %s", identifier);
-                    try {
-                        final Long id = Long.parseLong(identifier);
-                        return this.groupService.getGroupById(id).orElse(null);
-                    } catch (final NumberFormatException e) {
-                        LOG.infof("Identifier is not numeric, searching by name: %s", identifier);
-                        final var results = this.groupService.searchGroups(identifier);
-                        return results.stream()
-                                .filter(group -> identifier.equalsIgnoreCase(group.getName()))
-                                .findFirst()
-                                .orElse(null);
-                    }
-                },
-                group -> {
-                    if (group == null) {
-                        NotificationUtil.showError("Group not found");
-                        this.getUI().ifPresent(ui -> ui.navigate(UserGroupView.class));
-                        return;
-                    }
-                    this.currentGroup = group;
-                    this.groupId = group.getId();
-                    this.buildUi();
-                    this.loadMembersAsync();
-                },
-                MidasErrorHandler::handleInUiContext,
-                30);
+        this.loadDataAsync(() -> {
+            LOG.infof("Resolving group with identifier: %s", identifier);
+            try {
+                final Long id = Long.parseLong(identifier);
+                return this.groupService.getGroupById(id).orElse(null);
+            } catch (final NumberFormatException e) {
+                LOG.infof("Identifier is not numeric, searching by name: %s", identifier);
+                final var results = this.groupService.searchGroups(identifier);
+                return results.stream().filter(group -> identifier.equalsIgnoreCase(group.getName())).findFirst()
+                        .orElse(null);
+            }
+        }, group -> {
+            if (group == null) {
+                NotificationUtil.showError("Group not found");
+                this.getUI().ifPresent(ui -> ui.navigate(UserGroupView.class));
+                return;
+            }
+            this.currentGroup = group;
+            this.groupId = group.getId();
+            this.buildUi();
+            this.loadMembersAsync();
+        }, MidasErrorHandler::handleInUiContext, 30);
     }
 
     private void buildUi() {
@@ -127,10 +121,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
         this.membersGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.membersGrid.setSizeFull();
 
-        this.membersGrid.addColumn(UserDto::getUsername)
-                .setHeader("Username")
-                .setFlexGrow(2)
-                .setSortable(true);
+        this.membersGrid.addColumn(UserDto::getUsername).setHeader("Username").setFlexGrow(2).setSortable(true);
 
         this.membersGrid.addColumn(user -> {
             final LocalDateTime created = user.getCreated();
@@ -143,16 +134,12 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private void loadMembersAsync() {
         LOG.infof("Starting async member loading for group: %s", this.groupId);
 
-        this.loadDataAsync(
-                () -> {
-                    LOG.info("Making REST call to load group members");
-                    return this.groupService.getUsersInGroup(this.groupId);
-                },
-                members -> {
-                    LOG.infof("Successfully loaded %s members", members.size());
-                    this.membersGrid.setItems(members);
-                },
-                MidasErrorHandler::handleInUiContext,
-                30);
+        this.loadDataAsync(() -> {
+            LOG.info("Making REST call to load group members");
+            return this.groupService.getUsersInGroup(this.groupId);
+        }, members -> {
+            LOG.infof("Successfully loaded %s members", members.size());
+            this.membersGrid.setItems(members);
+        }, MidasErrorHandler::handleInUiContext, 30);
     }
 }

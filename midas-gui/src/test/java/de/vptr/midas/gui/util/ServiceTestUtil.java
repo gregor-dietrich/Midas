@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -29,10 +28,8 @@ public class ServiceTestUtil {
     /**
      * Test that a 401 exception is handled with logout
      */
-    public static void testHandles401WithLogout(final AuthService authService,
-            final Object client,
-            final Runnable serviceMethodCall,
-            final Runnable clientMethodCall) {
+    public static void testHandles401WithLogout(final AuthService authService, final Object client,
+            final Runnable serviceMethodCall, final Runnable clientMethodCall) {
         // Given
         setupAuthHeader(authService);
         final WebApplicationException webAppException = new WebApplicationException(401);
@@ -47,14 +44,11 @@ public class ServiceTestUtil {
      * Test that a method throws AuthenticationException when auth header is null
      */
     public static void testAuthenticationRequired(final Runnable methodCall, final String expectedMessage) {
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage(expectedMessage);
+        assertThatThrownBy(methodCall::run).isInstanceOf(AuthenticationException.class).hasMessage(expectedMessage);
     }
 
     /**
-     * Test that a method throws AuthenticationException when auth header is null
-     * with default message
+     * Test that a method throws AuthenticationException when auth header is null with default message
      */
     public static void testAuthenticationRequired(final Runnable methodCall) {
         testAuthenticationRequired(methodCall, "Authentication required");
@@ -67,23 +61,19 @@ public class ServiceTestUtil {
         // Setup the client to throw ProcessingException
         clientCallSetup.run();
 
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(ServiceException.class)
+        assertThatThrownBy(methodCall::run).isInstanceOf(ServiceException.class)
                 .hasMessage("Backend connection failed");
     }
 
     /**
-     * Test that a method throws AuthenticationException on 401 response and calls
-     * logout
+     * Test that a method throws AuthenticationException on 401 response and calls logout
      */
     public static void test401ErrorHandling(final Runnable clientCallSetup, final Runnable methodCall,
             final AuthService authService) {
         // Setup the client to throw WebApplicationException with 401
         clientCallSetup.run();
 
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage("Session expired");
+        assertThatThrownBy(methodCall::run).isInstanceOf(AuthenticationException.class).hasMessage("Session expired");
 
         verify(authService).logout();
     }
@@ -128,15 +118,12 @@ public class ServiceTestUtil {
     }
 
     /**
-     * Common pattern for testing service method that throws ServiceException on bad
-     * response
+     * Common pattern for testing service method that throws ServiceException on bad response
      */
     public static void testServiceExceptionOnBadResponse(final Runnable clientCallSetup, final Runnable methodCall) {
         clientCallSetup.run();
 
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("Unexpected error");
+        assertThatThrownBy(methodCall::run).isInstanceOf(ServiceException.class).hasMessage("Unexpected error");
     }
 
     /**

@@ -12,8 +12,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import de.vptr.midas.gui.component.button.SearchButton;
 
 /**
- * Reusable search layout with text field, search button, and clear button.
- * Includes built-in search-in-progress state management.
+ * Reusable search layout with text field, search button, and clear button. Includes built-in search-in-progress state
+ * management.
  */
 public class AsyncSearchLayout extends HorizontalLayout {
 
@@ -27,20 +27,19 @@ public class AsyncSearchLayout extends HorizontalLayout {
     private final Runnable clearAction;
     private final SearchExecutionSupport searchExecutionSupport;
 
-    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction,
-            final String placeholder, final String tooltip) {
+    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
+            final String tooltip) {
         this(searchAction, clearAction, placeholder, tooltip, DEFAULT_WIDTH, new SearchExecutionSupport());
     }
 
     /** Initializes AsyncSearchLayout. */
-    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction,
-            final String placeholder, final String tooltip, final String fieldWidth) {
+    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
+            final String tooltip, final String fieldWidth) {
         this(searchAction, clearAction, placeholder, tooltip, fieldWidth, new SearchExecutionSupport());
     }
 
-    AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction,
-            final String placeholder, final String tooltip, final String fieldWidth,
-            final SearchExecutionSupport searchExecutionSupport) {
+    AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
+            final String tooltip, final String fieldWidth, final SearchExecutionSupport searchExecutionSupport) {
         this.searchAction = searchAction;
         this.clearAction = clearAction;
         this.searchExecutionSupport = searchExecutionSupport;

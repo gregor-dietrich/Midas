@@ -3,8 +3,7 @@ package de.vptr.midas.gui.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response DTO for page operations.
- * Contains safe data for client responses.
+ * Response DTO for page operations. Contains safe data for client responses.
  */
 public class PageResponseDto {
 

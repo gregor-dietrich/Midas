@@ -13,13 +13,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Objects;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.PostDto;
-import de.vptr.midas.api.dto.PostResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
@@ -44,6 +45,10 @@ class PostServiceTest extends AbstractIntegrationTest {
     private UserEntity testUser;
     private PostCategoryEntity testCategory;
 
+    private long testUserId;
+    private long testCategoryId;
+
+    @SuppressWarnings("NullAway")
     @BeforeEach
     void setUp() {
         runCleanup(() -> {
@@ -53,11 +58,12 @@ class PostServiceTest extends AbstractIntegrationTest {
 
             this.testUser = setupTestUser(this.userService);
             this.testCategory = setupTestCategory();
+            this.testUserId = Objects.requireNonNull(this.testUser.id);
+            this.testCategoryId = Objects.requireNonNull(this.testCategory.id);
         });
     }
 
     private void cleanupTestUsers() {
-        // Clean up any test users that start with "testuser_" prefix
         UserEntity.delete("username like ?1", "testuser_%");
     }
 
@@ -86,16 +92,15 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var publishedPosts = this.postService.findPublishedPosts();
         assertNotNull(publishedPosts);
 
-        // All returned posts should be published
-        for (final PostResponseDto post : publishedPosts) {
-            assertTrue(post.published);
+        for (final var post : publishedPosts) {
+            assertTrue(Boolean.TRUE.equals(post.published));
         }
     }
 
     @Test
     @TestTransaction
     void testCreatePost() {
-        final var newPost = ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createUniquePostDto(this.testUserId, this.testCategoryId);
 
         final var createdPost = this.postService.createPost(newPost);
 
@@ -105,53 +110,38 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertEquals(newPost.content, createdPost.content);
         assertNotNull(createdPost.created);
         assertNull(createdPost.lastEdit);
-        assertFalse(createdPost.published); // Default should be false
-        assertFalse(createdPost.commentable); // Default should be false
+        assertFalse(Boolean.TRUE.equals(createdPost.published));
+        assertFalse(Boolean.TRUE.equals(createdPost.commentable));
     }
 
     @Test
     @TestTransaction
     void testCreatePostWithPublishedFlag() {
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Published Test Post",
-                "Published test content",
-                true,
-                true,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Published Test Post", "Published test content", true,
+                true, this.testUserId, this.testCategoryId);
 
         final var createdPost = this.postService.createPost(newPost);
 
         assertNotNull(createdPost);
-        assertTrue(createdPost.published);
-        assertTrue(createdPost.commentable);
+        assertTrue(Boolean.TRUE.equals(createdPost.published));
+        assertTrue(Boolean.TRUE.equals(createdPost.commentable));
     }
 
     @Test
     @TestTransaction
     void testUpdatePost() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Original Title",
-                "Original content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Original Title", "Original content", false, false,
+                this.testUserId, this.testCategoryId);
         final var createdPost = this.postService.createPost(newPost);
 
         final var originalCreated = createdPost.created;
 
-        // Update the post
-        final var updateDto = ServiceTestDataBuilder.createPostDto(
-                "Updated Title",
-                "Updated content",
-                false,
-                false,
-                null,
-                null);
+        final var updateDto =
+                ServiceTestDataBuilder.createPostDto("Updated Title", "Updated content", false, false, null, null);
 
-        final var updatedPost = this.postService.updatePost(createdPost.id, updateDto, this.testUser.username);
+        final Long postId = Objects.requireNonNull(createdPost.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var updatedPost = this.postService.updatePost(postId, updateDto, username);
 
         assertNotNull(updatedPost);
         assertEquals("Updated Title", updatedPost.title);
@@ -163,74 +153,50 @@ class PostServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdatePostShouldDenyNonOwnerWithoutAdminAccess() {
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Ownership Title",
-                "Ownership content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Ownership Title", "Ownership content", false, false,
+                this.testUserId, this.testCategoryId);
         final var createdPost = this.postService.createPost(newPost);
         final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
 
-        final var updateDto = ServiceTestDataBuilder.createPostDto(
-                "Blocked update",
-                "Blocked content",
-                false,
-                false,
-                null,
-                null);
+        final var updateDto =
+                ServiceTestDataBuilder.createPostDto("Blocked update", "Blocked content", false, false, null, null);
 
+        final Long postId = Objects.requireNonNull(createdPost.id);
+        final String intruderUsername = Objects.requireNonNull(intruder.username);
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.postService.updatePost(createdPost.id, updateDto, intruder.username));
+                () -> this.postService.updatePost(postId, updateDto, intruderUsername));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
     @Test
     @TestTransaction
     void testPatchPost() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Original Title",
-                "Original content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Original Title", "Original content", false, false,
+                this.testUserId, this.testCategoryId);
         final var createdPost = this.postService.createPost(newPost);
 
-        // Patch only the title
-        final var patchDto = ServiceTestDataBuilder.createPostDto(
-                "Patched Title",
-                null,
-                false,
-                false,
-                null,
-                null);
+        final var patchDto = ServiceTestDataBuilder.createPostDto("Patched Title", null, false, false, null, null);
 
-        final var patchedPost = this.postService.patchPost(createdPost.id, patchDto, this.testUser.username);
+        final Long postId = Objects.requireNonNull(createdPost.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var patchedPost = this.postService.patchPost(postId, patchDto, username);
 
         assertNotNull(patchedPost);
         assertEquals("Patched Title", patchedPost.title);
-        assertEquals("Original content", patchedPost.content); // Content should remain unchanged
+        assertEquals("Original content", patchedPost.content);
     }
 
     @Test
     @TestTransaction
     void testDeletePost() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "To Be Deleted",
-                "This post will be deleted",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("To Be Deleted", "This post will be deleted", false,
+                false, this.testUserId, this.testCategoryId);
         final var createdPost = this.postService.createPost(newPost);
 
-        final var postId = createdPost.id;
+        final Long postId = Objects.requireNonNull(createdPost.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
 
-        final var deleted = this.postService.deletePost(postId, this.testUser.username);
+        final var deleted = this.postService.deletePost(postId, username);
 
         assertTrue(deleted);
         final var deletedPost = this.postService.findById(postId);
@@ -246,17 +212,12 @@ class PostServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindById() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Find By ID Test",
-                "Test content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Find By ID Test", "Test content", false, false,
+                this.testUserId, this.testCategoryId);
         final var createdPost = this.postService.createPost(newPost);
 
-        final var foundPost = this.postService.findById(createdPost.id);
+        final Long postId = Objects.requireNonNull(createdPost.id);
+        final var foundPost = this.postService.findById(postId);
 
         assertTrue(foundPost.isPresent());
         assertEquals("Find By ID Test", foundPost.get().title);
@@ -271,41 +232,29 @@ class PostServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByUserId() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "User Post Test",
-                "Test content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("User Post Test", "Test content", false, false,
+                this.testUserId, this.testCategoryId);
         this.postService.createPost(newPost);
 
-        final var userPosts = this.postService.findByUserId(this.testUser.id);
+        final var userPosts = this.postService.findByUserId(this.testUserId);
 
         assertNotNull(userPosts);
         assertFalse(userPosts.isEmpty());
-        assertTrue(userPosts.stream().allMatch(post -> post.userId.equals(this.testUser.id)));
+        assertTrue(userPosts.stream().allMatch(post -> Objects.equals(post.userId, this.testUserId)));
     }
 
     @Test
     @TestTransaction
     void testFindByCategoryId() {
-        // First create a post
-        final var newPost = ServiceTestDataBuilder.createPostDto(
-                "Category Post Test",
-                "Test content",
-                false,
-                false,
-                this.testUser.id,
-                this.testCategory.id);
+        final var newPost = ServiceTestDataBuilder.createPostDto("Category Post Test", "Test content", false, false,
+                this.testUserId, this.testCategoryId);
         this.postService.createPost(newPost);
 
-        final var categoryPosts = this.postService.findByCategoryId(this.testCategory.id);
+        final var categoryPosts = this.postService.findByCategoryId(this.testCategoryId);
 
         assertNotNull(categoryPosts);
         assertFalse(categoryPosts.isEmpty());
-        assertTrue(categoryPosts.stream().allMatch(post -> post.categoryId.equals(this.testCategory.id)));
+        assertTrue(categoryPosts.stream().allMatch(post -> Objects.equals(post.categoryId, this.testCategoryId)));
     }
 
     @Test
@@ -325,8 +274,7 @@ class PostServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testSearchPostsWithQuery() {
         final var dto = ServiceTestDataBuilder.createPostDto("UniqueSearchTitle999", "content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         this.postService.createPost(dto);
 
         final var results = this.postService.searchPosts("UniqueSearchTitle999");
@@ -339,13 +287,8 @@ class PostServiceTest extends AbstractIntegrationTest {
     void testSearchPostsAppliesSharedResultLimit() {
         final String token = "post-limit-" + generateUniqueTestSuffix();
         for (int i = 0; i < PaginationUtil.MAX_SIZE + 5; i++) {
-            final var post = ServiceTestDataBuilder.createPostDto(
-                    token + "-" + i,
-                    "content-" + i,
-                    false,
-                    false,
-                    this.testUser.id,
-                    this.testCategory.id);
+            final var post = ServiceTestDataBuilder.createPostDto(token + "-" + i, "content-" + i, false, false,
+                    this.testUserId, this.testCategoryId);
             this.postService.createPost(post);
         }
 
@@ -370,13 +313,11 @@ class PostServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByDateRangeValid() {
         final var dto = ServiceTestDataBuilder.createPostDto("Date Range Test", "content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         this.postService.createPost(dto);
 
-        final var results = this.postService.findByDateRange(
-                LocalDate.now().minusDays(1).toString(),
-                LocalDate.now().plusDays(1).toString());
+        final var results = this.postService.findByDateRange(LocalDate.now(ZoneOffset.UTC).minusDays(1).toString(),
+                LocalDate.now(ZoneOffset.UTC).plusDays(1).toString());
         assertNotNull(results);
         assertFalse(results.isEmpty());
     }
@@ -389,7 +330,7 @@ class PostServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdatePostNotFound() {
-        final var dto = ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, this.testUser.id, null);
+        final var dto = ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, this.testUserId, null);
         assertThrows(WebApplicationException.class, () -> this.postService.updatePost(999999L, dto, null));
     }
 
@@ -397,26 +338,26 @@ class PostServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testUpdatePostWithBlankTitle() {
         final var createDto = ServiceTestDataBuilder.createPostDto("OrigTitle", "Content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         final var created = this.postService.createPost(createDto);
 
-        final var dto = ServiceTestDataBuilder.createPostDto("", "Content", false, false, this.testUser.id, null);
-        assertThrows(ValidationException.class,
-                () -> this.postService.updatePost(created.id, dto, this.testUser.username));
+        final Long postId = Objects.requireNonNull(created.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var dto = ServiceTestDataBuilder.createPostDto("", "Content", false, false, this.testUserId, null);
+        assertThrows(ValidationException.class, () -> this.postService.updatePost(postId, dto, username));
     }
 
     @Test
     @TestTransaction
     void testUpdatePostWithBlankContent() {
         final var createDto = ServiceTestDataBuilder.createPostDto("OrigTitle2", "Content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         final var created = this.postService.createPost(createDto);
 
-        final var dto = ServiceTestDataBuilder.createPostDto("Title", "", false, false, this.testUser.id, null);
-        assertThrows(ValidationException.class,
-                () -> this.postService.updatePost(created.id, dto, this.testUser.username));
+        final Long postId = Objects.requireNonNull(created.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var dto = ServiceTestDataBuilder.createPostDto("Title", "", false, false, this.testUserId, null);
+        assertThrows(ValidationException.class, () -> this.postService.updatePost(postId, dto, username));
     }
 
     @Test
@@ -430,63 +371,65 @@ class PostServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testPatchPostPublishedFlag() {
         final var createDto = ServiceTestDataBuilder.createPostDto("Patch Published", "Content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         final var created = this.postService.createPost(createDto);
-        assertFalse(created.published);
+        assertFalse(Boolean.TRUE.equals(created.published));
 
         final var patchDto = new PostDto();
         patchDto.published = true;
 
-        final var patched = this.postService.patchPost(created.id, patchDto, this.testUser.username);
-        assertTrue(patched.published);
+        final Long postId = Objects.requireNonNull(created.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var patched = this.postService.patchPost(postId, patchDto, username);
+        assertTrue(Boolean.TRUE.equals(patched.published));
     }
 
     @Test
     @TestTransaction
     void testPatchPostCommentableFlag() {
         final var createDto = ServiceTestDataBuilder.createPostDto("Patch Commentable", "Content", false, false,
-                this.testUser.id,
-                this.testCategory.id);
+                this.testUserId, this.testCategoryId);
         final var created = this.postService.createPost(createDto);
-        assertFalse(created.commentable);
+        assertFalse(Boolean.TRUE.equals(created.commentable));
 
         final var patchDto = new PostDto();
         patchDto.commentable = true;
 
-        final var patched = this.postService.patchPost(created.id, patchDto, this.testUser.username);
-        assertTrue(patched.commentable);
+        final Long postId = Objects.requireNonNull(created.id);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final var patched = this.postService.patchPost(postId, patchDto, username);
+        assertTrue(Boolean.TRUE.equals(patched.commentable));
     }
 
     @Test
     @TestTransaction
     void testCreatePostWithBlankTitle() {
-        final var dto = ServiceTestDataBuilder.createPostDto("", "content", false, false, this.testUser.id,
-                this.testCategory.id);
+        final var dto =
+                ServiceTestDataBuilder.createPostDto("", "content", false, false, this.testUserId, this.testCategoryId);
         assertThrows(ValidationException.class, () -> this.postService.createPost(dto));
     }
 
     @Test
     @TestTransaction
     void testCreatePostWithBlankContent() {
-        final var dto = ServiceTestDataBuilder.createPostDto("Title", "", false, false, this.testUser.id,
-                this.testCategory.id);
+        final var dto =
+                ServiceTestDataBuilder.createPostDto("Title", "", false, false, this.testUserId, this.testCategoryId);
         assertThrows(ValidationException.class, () -> this.postService.createPost(dto));
     }
 
     @Test
     @TestTransaction
     void testCreatePostWithInvalidUserId() {
-        final var dto = ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, 999999L,
-                this.testCategory.id);
+        final var dto =
+                ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, 999999L, this.testCategoryId);
         assertThrows(ValidationException.class, () -> this.postService.createPost(dto));
     }
 
     @Test
     @TestTransaction
     void testCreatePostWithInvalidCategoryId() {
-        final var dto = ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, this.testUser.id,
-                999999L);
+        final var dto =
+                ServiceTestDataBuilder.createPostDto("Title", "Content", false, false, this.testUserId, 999999L);
         assertThrows(ValidationException.class, () -> this.postService.createPost(dto));
     }
 

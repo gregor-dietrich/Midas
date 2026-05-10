@@ -1,6 +1,7 @@
 package de.vptr.midas.api.security;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -15,6 +16,7 @@ import io.quarkus.security.identity.request.UsernamePasswordAuthenticationReques
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -52,13 +54,12 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
         final char[] password = request.getPassword() != null ? request.getPassword().getPassword().clone() : null;
         final String clientKey = username;
 
-        return Uni.createFrom()
-                .item(() -> this.authenticateUser(username, password, clientKey))
+        return Uni.createFrom().item(() -> this.authenticateUser(username, password, clientKey))
                 .runSubscriptionOn(this.executor);
     }
 
     @Transactional
-    SecurityIdentity authenticateUser(final String username, final char[] password, final String clientKey) {
+    SecurityIdentity authenticateUser(final String username, @Nullable final char[] password, final String clientKey) {
         try {
             if (this.authFailureRateLimitService.isBlocked(clientKey)) {
                 throw new AuthenticationFailedException("Too many invalid authentication attempts");
@@ -73,7 +74,8 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
                 throw new AuthenticationFailedException("Invalid credentials");
             }
 
-            if (!this.passwordHashingService.verifyPasswordChars(password, user.password, user.salt)) {
+            if (user.password == null || user.salt == null
+                    || !this.passwordHashingService.verifyPasswordChars(password, user.password, user.salt)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 throw new AuthenticationFailedException("Invalid credentials");
             }
@@ -92,17 +94,13 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             // for authentication
             try {
                 this.entityManager.createQuery("UPDATE UserEntity u SET u.lastLogin = :now WHERE u.id = :id")
-                        .setParameter("now", LocalDateTime.now())
-                        .setParameter("id", user.id)
+                        .setParameter("now", LocalDateTime.now(ZoneOffset.UTC)).setParameter("id", user.id)
                         .executeUpdate();
             } catch (final OptimisticLockException e) {
-                LOG.debugf("Failed to update last_login for user %s (concurrent login): %s",
-                        user.username, e.getMessage());
+                LOG.debugf("Failed to update last_login for user %s (concurrent login): %s", user.id, e.getMessage());
             }
 
-            return QuarkusSecurityIdentity.builder()
-                    .setPrincipal(new QuarkusPrincipal(username))
-                    .build();
+            return QuarkusSecurityIdentity.builder().setPrincipal(new QuarkusPrincipal(username)).build();
         } finally {
             clearPassword(password);
         }
@@ -123,7 +121,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
         return this.authenticateUser(username, password, username);
     }
 
-    private static void clearPassword(final char[] password) {
+    private static void clearPassword(@Nullable final char[] password) {
         if (password != null) {
             Arrays.fill(password, '\0');
         }

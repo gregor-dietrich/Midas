@@ -13,6 +13,7 @@ import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -37,13 +38,10 @@ public class PostCommentService {
 
     /** Returns all comments with the given pagination. */
     public List<PostCommentResponseDto> getAllComments(final int page, final int size) {
-        final List<PostCommentEntity> comments = PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user ORDER BY c.created DESC")
-                .page(page, size)
-                .list();
-        return comments.stream()
-                .map(PostCommentResponseDto::new)
-                .toList();
+        final List<PostCommentEntity> comments = PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user ORDER BY c.created DESC")
+                .page(page, size).list();
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Returns the comment with the given id. */
@@ -51,8 +49,7 @@ public class PostCommentService {
         return PostCommentEntity
                 .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
                         id)
-                .<PostCommentEntity>firstResultOptional()
-                .map(PostCommentResponseDto::new);
+                .<PostCommentEntity>firstResultOptional().map(PostCommentResponseDto::new);
     }
 
     /** Returns all comments for the given post with default pagination. */
@@ -62,13 +59,10 @@ public class PostCommentService {
 
     /** Returns all comments for the given post with pagination. */
     public List<PostCommentResponseDto> findByPostId(final Long postId, final int page, final int size) {
-        final List<PostCommentEntity> comments = PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.post.id = ?1",
-                        postId)
-                .page(page, size).list();
-        return comments.stream()
-                .map(PostCommentResponseDto::new)
-                .toList();
+        final List<PostCommentEntity> comments = PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.post.id = ?1",
+                postId).page(page, size).list();
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Returns all comments by the given user with default pagination. */
@@ -78,23 +72,18 @@ public class PostCommentService {
 
     /** Returns all comments by the given user with pagination. */
     public List<PostCommentResponseDto> findByUserId(final Long userId, final int page, final int size) {
-        final List<PostCommentEntity> comments = PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.user.id = ?1",
-                        userId)
-                .page(page, size).list();
-        return comments.stream()
-                .map(PostCommentResponseDto::new)
-                .toList();
+        final List<PostCommentEntity> comments = PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.user.id = ?1",
+                userId).page(page, size).list();
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Returns the most recent comments up to the given limit. */
     public List<PostCommentResponseDto> findRecentComments(final int limit) {
-        final List<PostCommentEntity> comments = PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user ORDER BY c.created DESC")
+        final List<PostCommentEntity> comments = PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user ORDER BY c.created DESC")
                 .page(0, limit).list();
-        return comments.stream()
-                .map(PostCommentResponseDto::new)
-                .toList();
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Creates a new comment, assigning the current user. */
@@ -102,8 +91,7 @@ public class PostCommentService {
     public PostCommentResponseDto createComment(final PostCommentDto dto, final String currentUsername) {
         final PostEntity existingPost = PostEntity.findById(dto.postId);
         if (existingPost == null) {
-            throw new WebApplicationException(
-                    "Post with ID " + dto.postId + " does not exist.",
+            throw new WebApplicationException("Post with ID " + dto.postId + " does not exist.",
                     Response.Status.BAD_REQUEST);
         }
         if (existingPost.published == null || !existingPost.published) {
@@ -117,16 +105,15 @@ public class PostCommentService {
         comment.content = dto.content;
         comment.post = existingPost;
         comment.user = (UserEntity) UserEntity.find("username", currentUsername).firstResultOptional()
-                .orElseThrow(() -> new WebApplicationException(
-                        "User with username '" + currentUsername + "' not found", Response.Status.NOT_FOUND));
+                .orElseThrow(() -> new WebApplicationException("User with username '" + currentUsername + "' not found",
+                        Response.Status.NOT_FOUND));
         comment.persistAndFlush();
         return new PostCommentResponseDto(comment);
     }
 
     /** Updates the comment with the given id. */
     @Transactional
-    public PostCommentResponseDto updateComment(final Long id, final PostCommentDto dto,
-            final String currentUsername) {
+    public PostCommentResponseDto updateComment(final Long id, final PostCommentDto dto, final String currentUsername) {
         final PostCommentEntity existingComment = PostCommentEntity.findById(id);
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
@@ -139,8 +126,7 @@ public class PostCommentService {
 
     /** Partially updates the comment with the given id. */
     @Transactional
-    public PostCommentResponseDto patchComment(final Long id, final PostCommentDto dto,
-            final String currentUsername) {
+    public PostCommentResponseDto patchComment(final Long id, final PostCommentDto dto, final String currentUsername) {
         final PostCommentEntity existingComment = PostCommentEntity.findById(id);
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
@@ -155,7 +141,7 @@ public class PostCommentService {
 
     /** Deletes the comment with the given id. */
     @Transactional
-    public boolean deleteComment(final Long id, final String currentUsername) {
+    public boolean deleteComment(final Long id, @Nullable final String currentUsername) {
         final PostCommentEntity existingComment = PostCommentEntity.findById(id);
         if (existingComment == null) {
             return false;
@@ -179,9 +165,7 @@ public class PostCommentService {
                 "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE LOWER(c.content) LIKE ?1 ESCAPE '\\' OR LOWER(c.user.username) LIKE ?1 ESCAPE '\\'",
                 searchTerm).page(0, 100).list();
 
-        return comments.stream()
-                .map(PostCommentResponseDto::new)
-                .toList();
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Returns comments within the given date range. */
@@ -197,20 +181,17 @@ public class PostCommentService {
             final LocalDateTime startDateTime = start.atStartOfDay();
             final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
 
-            final List<PostCommentEntity> comments = PostCommentEntity
-                    .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.created >= ?1 AND c.created <= ?2",
-                            startDateTime, endDateTime)
-                    .list();
+            final List<PostCommentEntity> comments = PostCommentEntity.find(
+                    "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.created >= ?1 AND c.created <= ?2",
+                    startDateTime, endDateTime).list();
 
-            return comments.stream()
-                    .map(PostCommentResponseDto::new)
-                    .toList();
+            return comments.stream().map(PostCommentResponseDto::new).toList();
         } catch (final DateTimeParseException e) {
             throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
         }
     }
 
-    private void verifyCommentOwnership(final String currentUsername, final PostCommentEntity existingComment,
+    private void verifyCommentOwnership(@Nullable final String currentUsername, final PostCommentEntity existingComment,
             final String deniedMessage) {
         if (currentUsername == null) {
             throw new ValidationException("Authentication required to modify comments.");
@@ -218,7 +199,7 @@ public class PostCommentService {
         if (existingComment.user == null) {
             throw new ValidationException("Comment has no owner and cannot be modified.");
         }
-        if (!existingComment.user.username.equals(currentUsername)
+        if (!currentUsername.equals(existingComment.user.username)
                 && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
             throw new WebApplicationException(deniedMessage, Response.Status.FORBIDDEN);
         }

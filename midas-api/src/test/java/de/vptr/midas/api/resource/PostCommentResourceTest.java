@@ -37,11 +37,7 @@ class PostCommentResourceTest {
         final Long postId = TestUtil.createTestPost();
         final Long commentId = TestUtil.createTestComment(postId);
 
-        TestUtil.authenticatedRequest()
-                .when()
-                .get(ENDPOINT_URL + "/" + commentId)
-                .then()
-                .statusCode(200);
+        TestUtil.authenticatedRequest().when().get(ENDPOINT_URL + "/" + commentId).then().statusCode(200);
     }
 
     @Test
@@ -68,14 +64,16 @@ class PostCommentResourceTest {
     @Test
     void testCreateComment_authorized() {
         final Long postId = TestUtil.createTestPost();
-        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(postId);
+        final String commentJson =
+                TestDataBuilder.createDefaultPostCommentJson(java.util.Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithCreation(ENDPOINT_URL, commentJson);
     }
 
     @Test
     void testCreateComment_authorizedWithInsufficientRole() {
         final Long postId = TestUtil.createTestPost();
-        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(postId);
+        final String commentJson =
+                TestDataBuilder.createDefaultPostCommentJson(java.util.Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithInsufficientRole(ENDPOINT_URL, commentJson);
     }
 

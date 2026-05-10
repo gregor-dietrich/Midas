@@ -32,7 +32,7 @@ import io.restassured.specification.RequestSpecification;
 @QuarkusTest
 class AccountResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/accounts";
-    private static final long ADMIN_USER_ID = 1L;  // admin user always created with id=1 in seed data
+    private static final long ADMIN_USER_ID = 1L; // admin user always created with id=1 in seed data
     private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
 
     @Test
@@ -98,24 +98,12 @@ class AccountResourceTest {
     @Test
     void testPatchUserAccount_authorizedWithoutNamePreservesExistingName() {
         final String originalName = "Patch Account " + TestUtil.generateUniqueSuffix();
-        final Integer accountId = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(createAccountJson(originalName))
-                .when()
-                .post(ENDPOINT_URL)
-                .then()
-                .statusCode(201)
-                .extract()
-                .path("id");
+        final Integer accountId =
+                authenticatedRequest().contentType(ContentType.JSON).body(createAccountJson(originalName)).when()
+                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
-        authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(createEmptyJson())
-                .when()
-                .patch(ENDPOINT_URL + "/" + accountId)
-                .then()
-                .statusCode(200)
-                .body("name", equalTo(originalName));
+        authenticatedRequest().contentType(ContentType.JSON).body(createEmptyJson()).when()
+                .patch(ENDPOINT_URL + "/" + accountId).then().statusCode(200).body("name", equalTo(originalName));
     }
 
     @Test
@@ -129,16 +117,11 @@ class AccountResourceTest {
         final long sourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final long targetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, 2L, "100.00", "Spoofed payment",
                         "2024-01-01"))
-                .when()
-                .post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments")
-                .then()
-                .statusCode(201)
-                .body("userId", equalTo(1))
-                .body("username", equalTo("admin"));
+                .when().post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments").then().statusCode(201)
+                .body("userId", equalTo(1)).body("username", equalTo("admin"));
     }
 
     @Test
@@ -147,27 +130,17 @@ class AccountResourceTest {
         final long sourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final long targetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        final Integer paymentId = forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        final Integer paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, 1L, "100.00", "Original payment",
                         "2024-01-01"))
-                .when()
-                .post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments")
-                .then()
-                .statusCode(201)
-                .extract()
+                .when().post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments").then().statusCode(201).extract()
                 .path("id");
 
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, 2L, "150.00", "Updated payment",
                         "2024-01-02"))
-                .when()
-                .put(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments/" + paymentId)
-                .then()
-                .statusCode(200)
-                .body("userId", equalTo(1))
-                .body("username", equalTo("admin"))
+                .when().put(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments/" + paymentId).then().statusCode(200)
+                .body("userId", equalTo(1)).body("username", equalTo("admin"))
                 .body("comment", equalTo("Updated payment"));
     }
 
@@ -180,14 +153,10 @@ class AccountResourceTest {
 
         // Payment not involving the scoped account is now permitted as long as
         // the user has access to both source and target accounts.
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, 1L, "100.00", "Off-account payment",
                         "2024-01-01"))
-                .when()
-                .post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments")
-                .then()
-                .statusCode(201);
+                .when().post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments").then().statusCode(201);
     }
 
     @Test
@@ -198,26 +167,17 @@ class AccountResourceTest {
         final long replacementSourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final long replacementTargetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        final Integer paymentId = forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        final Integer paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(originalTargetAccountId, scopedAccountId, 1L, "100.00", "Original payment",
                         "2024-01-01"))
-                .when()
-                .post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments")
-                .then()
-                .statusCode(201)
-                .extract()
+                .when().post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments").then().statusCode(201).extract()
                 .path("id");
 
         // Updating to accounts not involving scopedAccountId is now permitted.
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createPaymentJson(replacementTargetAccountId, replacementSourceAccountId, 2L, "150.00",
                         "Moved payment", "2024-01-02"))
-                .when()
-                .put(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments/" + paymentId)
-                .then()
-                .statusCode(200);
+                .when().put(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments/" + paymentId).then().statusCode(200);
     }
 
     @Test
@@ -226,40 +186,20 @@ class AccountResourceTest {
         final long accountId = this.createAdminAccessibleAccount(clientKey);
 
         // Set isNegative = true
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
-                .body(createUserAccountMetaJson(true))
-                .when()
-                .patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID)
-                .then()
-                .statusCode(204);
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(createUserAccountMetaJson(true))
+                .when().patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
 
         // Verify flag is reflected in GET /accounts/{id}/users
-        forwardedAuthenticatedRequest(clientKey)
-                .when()
-                .get(ENDPOINT_URL + "/" + accountId + "/users")
-                .then()
-                .statusCode(200)
-                .body("[0].isNegative", equalTo(true));
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/" + accountId + "/users").then()
+                .statusCode(200).body("[0].isNegative", equalTo(true));
     }
 
     private long createAdminAccessibleAccount(final String clientKey) {
-        final Integer accountId = forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
-                .body(createUniqueAccountJson())
-                .when()
-                .post(ENDPOINT_URL)
-                .then()
-                .statusCode(201)
-                .extract()
-                .path("id");
+        final Integer accountId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+                .body(createUniqueAccountJson()).when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
-        forwardedAuthenticatedRequest(clientKey)
-                .contentType(ContentType.JSON)
-                .when()
-                .post(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID)
-                .then()
-                .statusCode(201);
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).when()
+                .post(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(201);
 
         return accountId.longValue();
     }

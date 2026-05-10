@@ -26,8 +26,8 @@ import jakarta.inject.Inject;
 
 /** Detail view for a single post category. */
 @Route(value = "categories", layout = MainLayout.class)
-public class PostCategoryDetailView extends AbstractAsyncDataView implements BeforeEnterObserver,
-        HasUrlParameter<String> {
+public class PostCategoryDetailView extends AbstractAsyncDataView
+        implements BeforeEnterObserver, HasUrlParameter<String> {
 
     private static final Logger LOG = Logger.getLogger(PostCategoryDetailView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -71,36 +71,30 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
     private void resolveCategoryAsync(final String identifier) {
         LOG.infof("Resolving category for identifier: %s", identifier);
 
-        this.loadDataAsync(
-                () -> {
-                    try {
-                        final var categoryId = Long.parseLong(identifier);
-                        final var opt = this.categoryService.getCategoryById(categoryId);
-                        if (opt.isPresent()) {
-                            return opt.get();
-                        }
-                    } catch (final NumberFormatException ignored) {
-                        LOG.debugf("Identifier '%s' is not numeric, searching by name", identifier);
-                    }
+        this.loadDataAsync(() -> {
+            try {
+                final var categoryId = Long.parseLong(identifier);
+                final var opt = this.categoryService.getCategoryById(categoryId);
+                if (opt.isPresent()) {
+                    return opt.get();
+                }
+            } catch (final NumberFormatException ignored) {
+                LOG.debugf("Identifier '%s' is not numeric, searching by name", identifier);
+            }
 
-                    final var allCategories = this.categoryService.getAllCategories();
-                    return allCategories.stream()
-                            .filter(cat -> cat.getName().equalsIgnoreCase(identifier))
-                            .findFirst()
-                            .orElse(null);
-                },
-                resolvedCategory -> {
-                    if (resolvedCategory == null) {
-                        NotificationUtil.showError("Category not found");
-                        this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class));
-                        return;
-                    }
-                    this.category = resolvedCategory;
-                    this.buildUi();
-                    this.loadPostsAsync();
-                },
-                MidasErrorHandler::handleInUiContext,
-                30);
+            final var allCategories = this.categoryService.getAllCategories();
+            return allCategories.stream().filter(cat -> cat.getName().equalsIgnoreCase(identifier)).findFirst()
+                    .orElse(null);
+        }, resolvedCategory -> {
+            if (resolvedCategory == null) {
+                NotificationUtil.showError("Category not found");
+                this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class));
+                return;
+            }
+            this.category = resolvedCategory;
+            this.buildUi();
+            this.loadPostsAsync();
+        }, MidasErrorHandler::handleInUiContext, 30);
     }
 
     private void buildUi() {
@@ -128,15 +122,10 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);
 
-        this.postGrid.addColumn(PostResponseDto::getUsername)
-                .setHeader("Author")
-                .setFlexGrow(1);
+        this.postGrid.addColumn(PostResponseDto::getUsername).setHeader("Author").setFlexGrow(1);
 
-        this.postGrid.addColumn(post -> post.getCreated() != null
-                ? post.getCreated().format(DATE_FORMATTER)
-                : "")
-                .setHeader("Date")
-                .setFlexGrow(1);
+        this.postGrid.addColumn(post -> post.getCreated() != null ? post.getCreated().format(DATE_FORMATTER) : "")
+                .setHeader("Date").setFlexGrow(1);
 
         this.postGrid.setPageSize(20);
     }
@@ -144,13 +133,9 @@ public class PostCategoryDetailView extends AbstractAsyncDataView implements Bef
     private void loadPostsAsync() {
         LOG.infof("Loading posts for category: %s", this.category.getName());
 
-        this.loadDataAsync(
-                () -> this.postService.getPostsByCategory(this.category.getId()),
-                posts -> {
-                    LOG.infof("Successfully loaded %s posts", posts.size());
-                    this.postGrid.setItems(posts);
-                },
-                MidasErrorHandler::handleInUiContext,
-                30);
+        this.loadDataAsync(() -> this.postService.getPostsByCategory(this.category.getId()), posts -> {
+            LOG.infof("Successfully loaded %s posts", posts.size());
+            this.postGrid.setItems(posts);
+        }, MidasErrorHandler::handleInUiContext, 30);
     }
 }

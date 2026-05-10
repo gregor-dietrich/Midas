@@ -37,12 +37,9 @@ class ServiceHelperTest {
         when(this.response.getStatus()).thenReturn(200);
         when(this.response.readEntity(String.class)).thenReturn("payload");
 
-        final var result = ServiceHelper.executeWithResponse(
-                () -> this.response,
-                this.authService,
-                LOG,
-                "reading payload",
-                currentResponse -> ServiceHelper.readEntity(currentResponse, String.class, "test payload"));
+        final var result =
+                ServiceHelper.executeWithResponse(() -> this.response, this.authService, LOG, "reading payload",
+                        currentResponse -> ServiceHelper.readEntity(currentResponse, String.class, "test payload"));
 
         assertThat(result).isEqualTo("payload");
         verify(this.response).close();
@@ -52,13 +49,8 @@ class ServiceHelperTest {
     void executeWithResponse_shouldHandleRaw401ResponseAndCloseIt() {
         when(this.response.getStatus()).thenReturn(401);
 
-        assertThatThrownBy(() -> ServiceHelper.executeWithResponse(
-                () -> this.response,
-                this.authService,
-                LOG,
-                "reading payload",
-                _ -> "ignored"))
-                .isInstanceOf(AuthenticationException.class)
+        assertThatThrownBy(() -> ServiceHelper.executeWithResponse(() -> this.response, this.authService, LOG,
+                "reading payload", _ -> "ignored")).isInstanceOf(AuthenticationException.class)
                 .hasMessage("Session expired");
 
         verify(this.authService).logout();
@@ -74,17 +66,10 @@ class ServiceHelperTest {
         when(this.response.hasEntity()).thenReturn(true);
         when(this.response.readEntity(String.class)).thenReturn("{\"message\":\"Invalid account payload\"}");
 
-        assertThatThrownBy(() -> ServiceHelper.executeWithResponse(
-                () -> {
-                    throw new WebApplicationException(this.response);
-                },
-                this.authService,
-                LOG,
-                "creating account",
-                "Failed to create account",
-                _ -> "ignored"))
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("Backend request failed");
+        assertThatThrownBy(() -> ServiceHelper.executeWithResponse(() -> {
+            throw new WebApplicationException(this.response);
+        }, this.authService, LOG, "creating account", "Failed to create account", _ -> "ignored"))
+                .isInstanceOf(ServiceException.class).hasMessage("Backend request failed");
 
         verify(this.response).bufferEntity();
         verify(this.response).close();
@@ -99,14 +84,9 @@ class ServiceHelperTest {
         when(this.response.hasEntity()).thenReturn(true);
         when(this.response.readEntity(String.class)).thenReturn("{\"message\":\"Page lookup failed\"}");
 
-        assertThatThrownBy(() -> ServiceHelper.execute(
-                () -> {
-                    throw new WebApplicationException(this.response);
-                },
-                this.authService,
-                LOG,
-                "fetching page"))
-                .isInstanceOf(ServiceException.class)
+        assertThatThrownBy(() -> ServiceHelper.execute(() -> {
+            throw new WebApplicationException(this.response);
+        }, this.authService, LOG, "fetching page")).isInstanceOf(ServiceException.class)
                 .hasMessage("Backend request failed");
 
         verify(this.response).bufferEntity();
@@ -118,14 +98,10 @@ class ServiceHelperTest {
         when(this.response.getStatus()).thenReturn(200);
         when(this.response.readEntity(String.class)).thenThrow(new IllegalStateException("invalid body"));
 
-        assertThatThrownBy(() -> ServiceHelper.executeWithResponse(
-                () -> this.response,
-                this.authService,
-                LOG,
-                "reading payload",
-                currentResponse -> ServiceHelper.readEntity(currentResponse, String.class, "test payload")))
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("Failed to read test payload");
+        assertThatThrownBy(
+                () -> ServiceHelper.executeWithResponse(() -> this.response, this.authService, LOG, "reading payload",
+                        currentResponse -> ServiceHelper.readEntity(currentResponse, String.class, "test payload")))
+                .isInstanceOf(ServiceException.class).hasMessage("Failed to read test payload");
 
         verify(this.response).close();
     }
@@ -137,22 +113,15 @@ class ServiceHelperTest {
         when(this.response.readEntity(entityType)).thenThrow(new IllegalStateException("invalid list"));
 
         assertThatThrownBy(() -> ServiceHelper.readEntity(this.response, entityType, "string list"))
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("Failed to read string list")
+                .isInstanceOf(ServiceException.class).hasMessage("Failed to read string list")
                 .hasCauseInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void execute_shouldWrapUnexpectedRuntimeException() {
-        assertThatThrownBy(() -> ServiceHelper.execute(
-                () -> {
-                    throw new IllegalStateException("boom");
-                },
-                this.authService,
-                LOG,
-                "syncing payload"))
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("Unexpected error")
-                .hasCauseInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> ServiceHelper.execute(() -> {
+            throw new IllegalStateException("boom");
+        }, this.authService, LOG, "syncing payload")).isInstanceOf(ServiceException.class)
+                .hasMessage("Unexpected error").hasCauseInstanceOf(IllegalStateException.class);
     }
 }

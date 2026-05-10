@@ -1,11 +1,13 @@
 package de.vptr.midas.api.util;
 
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import jakarta.annotation.Nullable;
 
 /**
  * General test utilities for REST API testing
@@ -23,8 +25,7 @@ public class TestUtil {
     }
 
     /**
-     * Provides direct access to REST-assured's given() method for custom test
-     * scenarios
+     * Provides direct access to REST-assured's given() method for custom test scenarios
      */
     public static RequestSpecification given() {
         return RestAssured.given();
@@ -38,8 +39,7 @@ public class TestUtil {
     }
 
     /**
-     * Creates a REST-assured request with basic authentication and JSON content
-     * type (admin)
+     * Creates a REST-assured request with basic authentication and JSON content type (admin)
      */
     public static RequestSpecification authenticatedJsonRequest() {
         return authenticatedRequest().contentType(ContentType.JSON);
@@ -53,8 +53,7 @@ public class TestUtil {
     }
 
     /**
-     * Creates a REST-assured request with basic authentication and JSON content
-     * type (guest)
+     * Creates a REST-assured request with basic authentication and JSON content type (guest)
      */
     public static RequestSpecification authenticatedGuestJsonRequest() {
         return authenticatedGuestRequest().contentType(ContentType.JSON);
@@ -64,11 +63,7 @@ public class TestUtil {
      * Tests unauthorized access to an endpoint
      */
     public static ValidatableResponse testUnauthorizedAccess(final String endpoint) {
-        return given()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(401);
+        return given().when().get(endpoint).then().statusCode(401);
     }
 
     /**
@@ -112,70 +107,42 @@ public class TestUtil {
      * Tests authorized GET request expecting 200 OK with JSON content
      */
     public static ValidatableResponse testAuthorizedGetWithJson(final String endpoint) {
-        return authenticatedRequest()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON);
+        return authenticatedRequest().when().get(endpoint).then().statusCode(200).contentType(ContentType.JSON);
     }
 
     /**
      * Tests unauthenticated GET request on a @PermitAll endpoint expecting 200 OK
      */
     public static ValidatableResponse testPermitAllGetWithJson(final String endpoint) {
-        return given()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(200);
+        return given().when().get(endpoint).then().statusCode(200);
     }
 
     /**
      * Tests authorized GET request expecting 200 OK (resource exists)
      */
     public static ValidatableResponse testAuthorizedGetWithExistingResource(final String endpoint) {
-        return authenticatedRequest()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(200);
+        return authenticatedRequest().when().get(endpoint).then().statusCode(200);
     }
 
     /**
      * Tests authorized GET request expecting 404 (resource does not exist)
      */
     public static ValidatableResponse testAuthorizedGetWithNonExistentResource(final String endpoint) {
-        return authenticatedRequest()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(404);
+        return authenticatedRequest().when().get(endpoint).then().statusCode(404);
     }
 
     /**
-     * Tests authorized GET request expecting 200 OK with JSON content (resource
-     * exists)
+     * Tests authorized GET request expecting 200 OK with JSON content (resource exists)
      */
     public static ValidatableResponse testAuthorizedGetWithExistingResourceAndJson(final String endpoint) {
-        return authenticatedRequest()
-                .when()
-                .get(endpoint)
-                .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON);
+        return authenticatedRequest().when().get(endpoint).then().statusCode(200).contentType(ContentType.JSON);
     }
 
     /**
      * Tests authorized POST request expecting 201 (successful creation)
      */
     public static ValidatableResponse testAuthorizedPostWithCreation(final String endpoint, final String jsonBody) {
-        return authenticatedJsonRequest()
-                .body(jsonBody)
-                .when()
-                .post(endpoint)
-                .then()
-                .statusCode(201);
+        return authenticatedJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(201);
     }
 
     /**
@@ -183,39 +150,22 @@ public class TestUtil {
      */
     public static ValidatableResponse testAuthorizedPostWithInsufficientRole(final String endpoint,
             final String jsonBody) {
-        return authenticatedGuestJsonRequest()
-                .body(jsonBody)
-                .when()
-                .post(endpoint)
-                .then()
-                .statusCode(403);
+        return authenticatedGuestJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(403);
     }
 
     /**
      * Tests authorized POST request expecting 400 (bad request/syntax error)
      */
-    public static ValidatableResponse testAuthorizedPostWithSyntaxError(final String endpoint,
-            final String jsonBody) {
-        return authenticatedJsonRequest()
-                .body(jsonBody)
-                .when()
-                .post(endpoint)
-                .then()
-                .statusCode(400);
+    public static ValidatableResponse testAuthorizedPostWithSyntaxError(final String endpoint, final String jsonBody) {
+        return authenticatedJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(400);
     }
 
     /**
-     * Tests authorized POST request expecting 422 (unprocessable entity/validation
-     * error)
+     * Tests authorized POST request expecting 422 (unprocessable entity/validation error)
      */
     public static ValidatableResponse testAuthorizedPostWithValidationError(final String endpoint,
             final String jsonBody) {
-        return authenticatedJsonRequest()
-                .body(jsonBody)
-                .when()
-                .post(endpoint)
-                .then()
-                .statusCode(422);
+        return authenticatedJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(422);
     }
 
     /**
@@ -248,29 +198,20 @@ public class TestUtil {
     }
 
     /**
-     * Tests a PUT request with authentication that should return 200 with JSON
-     * response
+     * Tests a PUT request with authentication that should return 200 with JSON response
      */
     public static ValidatableResponse testAuthorizedPutWithJson(final String endpoint, final String requestBody) {
-        return authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(requestBody)
-                .when()
-                .put(endpoint)
-                .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON);
+        return authenticatedRequest().contentType(ContentType.JSON).body(requestBody).when().put(endpoint).then()
+                .statusCode(200).contentType(ContentType.JSON);
     }
 
     /**
      * Creates a test category and returns its ID
      */
+    @Nullable
     public static Long createTestCategory() {
         final var categoryJson = TestDataBuilder.createDefaultPostCategoryJson();
-        final var response = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(categoryJson)
-                .when()
+        final var response = authenticatedRequest().contentType(ContentType.JSON).body(categoryJson).when()
                 .post("/api/v1/categories");
         final Integer id = response.then().statusCode(201).extract().path("id");
         return id != null ? id.longValue() : null;
@@ -279,14 +220,13 @@ public class TestUtil {
     /**
      * Creates a test post and returns its ID
      */
+    @Nullable
     public static Long createTestPost() {
         final var categoryId = createTestCategory();
-        final var postJson = TestDataBuilder.createPostJson("Test Post", "Test content", true, true, 1L, categoryId);
-        final var response = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(postJson)
-                .when()
-                .post("/api/v1/posts");
+        final var postJson = TestDataBuilder.createPostJson("Test Post", "Test content", true, true, 1L,
+                Objects.requireNonNull(categoryId));
+        final var response =
+                authenticatedRequest().contentType(ContentType.JSON).body(postJson).when().post("/api/v1/posts");
         final Integer id = response.then().statusCode(201).extract().path("id");
         return id != null ? id.longValue() : null;
     }
@@ -294,13 +234,11 @@ public class TestUtil {
     /**
      * Creates a test comment and returns its ID
      */
-    public static Long createTestComment(final Long postId) {
-        final var commentJson = TestDataBuilder.createDefaultPostCommentJson(postId);
-        final var response = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(commentJson)
-                .when()
-                .post("/api/v1/comments");
+    @Nullable
+    public static Long createTestComment(@Nullable final Long postId) {
+        final var commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
+        final var response =
+                authenticatedRequest().contentType(ContentType.JSON).body(commentJson).when().post("/api/v1/comments");
         final Integer id = response.then().statusCode(201).extract().path("id");
         return id != null ? id.longValue() : null;
     }
@@ -308,13 +246,11 @@ public class TestUtil {
     /**
      * Creates a test account and returns its ID
      */
+    @Nullable
     public static Long createTestAccount() {
         final var accountJson = TestDataBuilder.createUniqueAccountJson();
-        final var response = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(accountJson)
-                .when()
-                .post("/api/v1/accounts");
+        final var response =
+                authenticatedRequest().contentType(ContentType.JSON).body(accountJson).when().post("/api/v1/accounts");
         final Integer id = response.then().statusCode(201).extract().path("id");
         return id != null ? id.longValue() : null;
     }
@@ -325,8 +261,8 @@ public class TestUtil {
     public static String createPaymentJsonWithTestAccounts() {
         final Long targetAccountId = createTestAccount();
         final Long sourceAccountId = createTestAccount();
-        return TestDataBuilder.createPaymentJson(targetAccountId, sourceAccountId, 1L, "100.00", "Test payment",
-                "2024-01-01");
+        return TestDataBuilder.createPaymentJson(Objects.requireNonNull(targetAccountId),
+                Objects.requireNonNull(sourceAccountId), 1L, "100.00", "Test payment", "2024-01-01");
     }
 
     /**
@@ -345,17 +281,10 @@ public class TestUtil {
     }
 
     /**
-     * Tests a PATCH request with authentication that should return 200 with JSON
-     * response
+     * Tests a PATCH request with authentication that should return 200 with JSON response
      */
     public static ValidatableResponse testAuthorizedPatchWithJson(final String endpoint, final String requestBody) {
-        return authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(requestBody)
-                .when()
-                .patch(endpoint)
-                .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON);
+        return authenticatedRequest().contentType(ContentType.JSON).body(requestBody).when().patch(endpoint).then()
+                .statusCode(200).contentType(ContentType.JSON);
     }
 }

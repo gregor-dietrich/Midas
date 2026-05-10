@@ -27,42 +27,42 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PostCategoryClient {
 
-        @GET
-        List<PostCategoryResponseDto> getAllCategories(@QueryParam("page") Integer page,
-                        @QueryParam("size") Integer size, @HeaderParam("Authorization") String authorization);
+    @GET
+    List<PostCategoryResponseDto> getAllCategories(@QueryParam("page") Integer page, @QueryParam("size") Integer size,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/root")
-        List<PostCategoryResponseDto> getRootCategories(@HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/root")
+    List<PostCategoryResponseDto> getRootCategories(@HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/{id}")
-        Response getCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/{id}")
+    Response getCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/parent/{parentId}")
-        List<PostCategoryResponseDto> getCategoriesByParent(@PathParam("parentId") Long parentId,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/parent/{parentId}")
+    List<PostCategoryResponseDto> getCategoriesByParent(@PathParam("parentId") Long parentId,
+            @HeaderParam("Authorization") String authorization);
 
-        @POST
-        Response createCategory(PostCategoryDto category, @HeaderParam("Authorization") String authorization);
+    @POST
+    Response createCategory(PostCategoryDto category, @HeaderParam("Authorization") String authorization);
 
-        @PUT
-        @Path("/{id}")
-        Response updateCategory(@PathParam("id") Long id, PostCategoryDto category,
-                        @HeaderParam("Authorization") String authorization);
+    @PUT
+    @Path("/{id}")
+    Response updateCategory(@PathParam("id") Long id, PostCategoryDto category,
+            @HeaderParam("Authorization") String authorization);
 
-        @PATCH
-        @Path("/{id}")
-        Response patchCategory(@PathParam("id") Long id, PostCategoryDto category,
-                        @HeaderParam("Authorization") String authorization);
+    @PATCH
+    @Path("/{id}")
+    Response patchCategory(@PathParam("id") Long id, PostCategoryDto category,
+            @HeaderParam("Authorization") String authorization);
 
-        @DELETE
-        @Path("/{id}")
-        Response deleteCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @DELETE
+    @Path("/{id}")
+    Response deleteCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/search")
-        List<PostCategoryResponseDto> searchCategories(@QueryParam("query") String query,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/search")
+    List<PostCategoryResponseDto> searchCategories(@QueryParam("query") String query,
+            @HeaderParam("Authorization") String authorization);
 }

@@ -41,8 +41,7 @@ public class UserGroupResource {
     /** Returns all groups with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "user-group:edit", "user-group:delete" })
-    public List<UserGroupResponseDto> getAllGroups(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<UserGroupResponseDto> getAllGroups(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);

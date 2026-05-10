@@ -1,8 +1,8 @@
 package de.vptr.midas.api.exception;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,8 +42,8 @@ class GenericExceptionMapperTest {
 
     @Test
     void testToResponse_wrapsClientWebApplicationException() {
-        final Response response = mapper
-                .toResponse(new WebApplicationException("Invalid query", Response.Status.BAD_REQUEST));
+        final Response response =
+                mapper.toResponse(new WebApplicationException("Invalid query", Response.Status.BAD_REQUEST));
 
         final var body = (ApiErrorResponse) response.getEntity();
         assertNotNull(body);
@@ -55,8 +55,8 @@ class GenericExceptionMapperTest {
 
     @Test
     void testToResponse_masksServerWebApplicationExceptionDetails() {
-        final Response response = mapper
-                .toResponse(new WebApplicationException("secret details", Response.Status.INTERNAL_SERVER_ERROR));
+        final Response response =
+                mapper.toResponse(new WebApplicationException("secret details", Response.Status.INTERNAL_SERVER_ERROR));
 
         final var body = (ApiErrorResponse) response.getEntity();
         assertNotNull(body);

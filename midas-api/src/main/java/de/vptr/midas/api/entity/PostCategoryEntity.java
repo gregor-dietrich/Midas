@@ -10,6 +10,7 @@ import org.hibernate.generator.EventType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,35 +27,40 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a post category. */
 @Entity
-@Table(name = "post_categories", indexes = {
-        @Index(name = "idx_post_category_parent_id", columnList = "parent_id")
-})
+@Table(name = "post_categories", indexes = { @Index(name = "idx_post_category_parent_id", columnList = "parent_id") })
 public class PostCategoryEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @NotBlank
+    @Nullable
     public String name;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @Nullable
     public PostCategoryEntity parent;
 
     @JsonIgnore
     @OneToMany(mappedBy = "parent", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @Nullable
     public List<PostCategoryEntity> children;
 
     @JsonIgnore
     @OneToMany(mappedBy = "category", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @Nullable
     public List<PostEntity> posts;
 
     // Helper method to check if this is a root category

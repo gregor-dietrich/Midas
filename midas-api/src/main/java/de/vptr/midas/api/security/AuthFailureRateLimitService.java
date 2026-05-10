@@ -29,10 +29,10 @@ public class AuthFailureRateLimitService {
     long periodSeconds;
 
     /**
-     * Checks whether the given key is currently blocked due to too many
-     * failed authentication attempts.
+     * Checks whether the given key is currently blocked due to too many failed authentication attempts.
      *
-     * @param key the client identifier (e.g. username or IP address)
+     * @param key
+     *            the client identifier (e.g. username or IP address)
      * @return true if the key is blocked
      */
     public boolean isBlocked(final String key) {
@@ -45,7 +45,8 @@ public class AuthFailureRateLimitService {
     /**
      * Records a failed authentication attempt for the given key.
      *
-     * @param key the client identifier (e.g. username or IP address)
+     * @param key
+     *            the client identifier (e.g. username or IP address)
      */
     public void recordFailure(final String key) {
         this.cleanupIfNeeded();
@@ -78,10 +79,8 @@ public class AuthFailureRateLimitService {
     }
 
     private Bucket createBucket() {
-        final var bandwidth = Bandwidth.builder()
-                .capacity(this.authFailurePermits)
-                .refillGreedy(this.authFailurePermits, Duration.ofSeconds(this.periodSeconds))
-                .build();
+        final var bandwidth = Bandwidth.builder().capacity(this.authFailurePermits)
+                .refillGreedy(this.authFailurePermits, Duration.ofSeconds(this.periodSeconds)).build();
         return Bucket.builder().addLimit(bandwidth).build();
     }
 

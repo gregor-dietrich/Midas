@@ -53,8 +53,8 @@ public class PaymentDto {
 
     /** Creates a new instance. */
     public PaymentDto(final Long userId, final Long sourceAccountId, final Long targetAccountId,
-            final BigDecimal amount,
-            final LocalDate date, final String comment, final LocalDateTime created, final LocalDateTime lastEdit) {
+            final BigDecimal amount, final LocalDate date, final String comment, final LocalDateTime created,
+            final LocalDateTime lastEdit) {
         this.userId = userId;
         this.sourceAccountId = sourceAccountId;
         this.targetAccountId = targetAccountId;

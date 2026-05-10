@@ -4,22 +4,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import de.vptr.midas.api.entity.PostCategoryEntity;
+import jakarta.annotation.Nullable;
 
 /**
- * Response DTO for post category operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for post category operations. Contains computed fields and safe data for client responses.
  */
 public class PostCategoryResponseDto {
 
+    @Nullable
     public Long id;
+    @Nullable
     public String name;
+    @Nullable
     public Long parentId;
+    @Nullable
     public String parentName;
     public boolean isRootCategory;
     public int childrenCount;
     public int postsCount;
+    @Nullable
     public List<Long> childrenIds;
+    @Nullable
     public LocalDateTime created;
+    @Nullable
     public LocalDateTime lastEdit;
 
     public PostCategoryResponseDto() {
@@ -27,11 +34,10 @@ public class PostCategoryResponseDto {
     }
 
     /**
-     * Creates a new instance with pre-computed counts (avoids lazy-loading
-     * collections).
+     * Creates a new instance with pre-computed counts (avoids lazy-loading collections).
      */
     public PostCategoryResponseDto(final PostCategoryEntity entity, final int childrenCount,
-            final List<Long> childrenIds, final int postsCount) {
+            @Nullable final List<Long> childrenIds, final int postsCount) {
         this.id = entity.id;
         this.name = entity.name;
         this.isRootCategory = entity.isRootCategory();

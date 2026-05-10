@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     private PostEntity testPost;
     private PostCategoryEntity testCategory;
 
+    @SuppressWarnings("NullAway")
     @BeforeEach
     void setUp() {
         runInIsolatedTransaction(() -> {
@@ -82,11 +85,11 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateComment() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Test Comment Content", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Test Comment Content", this.testPost.id);
 
-        final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
-                this.testUser.username);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(createdComment);
         assertNotNull(createdComment.id);
@@ -99,18 +102,16 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdateComment() {
-        // First create a comment
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Original Comment", this.testPost.id);
-        final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
-                this.testUser.username);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        // Update the comment
         final var updateDto = new PostCommentDto();
         updateDto.content = "Updated Comment Content";
 
-        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(createdComment.id, updateDto,
-                this.testUser.username);
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(commentId, updateDto,
+                Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(updatedComment);
         assertEquals("Updated Comment Content", updatedComment.content);
@@ -119,30 +120,29 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdateCommentShouldDenyNonOwnerWithoutAdminAccess() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Original Comment", this.testPost.id);
-        final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
-                this.testUser.username);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
         final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
 
         final var updateDto = new PostCommentDto();
         updateDto.content = "Blocked update";
 
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String intruderUsername = Objects.requireNonNull(intruder.username);
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.updateComment(createdComment.id, updateDto, intruder.username));
+                () -> this.postCommentService.updateComment(commentId, updateDto, intruderUsername));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
     @Test
     @TestTransaction
     void testDeleteComment() {
-        // First create a comment
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Comment to delete", this.testPost.id);
-        final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
-                this.testUser.username);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Comment to delete", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        final Long commentId = createdComment.id;
+        final Long commentId = Objects.requireNonNull(createdComment.id);
 
         final var deleted = this.postCommentService.deleteComment(commentId, this.testUser.username);
 
@@ -160,13 +160,13 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindById() {
-        // First create a comment
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Find By ID Comment", this.testPost.id);
-        final PostCommentResponseDto createdComment = this.postCommentService.createComment(newComment,
-                this.testUser.username);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Find By ID Comment", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        final var foundComment = this.postCommentService.findById(createdComment.id);
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final var foundComment = this.postCommentService.findById(commentId);
 
         assertTrue(foundComment.isPresent());
         assertEquals("Find By ID Comment", foundComment.get().content);
@@ -181,55 +181,49 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByPostId() {
-        // First create comments
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "First comment", this.testPost.id);
-        this.postCommentService.createComment(comment1, this.testUser.username);
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final Long postId = Objects.requireNonNull(this.testPost.id);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("First comment", postId);
+        this.postCommentService.createComment(comment1, username);
 
-        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Second comment", this.testPost.id);
-        this.postCommentService.createComment(comment2, this.testUser.username);
+        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto("Second comment", postId);
+        this.postCommentService.createComment(comment2, username);
 
-        final var postComments = this.postCommentService.findByPostId(this.testPost.id);
+        final var postComments = this.postCommentService.findByPostId(postId);
 
         assertNotNull(postComments);
         assertTrue(postComments.size() >= 2);
 
-        // Verify all comments belong to the post
         for (final var comment : postComments) {
-            assertEquals(this.testPost.id, comment.postId);
+            assertEquals(postId, comment.postId);
         }
     }
 
     @Test
     @TestTransaction
     void testFindByUserId() {
-        // First create comments
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "User comment 1", this.testPost.id);
-        this.postCommentService.createComment(comment1, this.testUser.username);
+        final String username2 = Objects.requireNonNull(this.testUser.username);
+        final Long userId = Objects.requireNonNull(this.testUser.id);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("User comment 1", this.testPost.id);
+        this.postCommentService.createComment(comment1, username2);
 
-        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "User comment 2", this.testPost.id);
-        this.postCommentService.createComment(comment2, this.testUser.username);
+        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto("User comment 2", this.testPost.id);
+        this.postCommentService.createComment(comment2, username2);
 
-        final var userComments = this.postCommentService.findByUserId(this.testUser.id);
+        final var userComments = this.postCommentService.findByUserId(userId);
         assertNotNull(userComments);
         assertTrue(userComments.size() >= 2);
 
-        // Verify all comments belong to the user
         for (final var comment : userComments) {
-            assertEquals(this.testUser.id, comment.userId);
+            assertEquals(userId, comment.userId);
         }
     }
 
     @Test
     @TestTransaction
     void testFindRecentComments() {
-        // First create a comment
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto(
-                "Recent comment", this.testPost.id);
-        this.postCommentService.createComment(comment1, this.testUser.username);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("Recent comment", this.testPost.id);
+        this.postCommentService.createComment(comment1, Objects.requireNonNull(this.testUser.username));
 
         final var recentComments = this.postCommentService.findRecentComments(10);
 

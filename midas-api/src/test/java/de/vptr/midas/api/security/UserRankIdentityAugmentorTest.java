@@ -280,14 +280,8 @@ public class UserRankIdentityAugmentorTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "nonExistingUser,passwordDoesNotMatter",
-            "bannedUser,bannedUser",
-            "notActivatedUser,notActivatedUser",
-            ",",
-            " , ",
-            "null,null"
-    }, nullValues = "null")
+    @CsvSource(value = { "nonExistingUser,passwordDoesNotMatter", "bannedUser,bannedUser",
+            "notActivatedUser,notActivatedUser", ",", " , ", "null,null" }, nullValues = "null")
     void testAugmentIdentity_fails(final String username, final String password) {
         assertThrows(AuthenticationFailedException.class, () -> this.getAugmentedIdentity(username, password));
     }
@@ -299,34 +293,34 @@ public class UserRankIdentityAugmentorTest {
             final var rankEntity = new UserRankEntity();
             rankEntity.id = rank.id;
             rankEntity.name = rank.name;
-            rankEntity.adminView = rank.adminView;
-            rankEntity.pageAdd = rank.pageAdd;
-            rankEntity.pageDelete = rank.pageDelete;
-            rankEntity.pageEdit = rank.pageEdit;
-            rankEntity.postAdd = rank.postAdd;
-            rankEntity.postDelete = rank.postDelete;
-            rankEntity.postEdit = rank.postEdit;
-            rankEntity.postCategoryAdd = rank.postCategoryAdd;
-            rankEntity.postCategoryDelete = rank.postCategoryDelete;
-            rankEntity.postCategoryEdit = rank.postCategoryEdit;
-            rankEntity.postCommentAdd = rank.postCommentAdd;
-            rankEntity.postCommentDelete = rank.postCommentDelete;
-            rankEntity.postCommentEdit = rank.postCommentEdit;
-            rankEntity.userAdd = rank.userAdd;
-            rankEntity.userDelete = rank.userDelete;
-            rankEntity.userEdit = rank.userEdit;
-            rankEntity.userGroupAdd = rank.userGroupAdd;
-            rankEntity.userGroupDelete = rank.userGroupDelete;
-            rankEntity.userGroupEdit = rank.userGroupEdit;
-            rankEntity.userAccountAdd = rank.userAccountAdd;
-            rankEntity.userAccountDelete = rank.userAccountDelete;
-            rankEntity.userAccountEdit = rank.userAccountEdit;
-            rankEntity.userRankAdd = rank.userRankAdd;
-            rankEntity.userRankDelete = rank.userRankDelete;
-            rankEntity.userRankEdit = rank.userRankEdit;
+            rankEntity.adminView = Boolean.TRUE.equals(rank.adminView);
+            rankEntity.pageAdd = Boolean.TRUE.equals(rank.pageAdd);
+            rankEntity.pageDelete = Boolean.TRUE.equals(rank.pageDelete);
+            rankEntity.pageEdit = Boolean.TRUE.equals(rank.pageEdit);
+            rankEntity.postAdd = Boolean.TRUE.equals(rank.postAdd);
+            rankEntity.postDelete = Boolean.TRUE.equals(rank.postDelete);
+            rankEntity.postEdit = Boolean.TRUE.equals(rank.postEdit);
+            rankEntity.postCategoryAdd = Boolean.TRUE.equals(rank.postCategoryAdd);
+            rankEntity.postCategoryDelete = Boolean.TRUE.equals(rank.postCategoryDelete);
+            rankEntity.postCategoryEdit = Boolean.TRUE.equals(rank.postCategoryEdit);
+            rankEntity.postCommentAdd = Boolean.TRUE.equals(rank.postCommentAdd);
+            rankEntity.postCommentDelete = Boolean.TRUE.equals(rank.postCommentDelete);
+            rankEntity.postCommentEdit = Boolean.TRUE.equals(rank.postCommentEdit);
+            rankEntity.userAdd = Boolean.TRUE.equals(rank.userAdd);
+            rankEntity.userDelete = Boolean.TRUE.equals(rank.userDelete);
+            rankEntity.userEdit = Boolean.TRUE.equals(rank.userEdit);
+            rankEntity.userGroupAdd = Boolean.TRUE.equals(rank.userGroupAdd);
+            rankEntity.userGroupDelete = Boolean.TRUE.equals(rank.userGroupDelete);
+            rankEntity.userGroupEdit = Boolean.TRUE.equals(rank.userGroupEdit);
+            rankEntity.userAccountAdd = Boolean.TRUE.equals(rank.userAccountAdd);
+            rankEntity.userAccountDelete = Boolean.TRUE.equals(rank.userAccountDelete);
+            rankEntity.userAccountEdit = Boolean.TRUE.equals(rank.userAccountEdit);
+            rankEntity.userRankAdd = Boolean.TRUE.equals(rank.userRankAdd);
+            rankEntity.userRankDelete = Boolean.TRUE.equals(rank.userRankDelete);
+            rankEntity.userRankEdit = Boolean.TRUE.equals(rank.userRankEdit);
             return this.userRankIdentityAugmentor.buildRolesFromUserRank(rankEntity);
         }
-        return this.userRankIdentityAugmentor.buildRolesFromUserRank(null);
+        return Set.of();
     }
 
     private SecurityIdentity getAugmentedIdentity(final String username, final String password) {

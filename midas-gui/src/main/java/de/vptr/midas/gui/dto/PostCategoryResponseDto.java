@@ -5,8 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response DTO for post category operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for post category operations. Contains computed fields and safe data for client responses.
  */
 public class PostCategoryResponseDto {
 

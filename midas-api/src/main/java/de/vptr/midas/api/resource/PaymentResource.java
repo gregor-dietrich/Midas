@@ -11,6 +11,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -43,13 +44,13 @@ public class PaymentResource {
     PaymentService paymentService;
 
     @Context
+    @Nullable
     SecurityContext securityContext;
 
     /** Returns all payments with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getAllPayments(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PaymentResponseDto> getAllPayments(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -90,8 +91,7 @@ public class PaymentResource {
     @GET
     @Path("/date-range")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getPaymentsByDateRange(
-            @QueryParam("startDate") final LocalDate startDate,
+    public List<PaymentResponseDto> getPaymentsByDateRange(@QueryParam("startDate") final LocalDate startDate,
             @QueryParam("endDate") final LocalDate endDate) {
         if (startDate == null || endDate == null) {
             throw new BadRequestException("Both startDate and endDate parameters are required");

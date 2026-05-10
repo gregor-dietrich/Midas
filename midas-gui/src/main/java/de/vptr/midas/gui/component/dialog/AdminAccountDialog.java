@@ -20,8 +20,7 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing accounts in the admin view.
- * Encapsulates form fields, binder, and save/cancel logic.
+ * Dialog for creating and editing accounts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
 public class AdminAccountDialog extends FormDialog {
 
@@ -35,8 +34,7 @@ public class AdminAccountDialog extends FormDialog {
     private AccountDto currentAccount;
 
     /** Initializes AdminAccountDialog. */
-    public AdminAccountDialog(final AccountService accountService,
-            final Runnable onSave,
+    public AdminAccountDialog(final AccountService accountService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.accountService = accountService;

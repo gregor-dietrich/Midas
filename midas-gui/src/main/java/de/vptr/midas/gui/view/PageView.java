@@ -10,12 +10,11 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import de.vptr.midas.gui.util.NotificationUtil;
-import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import jakarta.inject.Inject;
 
 /** User view for browsing pages. */
@@ -54,23 +53,18 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadPagesAsync() {
         LOG.info("Starting async page loading");
 
-        this.loadDataAsync(
-                () -> this.pageService.getAllPages(),
-                pages -> {
-                    LOG.infof("Successfully loaded %s pages", pages.size());
-                    this.grid.setItems(pages);
-                });
+        this.loadDataAsync(() -> this.pageService.getAllPages(), pages -> {
+            LOG.infof("Successfully loaded %s pages", pages.size());
+            this.grid.setItems(pages);
+        });
     }
 
     private void buildUi() {
         this.removeAll();
 
         final var header = new H2("Pages");
-        this.searchLayout = new AsyncSearchLayout(
-                this::searchPages,
-                this::loadPagesAsync,
-                "Search by title or content...",
-                "Search Pages");
+        this.searchLayout = new AsyncSearchLayout(this::searchPages, this::loadPagesAsync,
+                "Search by title or content...", "Search Pages");
         this.createGrid();
 
         this.add(header, this.searchLayout, this.grid);
@@ -106,16 +100,13 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void searchPages(final String query) {
         this.searchLayout.setSearching(true);
 
-        this.loadDataAsync(
-                () -> this.pageService.searchPages(query),
-                pages -> {
-                    this.searchLayout.setSearching(false);
-                    LOG.infof("Search found %s pages", pages.size());
-                    this.grid.setItems(pages);
-                },
-                throwable -> {
-                    this.searchLayout.setSearching(false);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.pageService.searchPages(query), pages -> {
+            this.searchLayout.setSearching(false);
+            LOG.infof("Search found %s pages", pages.size());
+            this.grid.setItems(pages);
+        }, throwable -> {
+            this.searchLayout.setSearching(false);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

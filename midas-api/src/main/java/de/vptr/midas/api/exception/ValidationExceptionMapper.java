@@ -13,8 +13,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
     @Override
     public Response toResponse(final ValidationException exception) {
         final String message = exception != null && exception.getMessage() != null && !exception.getMessage().isBlank()
-                ? exception.getMessage()
-                : "Validation failed";
+                ? exception.getMessage() : "Validation failed";
         return ResponseUtil.unprocessable(new ApiErrorResponse(422, "Validation failed", message));
     }
 }

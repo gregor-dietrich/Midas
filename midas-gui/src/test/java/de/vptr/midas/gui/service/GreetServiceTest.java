@@ -72,8 +72,7 @@ class GreetServiceTest {
         when(this.authService.getAuthorizationHeader()).thenReturn(null);
 
         // When / Then
-        assertThatThrownBy(() -> this.greetService.greet("John"))
-                .isInstanceOf(AuthenticationException.class)
+        assertThatThrownBy(() -> this.greetService.greet("John")).isInstanceOf(AuthenticationException.class)
                 .hasMessage("Not authenticated");
     }
 
@@ -84,8 +83,7 @@ class GreetServiceTest {
         when(this.authService.getAuthorizationHeader()).thenThrow(new RuntimeException("Connection error"));
 
         // When / Then
-        assertThatThrownBy(() -> this.greetService.greet(name))
-                .isInstanceOf(RuntimeException.class)
+        assertThatThrownBy(() -> this.greetService.greet(name)).isInstanceOf(RuntimeException.class)
                 .hasMessage("Connection error");
     }
 }

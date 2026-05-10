@@ -208,8 +208,7 @@ class UserServiceTest {
 
         final var results = this.userService.searchUsers(null);
 
-        assertEquals(expected.stream().map(user -> user.id).toList(),
-                results.stream().map(user -> user.id).toList());
+        assertEquals(expected.stream().map(user -> user.id).toList(), results.stream().map(user -> user.id).toList());
     }
 
     @Test
@@ -218,8 +217,7 @@ class UserServiceTest {
 
         final var results = this.userService.searchUsers("   ");
 
-        assertEquals(expected.stream().map(user -> user.id).toList(),
-                results.stream().map(user -> user.id).toList());
+        assertEquals(expected.stream().map(user -> user.id).toList(), results.stream().map(user -> user.id).toList());
     }
 
     @Test
@@ -290,8 +288,7 @@ class UserServiceTest {
         final var created = this.userService.createUser(dto);
 
         final var patchDto = new UserDto();
-        patchDto.email = "patched_" + ServiceTestUtil.generateUniqueTestSuffix()
-                + "@example.com";
+        patchDto.email = "patched_" + ServiceTestUtil.generateUniqueTestSuffix() + "@example.com";
 
         final var patched = this.userService.patchUser(created.id, patchDto);
         assertNotNull(patched);

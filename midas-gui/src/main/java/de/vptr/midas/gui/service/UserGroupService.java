@@ -1,9 +1,6 @@
 package de.vptr.midas.gui.service;
 
-import de.vptr.midas.gui.util.UiConstants;
-
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +16,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -37,24 +35,25 @@ public class UserGroupService {
     AuthService authService;
 
     /** Returns the all groups. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> getAllGroups(final Integer page, final Integer size) {
         LOG.debug("Fetching all groups");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(
-                () -> this.groupClient.getAllGroups(safePage, safeSize, authHeader),
+        return ServiceHelper.execute(() -> this.groupClient.getAllGroups(safePage, safeSize, authHeader),
                 this.authService, LOG, "fetching groups");
     }
 
     /** Returns the group by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<UserGroupResponseDto> getGroupById(final Long id) {
         LOG.debugf("Fetching group with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(id, authHeader),
-                this.authService, LOG, "fetching group " + id, response -> {
+        return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(id, authHeader), this.authService, LOG,
+                "fetching group " + id, response -> {
                     if (response.getStatus() == 200) {
                         return Optional
                                 .of(ServiceHelper.readEntity(response, UserGroupResponseDto.class, "group response"));
@@ -67,23 +66,23 @@ public class UserGroupService {
     }
 
     /** Returns the users in group. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserDto> getUsersInGroup(final Long groupId) {
         LOG.debugf("Fetching users in group: %s", groupId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.groupClient.getUsersInGroup(groupId, authHeader),
-                this.authService, LOG, "fetching users in group " + groupId);
+        return ServiceHelper.execute(() -> this.groupClient.getUsersInGroup(groupId, authHeader), this.authService, LOG,
+                "fetching users in group " + groupId);
     }
 
     /** Handles the search groups operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> searchGroups(final String query) {
         LOG.debugf("Searching groups with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.groupClient.searchGroups(query, authHeader),
-                this.authService, LOG, "searching groups");
+        return ServiceHelper.execute(() -> this.groupClient.searchGroups(query, authHeader), this.authService, LOG,
+                "searching groups");
     }
 
     /** Creates a new group. */
@@ -120,8 +119,8 @@ public class UserGroupService {
     public boolean deleteGroup(final Long id) {
         LOG.debugf("Deleting group: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.deleteGroup(id, authHeader),
-                this.authService, LOG, "deleting group " + id, response -> response.getStatus() == 204);
+        return ServiceHelper.executeWithResponse(() -> this.groupClient.deleteGroup(id, authHeader), this.authService,
+                LOG, "deleting group " + id, response -> response.getStatus() == 204);
     }
 
     /** Adds the user to group. */
@@ -145,18 +144,18 @@ public class UserGroupService {
     public boolean removeUserFromGroup(final Long groupId, final Long userId) {
         LOG.debugf("Removing user %s from group %s", userId, groupId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.removeUserFromGroup(groupId, userId,
-                authHeader), this.authService, LOG, "removing user " + userId + " from group " + groupId,
-                response -> response.getStatus() == 204);
+        return ServiceHelper.executeWithResponse(
+                () -> this.groupClient.removeUserFromGroup(groupId, userId, authHeader), this.authService, LOG,
+                "removing user " + userId + " from group " + groupId, response -> response.getStatus() == 204);
     }
 
     /** Returns the groups by user. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserGroupResponseDto> getGroupsByUser(final Long userId) {
         LOG.debugf("Fetching groups for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.groupClient.getGroupsForUser(userId, authHeader),
-                this.authService, LOG, "fetching groups for user " + userId);
+        return ServiceHelper.execute(() -> this.groupClient.getGroupsForUser(userId, authHeader), this.authService, LOG,
+                "fetching groups for user " + userId);
     }
 }

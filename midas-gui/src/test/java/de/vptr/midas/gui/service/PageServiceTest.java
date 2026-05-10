@@ -53,8 +53,8 @@ class PageServiceTest {
 
     @Test
     void getAllPages_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.getAllPages());
     }
@@ -93,8 +93,8 @@ class PageServiceTest {
 
     @Test
     void getPageById_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.getPageById(1L));
     }
@@ -118,8 +118,8 @@ class PageServiceTest {
     @Test
     void createPage_shouldThrowAuthenticationException_whenNotAuthenticated() {
         final var page = MockDataUtil.createPageDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.pageService.createPage(page));
     }
@@ -145,8 +145,8 @@ class PageServiceTest {
     @Test
     void updatePage_shouldThrowAuthenticationException_whenNotAuthenticated() {
         final var page = MockDataUtil.createPageDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.pageService.updatePage(page));
     }
@@ -165,8 +165,8 @@ class PageServiceTest {
 
     @Test
     void deletePage_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.pageService.deletePage(1L));
     }
@@ -186,11 +186,10 @@ class PageServiceTest {
 
     @Test
     void searchPages_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.pageService.searchPages("result"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.searchPages("result"));
     }
 
     @Test
@@ -207,11 +206,10 @@ class PageServiceTest {
 
     @Test
     void searchContent_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.pageService.searchContent("content"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.searchContent("content"));
     }
 
     @Test

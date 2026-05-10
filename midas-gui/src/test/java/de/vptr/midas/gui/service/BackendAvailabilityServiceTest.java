@@ -19,9 +19,9 @@ import jakarta.ws.rs.core.Response;
 /**
  * Unit tests for BackendAvailabilityService core logic.
  *
- * <p>Note: SmallRye Fault Tolerance decorators (@Retry, @Timeout, @Fallback) require
- * the Quarkus runtime and are not testable in unit tests. Decorator behavior is
- * tested via integration tests or manual testing in dev mode.
+ * <p>
+ * Note: SmallRye Fault Tolerance decorators (@Retry, @Timeout, @Fallback) require the Quarkus runtime and are not
+ * testable in unit tests. Decorator behavior is tested via integration tests or manual testing in dev mode.
  */
 @ExtendWith(MockitoExtension.class)
 class BackendAvailabilityServiceTest {

@@ -3,16 +3,25 @@ package de.vptr.midas.api.dto;
 import java.time.LocalDateTime;
 
 import de.vptr.midas.api.entity.PostCommentEntity;
+import jakarta.annotation.Nullable;
 
 /** Data transfer object for post comment response data. */
 public class PostCommentResponseDto {
+    @Nullable
     public Long id;
+    @Nullable
     public String content;
+    @Nullable
     public Long postId;
+    @Nullable
     public String postTitle;
+    @Nullable
     public Long userId;
+    @Nullable
     public String username;
+    @Nullable
     public LocalDateTime created;
+    @Nullable
     public LocalDateTime lastEdit;
 
     public PostCommentResponseDto() {

@@ -101,17 +101,11 @@ class AsyncSearchLayoutTest {
     @Test
     void searchButton_shouldTrimQueryBeforeExecutingSearch() {
         final var executedSearches = new AtomicInteger();
-        final var layout = new AsyncSearchLayout(
-                query -> {
-                    assertThat(query).isEqualTo("users");
-                    executedSearches.incrementAndGet();
-                },
-                () -> {
-                },
-                "Search...",
-                "Search",
-                "300px",
-                new SearchExecutionSupport());
+        final var layout = new AsyncSearchLayout(query -> {
+            assertThat(query).isEqualTo("users");
+            executedSearches.incrementAndGet();
+        }, () -> {
+        }, "Search...", "Search", "300px", new SearchExecutionSupport());
 
         layout.getTextField().setValue("  users  ");
         layout.getSearchButton().click();
@@ -123,14 +117,8 @@ class AsyncSearchLayoutTest {
     @Test
     void searchButton_shouldIgnoreBlankQuery() {
         final var executedSearches = new AtomicInteger();
-        final var layout = new AsyncSearchLayout(
-                _ -> executedSearches.incrementAndGet(),
-                () -> {
-                },
-                "Search...",
-                "Search",
-                "300px",
-                new SearchExecutionSupport());
+        final var layout = new AsyncSearchLayout(_ -> executedSearches.incrementAndGet(), () -> {
+        }, "Search...", "Search", "300px", new SearchExecutionSupport());
 
         layout.getTextField().setValue("   ");
         layout.getSearchButton().click();
@@ -142,14 +130,8 @@ class AsyncSearchLayoutTest {
     void searchButton_shouldThrottleRepeatedQuery() {
         final var executedSearches = new AtomicInteger();
         final var currentTimeMillis = new AtomicLong(1_000L);
-        final var layout = new AsyncSearchLayout(
-                _ -> executedSearches.incrementAndGet(),
-                () -> {
-                },
-                "Search...",
-                "Search",
-                "300px",
-                new SearchExecutionSupport(currentTimeMillis::get, 400L));
+        final var layout = new AsyncSearchLayout(_ -> executedSearches.incrementAndGet(), () -> {
+        }, "Search...", "Search", "300px", new SearchExecutionSupport(currentTimeMillis::get, 400L));
 
         layout.getTextField().setValue("users");
         layout.getSearchButton().click();

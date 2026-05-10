@@ -34,88 +34,81 @@ import de.vptr.midas.gui.util.NotificationUtil;
 @ExtendWith(MockitoExtension.class)
 class AdminAccountDialogTest {
 
-        @Mock
-        AccountService accountService;
+    @Mock
+    AccountService accountService;
 
-        private UI ui;
-        private Runnable onSave;
-        private Runnable onAuthFailure;
-        private MockedStatic<NotificationUtil> notificationMock;
+    private UI ui;
+    private Runnable onSave;
+    private Runnable onAuthFailure;
+    private MockedStatic<NotificationUtil> notificationMock;
 
-        @BeforeEach
-        void setUp() {
-                this.ui = new UI();
-                UI.setCurrent(this.ui);
-                this.onSave = mock(Runnable.class);
-                this.onAuthFailure = mock(Runnable.class);
-                this.notificationMock = mockStatic(NotificationUtil.class);
-        }
+    @BeforeEach
+    void setUp() {
+        this.ui = new UI();
+        UI.setCurrent(this.ui);
+        this.onSave = mock(Runnable.class);
+        this.onAuthFailure = mock(Runnable.class);
+        this.notificationMock = mockStatic(NotificationUtil.class);
+    }
 
-        @AfterEach
-        void tearDown() {
-                UI.setCurrent(null);
-                this.notificationMock.close();
-        }
+    @AfterEach
+    void tearDown() {
+        UI.setCurrent(null);
+        this.notificationMock.close();
+    }
 
-        @Test
-        void saveAccount_shouldCreateAccount_withValidFields() {
-                final var dialog = new AdminAccountDialog(this.accountService, this.onSave, this.onAuthFailure);
-                when(this.accountService.createAccount(any(AccountDto.class)))
-                                .thenReturn(MockDataUtil.createAccountDto());
+    @Test
+    void saveAccount_shouldCreateAccount_withValidFields() {
+        final var dialog = new AdminAccountDialog(this.accountService, this.onSave, this.onAuthFailure);
+        when(this.accountService.createAccount(any(AccountDto.class))).thenReturn(MockDataUtil.createAccountDto());
 
-                dialog.open(null);
+        dialog.open(null);
 
-                this.findComponent(dialog, TextField.class, field -> "Account Name".equals(field.getLabel()))
-                                .setValue("New Savings Account");
+        this.findComponent(dialog, TextField.class, field -> "Account Name".equals(field.getLabel()))
+                .setValue("New Savings Account");
 
-                this.findButton(dialog, "Save").click();
+        this.findButton(dialog, "Save").click();
 
-                final ArgumentCaptor<AccountDto> captor = ArgumentCaptor.forClass(AccountDto.class);
-                verify(this.accountService).createAccount(captor.capture());
-                assertThat(captor.getValue().getName()).isEqualTo("New Savings Account");
-                this.notificationMock.verify(() -> NotificationUtil.showSuccess("Account created successfully"));
-                verify(this.onSave).run();
-        }
+        final ArgumentCaptor<AccountDto> captor = ArgumentCaptor.forClass(AccountDto.class);
+        verify(this.accountService).createAccount(captor.capture());
+        assertThat(captor.getValue().getName()).isEqualTo("New Savings Account");
+        this.notificationMock.verify(() -> NotificationUtil.showSuccess("Account created successfully"));
+        verify(this.onSave).run();
+    }
 
-        @Test
-        void saveAccount_shouldCallOnAuthFailure_onAuthException() {
-                final var dialog = new AdminAccountDialog(this.accountService, this.onSave, this.onAuthFailure);
-                when(this.accountService.createAccount(any(AccountDto.class)))
-                                .thenThrow(new AuthenticationException("Session expired"));
+    @Test
+    void saveAccount_shouldCallOnAuthFailure_onAuthException() {
+        final var dialog = new AdminAccountDialog(this.accountService, this.onSave, this.onAuthFailure);
+        when(this.accountService.createAccount(any(AccountDto.class)))
+                .thenThrow(new AuthenticationException("Session expired"));
 
-                dialog.open(null);
+        dialog.open(null);
 
-                this.findComponent(dialog, TextField.class, field -> "Account Name".equals(field.getLabel()))
-                                .setValue("Failing Account");
+        this.findComponent(dialog, TextField.class, field -> "Account Name".equals(field.getLabel()))
+                .setValue("Failing Account");
 
-                this.findButton(dialog, "Save").click();
+        this.findButton(dialog, "Save").click();
 
-                this.notificationMock
-                                .verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
-                verify(this.onAuthFailure).run();
-        }
+        this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
+        verify(this.onAuthFailure).run();
+    }
 
-        private Button findButton(final Component root, final String text) {
-                return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
-        }
+    private Button findButton(final Component root, final String text) {
+        return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
+    }
 
-        private <T extends Component> T findComponent(final Component root, final Class<T> type,
-                        final Predicate<T> predicate) {
-                return this.findComponents(root, type).stream()
-                                .filter(predicate)
-                                .findFirst()
-                                .orElseThrow(() -> new AssertionError("Component not found: " + type.getSimpleName()));
-        }
+    private <T extends Component> T findComponent(final Component root, final Class<T> type,
+            final Predicate<T> predicate) {
+        return this.findComponents(root, type).stream().filter(predicate).findFirst()
+                .orElseThrow(() -> new AssertionError("Component not found: " + type.getSimpleName()));
+    }
 
-        @SuppressWarnings("unchecked")
-        private <T extends Component> List<T> findComponents(final Component root, final Class<T> type) {
-                final List<T> directMatches = root.getChildren()
-                                .filter(type::isInstance)
-                                .map(component -> (T) component)
-                                .toList();
-                final List<T> nestedMatches = root.getChildren()
-                                .flatMap(component -> this.findComponents(component, type).stream())
-                                .toList();
-                return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
-        }
+    @SuppressWarnings("unchecked")
+    private <T extends Component> List<T> findComponents(final Component root, final Class<T> type) {
+        final List<T> directMatches =
+                root.getChildren().filter(type::isInstance).map(component -> (T) component).toList();
+        final List<T> nestedMatches =
+                root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
+        return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
+    }
 }

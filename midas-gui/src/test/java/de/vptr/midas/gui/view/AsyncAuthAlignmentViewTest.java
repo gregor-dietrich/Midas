@@ -60,8 +60,7 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.pageService = pageService;
-        when(pageService.searchPages(anyString()))
-                .thenThrow(new AuthenticationException("Authentication required"));
+        when(pageService.searchPages(anyString())).thenThrow(new AuthenticationException("Authentication required"));
         doAnswer(_ -> {
             latch.countDown();
             return null;

@@ -19,8 +19,9 @@ import jakarta.ws.rs.core.Response;
 /**
  * Unit tests for BackendAvailabilityService health check scenarios.
  *
- * <p>Tests the core response status checks. Decorator behavior (@Retry, @Timeout,
- * @Fallback) is tested via manual testing in dev mode or integration tests.
+ * <p>
+ * Tests the core response status checks. Decorator behavior (@Retry, @Timeout, @Fallback) is tested via manual testing
+ * in dev mode or integration tests.
  */
 @ExtendWith(MockitoExtension.class)
 class HealthServiceTest {

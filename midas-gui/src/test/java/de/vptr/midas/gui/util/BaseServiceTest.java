@@ -48,8 +48,7 @@ public abstract class BaseServiceTest {
     }
 
     /**
-     * Test that a method throws AuthenticationException on 401 response and calls
-     * logout
+     * Test that a method throws AuthenticationException on 401 response and calls logout
      */
     protected void test401ErrorHandling(final Runnable clientCallSetup, final Runnable methodCall) {
         clientCallSetup.run();

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 
@@ -64,11 +65,12 @@ class AccountAccessServiceTest {
         dto.name = createUniqueTestName("Meta Account");
         final var created = this.accountService.createAccount(dto);
 
-        this.accountAccessService.associateUserWithAccount(user.id, created.id);
-        this.accountAccessService.updateUserAccountMeta(user.id, created.id, true);
+        final Long userId = Objects.requireNonNull(user.id, "user.id");
+        final Long accountId = Objects.requireNonNull(created.id, "created.id");
+        this.accountAccessService.associateUserWithAccount(userId, accountId);
+        this.accountAccessService.updateUserAccountMeta(userId, accountId, true);
 
-        final UserAccountMetaEntity meta = UserAccountMetaEntity
-                .findByUserAndAccount(user.id, created.id);
+        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(userId, accountId);
         assertNotNull(meta);
         assertTrue(meta.isNegative);
     }
@@ -90,21 +92,22 @@ class AccountAccessServiceTest {
         dto.name = createUniqueTestName("Flags Account");
         final var created = this.accountService.createAccount(dto);
 
-        this.accountAccessService.associateUserWithAccount(user.id, created.id);
-        this.accountAccessService.updateUserAccountMeta(user.id, created.id, true);
+        final Long userId2 = Objects.requireNonNull(user.id, "user.id");
+        final Long accountId2 = Objects.requireNonNull(created.id, "created.id");
+        this.accountAccessService.associateUserWithAccount(userId2, accountId2);
+        this.accountAccessService.updateUserAccountMeta(userId2, accountId2, true);
 
-        final Map<Long, Boolean> flags = this.accountAccessService
-                .getIsNegativeFlagsForUser(user.id, List.of(created.id));
+        final Map<Long, Boolean> flags =
+                this.accountAccessService.getIsNegativeFlagsForUser(userId2, List.of(accountId2));
 
         assertNotNull(flags);
         assertEquals(1, flags.size());
-        assertTrue(flags.get(created.id));
+        assertTrue(Boolean.TRUE.equals(flags.get(accountId2)));
     }
 
     @Test
     void getIsNegativeFlagsForUser_returnsEmptyMapForEmptyAccountList() {
-        final Map<Long, Boolean> flags = this.accountAccessService
-                .getIsNegativeFlagsForUser(1L, List.of());
+        final Map<Long, Boolean> flags = this.accountAccessService.getIsNegativeFlagsForUser(1L, List.of());
         assertNotNull(flags);
         assertTrue(flags.isEmpty());
     }

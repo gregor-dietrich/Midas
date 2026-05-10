@@ -12,9 +12,8 @@ import de.vptr.midas.gui.util.UiAsyncExecutor;
 public abstract class AbstractAsyncDataView extends VerticalLayout {
 
     /**
-     * Runs dataLoader off the UI thread, then dispatches result to onSuccess on the
-     * UI thread.
-     * Errors are handled centrally via MidasErrorHandler.
+     * Runs dataLoader off the UI thread, then dispatches result to onSuccess on the UI thread. Errors are handled
+     * centrally via MidasErrorHandler.
      */
     protected <T> void loadDataAsync(final Supplier<T> dataLoader, final Consumer<T> onSuccess) {
         this.loadDataAsync(dataLoader, onSuccess, UiAsyncExecutor.DEFAULT_TIMEOUT_SECONDS);
@@ -29,9 +28,8 @@ public abstract class AbstractAsyncDataView extends VerticalLayout {
     }
 
     /**
-     * Runs dataLoader off the UI thread, dispatching result to onSuccess and errors
-     * to
-     * a custom onError handler — both on the UI thread.
+     * Runs dataLoader off the UI thread, dispatching result to onSuccess and errors to a custom onError handler — both
+     * on the UI thread.
      */
     protected <T> void loadDataAsync(final Supplier<T> dataLoader, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError) {

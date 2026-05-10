@@ -1,5 +1,6 @@
 # Coverage reports
 .coverage
+.ref
 
 # Binary bundles (GUI)
 midas-gui/src/main/bundles

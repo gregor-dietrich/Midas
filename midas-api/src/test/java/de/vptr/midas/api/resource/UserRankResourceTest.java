@@ -58,19 +58,10 @@ class UserRankResourceTest {
 
     @Test
     void testCreateUserRank_authorizedWithSufficientRole() {
-        Integer id = authenticatedJsonRequest()
-                .body(createDefaultUserRankJson())
-                .when()
-                .post(ENDPOINT_URL)
-                .then()
-                .statusCode(201)
-                .extract().path("id");
+        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("id");
 
-        authenticatedRequest()
-                .when()
-                .delete(ENDPOINT_URL + "/" + id)
-                .then()
-                .statusCode(204);
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }
 
     @Test

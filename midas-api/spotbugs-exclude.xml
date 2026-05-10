@@ -1,81 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SpotBugs Exclusion Filter
-  
+
   This filter excludes false positives and intentional design patterns that SpotBugs flags.
-  
-  SE_NO_SERIALVERSIONID / SE_TRANSIENT_FIELD_NOT_RESTORED:
-    JPA entity classes and DTOs in the API project are never serialized to Java streams.
-    Adding serialVersionUID would be unnecessary boilerplate.
-  
-  URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD / UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD:
-    DTO classes intentionally use public fields for Jackson serialization.
 -->
 <FindBugsFilter xmlns="http://findbugs.sourceforge.net/filter/3.0.0">
-    <!-- Suppress all SE_ pattern warnings (serialization issues) for the entire project -->
-    <Match>
-        <Bug pattern="SE_NO_SERIALVERSIONID" />
-    </Match>
+  <!--
+    PA_PUBLIC_PRIMITIVE_ATTRIBUTE:
+    Entity fields are intentionally public for direct access in Panache Active Record pattern.
+    This is the standard Quarkus Panache design. The publicId field follows the same pattern
+    as the existing id field and other entity fields.
+  -->
+  <Match>
+    <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
+    <Class name="~de\.vptr\.midas\.api\.entity\..*Entity" />
+    <Field name="publicId" />
+  </Match>
 
-    <Match>
-        <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
-    </Match>
+  <!--
+    URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD / UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD:
+    DTO fields are used for JSON serialization/deserialization and API transfer.
+    SpotBugs cannot trace usage across serialization boundaries.
+  -->
+  <Match>
+    <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
+    <Class name="~de\.vptr\.midas\.api\.dto\..*" />
+  </Match>
+  <Match>
+    <Bug pattern="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD" />
+    <Class name="~de\.vptr\.midas\.api\.dto\..*" />
+  </Match>
 
-    <!--
-      URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD / UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD:
-        DTO classes intentionally use public fields for Jackson serialization and
-        deserialization. Jackson accesses these fields via reflection, which is invisible
-        to SpotBugs static analysis. Making all DTO fields private solely to satisfy
-        SpotBugs would require extensive boilerplate getters/setters and break the
-        deliberate public-field style used throughout this codebase.
-    -->
-    <Match>
-        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
-        <Class name="~de\.vptr\.midas\.api\.dto\..*" />
-    </Match>
+  <!--
+    DM_EXIT:
+    PasswordUtil is a CLI utility where System.exit is appropriate.
+  -->
+  <Match>
+    <Bug pattern="DM_EXIT" />
+    <Class name="de.vptr.midas.api.util.PasswordUtil" />
+  </Match>
 
-    <Match>
-        <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" />
-        <Class name="~de\.vptr\.midas\.api\.dto\..*" />
-    </Match>
+  <!--
+    UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR:
+    DTO fields are populated by Jackson deserialization, not constructors.
+  -->
+  <Match>
+    <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" />
+    <Class name="~de\.vptr\.midas\.api\.dto\..*" />
+  </Match>
 
-    <!--
-      UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD:
-        Request/input DTO fields are populated by Jackson during deserialization and read by
-        service classes. SpotBugs cannot trace Jackson reflection-based field access and
-        incorrectly reports these as unused.
-    -->
-    <Match>
-        <Bug pattern="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD" />
-        <Class name="~de\.vptr\.midas\.api\.dto\..*" />
-    </Match>
+  <!--
+    UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD:
+    Response DTO fields are populated by Jackson deserialization from API responses.
+  -->
+  <Match>
+    <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" />
+    <Class name="~de\.vptr\.midas\.api\.dto\..*" />
+  </Match>
 
-    <!--
-      UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD on entity classes:
-        Panache entity public fields are written by service classes (e.g., setting
-        entity.created and entity.lastEdit before persist). SpotBugs cannot trace writes
-        from external service classes to public entity fields and incorrectly reports them
-        as never written.
-    -->
-    <Match>
-        <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" />
-        <Class name="~de\.vptr\.midas\.api\.entity\..*" />
-    </Match>
-
-    <Match>
-        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
-        <Class name="de.vptr.midas.api.exception.ValidationExceptionMapper$ErrorResponse" />
-    </Match>
-
-    <!--
-      DLS_DEAD_LOCAL_STORE in service batch-query helper methods:
-        Variables like `ids` and `accountIds` are extracted from entity lists and passed to
-        JPA TypedQuery.setParameter(). SpotBugs cannot trace reads through JPA method chains
-        (TypedQuery uses generic Object parameters) and incorrectly reports these as dead stores.
-        The variables are genuinely read and used as IN-clause parameters for batch queries.
-    -->
-    <Match>
-        <Bug pattern="DLS_DEAD_LOCAL_STORE" />
-        <Package name="~de\.vptr\.midas\.api\.service.*" />
-    </Match>
+  <!--
+    THROWS_METHOD_THROWS_RUNTIMEEXCEPTION:
+    Intentional pattern for validation and error handling methods.
+  -->
+  <Match>
+    <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION" />
+  </Match>
 </FindBugsFilter>

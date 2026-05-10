@@ -47,16 +47,14 @@ public class UserRankResource {
     @Path("/{id}")
     @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public Response getRank(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(
-                this.rankService.findById(id));
+        return ResponseUtil.okOrNotFound(this.rankService.findById(id));
     }
 
     @GET
     @Path("/name/{name}")
     @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
     public Response getRankByName(@PathParam("name") @Size(max = 255) final String name) {
-        return ResponseUtil.okOrNotFound(
-                this.rankService.findByName(name));
+        return ResponseUtil.okOrNotFound(this.rankService.findByName(name));
     }
 
     /** Returns all ranks matching the search query. */

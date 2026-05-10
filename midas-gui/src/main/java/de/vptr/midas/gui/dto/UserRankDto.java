@@ -443,11 +443,10 @@ public class UserRankDto {
     /** Returns whether any permission is granted. */
     public boolean hasAnyPermission() {
         return this.canAdminView() || this.canAddPage() || this.canDeletePage() || this.canEditPage()
-                || this.canAddPost() || this.canDeletePost() || this.canEditPost()
-                || this.canAddPostCategory() || this.canDeletePostCategory() || this.canEditPostCategory()
-                || this.canAddPostComment() || this.canDeletePostComment() || this.canEditPostComment()
-                || this.canAddUser() || this.canDeleteUser() || this.canEditUser()
-                || this.canAddUserGroup() || this.canDeleteUserGroup() || this.canEditUserGroup()
+                || this.canAddPost() || this.canDeletePost() || this.canEditPost() || this.canAddPostCategory()
+                || this.canDeletePostCategory() || this.canEditPostCategory() || this.canAddPostComment()
+                || this.canDeletePostComment() || this.canEditPostComment() || this.canAddUser() || this.canDeleteUser()
+                || this.canEditUser() || this.canAddUserGroup() || this.canDeleteUserGroup() || this.canEditUserGroup()
                 || this.canAddUserAccount() || this.canDeleteUserAccount() || this.canEditUserAccount()
                 || this.canAddUserRank() || this.canDeleteUserRank() || this.canEditUserRank();
     }

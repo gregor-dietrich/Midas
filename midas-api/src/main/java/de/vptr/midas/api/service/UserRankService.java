@@ -27,8 +27,7 @@ public class UserRankService {
 
     /** Returns the rank with the given id. */
     public Optional<UserRankResponseDto> findById(final Long id) {
-        return UserRankEntity.findByIdOptional(id)
-                .map(entity -> this.toRankResponseDto((UserRankEntity) entity));
+        return UserRankEntity.findByIdOptional(id).map(entity -> this.toRankResponseDto((UserRankEntity) entity));
     }
 
     /** Returns the rank with the given name. */
@@ -43,8 +42,8 @@ public class UserRankService {
         if (searchTerm == null) {
             return this.getAllRanks();
         }
-        final List<UserRankEntity> ranks = SearchQueryUtil.applyDefaultSearchLimit(
-                UserRankEntity.find("LOWER(name) LIKE ?1 ESCAPE '\\'", searchTerm)).list();
+        final List<UserRankEntity> ranks = SearchQueryUtil
+                .applyDefaultSearchLimit(UserRankEntity.find("LOWER(name) LIKE ?1 ESCAPE '\\'", searchTerm)).list();
         return this.toRankResponseDtos(ranks);
     }
 
@@ -215,18 +214,14 @@ public class UserRankService {
         final List<Long> ids = ranks.stream().map(r -> r.id).toList();
 
         final List<Object[]> countResults = UserEntity.getEntityManager()
-                .createQuery(
-                        "SELECT u.rank.id, COUNT(u) FROM UserEntity u WHERE u.rank.id IN :ids GROUP BY u.rank.id",
+                .createQuery("SELECT u.rank.id, COUNT(u) FROM UserEntity u WHERE u.rank.id IN :ids GROUP BY u.rank.id",
                         Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+                .setParameter("ids", ids).getResultList();
         final Map<Long, Long> userCounts = new HashMap<>();
         for (final Object[] row : countResults) {
             userCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return ranks.stream()
-                .map(r -> new UserRankResponseDto(r, userCounts.getOrDefault(r.id, 0L)))
-                .toList();
+        return ranks.stream().map(r -> new UserRankResponseDto(r, userCounts.getOrDefault(r.id, 0L))).toList();
     }
 }

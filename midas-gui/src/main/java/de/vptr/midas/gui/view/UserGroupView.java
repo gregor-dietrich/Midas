@@ -24,7 +24,6 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
@@ -74,11 +73,8 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.removeAll();
 
         final var title = new H2("Groups");
-        this.searchLayout = new AsyncSearchLayout(
-                this::searchGroups,
-                this::loadGroupsAsync,
-                "Search by name...",
-                "Search Groups");
+        this.searchLayout =
+                new AsyncSearchLayout(this::searchGroups, this::loadGroupsAsync, "Search by name...", "Search Groups");
 
         this.createMyGroupsGrid();
         this.createOtherGroupsGrid();
@@ -106,10 +102,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
         this.myGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
-                .setHeader("Members")
-                .setWidth("120px")
-                .setFlexGrow(0)
-                .setSortable(true);
+                .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);
 
         this.myGroupsGrid.setPageSize(20);
     }
@@ -130,10 +123,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
         this.otherGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
-                .setHeader("Members")
-                .setWidth("120px")
-                .setFlexGrow(0)
-                .setSortable(true);
+                .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);
 
         this.otherGroupsGrid.setPageSize(20);
     }
@@ -145,40 +135,33 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     private void loadGroupsAsync() {
         LOG.info("Starting async group loading");
 
-        this.loadDataAsync(
-                () -> {
-                    LOG.info("Making REST calls to load groups and current user");
-                    final var currentUser = this.userService.getCurrentUser().orElse(null);
-                    final var allGroups = this.groupService.getAllGroups(0, UiConstants.DEFAULT_PAGE_SIZE);
+        this.loadDataAsync(() -> {
+            LOG.info("Making REST calls to load groups and current user");
+            final var currentUser = this.userService.getCurrentUser().orElse(null);
+            final var allGroups = this.groupService.getAllGroups(0, UiConstants.DEFAULT_PAGE_SIZE);
 
-                    List<UserGroupResponseDto> myGroups = Collections.emptyList();
-                    if (currentUser != null) {
-                        myGroups = this.groupService.getGroupsByUser(currentUser.getId());
-                    }
+            List<UserGroupResponseDto> myGroups = Collections.emptyList();
+            if (currentUser != null) {
+                myGroups = this.groupService.getGroupsByUser(currentUser.getId());
+            }
 
-                    return new GroupLoadResult(allGroups, myGroups, currentUser);
-                },
-                result -> {
-                    LOG.infof("Successfully loaded %s total groups, %s user groups",
-                            result.allGroups.size(), result.myGroups.size());
+            return new GroupLoadResult(allGroups, myGroups, currentUser);
+        }, result -> {
+            LOG.infof("Successfully loaded %s total groups, %s user groups", result.allGroups.size(),
+                    result.myGroups.size());
 
-                    if (result.currentUser != null) {
-                        this.currentUserId = result.currentUser.getId();
-                    }
+            if (result.currentUser != null) {
+                this.currentUserId = result.currentUser.getId();
+            }
 
-                    this.updateGrids(result.allGroups, result.myGroups);
-                });
+            this.updateGrids(result.allGroups, result.myGroups);
+        });
     }
 
-    private void updateGrids(final List<UserGroupResponseDto> allGroups,
-            final List<UserGroupResponseDto> myGroups) {
-        final Set<Long> myGroupIds = myGroups.stream()
-                .map(UserGroupResponseDto::getId)
-                .collect(Collectors.toSet());
+    private void updateGrids(final List<UserGroupResponseDto> allGroups, final List<UserGroupResponseDto> myGroups) {
+        final Set<Long> myGroupIds = myGroups.stream().map(UserGroupResponseDto::getId).collect(Collectors.toSet());
 
-        final var otherGroups = allGroups.stream()
-                .filter(group -> !myGroupIds.contains(group.getId()))
-                .toList();
+        final var otherGroups = allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
 
         this.myGroupsGrid.setItems(myGroups);
         this.otherGroupsGrid.setItems(otherGroups);
@@ -190,41 +173,35 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
         final Long capturedUserId = this.currentUserId;
 
-        this.loadDataAsync(
-                () -> {
-                    LOG.info("Making REST call to search groups");
-                    final var searchResults = this.groupService.searchGroups(query);
+        this.loadDataAsync(() -> {
+            LOG.info("Making REST call to search groups");
+            final var searchResults = this.groupService.searchGroups(query);
 
-                    List<UserGroupResponseDto> myGroups = Collections.emptyList();
-                    if (capturedUserId != null) {
-                        myGroups = this.groupService.getGroupsByUser(capturedUserId);
-                    }
+            List<UserGroupResponseDto> myGroups = Collections.emptyList();
+            if (capturedUserId != null) {
+                myGroups = this.groupService.getGroupsByUser(capturedUserId);
+            }
 
-                    return new GroupLoadResult(searchResults, myGroups, null);
-                },
-                result -> {
-                    this.searchLayout.setSearching(false);
-                    LOG.infof("Successfully found %s groups matching query", result.allGroups.size());
+            return new GroupLoadResult(searchResults, myGroups, null);
+        }, result -> {
+            this.searchLayout.setSearching(false);
+            LOG.infof("Successfully found %s groups matching query", result.allGroups.size());
 
-                    final Set<Long> myGroupIds = result.myGroups.stream()
-                            .map(UserGroupResponseDto::getId)
-                            .collect(Collectors.toSet());
+            final Set<Long> myGroupIds =
+                    result.myGroups.stream().map(UserGroupResponseDto::getId).collect(Collectors.toSet());
 
-                    final var myResults = result.allGroups.stream()
-                            .filter(group -> myGroupIds.contains(group.getId()))
-                            .toList();
+            final var myResults =
+                    result.allGroups.stream().filter(group -> myGroupIds.contains(group.getId())).toList();
 
-                    final var otherResults = result.allGroups.stream()
-                            .filter(group -> !myGroupIds.contains(group.getId()))
-                            .toList();
+            final var otherResults =
+                    result.allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
 
-                    this.myGroupsGrid.setItems(myResults);
-                    this.otherGroupsGrid.setItems(otherResults);
-                },
-                throwable -> {
-                    this.searchLayout.setSearching(false);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+            this.myGroupsGrid.setItems(myResults);
+            this.otherGroupsGrid.setItems(otherResults);
+        }, throwable -> {
+            this.searchLayout.setSearching(false);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private static class GroupLoadResult {
@@ -232,8 +209,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         final List<UserGroupResponseDto> myGroups;
         final UserResponseDto currentUser;
 
-        GroupLoadResult(final List<UserGroupResponseDto> allGroups,
-                final List<UserGroupResponseDto> myGroups,
+        GroupLoadResult(final List<UserGroupResponseDto> allGroups, final List<UserGroupResponseDto> myGroups,
                 final UserResponseDto currentUser) {
             this.allGroups = allGroups;
             this.myGroups = myGroups;

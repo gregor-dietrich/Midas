@@ -28,7 +28,8 @@ public class SearchLayout extends HorizontalLayout {
     public SearchLayout(final HasValue.ValueChangeListener<ComponentValueChangeEvent<TextField, String>> listener,
             final ComponentEventListener<ClickEvent<Button>> searchAction, final String placeholderText,
             final String tooltipText, final String fieldLabel, final String fieldWidth) {
-        this(listener, searchAction, placeholderText, tooltipText, fieldLabel, fieldWidth, new SearchExecutionSupport());
+        this(listener, searchAction, placeholderText, tooltipText, fieldLabel, fieldWidth,
+                new SearchExecutionSupport());
     }
 
     SearchLayout(final HasValue.ValueChangeListener<ComponentValueChangeEvent<TextField, String>> listener,

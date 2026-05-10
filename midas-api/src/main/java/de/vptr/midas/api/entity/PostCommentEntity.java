@@ -8,6 +8,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,33 +23,37 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a post comment. */
 @Entity
-@Table(name = "post_comments", indexes = {
-        @Index(name = "idx_post_comment_post_id", columnList = "post_id"),
-        @Index(name = "idx_post_comment_user_id", columnList = "user_id")
-})
+@Table(name = "post_comments", indexes = { @Index(name = "idx_post_comment_post_id", columnList = "post_id"),
+        @Index(name = "idx_post_comment_user_id", columnList = "user_id") })
 public class PostCommentEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @Column(columnDefinition = "TEXT")
     @NotBlank
+    @Nullable
     public String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
+    @Nullable
     public PostEntity post;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @Nullable
     public UserEntity user;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     // Helper method to find comments by post

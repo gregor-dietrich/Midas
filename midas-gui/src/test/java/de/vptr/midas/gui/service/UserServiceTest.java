@@ -90,8 +90,7 @@ class UserServiceTest {
                 .thenThrow(ExceptionTestUtil.create401Exception());
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userService.getAllUsers(0, 50),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userService.getAllUsers(0, 50), this.authService);
     }
 
     @Test
@@ -189,8 +188,7 @@ class UserServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.userService.getUserByUsername("testuser"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getUserByUsername("testuser"));
     }
 
     @Test
@@ -225,8 +223,7 @@ class UserServiceTest {
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userClient.createUser(newUser, TestUtil.TEST_AUTH_HEADER))
                 .thenReturn(ResponseTestUtil.createBadRequestResponse());
-        assertThatThrownBy(() -> this.userService.createUser(newUser))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userService.createUser(newUser)).isInstanceOf(ServiceException.class);
     }
 
     @Test
@@ -260,8 +257,7 @@ class UserServiceTest {
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userClient.updateUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER))
                 .thenReturn(ResponseTestUtil.createBadRequestResponse());
-        assertThatThrownBy(() -> this.userService.updateUser(userToUpdate))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userService.updateUser(userToUpdate)).isInstanceOf(ServiceException.class);
     }
 
     @Test

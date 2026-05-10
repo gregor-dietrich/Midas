@@ -22,28 +22,22 @@ public class ExceptionTestUtil {
      * Assert that an exception is thrown with "User is not authenticated" message
      */
     public static void assertThrowsUserNotAuthenticated(final Runnable methodCall) {
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(AuthenticationException.class)
+        assertThatThrownBy(methodCall::run).isInstanceOf(AuthenticationException.class)
                 .hasMessage("Authentication required");
     }
 
     /**
-     * Assert that method throws AuthenticationException with "Authentication
-     * required"
+     * Assert that method throws AuthenticationException with "Authentication required"
      */
     public static void assertThrowsAuthenticationException(final Runnable methodCall, final String expectedMessage) {
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage(expectedMessage);
+        assertThatThrownBy(methodCall::run).isInstanceOf(AuthenticationException.class).hasMessage(expectedMessage);
     }
 
     /**
      * Test that a method throws ServiceException with specific message
      */
     public static void assertThrowsServiceException(final Runnable methodCall, final String expectedMessage) {
-        assertThatThrownBy(methodCall::run)
-                .isInstanceOf(ServiceException.class)
-                .hasMessage(expectedMessage);
+        assertThatThrownBy(methodCall::run).isInstanceOf(ServiceException.class).hasMessage(expectedMessage);
     }
 
     /**
@@ -118,8 +112,7 @@ public class ExceptionTestUtil {
     }
 
     public static void assertThrowsBackendError(final Runnable executable, final int expectedStatus) {
-        assertThatThrownBy(executable::run)
-                .isInstanceOf(ServiceException.class)
+        assertThatThrownBy(executable::run).isInstanceOf(ServiceException.class)
                 .hasMessage("Backend error: " + expectedStatus);
     }
 }

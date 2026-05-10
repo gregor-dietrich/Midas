@@ -17,7 +17,6 @@ import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
@@ -58,23 +57,18 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadUsersAsync() {
         LOG.info("Starting async user loading");
 
-        this.loadDataAsync(
-                () -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE),
-                users -> {
-                    LOG.infof("Successfully loaded %s users", users.size());
-                    this.grid.setItems(users);
-                });
+        this.loadDataAsync(() -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE), users -> {
+            LOG.infof("Successfully loaded %s users", users.size());
+            this.grid.setItems(users);
+        });
     }
 
     private void buildUi() {
         this.removeAll();
 
         final var header = new H2("Users");
-        this.searchLayout = new AsyncSearchLayout(
-                this::searchUsers,
-                this::loadUsersAsync,
-                "Search by username...",
-                "Search Users");
+        this.searchLayout =
+                new AsyncSearchLayout(this::searchUsers, this::loadUsersAsync, "Search by username...", "Search Users");
         this.createGrid();
 
         this.add(header, this.searchLayout, this.grid);
@@ -106,16 +100,13 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void searchUsers(final String query) {
         this.searchLayout.setSearching(true);
 
-        this.loadDataAsync(
-                () -> this.userService.searchUsers(query),
-                users -> {
-                    this.searchLayout.setSearching(false);
-                    LOG.infof("Search found %s users", users.size());
-                    this.grid.setItems(users);
-                },
-                throwable -> {
-                    this.searchLayout.setSearching(false);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.userService.searchUsers(query), users -> {
+            this.searchLayout.setSearching(false);
+            LOG.infof("Search found %s users", users.size());
+            this.grid.setItems(users);
+        }, throwable -> {
+            this.searchLayout.setSearching(false);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

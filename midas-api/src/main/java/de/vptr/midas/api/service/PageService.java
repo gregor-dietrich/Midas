@@ -8,7 +8,6 @@ import de.vptr.midas.api.dto.PageResponseDto;
 import de.vptr.midas.api.entity.PageEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -23,25 +22,18 @@ public class PageService {
 
     /** Returns all pages with the given pagination. */
     public List<PageResponseDto> getAllPages(final int page, final int size) {
-        return PageEntity.findAll()
-                .page(page, size)
-                .list()
-                .stream()
-                .map(entity -> new PageResponseDto((PageEntity) entity))
-                .toList();
+        return PageEntity.findAll().page(page, size).list().stream()
+                .map(entity -> new PageResponseDto((PageEntity) entity)).toList();
     }
 
     /** Returns the page with the given id. */
     public Optional<PageResponseDto> findById(final Long id) {
-        return PageEntity.findByIdOptional(id)
-                .map(entity -> new PageResponseDto((PageEntity) entity));
+        return PageEntity.findByIdOptional(id).map(entity -> new PageResponseDto((PageEntity) entity));
     }
 
     /** Returns all pages matching the given search term. */
     public List<PageResponseDto> searchPages(final String searchTerm) {
-        return PageEntity.searchPages(searchTerm).stream()
-                .map(PageResponseDto::new)
-                .toList();
+        return PageEntity.searchPages(searchTerm).stream().map(PageResponseDto::new).toList();
     }
 
     /** Creates a new page. */

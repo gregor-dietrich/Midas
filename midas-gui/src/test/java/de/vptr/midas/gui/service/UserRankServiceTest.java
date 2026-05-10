@@ -115,8 +115,7 @@ class UserRankServiceTest {
         when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
 
         // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userRankService.getAllRanks(),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userRankService.getAllRanks(), this.authService);
     }
 
     @Test
@@ -243,8 +242,7 @@ class UserRankServiceTest {
         when(this.userRankClient.createRank(newRank, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.userRankService.createRank(newRank))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userRankService.createRank(newRank)).isInstanceOf(ServiceException.class);
     }
 
     @Test
@@ -280,8 +278,7 @@ class UserRankServiceTest {
         when(this.userRankClient.updateRank(1L, rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.userRankService.updateRank(rankToUpdate))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userRankService.updateRank(rankToUpdate)).isInstanceOf(ServiceException.class);
     }
 
     @Test
@@ -310,8 +307,7 @@ class UserRankServiceTest {
         when(this.userRankClient.deleteRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.userRankService.deleteRank(rankId))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.userRankService.deleteRank(rankId)).isInstanceOf(ServiceException.class);
     }
 
     @Test

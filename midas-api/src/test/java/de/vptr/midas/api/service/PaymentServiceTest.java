@@ -12,7 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +45,11 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     private AccountEntity testSourceAccount;
     private AccountEntity testTargetAccount;
 
+    private long testUserId;
+    private long testSourceAccountId;
+    private long testTargetAccountId;
+
+    @SuppressWarnings("NullAway")
     @BeforeEach
     void setUp() {
         runInIsolatedTransaction(() -> {
@@ -54,6 +61,10 @@ class PaymentServiceTest extends AbstractIntegrationTest {
             this.testTargetAccount = ServiceTestDataBuilder.createUniqueAccountEntity();
             this.testTargetAccount.name = "Target Account";
             this.testTargetAccount.persist();
+
+            this.testUserId = Objects.requireNonNull(this.testUser.id);
+            this.testSourceAccountId = Objects.requireNonNull(this.testSourceAccount.id);
+            this.testTargetAccountId = Objects.requireNonNull(this.testTargetAccount.id);
         });
     }
 
@@ -61,11 +72,11 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     void tearDown() {
         runCleanup(() -> {
             PaymentEntity.deleteAll();
-            if (this.testSourceAccount != null) {
-                AccountEntity.deleteById(this.testSourceAccount.id);
+            if (this.testSourceAccountId != 0L) {
+                AccountEntity.deleteById(this.testSourceAccountId);
             }
-            if (this.testTargetAccount != null) {
-                AccountEntity.deleteById(this.testTargetAccount.id);
+            if (this.testTargetAccountId != 0L) {
+                AccountEntity.deleteById(this.testTargetAccountId);
             }
             UserEntity.delete("username like ?1", "testuser_%");
         });
@@ -85,23 +96,19 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreatePayment() {
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Test payment",
-                LocalDate.now(),
-                new BigDecimal("100.50"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Test payment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.50"));
 
         final var createdPayment = this.paymentService.createPayment(newPaymentDto);
 
         assertNotNull(createdPayment);
         assertNotNull(createdPayment.id);
-        assertEquals(this.testTargetAccount.id, createdPayment.targetAccountId);
-        assertEquals(this.testSourceAccount.id, createdPayment.sourceAccountId);
-        assertEquals(this.testUser.id, createdPayment.userId);
+        assertEquals(this.testTargetAccountId, createdPayment.targetAccountId);
+        assertEquals(this.testSourceAccountId, createdPayment.sourceAccountId);
+        assertEquals(this.testUserId, createdPayment.userId);
         assertEquals("Test payment", createdPayment.comment);
-        assertEquals(LocalDate.now(), createdPayment.date);
+        assertEquals(LocalDate.now(ZoneOffset.UTC), createdPayment.date);
         assertEquals(new BigDecimal("100.50"), createdPayment.amount);
         assertNotNull(createdPayment.created);
     }
@@ -109,26 +116,17 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdatePayment() {
-        // First create a payment
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Original comment",
-                LocalDate.now(),
-                new BigDecimal("50.00"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Original comment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("50.00"));
         final var createdPayment = this.paymentService.createPayment(newPaymentDto);
 
-        // Update the payment
-        final var updateDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Updated comment",
-                LocalDate.now(),
-                new BigDecimal("75.00"));
+        final var updateDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Updated comment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("75.00"));
 
-        final var updatedPayment = this.paymentService.updatePayment(createdPayment.id, updateDto, ADMIN_USERNAME);
+        final var updatedPayment =
+                this.paymentService.updatePayment(Objects.requireNonNull(createdPayment.id), updateDto, ADMIN_USERNAME);
 
         assertNotNull(updatedPayment);
         assertEquals("Updated comment", updatedPayment.comment);
@@ -139,39 +137,30 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdatePaymentValidationNoAccounts() {
-        final var createDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Original comment",
-                LocalDate.now(),
-                new BigDecimal("50.00"));
+        final var createDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Original comment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("50.00"));
         final var createdPayment = this.paymentService.createPayment(createDto);
 
         final var updateDto = new PaymentDto();
-        updateDto.userId = this.testUser.id;
+        updateDto.userId = this.testUserId;
         updateDto.comment = "Updated comment";
-        updateDto.date = LocalDate.now();
+        updateDto.date = LocalDate.now(ZoneOffset.UTC);
         updateDto.amount = new BigDecimal("75.00");
 
-        assertThrows(ValidationException.class,
-                () -> this.paymentService.updatePayment(createdPayment.id, updateDto, ADMIN_USERNAME));
+        assertThrows(ValidationException.class, () -> this.paymentService
+                .updatePayment(Objects.requireNonNull(createdPayment.id), updateDto, ADMIN_USERNAME));
     }
 
     @Test
     @TestTransaction
     void testDeletePayment() {
-        // First create a payment
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Delete test payment",
-                LocalDate.now(),
-                new BigDecimal("25.00"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Delete test payment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("25.00"));
         final var createdPayment = this.paymentService.createPayment(newPaymentDto);
 
-        final Long paymentId = createdPayment.id;
+        final Long paymentId = Objects.requireNonNull(createdPayment.id);
 
         final var deleted = this.paymentService.deletePayment(paymentId, ADMIN_USERNAME);
 
@@ -189,20 +178,16 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindById() {
-        // First create a payment
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Find test payment",
-                LocalDate.now(),
-                new BigDecimal("200.00"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Find test payment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("200.00"));
         final var createdPayment = this.paymentService.createPayment(newPaymentDto);
 
-        final var foundPayment = this.paymentService.findById(createdPayment.id, ADMIN_USERNAME);
+        final Long createdId = Objects.requireNonNull(createdPayment.id);
+        final var foundPayment = this.paymentService.findById(createdId, ADMIN_USERNAME);
 
         assertTrue(foundPayment.isPresent());
-        assertEquals(createdPayment.id, foundPayment.get().id);
+        assertEquals(createdId, foundPayment.get().id);
         assertEquals("Find test payment", foundPayment.get().comment);
         assertEquals(new BigDecimal("200.00"), foundPayment.get().amount);
     }
@@ -216,40 +201,29 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByUserId() {
-        // First create a payment
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Payment test",
-                LocalDate.now(),
-                new BigDecimal("150.00"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Payment test", LocalDate.now(ZoneOffset.UTC), new BigDecimal("150.00"));
         this.paymentService.createPayment(newPaymentDto);
 
-        final var userPayments = this.paymentService.findByUserId(this.testUser.id);
+        final var userPayments = this.paymentService.findByUserId(this.testUserId);
 
         assertNotNull(userPayments);
         assertFalse(userPayments.isEmpty());
 
-        // Verify all payments belong to the user
         for (final var payment : userPayments) {
-            assertEquals(this.testUser.id, payment.userId);
+            assertEquals(this.testUserId, payment.userId);
         }
     }
 
     @Test
     @TestTransaction
     void testFindByDateRange() {
-        final LocalDate startDate = LocalDate.now().minusDays(1);
-        final LocalDate endDate = LocalDate.now().plusDays(1);
+        final LocalDate startDate = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        final LocalDate endDate = LocalDate.now(ZoneOffset.UTC).plusDays(1);
 
-        // First create a payment within the date range
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Date range test payment",
-                LocalDate.now(),
+        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId,
+                this.testTargetAccountId, this.testUserId, "Date range test payment", LocalDate.now(ZoneOffset.UTC),
                 new BigDecimal("100.00"));
         this.paymentService.createPayment(newPaymentDto);
 
@@ -258,35 +232,26 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         assertNotNull(paymentsInRange);
         assertFalse(paymentsInRange.isEmpty());
 
-        // Verify all payments are within the date range
         for (final var payment : paymentsInRange) {
-            assertFalse(payment.date.isBefore(startDate));
-            assertFalse(payment.date.isAfter(endDate));
+            assertFalse(Objects.requireNonNull(payment.date).isBefore(startDate));
+            assertFalse(Objects.requireNonNull(payment.date).isAfter(endDate));
         }
     }
 
     @Test
     @TestTransaction
     void testGetTotalAmountByUser() {
-        final var firstPayment = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "First payment",
-                LocalDate.now(),
-                new BigDecimal("100.50"));
-        final var secondPayment = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Second payment",
-                LocalDate.now(),
-                new BigDecimal("49.50"));
+        final var firstPayment =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "First payment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.50"));
+        final var secondPayment =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Second payment", LocalDate.now(ZoneOffset.UTC), new BigDecimal("49.50"));
 
         this.paymentService.createPayment(firstPayment);
         this.paymentService.createPayment(secondPayment);
 
-        final BigDecimal total = this.paymentService.getTotalAmountByUser(this.testUser.id);
+        final BigDecimal total = this.paymentService.getTotalAmountByUser(this.testUserId);
 
         assertEquals(new BigDecimal("150.00"), total);
     }
@@ -294,12 +259,11 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindBySourceAccountId() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, this.testTargetAccount.id,
-                this.testUser.id,
-                "Source test", LocalDate.now(), new BigDecimal("100.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                this.testUserId, "Source test", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.00"));
         this.paymentService.createPayment(dto);
 
-        final var payments = this.paymentService.findBySourceAccountId(this.testSourceAccount.id);
+        final var payments = this.paymentService.findBySourceAccountId(this.testSourceAccountId);
         assertNotNull(payments);
         assertFalse(payments.isEmpty());
     }
@@ -307,12 +271,11 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByTargetAccountId() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, this.testTargetAccount.id,
-                this.testUser.id,
-                "Target test", LocalDate.now(), new BigDecimal("100.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                this.testUserId, "Target test", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.00"));
         this.paymentService.createPayment(dto);
 
-        final var payments = this.paymentService.findByTargetAccountId(this.testTargetAccount.id);
+        final var payments = this.paymentService.findByTargetAccountId(this.testTargetAccountId);
         assertNotNull(payments);
         assertFalse(payments.isEmpty());
     }
@@ -320,9 +283,8 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testSearchPaymentsWithQuery() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, this.testTargetAccount.id,
-                this.testUser.id,
-                "UniqueSearchComment123", LocalDate.now(), new BigDecimal("50.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                this.testUserId, "UniqueSearchComment123", LocalDate.now(ZoneOffset.UTC), new BigDecimal("50.00"));
         this.paymentService.createPayment(dto);
 
         final var results = this.paymentService.searchPayments("UniqueSearchComment123");
@@ -354,19 +316,20 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testSearchPaymentsEscapesLikeWildcards() {
         final String token = "payment-search-" + generateUniqueTestSuffix();
-        final var literalMatch = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id,
-                this.testTargetAccount.id, this.testUser.id,
-                token + "_literal", LocalDate.now(), new BigDecimal("11.00"));
-        final var wildcardOnlyMatch = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id,
-                this.testTargetAccount.id, this.testUser.id,
-                token + "xliteral", LocalDate.now(), new BigDecimal("12.00"));
+        final var literalMatch =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, token + "_literal", LocalDate.now(ZoneOffset.UTC), new BigDecimal("11.00"));
+        final var wildcardOnlyMatch =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, token + "xliteral", LocalDate.now(ZoneOffset.UTC), new BigDecimal("12.00"));
 
         final var createdLiteralMatch = this.paymentService.createPayment(literalMatch);
         this.paymentService.createPayment(wildcardOnlyMatch);
 
         final var results = this.paymentService.searchPayments(token + "_");
 
-        assertEquals(List.of(createdLiteralMatch.id), results.stream().map(payment -> payment.id).toList());
+        assertEquals(List.of(Objects.requireNonNull(createdLiteralMatch.id)),
+                results.stream().map(payment -> payment.id).toList());
     }
 
     @Test
@@ -374,9 +337,9 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     void testSearchPaymentsAppliesSharedResultLimit() {
         final String token = "payment-limit-" + generateUniqueTestSuffix();
         for (int i = 0; i < PaginationUtil.MAX_SIZE + 5; i++) {
-            final var payment = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id,
-                    this.testTargetAccount.id, this.testUser.id,
-                    token + "-" + i, LocalDate.now().minusDays(i % 5L), BigDecimal.valueOf(i + 1L));
+            final var payment = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId,
+                    this.testTargetAccountId, this.testUserId, token + "-" + i,
+                    LocalDate.now(ZoneOffset.UTC).minusDays(i % 5L), BigDecimal.valueOf(i + 1L));
             this.paymentService.createPayment(payment);
         }
 
@@ -388,15 +351,16 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testPatchPaymentComment() {
-        final var createDto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id,
-                this.testTargetAccount.id, this.testUser.id,
-                "Original", LocalDate.now(), new BigDecimal("100.00"));
+        final var createDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Original", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.00"));
         final var created = this.paymentService.createPayment(createDto);
 
         final var patchDto = new PaymentDto();
         patchDto.comment = "Patched comment";
 
-        final var patched = this.paymentService.patchPayment(created.id, patchDto, ADMIN_USERNAME);
+        final var patched =
+                this.paymentService.patchPayment(Objects.requireNonNull(created.id), patchDto, ADMIN_USERNAME);
         assertNotNull(patched);
         assertEquals("Patched comment", patched.comment);
         assertEquals(new BigDecimal("100.00"), patched.amount);
@@ -405,15 +369,16 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testPatchPaymentAmount() {
-        final var createDto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id,
-                this.testTargetAccount.id, this.testUser.id,
-                "Amount test", LocalDate.now(), new BigDecimal("100.00"));
+        final var createDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Amount test", LocalDate.now(ZoneOffset.UTC), new BigDecimal("100.00"));
         final var created = this.paymentService.createPayment(createDto);
 
         final var patchDto = new PaymentDto();
         patchDto.amount = new BigDecimal("200.00");
 
-        final var patched = this.paymentService.patchPayment(created.id, patchDto, ADMIN_USERNAME);
+        final var patched =
+                this.paymentService.patchPayment(Objects.requireNonNull(created.id), patchDto, ADMIN_USERNAME);
         assertNotNull(patched);
         assertEquals(new BigDecimal("200.00"), patched.amount);
     }
@@ -421,17 +386,14 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByIdDeniedWhenUsernameMissing() {
-        final var newPaymentDto = ServiceTestDataBuilder.createPaymentDto(
-                this.testSourceAccount.id,
-                this.testTargetAccount.id,
-                this.testUser.id,
-                "Forbidden lookup",
-                LocalDate.now(),
-                new BigDecimal("10.00"));
+        final var newPaymentDto =
+                ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                        this.testUserId, "Forbidden lookup", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         final var createdPayment = this.paymentService.createPayment(newPaymentDto);
 
-        final var exception = assertThrows(WebApplicationException.class,
-                () -> this.paymentService.findById(createdPayment.id, null));
+        final Long createdId = Objects.requireNonNull(createdPayment.id);
+        final var exception =
+                assertThrows(WebApplicationException.class, () -> this.paymentService.findById(createdId, null));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
@@ -441,12 +403,13 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         final PaymentEntity malformedPayment = new PaymentEntity();
         malformedPayment.user = this.testUser;
         malformedPayment.comment = "Malformed payment";
-        malformedPayment.date = LocalDate.now();
+        malformedPayment.date = LocalDate.now(ZoneOffset.UTC);
         malformedPayment.amount = new BigDecimal("10.00");
         malformedPayment.persist();
 
+        final Long malformedId = Objects.requireNonNull(malformedPayment.id);
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.paymentService.findById(malformedPayment.id, ADMIN_USERNAME));
+                () -> this.paymentService.findById(malformedId, ADMIN_USERNAME));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
@@ -456,15 +419,16 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         final PaymentEntity malformedPayment = new PaymentEntity();
         malformedPayment.user = this.testUser;
         malformedPayment.comment = "Malformed payment";
-        malformedPayment.date = LocalDate.now();
+        malformedPayment.date = LocalDate.now(ZoneOffset.UTC);
         malformedPayment.amount = new BigDecimal("10.00");
         malformedPayment.persist();
 
         final PaymentDto patchDto = new PaymentDto();
         patchDto.comment = "Still malformed";
 
+        final Long malformedId = Objects.requireNonNull(malformedPayment.id);
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.paymentService.patchPayment(malformedPayment.id, patchDto, ADMIN_USERNAME));
+                () -> this.paymentService.patchPayment(malformedId, patchDto, ADMIN_USERNAME));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
@@ -478,9 +442,8 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindRecentPayments() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, this.testTargetAccount.id,
-                this.testUser.id,
-                "Recent", LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                this.testUserId, "Recent", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         this.paymentService.createPayment(dto);
 
         final var recent = this.paymentService.findRecentPayments(5);
@@ -492,9 +455,9 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreatePaymentValidationNoAccounts() {
         final var dto = new PaymentDto();
-        dto.userId = this.testUser.id;
+        dto.userId = this.testUserId;
         dto.comment = "test";
-        dto.date = LocalDate.now();
+        dto.date = LocalDate.now(ZoneOffset.UTC);
         dto.amount = new BigDecimal("10.00");
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
     }
@@ -503,10 +466,10 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreatePaymentValidationNoUser() {
         final var dto = new PaymentDto();
-        dto.sourceAccountId = this.testSourceAccount.id;
-        dto.targetAccountId = this.testTargetAccount.id;
+        dto.sourceAccountId = this.testSourceAccountId;
+        dto.targetAccountId = this.testTargetAccountId;
         dto.comment = "test";
-        dto.date = LocalDate.now();
+        dto.date = LocalDate.now(ZoneOffset.UTC);
         dto.amount = new BigDecimal("10.00");
         assertThrows(IllegalArgumentException.class, () -> this.paymentService.createPayment(dto));
     }
@@ -515,10 +478,10 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreatePaymentValidationNoComment() {
         final var dto = new PaymentDto();
-        dto.sourceAccountId = this.testSourceAccount.id;
-        dto.targetAccountId = this.testTargetAccount.id;
-        dto.userId = this.testUser.id;
-        dto.date = LocalDate.now();
+        dto.sourceAccountId = this.testSourceAccountId;
+        dto.targetAccountId = this.testTargetAccountId;
+        dto.userId = this.testUserId;
+        dto.date = LocalDate.now(ZoneOffset.UTC);
         dto.amount = new BigDecimal("10.00");
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
     }
@@ -527,9 +490,9 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreatePaymentValidationNoDate() {
         final var dto = new PaymentDto();
-        dto.sourceAccountId = this.testSourceAccount.id;
-        dto.targetAccountId = this.testTargetAccount.id;
-        dto.userId = this.testUser.id;
+        dto.sourceAccountId = this.testSourceAccountId;
+        dto.targetAccountId = this.testTargetAccountId;
+        dto.userId = this.testUserId;
         dto.comment = "test";
         dto.amount = new BigDecimal("10.00");
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
@@ -539,11 +502,11 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreatePaymentWithZeroAmount() {
         final var dto = new PaymentDto();
-        dto.sourceAccountId = this.testSourceAccount.id;
-        dto.targetAccountId = this.testTargetAccount.id;
-        dto.userId = this.testUser.id;
+        dto.sourceAccountId = this.testSourceAccountId;
+        dto.targetAccountId = this.testTargetAccountId;
+        dto.userId = this.testUserId;
         dto.comment = "test";
-        dto.date = LocalDate.now();
+        dto.date = LocalDate.now(ZoneOffset.UTC);
         dto.amount = BigDecimal.ZERO;
         final var created = this.paymentService.createPayment(dto);
         assertNotNull(created);
@@ -553,9 +516,8 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreatePaymentWithOnlySourceAccount() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, null, this.testUser.id,
-                "Source only",
-                LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, null, this.testUserId,
+                "Source only", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         final var created = this.paymentService.createPayment(dto);
         assertNotNull(created);
         assertNotNull(created.sourceAccountId);
@@ -564,9 +526,8 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreatePaymentWithOnlyTargetAccount() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(null, this.testTargetAccount.id, this.testUser.id,
-                "Target only",
-                LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(null, this.testTargetAccountId, this.testUserId,
+                "Target only", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         final var created = this.paymentService.createPayment(dto);
         assertNotNull(created);
         assertNotNull(created.targetAccountId);
@@ -575,27 +536,24 @@ class PaymentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreatePaymentInvalidTargetAccount() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, 999999L, this.testUser.id,
-                "Bad target",
-                LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, 999999L, this.testUserId,
+                "Bad target", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
     }
 
     @Test
     @TestTransaction
     void testCreatePaymentInvalidSourceAccount() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(999999L, this.testTargetAccount.id, this.testUser.id,
-                "Bad source",
-                LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(999999L, this.testTargetAccountId, this.testUserId,
+                "Bad source", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
     }
 
     @Test
     @TestTransaction
     void testCreatePaymentInvalidUser() {
-        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccount.id, this.testTargetAccount.id,
-                999999L,
-                "Bad user", LocalDate.now(), new BigDecimal("10.00"));
+        final var dto = ServiceTestDataBuilder.createPaymentDto(this.testSourceAccountId, this.testTargetAccountId,
+                999999L, "Bad user", LocalDate.now(ZoneOffset.UTC), new BigDecimal("10.00"));
         assertThrows(ValidationException.class, () -> this.paymentService.createPayment(dto));
     }
 

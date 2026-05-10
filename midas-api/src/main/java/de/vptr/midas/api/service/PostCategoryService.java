@@ -13,15 +13,12 @@ import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 /** Service for post category business logic. */
 @ApplicationScoped
 public class PostCategoryService {
-
-    private static final int MAX_CATEGORY_DEPTH = 100;
 
     /** Returns all categories with default pagination. */
     public List<PostCategoryResponseDto> getAllCategories() {
@@ -30,10 +27,9 @@ public class PostCategoryService {
 
     /** Returns all categories with the given pagination. */
     public List<PostCategoryResponseDto> getAllCategories(final int page, final int size) {
-        final List<PostCategoryEntity> categories = PostCategoryEntity
-                .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent ORDER BY c.id")
-                .page(page, size)
-                .list();
+        final List<PostCategoryEntity> categories =
+                PostCategoryEntity.find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent ORDER BY c.id")
+                        .page(page, size).list();
         return this.toCategoryResponseDtos(categories);
     }
 
@@ -41,15 +37,13 @@ public class PostCategoryService {
     public Optional<PostCategoryResponseDto> findById(final Long id) {
         return PostCategoryEntity
                 .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE c.id = ?1", id)
-                .<PostCategoryEntity>firstResultOptional()
-                .map(this::toCategoryResponseDto);
+                .<PostCategoryEntity>firstResultOptional().map(this::toCategoryResponseDto);
     }
 
     /** Returns all root categories. */
     public List<PostCategoryResponseDto> findRootCategories() {
-        final List<PostCategoryEntity> categories = PostCategoryEntity
-                .find("SELECT c FROM PostCategoryEntity c WHERE c.parent IS NULL")
-                .list();
+        final List<PostCategoryEntity> categories =
+                PostCategoryEntity.find("SELECT c FROM PostCategoryEntity c WHERE c.parent IS NULL").list();
         return this.toCategoryResponseDtos(categories);
     }
 
@@ -90,7 +84,8 @@ public class PostCategoryService {
             if (newParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
-            if (this.isDescendantOf(newParent.id, existingCategory.id)) {
+            if (newParent.id != null && existingCategory.id != null
+                    && this.isDescendantOf(newParent.id, existingCategory.id)) {
                 throw new WebApplicationException("Cannot set parent to a descendant category",
                         Response.Status.BAD_REQUEST);
             }
@@ -119,7 +114,8 @@ public class PostCategoryService {
             if (newParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
-            if (this.isDescendantOf(newParent.id, existingCategory.id)) {
+            if (newParent.id != null && existingCategory.id != null
+                    && this.isDescendantOf(newParent.id, existingCategory.id)) {
                 throw new WebApplicationException("Cannot set parent to a descendant category",
                         Response.Status.BAD_REQUEST);
             }
@@ -131,26 +127,23 @@ public class PostCategoryService {
     }
 
     /**
-     * Check if potential parent is a descendant of the category (to prevent
-     * circular references). Uses a recursive CTE to traverse ancestors.
+     * Check if potential parent is a descendant of the category (to prevent circular references). Uses a recursive CTE
+     * to traverse ancestors.
      */
     private boolean isDescendantOf(final Long potentialParentId, final Long categoryId) {
         if (potentialParentId.equals(categoryId)) {
             return true;
         }
 
-        final List<Long> ancestors = PostCategoryEntity.getEntityManager()
-                .createNativeQuery("""
-                        WITH RECURSIVE ancestors AS (
-                            SELECT id, parent_id FROM post_categories WHERE id = :startId
-                            UNION ALL
-                            SELECT c.id, c.parent_id FROM post_categories c
-                            INNER JOIN ancestors a ON c.id = a.parent_id
-                        )
-                        SELECT id FROM ancestors
-                        """, Long.class)
-                .setParameter("startId", potentialParentId)
-                .getResultList();
+        final List<Long> ancestors = PostCategoryEntity.getEntityManager().createNativeQuery("""
+                WITH RECURSIVE ancestors AS (
+                    SELECT id, parent_id FROM post_categories WHERE id = :startId
+                    UNION ALL
+                    SELECT c.id, c.parent_id FROM post_categories c
+                    INNER JOIN ancestors a ON c.id = a.parent_id
+                )
+                SELECT id FROM ancestors
+                """, Long.class).setParameter("startId", potentialParentId).getResultList();
 
         return ancestors.contains(categoryId);
     }
@@ -176,8 +169,7 @@ public class PostCategoryService {
     private PostCategoryResponseDto toCategoryResponseDto(final PostCategoryEntity category) {
         final List<Long> childrenIds = PostCategoryEntity.getEntityManager()
                 .createQuery("SELECT c.id FROM PostCategoryEntity c WHERE c.parent.id = :parentId", Long.class)
-                .setParameter("parentId", category.id)
-                .getResultList();
+                .setParameter("parentId", category.id).getResultList();
         final int postsCount = (int) PostEntity.count("category.id", category.id);
         return new PostCategoryResponseDto(category, childrenIds.size(), childrenIds, postsCount);
     }
@@ -190,34 +182,27 @@ public class PostCategoryService {
 
         // Batch fetch children info
         final List<Object[]> childResults = PostCategoryEntity.getEntityManager()
-                .createQuery(
-                        "SELECT c.parent.id, c.id FROM PostCategoryEntity c WHERE c.parent.id IN :ids",
+                .createQuery("SELECT c.parent.id, c.id FROM PostCategoryEntity c WHERE c.parent.id IN :ids",
                         Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+                .setParameter("ids", ids).getResultList();
         final Map<Long, List<Long>> childrenByParent = new HashMap<>();
         for (final Object[] row : childResults) {
             childrenByParent.computeIfAbsent((Long) row[0], k -> new ArrayList<>()).add((Long) row[1]);
         }
 
         // Batch fetch post counts
-        final List<Object[]> postCountResults = PostEntity.getEntityManager()
-                .createQuery(
-                        "SELECT p.category.id, COUNT(p) FROM PostEntity p WHERE p.category.id IN :ids GROUP BY p.category.id",
-                        Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+        final List<Object[]> postCountResults = PostEntity.getEntityManager().createQuery(
+                "SELECT p.category.id, COUNT(p) FROM PostEntity p WHERE p.category.id IN :ids GROUP BY p.category.id",
+                Object[].class).setParameter("ids", ids).getResultList();
         final Map<Long, Long> postCounts = new HashMap<>();
         for (final Object[] row : postCountResults) {
             postCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return categories.stream()
-                .map(c -> {
-                    final List<Long> childrenIds = childrenByParent.getOrDefault(c.id, List.of());
-                    final int postsCount = postCounts.getOrDefault(c.id, 0L).intValue();
-                    return new PostCategoryResponseDto(c, childrenIds.size(), childrenIds, postsCount);
-                })
-                .toList();
+        return categories.stream().map(c -> {
+            final List<Long> childrenIds = childrenByParent.getOrDefault(c.id, List.of());
+            final int postsCount = postCounts.getOrDefault(c.id, 0L).intValue();
+            return new PostCategoryResponseDto(c, childrenIds.size(), childrenIds, postsCount);
+        }).toList();
     }
 }

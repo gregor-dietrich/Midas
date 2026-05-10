@@ -10,6 +10,7 @@ import org.hibernate.generator.EventType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,10 +28,12 @@ public class UserRankEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @NotBlank
     @Column(unique = true)
+    @Nullable
     public String name;
 
     // View permissions
@@ -119,13 +122,16 @@ public class UserRankEntity extends PanacheEntityBase {
 
     @OneToMany(mappedBy = "rank", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JsonIgnore
+    @Nullable
     public List<UserEntity> users;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     @Override

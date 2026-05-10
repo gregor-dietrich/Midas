@@ -16,7 +16,6 @@ import de.vptr.midas.api.entity.UserGroupMetaEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -31,22 +30,18 @@ public class UserGroupService {
 
     /** Returns all groups with pagination. */
     public List<UserGroupResponseDto> getAllGroups(final int page, final int size) {
-        final List<UserGroupEntity> groups = UserGroupEntity.findAll()
-                .page(page, size)
-                .list();
+        final List<UserGroupEntity> groups = UserGroupEntity.findAll().page(page, size).list();
         return this.toGroupResponseDtos(groups);
     }
 
     /** Returns the group with the given id. */
     public Optional<UserGroupResponseDto> findById(final Long id) {
-        return UserGroupEntity.findByIdOptional(id)
-                .map(entity -> this.toGroupResponseDto((UserGroupEntity) entity));
+        return UserGroupEntity.findByIdOptional(id).map(entity -> this.toGroupResponseDto((UserGroupEntity) entity));
     }
 
     /** Returns the group with the given name. */
     public Optional<UserGroupResponseDto> findByName(final String name) {
-        return Optional.ofNullable(UserGroupEntity.findByName(name))
-                .map(this::toGroupResponseDto);
+        return Optional.ofNullable(UserGroupEntity.findByName(name)).map(this::toGroupResponseDto);
     }
 
     /** Returns all users in the given group. */
@@ -55,19 +50,17 @@ public class UserGroupService {
         if (group == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);
         }
-        final List<UserEntity> users = UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN "
-                        + "(SELECT m.user.id FROM UserGroupMetaEntity m WHERE m.group.id = ?1)", groupId)
-                .list();
+        final List<UserEntity> users = UserEntity.find("""
+                SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN \
+                (SELECT m.user.id FROM UserGroupMetaEntity m WHERE m.group.id = ?1)""", groupId).list();
         return this.toUserResponseDtos(users);
     }
 
     /** Returns all groups that the given user belongs to. */
     public List<UserGroupResponseDto> getGroupsForUser(final Long userId) {
-        final List<UserGroupEntity> groups = UserGroupEntity
-                .find("SELECT g FROM UserGroupEntity g WHERE g.id IN "
-                        + "(SELECT m.group.id FROM UserGroupMetaEntity m WHERE m.user.id = ?1)", userId)
-                .list();
+        final List<UserGroupEntity> groups = UserGroupEntity.find("""
+                SELECT g FROM UserGroupEntity g WHERE g.id IN \
+                (SELECT m.group.id FROM UserGroupMetaEntity m WHERE m.user.id = ?1)""", userId).list();
         return this.toGroupResponseDtos(groups);
     }
 
@@ -162,8 +155,8 @@ public class UserGroupService {
         if (searchTerm == null) {
             return this.getAllGroups();
         }
-        final List<UserGroupEntity> groups = SearchQueryUtil.applyDefaultSearchLimit(
-                UserGroupEntity.find("LOWER(name) LIKE ?1 ESCAPE '\\'", searchTerm)).list();
+        final List<UserGroupEntity> groups = SearchQueryUtil
+                .applyDefaultSearchLimit(UserGroupEntity.find("LOWER(name) LIKE ?1 ESCAPE '\\'", searchTerm)).list();
         return this.toGroupResponseDtos(groups);
     }
 
@@ -178,20 +171,15 @@ public class UserGroupService {
         }
         final List<Long> ids = groups.stream().map(g -> g.id).toList();
 
-        final List<Object[]> countResults = UserGroupMetaEntity.getEntityManager()
-                .createQuery(
-                        "SELECT m.group.id, COUNT(m) FROM UserGroupMetaEntity m WHERE m.group.id IN :ids GROUP BY m.group.id",
-                        Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+        final List<Object[]> countResults = UserGroupMetaEntity.getEntityManager().createQuery(
+                "SELECT m.group.id, COUNT(m) FROM UserGroupMetaEntity m WHERE m.group.id IN :ids GROUP BY m.group.id",
+                Object[].class).setParameter("ids", ids).getResultList();
         final Map<Long, Long> userCounts = new HashMap<>();
         for (final Object[] row : countResults) {
             userCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return groups.stream()
-                .map(g -> new UserGroupResponseDto(g, userCounts.getOrDefault(g.id, 0L)))
-                .toList();
+        return groups.stream().map(g -> new UserGroupResponseDto(g, userCounts.getOrDefault(g.id, 0L))).toList();
     }
 
     private List<UserResponseDto> toUserResponseDtos(final List<UserEntity> users) {
@@ -201,31 +189,24 @@ public class UserGroupService {
         final List<Long> ids = users.stream().map(u -> u.id).toList();
 
         final List<Object[]> postResults = PostEntity.getEntityManager()
-                .createQuery(
-                        "SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
+                .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
                         Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+                .setParameter("ids", ids).getResultList();
         final Map<Long, Long> postCounts = new HashMap<>();
         for (final Object[] row : postResults) {
             postCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        final List<Object[]> commentResults = PostCommentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
-                        Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+        final List<Object[]> commentResults = PostCommentEntity.getEntityManager().createQuery(
+                "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
+                Object[].class).setParameter("ids", ids).getResultList();
         final Map<Long, Long> commentCounts = new HashMap<>();
         for (final Object[] row : commentResults) {
             commentCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return users.stream()
-                .map(u -> new UserResponseDto(u,
-                        postCounts.getOrDefault(u.id, 0L),
-                        commentCounts.getOrDefault(u.id, 0L)))
+        return users.stream().map(
+                u -> new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L)))
                 .toList();
     }
 }

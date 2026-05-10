@@ -19,8 +19,7 @@ import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for editing post comments in the admin view.
- * Encapsulates form fields, binder, and save/cancel logic.
+ * Dialog for editing post comments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
 public class AdminPostCommentDialog extends FormDialog {
 
@@ -34,8 +33,7 @@ public class AdminPostCommentDialog extends FormDialog {
     private PostCommentDto currentComment;
 
     /** Initializes AdminPostCommentDialog. */
-    public AdminPostCommentDialog(final PostCommentService commentService,
-            final Runnable onSave,
+    public AdminPostCommentDialog(final PostCommentService commentService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.commentService = commentService;
@@ -61,9 +59,7 @@ public class AdminPostCommentDialog extends FormDialog {
         contentField.setMaxLength(5000);
         contentField.setInvalid(false);
 
-        this.binder.bind(contentField,
-                PostCommentDto::getContent,
-                PostCommentDto::setContent);
+        this.binder.bind(contentField, PostCommentDto::getContent, PostCommentDto::setContent);
 
         form.add(contentField);
 

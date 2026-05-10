@@ -12,9 +12,7 @@ public class ThemeService {
 
     /** Theme component. */
     public enum Theme {
-        LIGHT("Light", null),
-        DARK("Dark", Lumo.DARK),
-        SYSTEM("System", null);
+        LIGHT("Light", null), DARK("Dark", Lumo.DARK), SYSTEM("System", null);
 
         private final String displayName;
         private final String themeVariant;
@@ -88,10 +86,8 @@ public class ThemeService {
                     themeList.clear();
                     ui.getPage().executeJs(
                             "if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {"
-                                    + "  document.documentElement.setAttribute('theme', 'dark');"
-                                    + "} else {"
-                                    + "  document.documentElement.removeAttribute('theme');"
-                                    + "}");
+                                    + "  document.documentElement.setAttribute('theme', 'dark');" + "} else {"
+                                    + "  document.documentElement.removeAttribute('theme');" + "}");
                     break;
                 default:
                     break;

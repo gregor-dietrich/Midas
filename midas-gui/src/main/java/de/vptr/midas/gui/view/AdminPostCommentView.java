@@ -32,7 +32,6 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
 /** AdminPostCommentView view. */
@@ -75,8 +74,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(
-                query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -86,24 +84,18 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
-        this.commentDialog = new AdminPostCommentDialog(
-                this.commentService,
-                this::setupLazyDataProvider,
+        this.commentDialog = new AdminPostCommentDialog(this.commentService, this::setupLazyDataProvider,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchComments(),
-                "Search by author or content...",
-                "Search Comments");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchComments(), "Search by author or content...", "Search Comments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -114,10 +106,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
-        final var userFilterLayout = new IntegerFilterLayout(
-                _ -> this.filterByUser(),
-                "Enter User ID...",
-                "Filter by User");
+        final var userFilterLayout =
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(dateFilterLayout, userFilterLayout);
@@ -209,17 +199,14 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.searchButton.setEnabled(false);
         LOG.infof("Starting async comment search with query: %s", query);
 
-        this.loadDataAsync(
-                () -> this.commentService.searchComments(query.trim()),
-                comments -> {
-                    this.searchButton.setEnabled(true);
-                    LOG.infof("Successfully found %s comments", comments.size());
-                    this.grid.setItems(comments);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.commentService.searchComments(query.trim()), comments -> {
+            this.searchButton.setEnabled(true);
+            LOG.infof("Successfully found %s comments", comments.size());
+            this.grid.setItems(comments);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private void filterByDateRange() {
@@ -236,8 +223,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
+        this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
                 comments -> this.grid.setItems(comments));
     }
 
@@ -248,8 +234,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.commentService.getCommentsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.commentService.getCommentsByUser(userId.longValue()),
                 comments -> this.grid.setItems(comments));
     }
 }

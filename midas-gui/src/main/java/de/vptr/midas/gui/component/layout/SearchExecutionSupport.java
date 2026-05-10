@@ -44,8 +44,8 @@ final class SearchExecutionSupport {
         }
 
         final long now = this.currentTimeMillisSupplier.getAsLong();
-        final boolean throttled = query.equals(this.lastSubmittedQuery)
-                && now - this.lastSubmittedAtMillis < this.throttleMillis;
+        final boolean throttled =
+                query.equals(this.lastSubmittedQuery) && now - this.lastSubmittedAtMillis < this.throttleMillis;
         if (throttled) {
             return false;
         }

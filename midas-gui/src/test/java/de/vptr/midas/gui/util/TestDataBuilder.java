@@ -30,8 +30,8 @@ public class TestDataBuilder {
      */
     public static UserDto createUniqueUser() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
-        final var user = new UserDto(TestUtil.createUniqueTestUsername("testuser"),
-                TestUtil.createUniqueTestEmail("test"));
+        final var user =
+                new UserDto(TestUtil.createUniqueTestUsername("testuser"), TestUtil.createUniqueTestEmail("test"));
         user.setId(Long.valueOf(suffix));
         user.setActivated(false);
         user.setBanned(false);
@@ -76,8 +76,7 @@ public class TestDataBuilder {
      */
     public static UserGroupDto createUniqueUserGroup() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
-        final var group = new UserGroupDto(Long.valueOf(suffix),
-                TestUtil.createUniqueTestName("Test Group"));
+        final var group = new UserGroupDto(Long.valueOf(suffix), TestUtil.createUniqueTestName("Test Group"));
         return group;
     }
 
@@ -148,8 +147,8 @@ public class TestDataBuilder {
         final var created = LocalDateTime.now();
         final var updated = LocalDateTime.now();
 
-        final var payment = new PaymentDto(user.getId(), fromAccountId, toAccountId,
-                amount, date, comment, created, updated);
+        final var payment =
+                new PaymentDto(user.getId(), fromAccountId, toAccountId, amount, date, comment, created, updated);
         payment.setId(Long.valueOf(suffix));
         return payment;
     }

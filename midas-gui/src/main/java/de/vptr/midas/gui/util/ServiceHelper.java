@@ -14,16 +14,15 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Centralises the duplicated try/catch exception-handling pattern
- * found in every GUI service method that calls a REST client.
+ * Centralises the duplicated try/catch exception-handling pattern found in every GUI service method that calls a REST
+ * client.
  *
  * <p>
  * Three entry-points cover all current call shapes:
  * <ul>
  * <li>{@link #execute} – value-returning calls</li>
  * <li>{@link #executeVoid} – fire-and-forget calls</li>
- * <li>{@link #executeForResponse} – calls that return a raw
- * {@link Response}</li>
+ * <li>{@link #executeForResponse} – calls that return a raw {@link Response}</li>
  * </ul>
  */
 public final class ServiceHelper {
@@ -33,27 +32,25 @@ public final class ServiceHelper {
     }
 
     /**
-     * Executes a value-returning REST client call with standardised exception
-     * handling.
+     * Executes a value-returning REST client call with standardised exception handling.
      *
-     * @param action      the supplier wrapping the REST call
-     * @param authService used to invalidate the session on 401
-     * @param log         caller's logger for contextual messages
-     * @param operation   short description for log messages (e.g. "fetching pages")
+     * @param action
+     *            the supplier wrapping the REST call
+     * @param authService
+     *            used to invalidate the session on 401
+     * @param log
+     *            caller's logger for contextual messages
+     * @param operation
+     *            short description for log messages (e.g. "fetching pages")
      * @return the value produced by {@code action}
      */
-    public static <T> T execute(final Supplier<T> action,
-            final AuthService authService,
-            final Logger log,
+    public static <T> T execute(final Supplier<T> action, final AuthService authService, final Logger log,
             final String operation) {
         return execute(action, authService, log, operation, null);
     }
 
-    private static <T> T execute(final Supplier<T> action,
-            final AuthService authService,
-            final Logger log,
-            final String operation,
-            final String failurePrefix) {
+    private static <T> T execute(final Supplier<T> action, final AuthService authService, final Logger log,
+            final String operation, final String failurePrefix) {
         try {
             return action.get();
         } catch (final ProcessingException e) {
@@ -72,14 +69,16 @@ public final class ServiceHelper {
     /**
      * Executes a void REST client call with standardised exception handling.
      *
-     * @param action      the runnable wrapping the REST call
-     * @param authService used to invalidate the session on 401
-     * @param log         caller's logger for contextual messages
-     * @param operation   short description for log messages
+     * @param action
+     *            the runnable wrapping the REST call
+     * @param authService
+     *            used to invalidate the session on 401
+     * @param log
+     *            caller's logger for contextual messages
+     * @param operation
+     *            short description for log messages
      */
-    public static void executeVoid(final Runnable action,
-            final AuthService authService,
-            final Logger log,
+    public static void executeVoid(final Runnable action, final AuthService authService, final Logger log,
             final String operation) {
         execute(() -> {
             action.run();
@@ -88,59 +87,65 @@ public final class ServiceHelper {
     }
 
     /**
-     * Executes a REST client call that returns a {@link Response},
-     * with standardised exception handling.
-     * Useful for methods that need to inspect status codes on the raw response.
+     * Executes a REST client call that returns a {@link Response}, with standardised exception handling. Useful for
+     * methods that need to inspect status codes on the raw response.
      *
-     * @param action      the supplier wrapping the REST call
-     * @param authService used to invalidate the session on 401
-     * @param log         caller's logger for contextual messages
-     * @param operation   short description for log messages
+     * @param action
+     *            the supplier wrapping the REST call
+     * @param authService
+     *            used to invalidate the session on 401
+     * @param log
+     *            caller's logger for contextual messages
+     * @param operation
+     *            short description for log messages
      * @return the {@link Response} produced by {@code action}
      */
-    public static Response executeForResponse(final Supplier<Response> action,
-            final AuthService authService,
-            final Logger log,
-            final String operation) {
+    public static Response executeForResponse(final Supplier<Response> action, final AuthService authService,
+            final Logger log, final String operation) {
         return execute(action, authService, log, operation);
     }
 
     /**
-     * Executes a REST client call that returns a {@link Response}, closes it after
-     * processing and applies standardised exception handling.
+     * Executes a REST client call that returns a {@link Response}, closes it after processing and applies standardised
+     * exception handling.
      *
-     * @param action          the supplier wrapping the REST call
-     * @param authService     used to invalidate the session on 401
-     * @param log             caller's logger for contextual messages
-     * @param operation       short description for log messages
-     * @param responseHandler handler that inspects and parses the response
+     * @param action
+     *            the supplier wrapping the REST call
+     * @param authService
+     *            used to invalidate the session on 401
+     * @param log
+     *            caller's logger for contextual messages
+     * @param operation
+     *            short description for log messages
+     * @param responseHandler
+     *            handler that inspects and parses the response
      * @return the value produced by {@code responseHandler}
      */
-    public static <T> T executeWithResponse(final Supplier<Response> action,
-            final AuthService authService,
-            final Logger log,
-            final String operation,
-            final Function<Response, T> responseHandler) {
+    public static <T> T executeWithResponse(final Supplier<Response> action, final AuthService authService,
+            final Logger log, final String operation, final Function<Response, T> responseHandler) {
         return executeWithResponse(action, authService, log, operation, null, responseHandler);
     }
 
     /**
-     * Executes a REST client call that returns a {@link Response}, closes it after
-     * processing and translates backend failures with a caller-provided prefix.
+     * Executes a REST client call that returns a {@link Response}, closes it after processing and translates backend
+     * failures with a caller-provided prefix.
      *
-     * @param action          the supplier wrapping the REST call
-     * @param authService     used to invalidate the session on 401
-     * @param log             caller's logger for contextual messages
-     * @param operation       short description for log messages
-     * @param failurePrefix   message prefix for backend error translation
-     * @param responseHandler handler that inspects and parses the response
+     * @param action
+     *            the supplier wrapping the REST call
+     * @param authService
+     *            used to invalidate the session on 401
+     * @param log
+     *            caller's logger for contextual messages
+     * @param operation
+     *            short description for log messages
+     * @param failurePrefix
+     *            message prefix for backend error translation
+     * @param responseHandler
+     *            handler that inspects and parses the response
      * @return the value produced by {@code responseHandler}
      */
-    public static <T> T executeWithResponse(final Supplier<Response> action,
-            final AuthService authService,
-            final Logger log,
-            final String operation,
-            final String failurePrefix,
+    public static <T> T executeWithResponse(final Supplier<Response> action, final AuthService authService,
+            final Logger log, final String operation, final String failurePrefix,
             final Function<Response, T> responseHandler) {
         return execute(() -> {
             try (Response response = action.get()) {
@@ -151,16 +156,17 @@ public final class ServiceHelper {
     }
 
     /**
-     * Reads a typed entity from a response and translates client-side parsing
-     * failures to {@link ServiceException}.
+     * Reads a typed entity from a response and translates client-side parsing failures to {@link ServiceException}.
      *
-     * @param response           response containing the entity
-     * @param entityType         target entity type
-     * @param payloadDescription short payload description for diagnostics
+     * @param response
+     *            response containing the entity
+     * @param entityType
+     *            target entity type
+     * @param payloadDescription
+     *            short payload description for diagnostics
      * @return parsed entity
      */
-    public static <T> T readEntity(final Response response,
-            final Class<T> entityType,
+    public static <T> T readEntity(final Response response, final Class<T> entityType,
             final String payloadDescription) {
         try {
             return response.readEntity(entityType);
@@ -170,16 +176,17 @@ public final class ServiceHelper {
     }
 
     /**
-     * Reads a generic entity from a response and translates client-side parsing
-     * failures to {@link ServiceException}.
+     * Reads a generic entity from a response and translates client-side parsing failures to {@link ServiceException}.
      *
-     * @param response           response containing the entity
-     * @param entityType         target entity type
-     * @param payloadDescription short payload description for diagnostics
+     * @param response
+     *            response containing the entity
+     * @param entityType
+     *            target entity type
+     * @param payloadDescription
+     *            short payload description for diagnostics
      * @return parsed entity
      */
-    public static <T> T readEntity(final Response response,
-            final GenericType<T> entityType,
+    public static <T> T readEntity(final Response response, final GenericType<T> entityType,
             final String payloadDescription) {
         try {
             return response.readEntity(entityType);
@@ -189,11 +196,12 @@ public final class ServiceHelper {
     }
 
     /**
-     * Builds a {@link ServiceException} using the backend response body when
-     * available.
+     * Builds a {@link ServiceException} using the backend response body when available.
      *
-     * @param failurePrefix caller-specific error prefix
-     * @param response      backend response
+     * @param failurePrefix
+     *            caller-specific error prefix
+     * @param response
+     *            backend response
      * @return translated service exception
      */
     public static ServiceException responseFailure(final String failurePrefix, final Response response) {
@@ -201,25 +209,26 @@ public final class ServiceHelper {
     }
 
     /**
-     * Builds a {@link ServiceException} using the backend response body when
-     * available.
+     * Builds a {@link ServiceException} using the backend response body when available.
      *
-     * @param failurePrefix caller-specific error prefix
-     * @param response      backend response
-     * @param cause         original cause
+     * @param failurePrefix
+     *            caller-specific error prefix
+     * @param response
+     *            backend response
+     * @param cause
+     *            original cause
      * @return translated service exception
      */
-    public static ServiceException responseFailure(final String failurePrefix,
-            final Response response,
+    public static ServiceException responseFailure(final String failurePrefix, final Response response,
             final Throwable cause) {
         return new ServiceException(failurePrefix + ": " + ErrorMessageUtil.extractErrorMessage(response), cause);
     }
 
     /**
-     * Builds a generic backend failure exception while preserving structured error
-     * messages when present.
+     * Builds a generic backend failure exception while preserving structured error messages when present.
      *
-     * @param response backend response
+     * @param response
+     *            backend response
      * @return translated service exception
      */
     public static ServiceException backendError(final Response response) {
@@ -227,11 +236,12 @@ public final class ServiceHelper {
     }
 
     /**
-     * Builds a generic backend failure exception while preserving structured error
-     * messages when present.
+     * Builds a generic backend failure exception while preserving structured error messages when present.
      *
-     * @param response backend response
-     * @param cause    original cause
+     * @param response
+     *            backend response
+     * @param cause
+     *            original cause
      * @return translated service exception
      */
     public static ServiceException backendError(final Response response, final Throwable cause) {
@@ -243,10 +253,7 @@ public final class ServiceHelper {
     }
 
     private static RuntimeException translateWebApplicationException(final WebApplicationException exception,
-            final AuthService authService,
-            final Logger log,
-            final String operation,
-            final String failurePrefix) {
+            final AuthService authService, final Logger log, final String operation, final String failurePrefix) {
         final Response response = exception.getResponse();
         final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
         final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);

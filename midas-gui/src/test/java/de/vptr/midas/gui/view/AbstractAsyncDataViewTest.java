@@ -35,9 +35,7 @@ class AbstractAsyncDataViewTest {
 
     /** Concrete subclass for testing the abstract base */
     private static class TestAsyncDataView extends AbstractAsyncDataView {
-        public <T> void testLoadWithErrorHandler(
-                final Supplier<T> loader,
-                final Consumer<T> onSuccess,
+        public <T> void testLoadWithErrorHandler(final Supplier<T> loader, final Consumer<T> onSuccess,
                 final Consumer<Throwable> onError) {
             this.loadDataAsync(loader, onSuccess, onError);
         }
@@ -70,14 +68,11 @@ class AbstractAsyncDataViewTest {
         final var result = new AtomicReference<Integer>();
         final var latch = new CountDownLatch(1);
 
-        view.testLoadWithErrorHandler(
-                () -> 42,
-                value -> {
-                    result.set(value);
-                    latch.countDown();
-                },
-                _ -> {
-                });
+        view.testLoadWithErrorHandler(() -> 42, value -> {
+            result.set(value);
+            latch.countDown();
+        }, _ -> {
+        });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(result.get()).isEqualTo(42);
@@ -89,16 +84,13 @@ class AbstractAsyncDataViewTest {
         final var errorRef = new AtomicReference<Throwable>();
         final var latch = new CountDownLatch(1);
 
-        view.testLoadWithErrorHandler(
-                () -> {
-                    throw new RuntimeException("custom error");
-                },
-                _ -> {
-                },
-                error -> {
-                    errorRef.set(error);
-                    latch.countDown();
-                });
+        view.testLoadWithErrorHandler(() -> {
+            throw new RuntimeException("custom error");
+        }, _ -> {
+        }, error -> {
+            errorRef.set(error);
+            latch.countDown();
+        });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(errorRef.get()).isNotNull();
@@ -110,14 +102,11 @@ class AbstractAsyncDataViewTest {
         final var result = new AtomicReference<String>();
         final var latch = new CountDownLatch(1);
 
-        view.testLoadWithErrorHandler(
-                () -> "async result",
-                value -> {
-                    result.set(value);
-                    latch.countDown();
-                },
-                _ -> {
-                });
+        view.testLoadWithErrorHandler(() -> "async result", value -> {
+            result.set(value);
+            latch.countDown();
+        }, _ -> {
+        });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(result.get()).isEqualTo("async result");
@@ -129,22 +118,18 @@ class AbstractAsyncDataViewTest {
         final var errorRef = new AtomicReference<Throwable>();
         final var latch = new CountDownLatch(1);
 
-        view.loadDataAsync(
-                () -> {
-                    try {
-                        Thread.sleep(1500);
-                    } catch (final InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    return 42;
-                },
-                _ -> {
-                },
-                error -> {
-                    errorRef.set(error);
-                    latch.countDown();
-                },
-                1);
+        view.loadDataAsync(() -> {
+            try {
+                Thread.sleep(1500);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return 42;
+        }, _ -> {
+        }, error -> {
+            errorRef.set(error);
+            latch.countDown();
+        }, 1);
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(MidasErrorHandler.unwrapAsyncThrowable(errorRef.get())).isInstanceOf(TimeoutException.class);

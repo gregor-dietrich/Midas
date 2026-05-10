@@ -131,36 +131,16 @@ class PasswordHashingServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = {
-            "null,hash,salt",
-            "password,null,salt",
-            "password,hash,null",
-            "password,null,null",
-            "null,hash,null",
-            "null,null,salt",
-            "null,null,null"
-    }, nullValues = "null")
+    @CsvSource(value = { "null,hash,salt", "password,null,salt", "password,hash,null", "password,null,null",
+            "null,hash,null", "null,null,salt", "null,null,null" }, nullValues = "null")
     void testVerifyPassword_nullInputs(final String password, final String hash, final String salt) {
         assertFalse(this.passwordHashingService.verifyPassword(password, hash, salt));
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "'',hash,salt",
-            "' ',hash,salt",
-            "password,'',salt",
-            "password,' ',salt",
-            "password,hash,''",
-            "password,hash,' '",
-            "password,'',''",
-            "password,' ',' '",
-            "'',hash,''",
-            "' ',hash,' '",
-            "'','',salt",
-            "' ',' ',salt",
-            "'','',''",
-            "' ',' ',' '"
-    })
+    @CsvSource({ "'',hash,salt", "' ',hash,salt", "password,'',salt", "password,' ',salt", "password,hash,''",
+            "password,hash,' '", "password,'',''", "password,' ',' '", "'',hash,''", "' ',hash,' '", "'','',salt",
+            "' ',' ',salt", "'','',''", "' ',' ',' '" })
     void testVerifyPassword_emptyInputs(final String password, final String hash, final String salt) {
         assertFalse(this.passwordHashingService.verifyPassword(password, hash, salt));
     }

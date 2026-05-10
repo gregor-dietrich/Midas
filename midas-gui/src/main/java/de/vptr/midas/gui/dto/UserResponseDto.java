@@ -7,9 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
- * Response DTO for user operations.
- * Contains computed fields and safe data for client responses.
- * Does not expose sensitive fields like password, salt, or activation key.
+ * Response DTO for user operations. Contains computed fields and safe data for client responses. Does not expose
+ * sensitive fields like password, salt, or activation key.
  */
 @RegisterForReflection
 public class UserResponseDto {
@@ -154,8 +153,8 @@ public class UserResponseDto {
     }
 
     /**
-     * Returns whether this user's account association is flagged as negative.
-     * Populated when users are returned in account context.
+     * Returns whether this user's account association is flagged as negative. Populated when users are returned in
+     * account context.
      */
     public boolean isNegative() {
         return this.isNegative;

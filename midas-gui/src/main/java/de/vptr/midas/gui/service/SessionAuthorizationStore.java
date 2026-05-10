@@ -42,16 +42,14 @@ public final class SessionAuthorizationStore {
 
     SessionAuthorizationStore(final Clock clock) {
         this.clock = clock;
-        this.cache = Caffeine.newBuilder()
-                .expireAfterWrite(SESSION_TTL)
-                .maximumSize(MAX_SESSIONS)
-                .build();
+        this.cache = Caffeine.newBuilder().expireAfterWrite(SESSION_TTL).maximumSize(MAX_SESSIONS).build();
     }
 
     /**
      * Creates a new session id and stores the authorization header behind it.
      *
-     * @param authorizationHeader the backend authorization header
+     * @param authorizationHeader
+     *            the backend authorization header
      * @return generated opaque session id
      */
     public String createSession(final String authorizationHeader) {
@@ -64,7 +62,8 @@ public final class SessionAuthorizationStore {
     /**
      * Returns authorization header for the given session id.
      *
-     * @param sessionId opaque session id
+     * @param sessionId
+     *            opaque session id
      * @return authorization header or null
      */
     public String resolveAuthorization(final String sessionId) {
@@ -84,7 +83,8 @@ public final class SessionAuthorizationStore {
     /**
      * Removes stored authorization for the given session id.
      *
-     * @param sessionId opaque session id
+     * @param sessionId
+     *            opaque session id
      */
     public void revokeSession(final String sessionId) {
         if (sessionId != null) {

@@ -70,10 +70,8 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.loadDataAsync(() -> {
             LOG.info("Making optimized REST call to load user accounts with balances");
             final var accounts = this.accountService.getMyAccountsWithBalances();
-            final Map<Long, BigDecimal> balances = accounts.stream()
-                    .collect(Collectors.toMap(
-                            AccountResponseDto::getId,
-                            account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO));
+            final Map<Long, BigDecimal> balances = accounts.stream().collect(Collectors.toMap(AccountResponseDto::getId,
+                    account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO));
             return new AccountsWithBalances(accounts, balances);
         }, result -> {
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());
@@ -121,10 +119,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.grid.setSizeFull();
 
         // Add columns
-        this.grid.addColumn(AccountResponseDto::getName)
-                .setHeader("Account Name")
-                .setFlexGrow(2)
-                .setSortable(true);
+        this.grid.addColumn(AccountResponseDto::getName).setHeader("Account Name").setFlexGrow(2).setSortable(true);
 
         this.grid.addColumn(new ComponentRenderer<>(account -> {
             final Span balanceSpan = new Span();
@@ -138,14 +133,9 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
             }
             balanceSpan.getStyle().set("font-weight", "bold");
             return balanceSpan;
-        }))
-                .setFlexGrow(1)
-                .setSortable(false);
+        })).setFlexGrow(1).setSortable(false);
 
-        this.grid.addColumn(AccountResponseDto::getUserCount)
-                .setHeader("Users")
-                .setFlexGrow(0)
-                .setWidth("80px")
+        this.grid.addColumn(AccountResponseDto::getUserCount).setHeader("Users").setFlexGrow(0).setWidth("80px")
                 .setSortable(true);
 
         // Add item click listener to navigate to payments view
@@ -165,12 +155,10 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private void updateTotalBalance() {
         if (this.totalBalanceLabel != null && this.accountBalances != null) {
             // Sum balances, subtracting those flagged as negative for the current user
-            final BigDecimal totalBalance = this.accountsList.stream()
-                    .reduce(BigDecimal.ZERO, (sum, account) -> {
-                        final BigDecimal bal = this.accountBalances.getOrDefault(
-                                account.getId(), BigDecimal.ZERO);
-                        return account.isNegative() ? sum.subtract(bal) : sum.add(bal);
-                    }, BigDecimal::add);
+            final BigDecimal totalBalance = this.accountsList.stream().reduce(BigDecimal.ZERO, (sum, account) -> {
+                final BigDecimal bal = this.accountBalances.getOrDefault(account.getId(), BigDecimal.ZERO);
+                return account.isNegative() ? sum.subtract(bal) : sum.add(bal);
+            }, BigDecimal::add);
 
             final String balanceText = String.format("Total Balance: € %.2f", totalBalance);
             this.totalBalanceLabel.setText(balanceText);

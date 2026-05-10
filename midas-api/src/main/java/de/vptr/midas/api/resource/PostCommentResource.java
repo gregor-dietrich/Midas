@@ -9,6 +9,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -38,6 +39,7 @@ import jakarta.ws.rs.core.SecurityContext;
 public class PostCommentResource {
 
     @Context
+    @Nullable
     SecurityContext securityContext;
 
     @Inject
@@ -46,8 +48,7 @@ public class PostCommentResource {
     /** Returns all comments with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "post-comment:edit", "post-comment:delete" })
-    public List<PostCommentResponseDto> getAllComments(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PostCommentResponseDto> getAllComments(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -63,8 +64,7 @@ public class PostCommentResource {
     /** Returns comments for a post with pagination. */
     @GET
     @Path("/post/{postId}")
-    public List<PostCommentResponseDto> getCommentsByPost(
-            @PathParam("postId") @Min(1) final Long postId,
+    public List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") @Min(1) final Long postId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
@@ -76,8 +76,7 @@ public class PostCommentResource {
     @GET
     @Path("/user/{userId}")
     @Authenticated
-    public List<PostCommentResponseDto> getCommentsByUser(
-            @PathParam("userId") @Min(1) final Long userId,
+    public List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") @Min(1) final Long userId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
@@ -108,8 +107,7 @@ public class PostCommentResource {
     /** Returns comments within the given date range. */
     @GET
     @Path("/date-range")
-    public List<PostCommentResponseDto> getCommentsByDateRange(
-            @QueryParam("startDate") final String startDate,
+    public List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") final String startDate,
             @QueryParam("endDate") final String endDate) {
         return this.commentService.findByDateRange(startDate, endDate);
     }

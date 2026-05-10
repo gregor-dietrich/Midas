@@ -32,7 +32,6 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.inject.Inject;
 
 /** Admin view for managing accounts. */
@@ -74,8 +73,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(
-                query -> this.accountService.getAllAccounts(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.accountService.getAllAccounts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -88,30 +86,23 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.accountDialog = new AdminAccountDialog(this.accountService, this::setupLazyDataProvider, onAuthFailure);
-        this.userPanel = new AdminAccountUserPanel(this.accountService, this.authService, this.userService,
-                onAuthFailure);
+        this.userPanel =
+                new AdminAccountUserPanel(this.accountService, this.authService, this.userService, onAuthFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProvider();
-                        }
-                },
-                _ -> this.searchAccounts(),
-                "Search by name...",
-                "Search Accounts");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProvider();
+            }
+        }, _ -> this.searchAccounts(), "Search by name...", "Search Accounts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        final var filterLayout = new IntegerFilterLayout(
-                _ -> this.filterByUser(),
-                "Enter ID...",
-                "Filter by User");
+        final var filterLayout = new IntegerFilterLayout(_ -> this.filterByUser(), "Enter ID...", "Filter by User");
 
         this.userIdField = filterLayout.getIntegerField();
 
@@ -174,18 +165,15 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         }
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
-        this.loadDataAsync(
-                () -> this.accountService.searchAccounts(query.trim()),
-                accounts -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search Accounts");
-                    this.grid.setItems(accounts);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search Accounts");
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.accountService.searchAccounts(query.trim()), accounts -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search Accounts");
+            this.grid.setItems(accounts);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search Accounts");
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private void filterByUser() {
@@ -195,8 +183,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.accountService.getAccountsByUser((long) value),
+        this.loadDataAsync(() -> this.accountService.getAccountsByUser((long) value),
                 accounts -> this.grid.setItems(accounts));
     }
 

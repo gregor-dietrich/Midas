@@ -19,8 +19,8 @@ public class DateFilterLayout extends HorizontalLayout {
     private final DatePicker endDatePicker;
 
     /** Initializes DateFilterLayout. */
-    public DateFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction,
-            final String tooltipText, final String fieldWidth) {
+    public DateFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction, final String tooltipText,
+            final String fieldWidth) {
         this.setAlignItems(Alignment.END);
         this.setSpacing(true);
 
@@ -35,8 +35,7 @@ public class DateFilterLayout extends HorizontalLayout {
         this.add(this.startDatePicker, this.endDatePicker, this.button);
     }
 
-    public DateFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction,
-            final String tooltipText) {
+    public DateFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction, final String tooltipText) {
         this(filterAction, tooltipText, DEFAULT_WIDTH);
     }
 

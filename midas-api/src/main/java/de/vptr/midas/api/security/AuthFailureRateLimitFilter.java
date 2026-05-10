@@ -9,6 +9,7 @@ import de.vptr.midas.api.exception.ApiErrorResponse;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -16,18 +17,15 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
 /**
- * Blocks Basic-auth requests for identities currently locked by failed-attempt
- * limits.
+ * Blocks Basic-auth requests for identities currently locked by failed-attempt limits.
  */
 @ApplicationScoped
 public class AuthFailureRateLimitFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BASIC_PREFIX = "Basic ";
-    private static final ApiErrorResponse TOO_MANY_REQUESTS_RESPONSE = new ApiErrorResponse(
-            429,
-            "Too Many Requests",
-            "Too many invalid authentication attempts");
+    private static final ApiErrorResponse TOO_MANY_REQUESTS_RESPONSE =
+            new ApiErrorResponse(429, "Too Many Requests", "Too many invalid authentication attempts");
     private static final String TOO_MANY_REQUESTS_BODY = Json.encode(TOO_MANY_REQUESTS_RESPONSE);
 
     @Inject
@@ -45,8 +43,7 @@ public class AuthFailureRateLimitFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith(BASIC_PREFIX)) {
             final String username = extractUsername(authorizationHeader);
             if (username != null && this.authFailureRateLimitService.isBlocked(username)) {
-                routingContext.response()
-                        .setStatusCode(429)
+                routingContext.response().setStatusCode(429)
                         .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                         .putHeader(HttpHeaders.RETRY_AFTER, String.valueOf(this.periodSeconds))
                         .end(TOO_MANY_REQUESTS_BODY);
@@ -56,6 +53,7 @@ public class AuthFailureRateLimitFilter {
         routingContext.next();
     }
 
+    @Nullable
     private static String extractUsername(final String authorizationHeader) {
         final String base64Credentials = authorizationHeader.substring(BASIC_PREFIX.length());
         try {

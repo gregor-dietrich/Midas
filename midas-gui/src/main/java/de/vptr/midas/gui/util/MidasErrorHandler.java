@@ -25,8 +25,8 @@ public final class MidasErrorHandler {
     }
 
     /**
-     * Centralized async error handler. Unwraps CompletionException, then dispatches
-     * to auth/service/generic handling on the UI thread.
+     * Centralized async error handler. Unwraps CompletionException, then dispatches to auth/service/generic handling on
+     * the UI thread.
      */
     public static void handle(final Throwable throwable, final UI ui) {
         final Throwable cause = unwrapAsyncThrowable(throwable);

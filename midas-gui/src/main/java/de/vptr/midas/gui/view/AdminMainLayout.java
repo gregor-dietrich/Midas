@@ -275,8 +275,8 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
     }
 
     /**
-     * Returns the current user rank from service, caching it for the duration of this layout instance.
-     * This avoids redundant service calls during the same navigation/render cycle.
+     * Returns the current user rank from service, caching it for the duration of this layout instance. This avoids
+     * redundant service calls during the same navigation/render cycle.
      */
     private UserRankResponseDto getCachedUserRank() {
         if (!this.cachedUserRankValid) {

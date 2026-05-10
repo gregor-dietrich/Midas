@@ -15,8 +15,7 @@ public final class QueryAggregationUtil {
     public static Map<Long, List<Long>> groupLongValuesByKey(final List<Object[]> rows) {
         final Map<Long, List<Long>> valuesByKey = new HashMap<>();
         for (final Object[] row : rows) {
-            valuesByKey.computeIfAbsent((Long) row[0], ignored -> new ArrayList<>())
-                    .add((Long) row[1]);
+            valuesByKey.computeIfAbsent((Long) row[0], ignored -> new ArrayList<>()).add((Long) row[1]);
         }
         return valuesByKey;
     }

@@ -27,8 +27,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing posts in the admin view.
- * Encapsulates form fields, binder, and save/cancel logic.
+ * Dialog for creating and editing posts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
 public class AdminPostDialog extends FormDialog {
 
@@ -43,9 +42,7 @@ public class AdminPostDialog extends FormDialog {
     private PostDto currentPost;
 
     /** Initializes AdminPostDialog. */
-    public AdminPostDialog(final PostService postService,
-            final UserService userService,
-            final Runnable onSave,
+    public AdminPostDialog(final PostService postService, final UserService userService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.postService = postService;
@@ -120,25 +117,21 @@ public class AdminPostDialog extends FormDialog {
                 (p, value) -> p.setCommentable(value));
 
         // Category binding - convert between PostCategoryResponseDto and categoryId
-        this.binder.bind(categoryField,
-                p -> {
-                    if (p.getCategoryId() != null && availableCategories != null) {
-                        return availableCategories.stream()
-                                .filter(cat -> cat.getId().equals(p.getCategoryId()))
-                                .findFirst()
-                                .orElse(null);
-                    }
-                    return null;
-                },
-                (p, value) -> {
-                    if (value != null) {
-                        p.setCategoryId(value.getId());
-                        p.setCategoryName(value.getName());
-                    } else {
-                        p.setCategoryId(null);
-                        p.setCategoryName(null);
-                    }
-                });
+        this.binder.bind(categoryField, p -> {
+            if (p.getCategoryId() != null && availableCategories != null) {
+                return availableCategories.stream().filter(cat -> cat.getId().equals(p.getCategoryId())).findFirst()
+                        .orElse(null);
+            }
+            return null;
+        }, (p, value) -> {
+            if (value != null) {
+                p.setCategoryId(value.getId());
+                p.setCategoryName(value.getName());
+            } else {
+                p.setCategoryId(null);
+                p.setCategoryName(null);
+            }
+        });
 
         form.add(titleField, contentField, categoryField, publishedField, commentableField);
 

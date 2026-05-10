@@ -9,6 +9,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -44,13 +45,13 @@ public class UserResource {
     UserService userService;
 
     @Context
+    @Nullable
     SecurityContext securityContext;
 
     /** Returns all users with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "user:delete", "user:edit" })
-    public List<UserResponseDto> getAllUsers(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<UserResponseDto> getAllUsers(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -72,7 +73,8 @@ public class UserResource {
     /**
      * Create a user.
      * 
-     * @param userDto the user data
+     * @param userDto
+     *            the user data
      * @return the created user
      */
     @POST
@@ -80,7 +82,7 @@ public class UserResource {
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
         if (userDto.rankId != null && userDto.rankId != DEFAULT_USER_RANK_ID
-                && !this.securityContext.isUserInRole("user-rank:edit")) {
+                && (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit"))) {
             userDto.rankId = DEFAULT_USER_RANK_ID;
         }
         final UserResponseDto created = this.userService.createUser(userDto);
@@ -104,7 +106,8 @@ public class UserResource {
     /**
      * Get a user by ID.
      * 
-     * @param id the id
+     * @param id
+     *            the id
      * @return the user
      */
     @GET
@@ -117,8 +120,10 @@ public class UserResource {
     /**
      * Update a user fully.
      * 
-     * @param id      the id
-     * @param userDto the dto
+     * @param id
+     *            the id
+     * @param userDto
+     *            the dto
      * @return true
      */
     @PUT
@@ -135,8 +140,10 @@ public class UserResource {
     /**
      * Patch a user.
      * 
-     * @param id      the user id
-     * @param userDto patch data
+     * @param id
+     *            the user id
+     * @param userDto
+     *            patch data
      * @return the updated user
      */
     @PATCH
@@ -176,9 +183,9 @@ public class UserResource {
     }
 
     /** Enforces role-based write protection for rank and account-status fields. */
-    private static void enforceProtectedFieldPermissions(final UserDto dto, final UserResponseDto existing,
-            final SecurityContext securityContext) {
-        if (existing == null) {
+    private static void enforceProtectedFieldPermissions(final UserDto dto, @Nullable final UserResponseDto existing,
+            @Nullable final SecurityContext securityContext) {
+        if (existing == null || securityContext == null) {
             return;
         }
         if (!securityContext.isUserInRole("user-rank:edit")) {

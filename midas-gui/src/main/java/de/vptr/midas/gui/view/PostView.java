@@ -22,13 +22,10 @@ import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
-import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.inject.Inject;
 
 /** View for browsing published posts. */
@@ -87,11 +84,8 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private HorizontalLayout createFilterLayout() {
-        this.searchLayout = new AsyncSearchLayout(
-                this::searchPosts,
-                this::loadPostsAsync,
-                "Search by title or content...",
-                "Search Posts");
+        this.searchLayout = new AsyncSearchLayout(this::searchPosts, this::loadPostsAsync,
+                "Search by title or content...", "Search Posts");
 
         // Category filter
         this.categoryFilter = new ComboBox<>("Category");
@@ -116,9 +110,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setPageSize(20);
 
         // Single component column rendering each row as a card
-        this.grid.addComponentColumn(this::createPostCard)
-                .setHeader("")
-                .setFlexGrow(1);
+        this.grid.addComponentColumn(this::createPostCard).setHeader("").setFlexGrow(1);
     }
 
     private VerticalLayout createPostCard(final PostResponseDto post) {
@@ -197,82 +189,70 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         final LocalDate endDate = this.endDatePicker.getValue();
 
         if (selectedCategory != null) {
-            this.loadDataAsync(
-                    () -> this.postService.getPostsByCategory(selectedCategory.getId()),
-                    posts -> {
-                        LOG.infof("Successfully loaded %s posts for category %s", posts.size(), selectedCategory.getName());
-                        this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
-                    });
+            this.loadDataAsync(() -> this.postService.getPostsByCategory(selectedCategory.getId()), posts -> {
+                LOG.infof("Successfully loaded %s posts for category %s", posts.size(), selectedCategory.getName());
+                this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+            });
         } else {
-            this.loadDataAsync(
-                    () -> this.postService.getPublishedPosts(),
-                    posts -> {
-                        LOG.infof("Successfully loaded %s published posts", posts.size());
-                        this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
-                    });
+            this.loadDataAsync(() -> this.postService.getPublishedPosts(), posts -> {
+                LOG.infof("Successfully loaded %s published posts", posts.size());
+                this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+            });
         }
     }
 
-    private List<PostResponseDto> applyDateFilter(final List<PostResponseDto> posts,
-            final LocalDate startDate, final LocalDate endDate) {
+    private List<PostResponseDto> applyDateFilter(final List<PostResponseDto> posts, final LocalDate startDate,
+            final LocalDate endDate) {
         if (startDate == null && endDate == null) {
             return posts;
         }
-        return posts.stream()
-                .filter(post -> {
-                    if (post.getCreated() == null) {
-                        return false;
-                    }
-                    if (startDate != null) {
-                        final LocalDateTime startDateTime = startDate.atStartOfDay();
-                        if (post.getCreated().isBefore(startDateTime)) {
-                            return false;
-                        }
-                    }
-                    if (endDate != null) {
-                        final LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
-                        if (post.getCreated().isAfter(endDateTime)) {
-                            return false;
-                        }
-                    }
-                    return true;
-                })
-                .toList();
+        return posts.stream().filter(post -> {
+            if (post.getCreated() == null) {
+                return false;
+            }
+            if (startDate != null) {
+                final LocalDateTime startDateTime = startDate.atStartOfDay();
+                if (post.getCreated().isBefore(startDateTime)) {
+                    return false;
+                }
+            }
+            if (endDate != null) {
+                final LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+                if (post.getCreated().isAfter(endDateTime)) {
+                    return false;
+                }
+            }
+            return true;
+        }).toList();
     }
 
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        this.loadDataAsync(
-                () -> this.postCategoryService.getRootCategories(),
-                categories -> {
-                    LOG.infof("Successfully loaded %s categories", categories.size());
-                    this.availableCategories = categories;
-                    this.categoryFilter.setItems(this.availableCategories);
-                },
-                throwable -> {
-                    LOG.error("Error loading categories", throwable);
-                    this.availableCategories = List.of();
-                    MidasErrorHandler.handleInUiContext(throwable);
-                },
-                CATEGORY_LOAD_TIMEOUT_SECONDS);
+        this.loadDataAsync(() -> this.postCategoryService.getRootCategories(), categories -> {
+            LOG.infof("Successfully loaded %s categories", categories.size());
+            this.availableCategories = categories;
+            this.categoryFilter.setItems(this.availableCategories);
+        }, throwable -> {
+            LOG.error("Error loading categories", throwable);
+            this.availableCategories = List.of();
+            MidasErrorHandler.handleInUiContext(throwable);
+        }, CATEGORY_LOAD_TIMEOUT_SECONDS);
     }
 
     private void searchPosts(final String query) {
-        this.loadDataAsync(
-                () -> this.postService.searchPosts(query),
-                posts -> {
-                    final var selectedCategory = this.categoryFilter.getValue();
-                    var filtered = posts;
-                    if (selectedCategory != null) {
-                        final Long categoryId = selectedCategory.getId();
-                        filtered = posts.stream()
-                                .filter(post -> post.getCategoryId() != null && post.getCategoryId().equals(categoryId))
-                                .toList();
-                    }
-                    final LocalDate startDate = this.startDatePicker.getValue();
-                    final LocalDate endDate = this.endDatePicker.getValue();
-                    this.grid.setItems(this.applyDateFilter(filtered, startDate, endDate));
-                });
+        this.loadDataAsync(() -> this.postService.searchPosts(query), posts -> {
+            final var selectedCategory = this.categoryFilter.getValue();
+            var filtered = posts;
+            if (selectedCategory != null) {
+                final Long categoryId = selectedCategory.getId();
+                filtered = posts.stream()
+                        .filter(post -> post.getCategoryId() != null && post.getCategoryId().equals(categoryId))
+                        .toList();
+            }
+            final LocalDate startDate = this.startDatePicker.getValue();
+            final LocalDate endDate = this.endDatePicker.getValue();
+            this.grid.setItems(this.applyDateFilter(filtered, startDate, endDate));
+        });
     }
 }

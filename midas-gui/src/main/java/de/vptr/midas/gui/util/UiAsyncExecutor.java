@@ -22,8 +22,7 @@ public final class UiAsyncExecutor {
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     private static final Logger LOG = Logger.getLogger(UiAsyncExecutor.class);
-    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(
-            new UiThreadFactory());
+    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(new UiThreadFactory());
 
     private UiAsyncExecutor() {
     }
@@ -42,10 +41,14 @@ public final class UiAsyncExecutor {
     /**
      * Executes a background task using the default timeout.
      *
-     * @param <T>            the result type
-     * @param backgroundTask the supplier performing the background work
-     * @param onSuccess      callback invoked with the result on the UI thread
-     * @param onError        callback invoked with any throwable on the UI thread
+     * @param <T>
+     *            the result type
+     * @param backgroundTask
+     *            the supplier performing the background work
+     * @param onSuccess
+     *            callback invoked with the result on the UI thread
+     * @param onError
+     *            callback invoked with any throwable on the UI thread
      */
     public static <T> void execute(final Supplier<T> backgroundTask, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError) {
@@ -53,8 +56,7 @@ public final class UiAsyncExecutor {
     }
 
     /**
-     * Executes a background task with timeout, session propagation, and
-     * detached-safe UI dispatch.
+     * Executes a background task with timeout, session propagation, and detached-safe UI dispatch.
      */
     public static <T> void execute(final Supplier<T> backgroundTask, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError, final int timeoutSeconds) {
@@ -76,10 +78,14 @@ public final class UiAsyncExecutor {
     /**
      * Executes an async stage supplier using the default timeout.
      *
-     * @param <T>           the result type
-     * @param stageSupplier the supplier returning a completion stage
-     * @param onSuccess     callback invoked with the result on the UI thread
-     * @param onError       callback invoked with any throwable on the UI thread
+     * @param <T>
+     *            the result type
+     * @param stageSupplier
+     *            the supplier returning a completion stage
+     * @param onSuccess
+     *            callback invoked with the result on the UI thread
+     * @param onError
+     *            callback invoked with any throwable on the UI thread
      */
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError) {
@@ -87,8 +93,7 @@ public final class UiAsyncExecutor {
     }
 
     /**
-     * Executes an async stage supplier with timeout, session propagation, and
-     * detached-safe UI dispatch.
+     * Executes an async stage supplier with timeout, session propagation, and detached-safe UI dispatch.
      */
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError, final int timeoutSeconds) {
@@ -99,8 +104,7 @@ public final class UiAsyncExecutor {
         CompletableFuture
                 .supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()),
                         ASYNC_EXECUTOR)
-                .thenCompose(stage -> stage)
-                .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .thenCompose(stage -> stage).orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {
                         onError.accept(throwable);
@@ -129,8 +133,7 @@ public final class UiAsyncExecutor {
         }
     }
 
-    private static <T> T withSession(final VaadinSession session, final ClassLoader tccl,
-            final Supplier<T> supplier) {
+    private static <T> T withSession(final VaadinSession session, final ClassLoader tccl, final Supplier<T> supplier) {
         final VaadinSession previousSession = VaadinSession.getCurrent();
         final ClassLoader previousTccl = Thread.currentThread().getContextClassLoader();
         VaadinSession.setCurrent(session);

@@ -101,25 +101,20 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void setupLazyDataProviderPublishedPosts() {
-        this.grid.setItems(
-                query -> this.postService.getPublishedPosts(query.getPage(), query.getPageSize()).stream());
+        this.grid.setItems(query -> this.postService.getPublishedPosts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        this.loadDataAsync(
-                () -> this.postCategoryService.getAllCategories(),
-                categories -> {
-                    LOG.infof("Successfully loaded %s categories", categories.size());
-                    this.availableCategories = categories;
-                },
-                throwable -> {
-                    LOG.error("Error loading categories", throwable);
-                    this.availableCategories = List.of();
-                    MidasErrorHandler.handleInUiContext(throwable);
-                },
-                15);
+        this.loadDataAsync(() -> this.postCategoryService.getAllCategories(), categories -> {
+            LOG.infof("Successfully loaded %s categories", categories.size());
+            this.availableCategories = categories;
+        }, throwable -> {
+            LOG.error("Error loading categories", throwable);
+            this.availableCategories = List.of();
+            MidasErrorHandler.handleInUiContext(throwable);
+        }, 15);
     }
 
     private void buildUi() {
@@ -131,30 +126,24 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.createGrid();
 
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
-        this.postDialog = new AdminPostDialog(
-                this.postService, this.userService, this::setupLazyDataProviderAllPosts, authFailure);
-        this.commentPanel = new AdminPostCommentPanel(
-                this.postCommentService, authFailure);
+        this.postDialog = new AdminPostDialog(this.postService, this.userService, this::setupLazyDataProviderAllPosts,
+                authFailure);
+        this.commentPanel = new AdminPostCommentPanel(this.postCommentService, authFailure);
 
         this.add(header, searchLayout, buttonLayout, this.grid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                        if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                            this.setupLazyDataProviderAllPosts();
-                        }
-                },
-                _ -> this.searchPosts(),
-                "Search by title or content...",
-                "Search Posts");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.setupLazyDataProviderAllPosts();
+            }
+        }, _ -> this.searchPosts(), "Search by title or content...", "Search Posts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        this.showPublishedButton = new Button("Show Published Only",
-                _ -> this.setupLazyDataProviderPublishedPosts());
+        this.showPublishedButton = new Button("Show Published Only", _ -> this.setupLazyDataProviderPublishedPosts());
         this.showPublishedButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         // Date range filter
@@ -163,10 +152,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
-        final var userFilterLayout = new IntegerFilterLayout(
-                _ -> this.filterByUser(),
-                "Enter User ID...",
-                "Filter by User");
+        final var userFilterLayout =
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(this.showPublishedButton, dateFilterLayout, userFilterLayout);
@@ -205,8 +192,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         }).setHeader("Title").setFlexGrow(2);
 
         this.grid.addColumn(post -> post.getUsername() != null ? post.getUsername() : "").setHeader("Author")
-                .setWidth("120px")
-                .setFlexGrow(0);
+                .setWidth("120px").setFlexGrow(0);
         this.grid.addColumn(post -> post.getCategoryName() != null ? post.getCategoryName() : "").setHeader("Category")
                 .setWidth("120px").setFlexGrow(0);
 
@@ -270,18 +256,15 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchButton.setEnabled(false);
         this.searchButton.setText("Searching...");
 
-        this.loadDataAsync(
-                () -> this.postService.searchPosts(query.trim()),
-                posts -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    this.grid.setItems(posts);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    this.searchButton.setText("Search");
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.postService.searchPosts(query.trim()), posts -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            this.grid.setItems(posts);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            this.searchButton.setText("Search");
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 
     private void filterByDateRange() {
@@ -298,8 +281,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
+        this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
                 posts -> this.grid.setItems(posts));
     }
 
@@ -310,8 +292,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             return;
         }
 
-        this.loadDataAsync(
-                () -> this.postService.getPostsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.postService.getPostsByUser(userId.longValue()),
                 posts -> this.grid.setItems(posts));
     }
 }

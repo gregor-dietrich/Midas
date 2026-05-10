@@ -13,7 +13,6 @@ public class JsonParseExceptionMapper implements ExceptionMapper<JsonProcessingE
     @Override
     public Response toResponse(final JsonProcessingException exception) {
         return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ApiErrorResponse(400, "Bad Request", "Malformed JSON request body"))
-                .build();
+                .entity(new ApiErrorResponse(400, "Bad Request", "Malformed JSON request body")).build();
     }
 }

@@ -1,7 +1,5 @@
 package de.vptr.midas.gui.service;
 
-import de.vptr.midas.gui.util.UiConstants;
-
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +14,7 @@ import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -33,24 +32,25 @@ public class UserService {
     AuthService authService;
 
     /** Returns the all users. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserResponseDto> getAllUsers(final Integer page, final Integer size) {
         LOG.debug("Fetching all users");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(
-                () -> this.userClient.getAllUsers(safePage, safeSize, authHeader),
+        return ServiceHelper.execute(() -> this.userClient.getAllUsers(safePage, safeSize, authHeader),
                 this.authService, LOG, "fetching users");
     }
 
     /** Returns the current user. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getCurrentUser() {
         LOG.debug("Fetching current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.getCurrentUser(authHeader),
-                this.authService, LOG, "fetching current user", response -> {
+        return ServiceHelper.executeWithResponse(() -> this.userClient.getCurrentUser(authHeader), this.authService,
+                LOG, "fetching current user", response -> {
                     if (response.getStatus() == 200) {
                         return Optional
                                 .of(ServiceHelper.readEntity(response, UserResponseDto.class, "current user response"));
@@ -63,12 +63,13 @@ public class UserService {
     }
 
     /** Returns the user by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserById(final Long id) {
         LOG.debugf("Fetching user with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.getUser(id, authHeader),
-                this.authService, LOG, "fetching user " + id, response -> {
+        return ServiceHelper.executeWithResponse(() -> this.userClient.getUser(id, authHeader), this.authService, LOG,
+                "fetching user " + id, response -> {
                     if (response.getStatus() == 200) {
                         return Optional.of(ServiceHelper.readEntity(response, UserResponseDto.class, "user response"));
                     } else if (response.getStatus() == 404) {
@@ -80,7 +81,8 @@ public class UserService {
     }
 
     /** Returns the user by username. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<UserResponseDto> getUserByUsername(final String username) {
         LOG.debugf("Fetching user with username: %s", username);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -100,8 +102,8 @@ public class UserService {
     public UserResponseDto createUser(final UserDto user) {
         LOG.debugf("Creating new user: %s", user.getUsername());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.createUser(user, authHeader),
-                this.authService, LOG, "creating user", "Failed to create user", response -> {
+        return ServiceHelper.executeWithResponse(() -> this.userClient.createUser(user, authHeader), this.authService,
+                LOG, "creating user", "Failed to create user", response -> {
                     if (response.getStatus() == 201) {
                         return ServiceHelper.readEntity(response, UserResponseDto.class, "created user response");
                     }
@@ -127,8 +129,8 @@ public class UserService {
         LOG.debugf("Updating password for user: %s", user.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(user.getId(), user, authHeader),
-                this.authService, LOG, "updating user password " + user.getId(),
-                "Failed to update user password", response -> {
+                this.authService, LOG, "updating user password " + user.getId(), "Failed to update user password",
+                response -> {
                     if (response.getStatus() == 200) {
                         return ServiceHelper.readEntity(response, UserResponseDto.class,
                                 "updated user password response");
@@ -141,17 +143,17 @@ public class UserService {
     public boolean deleteUser(final Long id) {
         LOG.debugf("Deleting user: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.deleteUser(id, authHeader),
-                this.authService, LOG, "deleting user " + id, response -> response.getStatus() == 204);
+        return ServiceHelper.executeWithResponse(() -> this.userClient.deleteUser(id, authHeader), this.authService,
+                LOG, "deleting user " + id, response -> response.getStatus() == 204);
     }
 
     /** Handles the search users operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserResponseDto> searchUsers(final String query) {
         LOG.debugf("Searching users with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.userClient.searchUsers(query, authHeader),
-                this.authService, LOG, "searching users");
+        return ServiceHelper.execute(() -> this.userClient.searchUsers(query, authHeader), this.authService, LOG,
+                "searching users");
     }
 }

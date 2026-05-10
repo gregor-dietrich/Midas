@@ -8,8 +8,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response DTO for payment operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for payment operations. Contains computed fields and safe data for client responses.
  */
 public class PaymentResponseDto {
 

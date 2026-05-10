@@ -23,9 +23,8 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing post categories in the admin view.
- * Encapsulates form fields, binder, parent category filtering, and save/cancel
- * logic.
+ * Dialog for creating and editing post categories in the admin view. Encapsulates form fields, binder, parent category
+ * filtering, and save/cancel logic.
  */
 public class AdminPostCategoryDialog extends FormDialog {
 
@@ -39,8 +38,7 @@ public class AdminPostCategoryDialog extends FormDialog {
     private PostCategoryDto currentCategory;
 
     /** Initializes AdminPostCategoryDialog. */
-    public AdminPostCategoryDialog(final PostCategoryService categoryService,
-            final Runnable onSave,
+    public AdminPostCategoryDialog(final PostCategoryService categoryService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.categoryService = categoryService;
@@ -51,15 +49,12 @@ public class AdminPostCategoryDialog extends FormDialog {
     /**
      * Opens the dialog for the given category, with available parent categories.
      */
-    public void open(final PostCategoryDto category,
-            final List<PostCategoryResponseDto> allCategories) {
+    public void open(final PostCategoryDto category, final List<PostCategoryResponseDto> allCategories) {
         this.removeAll();
         this.currentCategory = category != null ? category : new PostCategoryDto();
         this.binder = new Binder<>(PostCategoryDto.class);
 
-        final var title = new H3(category != null && category.getId() != null
-                ? "Edit Category"
-                : "Create Category");
+        final var title = new H3(category != null && category.getId() != null ? "Edit Category" : "Create Category");
 
         final var form = new FormLayout();
         form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
@@ -74,11 +69,9 @@ public class AdminPostCategoryDialog extends FormDialog {
         parentField.setPlaceholder("(none)");
         parentField.setInvalid(false);
         if (allCategories != null) {
-            final var availableParents = allCategories.stream()
-                    .map(PostCategoryResponseDto::toPostCategoryDto)
+            final var availableParents = allCategories.stream().map(PostCategoryResponseDto::toPostCategoryDto)
                     .filter(cat -> category == null || !this.isDescendantOf(cat, category, allCategories))
-                    .filter(cat -> category == null || !cat.getId().equals(category.getId()))
-                    .toList();
+                    .filter(cat -> category == null || !cat.getId().equals(category.getId())).toList();
             parentField.setItems(availableParents);
         }
         parentField.setClearButtonVisible(true);
@@ -111,8 +104,7 @@ public class AdminPostCategoryDialog extends FormDialog {
         super.open();
     }
 
-    private boolean isDescendantOf(final PostCategoryDto potential,
-            final PostCategoryDto ancestor,
+    private boolean isDescendantOf(final PostCategoryDto potential, final PostCategoryDto ancestor,
             final List<PostCategoryResponseDto> allCategories) {
         if (potential.getParent() == null) {
             return false;
@@ -121,11 +113,8 @@ public class AdminPostCategoryDialog extends FormDialog {
             return true;
         }
 
-        final var parent = allCategories.stream()
-                .filter(cat -> cat.getId().equals(potential.getParent().getId()))
-                .map(PostCategoryResponseDto::toPostCategoryDto)
-                .findFirst()
-                .orElse(null);
+        final var parent = allCategories.stream().filter(cat -> cat.getId().equals(potential.getParent().getId()))
+                .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
 
         if (parent != null) {
             return this.isDescendantOf(parent, ancestor, allCategories);

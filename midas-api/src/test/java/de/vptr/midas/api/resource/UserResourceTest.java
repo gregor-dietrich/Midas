@@ -36,20 +36,12 @@ class UserResourceTest {
     @Test
     void testGetAllUsers_authorizedWithSufficientRole() {
         // Test assumes user has appropriate role (user:delete or user:edit)
-        authenticatedRequest()
-                .when()
-                .get(ENDPOINT_URL)
-                .then()
-                .statusCode(200);
+        authenticatedRequest().when().get(ENDPOINT_URL).then().statusCode(200);
     }
 
     @Test
     void testGetAllUsers_authorizedWithInsufficientRole() {
-        authenticatedGuestRequest()
-                .when()
-                .get(ENDPOINT_URL)
-                .then()
-                .statusCode(403);
+        authenticatedGuestRequest().when().get(ENDPOINT_URL).then().statusCode(403);
     }
 
     @Test

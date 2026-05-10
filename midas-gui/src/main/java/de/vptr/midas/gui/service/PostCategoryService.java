@@ -1,7 +1,5 @@
 package de.vptr.midas.gui.service;
 
-import de.vptr.midas.gui.util.UiConstants;
-
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +14,7 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -33,32 +32,36 @@ public class PostCategoryService {
     AuthService authService;
 
     /** Returns the all categories. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getAllCategories() {
         LOG.debug("Fetching all categories");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.categoryClient.getAllCategories(PaginationParamUtil.DEFAULT_PAGE,
-                        PaginationParamUtil.MAX_SIZE, authHeader),
-                this.authService, LOG, "fetching categories");
+        return ServiceHelper
+                .execute(
+                        () -> this.categoryClient.getAllCategories(PaginationParamUtil.DEFAULT_PAGE,
+                                PaginationParamUtil.MAX_SIZE, authHeader),
+                        this.authService, LOG, "fetching categories");
     }
 
     /** Returns the root categories. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getRootCategories() {
         LOG.debug("Fetching root categories");
         return ServiceHelper.execute(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getRootCategories(authHeader);
         }, this.authService, LOG, "fetching root categories");
     }
 
     /** Returns the category by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<PostCategoryResponseDto> getCategoryById(final Long id) {
         LOG.debugf("Fetching category with ID: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getCategory(id, authHeader);
         }, this.authService, LOG, "fetching category " + id, response -> {
             if (response.getStatus() == 200) {
@@ -73,11 +76,12 @@ public class PostCategoryService {
     }
 
     /** Returns the categories by parent. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getCategoriesByParent(final Long parentId) {
         LOG.debugf("Fetching categories for parent: %s", parentId);
         return ServiceHelper.execute(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getCategoriesByParent(parentId, authHeader);
         }, this.authService, LOG, "fetching categories for parent " + parentId);
     }
@@ -86,7 +90,7 @@ public class PostCategoryService {
     public PostCategoryDto createCategory(final PostCategoryDto category) {
         LOG.debugf("Creating new category: %s", category.getName());
         return ServiceHelper.executeWithResponse(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
 
             if (category.getParent() != null && category.getParentId() == null) {
                 category.setParentId(category.getParent().getId());
@@ -95,8 +99,8 @@ public class PostCategoryService {
             return this.categoryClient.createCategory(category, authHeader);
         }, this.authService, LOG, "creating category", "Failed to create category", response -> {
             if (response.getStatus() == 201) {
-                final PostCategoryResponseDto responseDto = ServiceHelper.readEntity(response,
-                        PostCategoryResponseDto.class, "created category response");
+                final PostCategoryResponseDto responseDto =
+                        ServiceHelper.readEntity(response, PostCategoryResponseDto.class, "created category response");
                 return this.fromApiResponse(responseDto);
             }
             throw ServiceHelper.responseFailure("Failed to create category", response);
@@ -107,7 +111,7 @@ public class PostCategoryService {
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
         LOG.debugf("Updating category: %s", category.getId());
         return ServiceHelper.executeWithResponse(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
 
             if (category.getParent() != null && category.getParentId() == null) {
                 category.setParentId(category.getParent().getId());
@@ -116,8 +120,8 @@ public class PostCategoryService {
             return this.categoryClient.updateCategory(category.getId(), category, authHeader);
         }, this.authService, LOG, "updating category " + category.getId(), "Failed to update category", response -> {
             if (response.getStatus() == 200) {
-                final PostCategoryResponseDto responseDto = ServiceHelper.readEntity(response,
-                        PostCategoryResponseDto.class, "updated category response");
+                final PostCategoryResponseDto responseDto =
+                        ServiceHelper.readEntity(response, PostCategoryResponseDto.class, "updated category response");
                 return this.fromApiResponse(responseDto);
             }
             throw ServiceHelper.responseFailure("Failed to update category", response);
@@ -128,7 +132,7 @@ public class PostCategoryService {
     public boolean deleteCategory(final Long id) {
         LOG.debugf("Deleting category: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
-        final var authHeader = this.authService.requireAuthorizationHeader();
+            final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.deleteCategory(id, authHeader);
         }, this.authService, LOG, "deleting category " + id, response -> response.getStatus() == 204);
     }
@@ -141,12 +145,12 @@ public class PostCategoryService {
     }
 
     /** Handles the search categories operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> searchCategories(final String query) {
         LOG.debugf("Searching categories with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.categoryClient.searchCategories(query, authHeader),
-                this.authService, LOG, "searching categories");
+        return ServiceHelper.execute(() -> this.categoryClient.searchCategories(query, authHeader), this.authService,
+                LOG, "searching categories");
     }
 }

@@ -8,6 +8,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,31 +23,33 @@ import jakarta.persistence.UniqueConstraint;
 
 /** JPA entity representing the association between a user and a group. */
 @Entity
-@Table(name = "user_groups_meta", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "group_id" })
-}, indexes = {
-        @Index(name = "idx_user_group_meta_user_id", columnList = "user_id"),
-        @Index(name = "idx_user_group_meta_group_id", columnList = "group_id")
-})
+@Table(name = "user_groups_meta", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "group_id" }) },
+        indexes = { @Index(name = "idx_user_group_meta_user_id", columnList = "user_id"),
+                @Index(name = "idx_user_group_meta_group_id", columnList = "group_id") })
 public class UserGroupMetaEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Nullable
     public Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @Nullable
     public UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
+    @Nullable
     public UserGroupEntity group;
 
     @Generated(event = EventType.INSERT)
+    @Nullable
     public LocalDateTime created;
 
     @Generated(event = EventType.UPDATE)
     @Column(name = "last_edit")
+    @Nullable
     public LocalDateTime lastEdit;
 
     // Helper method to find by user and group

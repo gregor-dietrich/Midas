@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response DTO for post operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for post operations. Contains computed fields and safe data for client responses.
  */
 public class PostResponseDto {
 

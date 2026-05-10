@@ -31,9 +31,8 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog panel for managing users associated with an account.
- * Shows a grid of current users with remove capability and a combo to add new
- * users.
+ * Dialog panel for managing users associated with an account. Shows a grid of current users with remove capability and
+ * a combo to add new users.
  */
 public class AdminAccountUserPanel extends FormDialog {
 
@@ -48,10 +47,8 @@ public class AdminAccountUserPanel extends FormDialog {
     private AccountDto selectedAccount;
 
     /** Initializes AdminAccountUserPanel. */
-    public AdminAccountUserPanel(final AccountService accountService,
-            final AuthService authService,
-            final UserService userService,
-            final Runnable onAuthFailure) {
+    public AdminAccountUserPanel(final AccountService accountService, final AuthService authService,
+            final UserService userService, final Runnable onAuthFailure) {
         super();
         this.accountService = accountService;
         this.userService = userService;
@@ -148,19 +145,14 @@ public class AdminAccountUserPanel extends FormDialog {
     private Stream<UserResponseDto> fetchAvailableUsers(final Query<UserResponseDto, String> query) {
         try {
             final var filter = query.getFilter().orElse("").trim();
-            final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
-                    .collect(Collectors.toList());
-            final var currentUserIds = currentUsers.stream()
-                    .map(UserResponseDto::getId)
-                    .collect(Collectors.toSet());
+            final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+            final var currentUserIds = currentUsers.stream().map(UserResponseDto::getId).collect(Collectors.toSet());
 
             final var users = filter.isEmpty()
                     ? this.userService.getAllUsers(query.getOffset() / query.getLimit(), query.getLimit())
                     : this.userService.searchUsers(filter);
 
-            return users.stream()
-                    .filter(user -> !currentUserIds.contains(user.getId()))
-                    .skip(query.getOffset())
+            return users.stream().filter(user -> !currentUserIds.contains(user.getId())).skip(query.getOffset())
                     .limit(query.getLimit());
         } catch (final RuntimeException e) {
             LOG.error("Error loading available users", e);
@@ -175,10 +167,9 @@ public class AdminAccountUserPanel extends FormDialog {
             return;
         }
 
-        final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>())
-                .collect(Collectors.toList());
-        final boolean alreadyAssociated = currentUsers.stream()
-                .anyMatch(user -> user.getId().equals(selectedUser.getId()));
+        final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+        final boolean alreadyAssociated =
+                currentUsers.stream().anyMatch(user -> user.getId().equals(selectedUser.getId()));
 
         if (alreadyAssociated) {
             NotificationUtil.showWarning("User is already associated with this account");
@@ -208,8 +199,7 @@ public class AdminAccountUserPanel extends FormDialog {
 
     private void updateUserNegativeFlag(final UserResponseDto user, final boolean isNegative) {
         try {
-            this.accountService.updateUserAccountMeta(
-                    this.selectedAccount.getId(), user.getId(), isNegative);
+            this.accountService.updateUserAccountMeta(this.selectedAccount.getId(), user.getId(), isNegative);
             NotificationUtil.showSuccess("Updated negative flag for " + user.getUsername());
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");

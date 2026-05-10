@@ -122,50 +122,41 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void verifyAccountAccess(final BeforeEnterEvent event) {
-        UiAsyncExecutor.execute(
-                () -> {
-                    final var userAccounts = this.accountService.getMyAccounts();
-                    final var account = userAccounts.stream()
-                            .filter(acc -> acc.getId().equals(this.accountId))
-                            .findFirst()
-                            .orElseThrow(() -> new ServiceException("Access denied or account not found"));
+        UiAsyncExecutor.execute(() -> {
+            final var userAccounts = this.accountService.getMyAccounts();
+            final var account = userAccounts.stream().filter(acc -> acc.getId().equals(this.accountId)).findFirst()
+                    .orElseThrow(() -> new ServiceException("Access denied or account not found"));
 
-                    return new AccountAccessResult(account, userAccounts);
-                },
-                result -> {
-                    this.currentAccount = result.currentAccount();
-                    this.userAccounts = result.userAccounts();
-                    this.buildUi();
-                    this.loadPaymentsAsync();
-                },
-                this::handleAccountAccessError);
+            return new AccountAccessResult(account, userAccounts);
+        }, result -> {
+            this.currentAccount = result.currentAccount();
+            this.userAccounts = result.userAccounts();
+            this.buildUi();
+            this.loadPaymentsAsync();
+        }, this::handleAccountAccessError);
     }
 
     private void loadPaymentsAsync() {
         LOG.infof("Starting async payment and balance loading for account: %s", this.accountId);
 
-        UiAsyncExecutor.execute(
-                () -> {
-                    LOG.info("Making REST call to load account payments");
-                    final var payments = this.accountService.getMyAccountPayments(this.accountId);
-                    LOG.info("Loading account balance");
-                    final var balance = this.accountService.getMyAccountBalance(this.accountId);
-                    return new AccountPaymentData(payments, balance);
-                },
-                result -> {
-                    LOG.infof("Successfully loaded %s payments and balance: %s",
-                            result.payments().size(), result.balance());
+        UiAsyncExecutor.execute(() -> {
+            LOG.info("Making REST call to load account payments");
+            final var payments = this.accountService.getMyAccountPayments(this.accountId);
+            LOG.info("Loading account balance");
+            final var balance = this.accountService.getMyAccountBalance(this.accountId);
+            return new AccountPaymentData(payments, balance);
+        }, result -> {
+            LOG.infof("Successfully loaded %s payments and balance: %s", result.payments().size(), result.balance());
 
-                    this.allPayments = result.payments();
-                    this.accountBalance = result.balance();
-                    this.grid.setItems(result.payments());
-                    this.updateBalanceDisplay();
-                    LOG.infof("UI updated with %s payments and balance", result.payments().size());
-                },
-                throwable -> {
-                    LOG.error("Error in async payment and balance loading", throwable);
-                    this.handleAccountDataLoadError(throwable);
-                });
+            this.allPayments = result.payments();
+            this.accountBalance = result.balance();
+            this.grid.setItems(result.payments());
+            this.updateBalanceDisplay();
+            LOG.infof("UI updated with %s payments and balance", result.payments().size());
+        }, throwable -> {
+            LOG.error("Error in async payment and balance loading", throwable);
+            this.handleAccountDataLoadError(throwable);
+        });
     }
 
     void handleAccountAccessError(final Throwable throwable) {
@@ -255,15 +246,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new AsyncSearchLayout(
-                this::searchPayments,
-                () -> {
-                    if (this.allPayments != null) {
-                        this.grid.setItems(this.allPayments);
-                    }
-                },
-                "Search by comment or other account...",
-                "Search Payments");
+        final var searchLayout = new AsyncSearchLayout(this::searchPayments, () -> {
+            if (this.allPayments != null) {
+                this.grid.setItems(this.allPayments);
+            }
+        }, "Search by comment or other account...", "Search Payments");
 
         // Date range filter
         final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
@@ -280,10 +267,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.grid.setSizeFull();
 
         // Configure columns
-        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getDate)
-                .setHeader("Date")
-                .setWidth("120px")
-                .setFlexGrow(0);
+        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getDate).setHeader("Date")
+                .setWidth("120px").setFlexGrow(0);
 
         this.grid.addColumn(new ComponentRenderer<>(payment -> {
             final String otherAccountName;
@@ -315,10 +300,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             } else {
                 return new Span(otherAccountName);
             }
-        }))
-                .setHeader("Other Account")
-                .setWidth("250px")
-                .setFlexGrow(0);
+        })).setHeader("Other Account").setWidth("250px").setFlexGrow(0);
 
         this.grid.addColumn(new ComponentRenderer<>(payment -> {
             final Span amountSpan = new Span();
@@ -350,13 +332,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
 
             return amountSpan;
-        }))
-                .setHeader("Amount")
-                .setWidth("150px")
-                .setFlexGrow(0);
+        })).setHeader("Amount").setWidth("150px").setFlexGrow(0);
 
-        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getComment)
-                .setHeader("Comment")
+        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getComment).setHeader("Comment")
                 .setFlexGrow(1);
 
         // Enable pagination for performance
@@ -391,14 +369,12 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
 
         // Filter client-side from already loaded payments
-        final var filteredPayments = this.allPayments.stream()
-                .filter(payment -> {
-                    if (payment.getDate() != null) {
-                        return !payment.getDate().isBefore(startDate) && !payment.getDate().isAfter(endDate);
-                    }
-                    return false;
-                })
-                .toList();
+        final var filteredPayments = this.allPayments.stream().filter(payment -> {
+            if (payment.getDate() != null) {
+                return !payment.getDate().isBefore(startDate) && !payment.getDate().isAfter(endDate);
+            }
+            return false;
+        }).toList();
 
         this.grid.setItems(filteredPayments);
         LOG.infof("Filtered %s payments by date range %s to %s", filteredPayments.size(), startDate, endDate);
@@ -418,32 +394,30 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final String searchTerm = query.trim().toLowerCase();
 
         // Filter client-side from already loaded payments
-        final var filteredPayments = this.allPayments.stream()
-                .filter(payment -> {
-                    // Search in username
-                    if (payment.getUsername() != null && payment.getUsername().toLowerCase().contains(searchTerm)) {
-                        return true;
-                    }
-                    // Search in amount
-                    if (payment.getAmount() != null && payment.getAmount().toString().contains(searchTerm)) {
-                        return true;
-                    }
-                    // Search in comment
-                    if (payment.getComment() != null && payment.getComment().toLowerCase().contains(searchTerm)) {
-                        return true;
-                    }
-                    // Search in account names
-                    if (payment.getSourceAccountName() != null
-                            && payment.getSourceAccountName().toLowerCase().contains(searchTerm)) {
-                        return true;
-                    }
-                    if (payment.getTargetAccountName() != null
-                            && payment.getTargetAccountName().toLowerCase().contains(searchTerm)) {
-                        return true;
-                    }
-                    return false;
-                })
-                .toList();
+        final var filteredPayments = this.allPayments.stream().filter(payment -> {
+            // Search in username
+            if (payment.getUsername() != null && payment.getUsername().toLowerCase().contains(searchTerm)) {
+                return true;
+            }
+            // Search in amount
+            if (payment.getAmount() != null && payment.getAmount().toString().contains(searchTerm)) {
+                return true;
+            }
+            // Search in comment
+            if (payment.getComment() != null && payment.getComment().toLowerCase().contains(searchTerm)) {
+                return true;
+            }
+            // Search in account names
+            if (payment.getSourceAccountName() != null
+                    && payment.getSourceAccountName().toLowerCase().contains(searchTerm)) {
+                return true;
+            }
+            if (payment.getTargetAccountName() != null
+                    && payment.getTargetAccountName().toLowerCase().contains(searchTerm)) {
+                return true;
+            }
+            return false;
+        }).toList();
 
         this.grid.setItems(filteredPayments);
         LOG.infof("Filtered %s payments by search term '%s'", filteredPayments.size(), searchTerm);
@@ -513,23 +487,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
         });
 
-        this.binder.forField(sourceAccountField)
-                .bind(
-                        payment1 -> this.findAccountById(payment1.getSourceAccountId()),
-                        (payment1, value) -> payment1.setSourceAccountId(value != null ? value.getId() : null));
+        this.binder.forField(sourceAccountField).bind(payment1 -> this.findAccountById(payment1.getSourceAccountId()),
+                (payment1, value) -> payment1.setSourceAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(targetAccountField)
-                .bind(
-                        payment1 -> this.findAccountById(payment1.getTargetAccountId()),
-                        (payment1, value) -> payment1.setTargetAccountId(value != null ? value.getId() : null));
+        this.binder.forField(targetAccountField).bind(payment1 -> this.findAccountById(payment1.getTargetAccountId()),
+                (payment1, value) -> payment1.setTargetAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(amountField)
-                .withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) > 0,
-                        "Amount must be positive")
-                .bind(PaymentDto::getAmount, PaymentDto::setAmount);
+        this.binder.forField(amountField).withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) > 0,
+                "Amount must be positive").bind(PaymentDto::getAmount, PaymentDto::setAmount);
 
-        this.binder.forField(dateField)
-                .withValidator(value -> value != null, "Payment date is required")
+        this.binder.forField(dateField).withValidator(value -> value != null, "Payment date is required")
                 .bind(PaymentDto::getDate, PaymentDto::setDate);
 
         this.binder.forField(commentField)
@@ -626,9 +593,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         if (accountId == null || this.userAccounts == null) {
             return null;
         }
-        return this.userAccounts.stream()
-                .filter(account -> account.getId().equals(accountId))
-                .findFirst()
-                .orElse(null);
+        return this.userAccounts.stream().filter(account -> account.getId().equals(accountId)).findFirst().orElse(null);
     }
 }

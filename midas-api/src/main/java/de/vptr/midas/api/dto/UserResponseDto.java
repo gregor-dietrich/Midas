@@ -3,34 +3,46 @@ package de.vptr.midas.api.dto;
 import java.time.LocalDateTime;
 
 import de.vptr.midas.api.entity.UserEntity;
+import jakarta.annotation.Nullable;
 
 /** Data transfer object for user response data. */
 public class UserResponseDto {
 
+    @Nullable
     public Long id;
+    @Nullable
     public String username;
     // Note: password and salt are never exposed in responses for security
+    @Nullable
     public String email;
+    @Nullable
     public Long rankId;
+    @Nullable
     public String rankName;
+    @Nullable
     public Boolean banned;
+    @Nullable
     public Boolean activated;
     // activationKey is sensitive and not exposed in normal responses
+    @Nullable
     public LocalDateTime created;
+    @Nullable
     public LocalDateTime lastLogin;
+    @Nullable
     public Long postsCount;
+    @Nullable
     public Long commentsCount;
     // Populated when user is returned in account context (per-account association flag)
+    @Nullable
     public Boolean isNegative;
 
     public UserResponseDto() {
     }
 
     /**
-     * Creates a new instance with pre-computed counts (avoids lazy-loading
-     * collections).
+     * Creates a new instance with pre-computed counts (avoids lazy-loading collections).
      */
-    public UserResponseDto(final UserEntity entity, final long postsCount, final long commentsCount) {
+    public UserResponseDto(@Nullable final UserEntity entity, final long postsCount, final long commentsCount) {
         if (entity != null) {
             this.id = entity.id;
             this.username = entity.username;

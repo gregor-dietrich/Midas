@@ -19,8 +19,8 @@ public class IntegerFilterLayout extends HorizontalLayout {
     private final IntegerField integerField;
 
     /** Initializes IntegerFilterLayout. */
-    public IntegerFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction,
-            final String tooltipText, final String fieldLabel, final String fieldWidth) {
+    public IntegerFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction, final String tooltipText,
+            final String fieldLabel, final String fieldWidth) {
         this.setAlignItems(Alignment.END);
         this.setSpacing(true);
 
@@ -32,8 +32,8 @@ public class IntegerFilterLayout extends HorizontalLayout {
         this.add(this.integerField, this.button);
     }
 
-    public IntegerFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction,
-            final String tooltipText, final String fieldLabel) {
+    public IntegerFilterLayout(final ComponentEventListener<ClickEvent<Button>> filterAction, final String tooltipText,
+            final String fieldLabel) {
         this(filterAction, tooltipText, fieldLabel, DEFAULT_WIDTH);
     }
 

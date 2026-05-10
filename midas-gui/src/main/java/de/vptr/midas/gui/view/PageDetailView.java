@@ -56,8 +56,8 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
     private void buildUi() {
         this.removeAll();
 
-        final var backButton = new Button("← Back to Pages",
-                e -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
+        final var backButton =
+                new Button("← Back to Pages", e -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);
@@ -105,18 +105,16 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
     }
 
     private void loadPageByTitle(final String title) {
-        this.loadDataAsync(
-                () -> this.pageService.searchPages(title),
-                pages -> {
-                    if (pages != null && !pages.isEmpty()) {
-                        final var page = pages.get(0);
-                        LOG.infof("Found page by title search: %s", page.getTitle());
-                        this.renderPage(page.getTitle(), page.getContent());
-                    } else {
-                        LOG.warnf("No page found for identifier: %s", title);
-                        this.renderNotFound();
-                    }
-                });
+        this.loadDataAsync(() -> this.pageService.searchPages(title), pages -> {
+            if (pages != null && !pages.isEmpty()) {
+                final var page = pages.get(0);
+                LOG.infof("Found page by title search: %s", page.getTitle());
+                this.renderPage(page.getTitle(), page.getContent());
+            } else {
+                LOG.warnf("No page found for identifier: %s", title);
+                this.renderNotFound();
+            }
+        });
     }
 
     private void renderPage(final String title, final String content) {

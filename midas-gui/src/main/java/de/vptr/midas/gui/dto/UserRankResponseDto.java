@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
- * Response DTO for user rank operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for user rank operations. Contains computed fields and safe data for client responses.
  */
 @RegisterForReflection
 public class UserRankResponseDto {
@@ -472,8 +471,8 @@ public class UserRankResponseDto {
     public boolean hasAnyPermission() {
         return this.canAdminView() || this.hasAnyPagePermission() || this.hasAnyPostPermission()
                 || this.hasAnyPostCategoryPermission() || this.hasAnyPostCommentPermission()
-                || this.hasAnyUserPermission() || this.hasAnyUserGroupPermission()
-                || this.hasAnyUserAccountPermission() || this.hasAnyUserRankPermission();
+                || this.hasAnyUserPermission() || this.hasAnyUserGroupPermission() || this.hasAnyUserAccountPermission()
+                || this.hasAnyUserRankPermission();
     }
 
     /** Handles the to user rank dto operation. */

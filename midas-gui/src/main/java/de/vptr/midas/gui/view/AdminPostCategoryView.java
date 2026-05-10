@@ -71,20 +71,16 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
-        this.loadDataAsync(
-                () -> this.categoryService.getAllCategories(),
-                categories -> {
-                    LOG.infof("Successfully loaded %s categories", categories.size());
-                    this.allCategories = categories;
-                    this.updateTreeGrid();
-                });
+        this.loadDataAsync(() -> this.categoryService.getAllCategories(), categories -> {
+            LOG.infof("Successfully loaded %s categories", categories.size());
+            this.allCategories = categories;
+            this.updateTreeGrid();
+        });
     }
 
     private void updateTreeGrid() {
         // Find root categories (categories without parent)
-        final var rootCategories = this.allCategories.stream()
-                .filter(PostCategoryResponseDto::isRootCategory)
-                .toList();
+        final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
 
         this.treeGrid.setItems(rootCategories, this::getChildrenOfCategory);
         this.treeGrid.expandRecursively(rootCategories, 2); // Expand up to 2 levels
@@ -96,21 +92,18 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         // we show it as a top-level item for better visibility
 
         // Get all category IDs that exist in the search results
-        final var categoryIdsInResults = searchResults.stream()
-                .map(PostCategoryResponseDto::getId)
-                .collect(Collectors.toSet());
+        final var categoryIdsInResults =
+                searchResults.stream().map(PostCategoryResponseDto::getId).collect(Collectors.toSet());
 
         // Find categories to show at the top level:
         // 1. Root categories (no parent)
         // 2. Categories whose parent is not in the search results (orphaned in this
         // context)
         final var topLevelCategories = searchResults.stream()
-                .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId()))
-                .toList();
+                .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId())).toList();
 
         this.treeGrid.setItems(topLevelCategories, category -> searchResults.stream()
-                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId()))
-                .toList());
+                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId())).toList());
 
         // Expand all search results for better visibility
         this.treeGrid.expandRecursively(topLevelCategories, 10);
@@ -129,24 +122,18 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
         this.createTreeGrid();
-        this.categoryDialog = new AdminPostCategoryDialog(
-                this.categoryService,
-                this::loadCategoriesAsync,
+        this.categoryDialog = new AdminPostCategoryDialog(this.categoryService, this::loadCategoriesAsync,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
         this.add(header, searchLayout, buttonLayout, this.treeGrid);
     }
 
     private HorizontalLayout createSearchLayout() {
-        final var searchLayout = new SearchLayout(
-                e -> {
-                    if (e.getValue() == null || e.getValue().trim().isEmpty()) {
-                        this.updateTreeGrid();
-                    }
-                },
-                _ -> this.searchCategories(),
-                "Search by name...",
-                "Search Categories");
+        final var searchLayout = new SearchLayout(e -> {
+            if (e.getValue() == null || e.getValue().trim().isEmpty()) {
+                this.updateTreeGrid();
+            }
+        }, _ -> this.searchCategories(), "Search by name...", "Search Categories");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -173,25 +160,19 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
 
         // Configure columns
         this.treeGrid.addHierarchyColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getName)
-                .setHeader("Category Name")
-                .setFlexGrow(3);
+                .setHeader("Category Name").setFlexGrow(3);
 
         this.treeGrid.addColumn(category -> category.getParentName() != null ? category.getParentName() : "N/A")
-                .setHeader("Parent")
-                .setFlexGrow(2);
+                .setHeader("Parent").setFlexGrow(2);
 
         this.treeGrid.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getChildrenCount)
-                .setHeader("Children")
-                .setFlexGrow(1);
+                .setHeader("Children").setFlexGrow(1);
 
         this.treeGrid.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getPostsCount)
-                .setHeader("Posts")
-                .setFlexGrow(1);
+                .setHeader("Posts").setFlexGrow(1);
 
         // Add action column
-        this.treeGrid.addComponentColumn(this::createActionButtons)
-                .setHeader("Actions")
-                .setWidth("150px")
+        this.treeGrid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px")
                 .setFlexGrow(0);
     }
 
@@ -199,8 +180,8 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.categoryDialog.open(
-                category.toPostCategoryDto(), this.allCategories));
+        final var editButton =
+                new EditButton(_ -> this.categoryDialog.open(category.toPostCategoryDto(), this.allCategories));
         final var deleteButton = new DeleteButton(_ -> this.deleteCategory(category));
 
         layout.add(editButton, deleteButton);
@@ -245,15 +226,12 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
 
         this.searchButton.setEnabled(false);
 
-        this.loadDataAsync(
-                () -> this.categoryService.searchCategories(query.trim()),
-                categories -> {
-                    this.searchButton.setEnabled(true);
-                    this.updateSearchTreeGrid(categories);
-                },
-                throwable -> {
-                    this.searchButton.setEnabled(true);
-                    MidasErrorHandler.handleInUiContext(throwable);
-                });
+        this.loadDataAsync(() -> this.categoryService.searchCategories(query.trim()), categories -> {
+            this.searchButton.setEnabled(true);
+            this.updateSearchTreeGrid(categories);
+        }, throwable -> {
+            this.searchButton.setEnabled(true);
+            MidasErrorHandler.handleInUiContext(throwable);
+        });
     }
 }

@@ -14,6 +14,7 @@ import io.netty.util.NetUtil;
 import io.vertx.core.http.HttpConnection;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,8 +28,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
 /**
- * Enforces per-endpoint read/write request rate limits before resource
- * matching.
+ * Enforces per-endpoint read/write request rate limits before resource matching.
  */
 @Provider
 @ApplicationScoped
@@ -80,54 +80,36 @@ public class RateLimitFilter implements ContainerRequestFilter {
         final String method = requestContext.getMethod();
 
         if (isAuthEndpoint(requestPath)) {
-            enforceBucket(
-                    requestContext,
-                    this.authBuckets,
-                    "AUTH:" + endpointGroup + ":" + clientKey,
-                    this.authPermits,
+            enforceBucket(requestContext, this.authBuckets, "AUTH:" + endpointGroup + ":" + clientKey, this.authPermits,
                     "Authentication request limit exceeded");
             return;
         }
 
         if (isWriteMethod(method)) {
-            enforceBucket(
-                    requestContext,
-                    this.writeBuckets,
-                    "WRITE:" + endpointGroup + ":" + clientKey,
-                    this.writePermits,
-                    "Write request limit exceeded");
+            enforceBucket(requestContext, this.writeBuckets, "WRITE:" + endpointGroup + ":" + clientKey,
+                    this.writePermits, "Write request limit exceeded");
             return;
         }
 
-        enforceBucket(
-                requestContext,
-                this.readBuckets,
-                "READ:" + endpointGroup + ":" + clientKey,
-                this.readPermits,
+        enforceBucket(requestContext, this.readBuckets, "READ:" + endpointGroup + ":" + clientKey, this.readPermits,
                 "Read request limit exceeded");
     }
 
-    private boolean enforceBucket(final ContainerRequestContext requestContext,
-            final BucketStore bucketStore,
-            final String bucketKey,
-            final long permits,
-            final String message) {
+    private boolean enforceBucket(final ContainerRequestContext requestContext, final BucketStore bucketStore,
+            final String bucketKey, final long permits, final String message) {
         final Bucket bucket = bucketStore.getOrCreate(bucketKey, () -> createBucket(permits));
         if (!bucket.tryConsume(1)) {
-            requestContext.abortWith(Response.status(Response.Status.TOO_MANY_REQUESTS)
-                    .header("Retry-After", this.periodSeconds)
-                    .entity(new ApiErrorResponse(429, "Too Many Requests", message))
-                    .build());
+            requestContext.abortWith(
+                    Response.status(Response.Status.TOO_MANY_REQUESTS).header("Retry-After", this.periodSeconds)
+                            .entity(new ApiErrorResponse(429, "Too Many Requests", message)).build());
             return false;
         }
         return true;
     }
 
     private Bucket createBucket(final long permits) {
-        final var bandwidth = Bandwidth.builder()
-                .capacity(permits)
-                .refillGreedy(permits, Duration.ofSeconds(this.periodSeconds))
-                .build();
+        final var bandwidth = Bandwidth.builder().capacity(permits)
+                .refillGreedy(permits, Duration.ofSeconds(this.periodSeconds)).build();
         return Bucket.builder().addLimit(bandwidth).build();
     }
 
@@ -163,9 +145,9 @@ public class RateLimitFilter implements ContainerRequestFilter {
 
     String resolveClientKey(final ContainerRequestContext requestContext) {
         if (this.trustForwardedFor) {
-            final String forwardedClientAddress = resolveTrustedClientAddress(
-                    requestContext.getHeaderString(FORWARDED_FOR_HEADER),
-                    requestContext.getHeaderString(REAL_IP_HEADER));
+            final String forwardedClientAddress =
+                    resolveTrustedClientAddress(requestContext.getHeaderString(FORWARDED_FOR_HEADER),
+                            requestContext.getHeaderString(REAL_IP_HEADER));
             if (forwardedClientAddress != null) {
                 return forwardedClientAddress;
             }
@@ -185,7 +167,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return resolveRequestClientKey(requestContext);
     }
 
-    static String resolveTrustedClientAddress(final String forwardedFor, final String realIp) {
+    @Nullable
+    static String resolveTrustedClientAddress(@Nullable final String forwardedFor, @Nullable final String realIp) {
         final String forwardedClientAddress = extractForwardedForClientAddress(forwardedFor);
         if (forwardedClientAddress != null) {
             return forwardedClientAddress;
@@ -194,7 +177,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return sanitizeClientAddress(realIp);
     }
 
-    static String extractForwardedForClientAddress(final String forwardedFor) {
+    @Nullable
+    static String extractForwardedForClientAddress(@Nullable final String forwardedFor) {
         if (forwardedFor == null || forwardedFor.isBlank()) {
             return null;
         }
@@ -204,7 +188,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return sanitizeClientAddress(firstHop);
     }
 
-    static String sanitizeClientAddress(final String clientAddress) {
+    @Nullable
+    static String sanitizeClientAddress(@Nullable final String clientAddress) {
         if (clientAddress == null || clientAddress.isBlank()) {
             return null;
         }
@@ -217,7 +202,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return null;
     }
 
-    static String resolveRemoteClientAddress(final RoutingContext routingContext) {
+    @Nullable
+    static String resolveRemoteClientAddress(@Nullable final RoutingContext routingContext) {
         if (routingContext == null || routingContext.request() == null) {
             return null;
         }
@@ -225,7 +211,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return resolveSocketClientAddress(routingContext.request().remoteAddress());
     }
 
-    static String resolveConnectionClientKey(final RoutingContext routingContext) {
+    @Nullable
+    static String resolveConnectionClientKey(@Nullable final RoutingContext routingContext) {
         if (routingContext == null || routingContext.request() == null) {
             return null;
         }
@@ -242,6 +229,7 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return "request:" + Integer.toHexString(System.identityHashCode(requestContext));
     }
 
+    @Nullable
     private RoutingContext resolveRoutingContext() {
         if (this.routingContextInstance == null || !this.routingContextInstance.isResolvable()) {
             return null;
@@ -250,7 +238,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         return this.routingContextInstance.get();
     }
 
-    private static String resolveSocketClientAddress(final SocketAddress socketAddress) {
+    @Nullable
+    private static String resolveSocketClientAddress(@Nullable final SocketAddress socketAddress) {
         if (socketAddress == null || socketAddress.hostAddress() == null) {
             return null;
         }

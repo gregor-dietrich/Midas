@@ -14,9 +14,9 @@ import jakarta.inject.Inject;
 /**
  * Service for checking backend availability during navigation.
  *
- * <p>Uses SmallRye Fault Tolerance (retry, fallback) for resilience.
- * REST clients are eagerly initialized at startup (see RestClientEagerInitializer)
- * so decorators work correctly even in dev mode.
+ * <p>
+ * Uses SmallRye Fault Tolerance (retry, fallback) for resilience. REST clients are eagerly initialized at startup (see
+ * RestClientEagerInitializer) so decorators work correctly even in dev mode.
  */
 @ApplicationScoped
 public class BackendAvailabilityService {
@@ -30,9 +30,11 @@ public class BackendAvailabilityService {
     /**
      * Returns whether the backend is available.
      *
-     * <p>Retry once on transient failures. Falls back to false if all retries exhaust.
+     * <p>
+     * Retry once on transient failures. Falls back to false if all retries exhaust.
      *
-     * <p>REST clients are pre-initialized at startup, so this works from any thread.
+     * <p>
+     * REST clients are pre-initialized at startup, so this works from any thread.
      */
     @Retry(maxRetries = 1, delay = 200, delayUnit = ChronoUnit.MILLIS)
     @Fallback(fallbackMethod = "fallbackAvailability")
@@ -59,8 +61,9 @@ public class BackendAvailabilityService {
     /**
      * Raw health check without SmallRye Fault Tolerance decorators.
      *
-     * <p>Safe for use from non-Quarkus threads (e.g. ForkJoinPool) where timeout
-     * and retry interceptors fail due to missing config context.
+     * <p>
+     * Safe for use from non-Quarkus threads (e.g. ForkJoinPool) where timeout and retry interceptors fail due to
+     * missing config context.
      */
     public boolean isBackendAvailableRaw() {
         LOG.trace("Checking backend availability (raw)");

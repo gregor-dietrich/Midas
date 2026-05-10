@@ -1,7 +1,5 @@
 package de.vptr.midas.gui.service;
 
-import de.vptr.midas.gui.util.UiConstants;
-
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -26,6 +24,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -47,29 +46,29 @@ public class AccountService {
     AuthService authService;
 
     /** Returns the all accounts. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getAllAccounts(final Integer page, final Integer size)
             throws ServiceException, AuthenticationException {
         LOG.debug("Fetching all accounts");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(
-                () -> this.accountClient.getAllAccounts(safePage, safeSize, authHeader),
+        return ServiceHelper.execute(() -> this.accountClient.getAllAccounts(safePage, safeSize, authHeader),
                 this.authService, LOG, "fetching accounts");
     }
 
     /** Returns the account by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountById(final Long id) {
         LOG.debugf("Fetching account with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccount(id, authHeader),
-                this.authService, LOG, "fetching account " + id, response -> {
+        return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccount(id, authHeader), this.authService,
+                LOG, "fetching account " + id, response -> {
                     if (response.getStatus() == 200) {
-                        final AccountResponseDto responseDto = ServiceHelper.readEntity(response,
-                                AccountResponseDto.class,
-                                "account response");
+                        final AccountResponseDto responseDto =
+                                ServiceHelper.readEntity(response, AccountResponseDto.class, "account response");
                         return Optional.of(responseDto.toAccountDto());
                     } else if (response.getStatus() == 404) {
                         return Optional.empty();
@@ -80,16 +79,16 @@ public class AccountService {
     }
 
     /** Returns the account by name. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountByName(final String name) {
         LOG.debugf("Fetching account with name: %s", name);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountByName(name, authHeader),
                 this.authService, LOG, "fetching account by name " + name, response -> {
                     if (response.getStatus() == 200) {
-                        final AccountResponseDto responseDto = ServiceHelper.readEntity(response,
-                                AccountResponseDto.class,
-                                "account response");
+                        final AccountResponseDto responseDto =
+                                ServiceHelper.readEntity(response, AccountResponseDto.class, "account response");
                         return Optional.of(responseDto.toAccountDto());
                     } else if (response.getStatus() == 404) {
                         return Optional.empty();
@@ -100,49 +99,50 @@ public class AccountService {
     }
 
     /** Returns the accounts by user. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getAccountsByUser(final Long userId) {
         LOG.debugf("Fetching accounts for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getAccountsByUser(userId, authHeader),
-                this.authService, LOG, "fetching accounts for user " + userId);
+        return ServiceHelper.execute(() -> this.accountClient.getAccountsByUser(userId, authHeader), this.authService,
+                LOG, "fetching accounts for user " + userId);
     }
 
     // User-facing method that doesn't require admin permissions
     /** Returns the my accounts. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getMyAccounts() {
         LOG.debug("Fetching accounts for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getMyAccounts(authHeader),
-                this.authService, LOG, "fetching my accounts");
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccounts(authHeader), this.authService, LOG,
+                "fetching my accounts");
     }
 
     // Optimized method to get accounts with balances in a single call
     /** Returns the my accounts with balances. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getMyAccountsWithBalances() {
         LOG.debug("Fetching accounts with balances for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getMyAccountsWithBalances(authHeader),
-                this.authService, LOG, "fetching my accounts with balances");
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccountsWithBalances(authHeader), this.authService,
+                LOG, "fetching my accounts with balances");
     }
 
     /** Handles the search accounts operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> searchAccounts(final String query) {
         LOG.debugf("Searching accounts with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.searchAccounts(query, authHeader),
-                this.authService, LOG, "searching accounts");
+        return ServiceHelper.execute(() -> this.accountClient.searchAccounts(query, authHeader), this.authService, LOG,
+                "searching accounts");
     }
 
     /** Returns the outgoing payments. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PaymentDto> getOutgoingPayments(final Long accountId) {
         LOG.debugf("Fetching outgoing payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -158,7 +158,8 @@ public class AccountService {
     }
 
     /** Returns the incoming payments. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<PaymentDto> getIncomingPayments(final Long accountId) {
         LOG.debugf("Fetching incoming payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -174,12 +175,12 @@ public class AccountService {
     }
 
     /** Returns the associated users. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public List<UserResponseDto> getAssociatedUsers(final Long accountId) {
         LOG.debugf("Fetching users associated with account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getAssociatedUsers(accountId, authHeader),
+        return ServiceHelper.execute(() -> this.accountClient.getAssociatedUsers(accountId, authHeader),
                 this.authService, LOG, "fetching users for account " + accountId);
     }
 
@@ -203,8 +204,8 @@ public class AccountService {
         LOG.debugf("Updating account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
-                () -> this.accountClient.updateAccount(account.getId(), account, authHeader),
-                this.authService, LOG, "updating account " + account.getId(), "Failed to update account", response -> {
+                () -> this.accountClient.updateAccount(account.getId(), account, authHeader), this.authService, LOG,
+                "updating account " + account.getId(), "Failed to update account", response -> {
                     if (response.getStatus() == 200) {
                         final AccountResponseDto responseDto = ServiceHelper.readEntity(response,
                                 AccountResponseDto.class, "updated account response");
@@ -243,23 +244,24 @@ public class AccountService {
     public boolean removeUserFromAccount(final Long accountId, final Long userId) {
         LOG.debugf("Removing user %s from account %s", userId, accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.accountClient.removeUserFromAccount(accountId, userId,
-                authHeader), this.authService, LOG, "removing user " + userId + " from account " + accountId,
-                response -> response.getStatus() == 204);
+        return ServiceHelper.executeWithResponse(
+                () -> this.accountClient.removeUserFromAccount(accountId, userId, authHeader), this.authService, LOG,
+                "removing user " + userId + " from account " + accountId, response -> response.getStatus() == 204);
     }
 
     /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative)
             throws ServiceException, AuthenticationException {
-        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s",
-                accountId, userId, Boolean.valueOf(isNegative));
+        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s", accountId, userId,
+                Boolean.valueOf(isNegative));
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var dto = new UserAccountMetaDto();
         dto.setIsNegative(isNegative);
         ServiceHelper.executeWithResponse(
-                () -> this.accountClient.updateUserAccountMeta(accountId, userId, dto, authHeader),
-                this.authService, LOG, "updating user-account meta", response -> {
+                () -> this.accountClient.updateUserAccountMeta(accountId, userId, dto, authHeader), this.authService,
+                LOG, "updating user-account meta", response -> {
                     if (response.getStatus() != 204) {
                         throw ServiceHelper.responseFailure("Failed to update user-account meta", response);
                     }
@@ -268,7 +270,8 @@ public class AccountService {
     }
 
     /** Returns the account balance. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS, abortOn = AuthenticationException.class)
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
     public BigDecimal getAccountBalance(final Long accountId) {
         LOG.debugf("Fetching balance for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -317,8 +320,7 @@ public class AccountService {
     public List<PaymentResponseDto> getMyAccountPayments(final Long accountId) {
         LOG.debugf("Fetching payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getMyAccountPayments(accountId, authHeader),
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccountPayments(accountId, authHeader),
                 this.authService, LOG, "fetching payments for my account " + accountId);
     }
 
@@ -328,8 +330,7 @@ public class AccountService {
     public List<PaymentResponseDto> getMyAccountOutgoingPayments(final Long accountId) {
         LOG.debugf("Fetching outgoing payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getMyAccountOutgoingPayments(accountId, authHeader),
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccountOutgoingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching outgoing payments for my account " + accountId);
     }
 
@@ -339,8 +340,7 @@ public class AccountService {
     public List<PaymentResponseDto> getMyAccountIncomingPayments(final Long accountId) {
         LOG.debugf("Fetching incoming payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(
-                () -> this.accountClient.getMyAccountIncomingPayments(accountId, authHeader),
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccountIncomingPayments(accountId, authHeader),
                 this.authService, LOG, "fetching incoming payments for my account " + accountId);
     }
 
@@ -349,9 +349,9 @@ public class AccountService {
     public PaymentDto createMyAccountPayment(final Long accountId, final PaymentDto payment) {
         LOG.debugf("Creating payment for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.accountClient.createMyAccountPayment(accountId, payment,
-                authHeader), this.authService, LOG, "creating payment for my account " + accountId,
-                "Failed to create payment", response -> {
+        return ServiceHelper.executeWithResponse(
+                () -> this.accountClient.createMyAccountPayment(accountId, payment, authHeader), this.authService, LOG,
+                "creating payment for my account " + accountId, "Failed to create payment", response -> {
                     if (response.getStatus() == 201) {
                         final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,
                                 PaymentResponseDto.class, "created payment response");
@@ -366,9 +366,9 @@ public class AccountService {
     public PaymentDto updateMyAccountPayment(final Long accountId, final Long paymentId, final PaymentDto payment) {
         LOG.debugf("Updating payment %s for my account: %s", paymentId, accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.accountClient.updateMyAccountPayment(accountId, paymentId,
-                payment, authHeader), this.authService, LOG,
-                "updating payment " + paymentId + " for my account " + accountId,
+        return ServiceHelper.executeWithResponse(
+                () -> this.accountClient.updateMyAccountPayment(accountId, paymentId, payment, authHeader),
+                this.authService, LOG, "updating payment " + paymentId + " for my account " + accountId,
                 "Failed to update payment", response -> {
                     if (response.getStatus() == 200) {
                         final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,

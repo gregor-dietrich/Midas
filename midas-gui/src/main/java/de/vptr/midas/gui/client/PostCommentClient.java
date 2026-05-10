@@ -27,55 +27,53 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PostCommentClient {
 
-        @GET
-        List<PostCommentResponseDto> getAllComments(@QueryParam("page") Integer page,
-                        @QueryParam("size") Integer size, @HeaderParam("Authorization") String authorization);
+    @GET
+    List<PostCommentResponseDto> getAllComments(@QueryParam("page") Integer page, @QueryParam("size") Integer size,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/{id}")
-        Response getComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/{id}")
+    Response getComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/post/{postId}")
-        List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") Long postId,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/post/{postId}")
+    List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") Long postId,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/user/{userId}")
-        List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") Long userId,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/user/{userId}")
+    List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") Long userId,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/recent")
-        List<PostCommentResponseDto> getRecentComments(@QueryParam("limit") int limit,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/recent")
+    List<PostCommentResponseDto> getRecentComments(@QueryParam("limit") int limit,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/search")
-        List<PostCommentResponseDto> searchComments(@QueryParam("query") String query,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/search")
+    List<PostCommentResponseDto> searchComments(@QueryParam("query") String query,
+            @HeaderParam("Authorization") String authorization);
 
-        @GET
-        @Path("/date-range")
-        List<PostCommentResponseDto> getCommentsByDateRange(
-                        @QueryParam("startDate") String startDate,
-                        @QueryParam("endDate") String endDate,
-                        @HeaderParam("Authorization") String authorization);
+    @GET
+    @Path("/date-range")
+    List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") String startDate,
+            @QueryParam("endDate") String endDate, @HeaderParam("Authorization") String authorization);
 
-        @POST
-        Response createComment(PostCommentDto comment, @HeaderParam("Authorization") String authorization);
+    @POST
+    Response createComment(PostCommentDto comment, @HeaderParam("Authorization") String authorization);
 
-        @PUT
-        @Path("/{id}")
-        Response updateComment(@PathParam("id") Long id, PostCommentDto comment,
-                        @HeaderParam("Authorization") String authorization);
+    @PUT
+    @Path("/{id}")
+    Response updateComment(@PathParam("id") Long id, PostCommentDto comment,
+            @HeaderParam("Authorization") String authorization);
 
-        @PATCH
-        @Path("/{id}")
-        Response patchComment(@PathParam("id") Long id, PostCommentDto comment,
-                        @HeaderParam("Authorization") String authorization);
+    @PATCH
+    @Path("/{id}")
+    Response patchComment(@PathParam("id") Long id, PostCommentDto comment,
+            @HeaderParam("Authorization") String authorization);
 
-        @DELETE
-        @Path("/{id}")
-        Response deleteComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @DELETE
+    @Path("/{id}")
+    Response deleteComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
 }

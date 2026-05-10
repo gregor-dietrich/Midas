@@ -5,20 +5,33 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import de.vptr.midas.api.entity.PaymentEntity;
+import jakarta.annotation.Nullable;
 
 /** Data transfer object for payment response data. */
 public class PaymentResponseDto {
+    @Nullable
     public Long id;
+    @Nullable
     public Long targetAccountId;
+    @Nullable
     public String targetAccountName;
+    @Nullable
     public Long sourceAccountId;
+    @Nullable
     public String sourceAccountName;
+    @Nullable
     public Long userId;
+    @Nullable
     public String username;
+    @Nullable
     public String comment;
+    @Nullable
     public LocalDate date;
+    @Nullable
     public BigDecimal amount;
+    @Nullable
     public LocalDateTime created;
+    @Nullable
     public LocalDateTime lastEdit;
 
     public PaymentResponseDto() {

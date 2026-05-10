@@ -43,9 +43,8 @@ class PostServiceTest {
     @Test
     void getAllPosts_shouldReturnPosts_whenAuthenticated() {
         // Given
-        final var expectedPosts = Arrays.asList(
-                MockDataUtil.createPostResponseDto(),
-                MockDataUtil.createPostResponseDto());
+        final var expectedPosts =
+                Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.postClient.getAllPosts(null, null, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
@@ -61,8 +60,8 @@ class PostServiceTest {
     @Test
     void getAllPosts_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postService.getAllPosts());
@@ -93,9 +92,8 @@ class PostServiceTest {
     @Test
     void getPublishedPosts_shouldReturnPosts_whenAuthenticated() {
         // Given
-        final var expectedPosts = Arrays.asList(
-                MockDataUtil.createPostResponseDto(),
-                MockDataUtil.createPostResponseDto());
+        final var expectedPosts =
+                Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.postClient.getPublishedPosts(null, null, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
@@ -111,8 +109,8 @@ class PostServiceTest {
     @Test
     void getPublishedPosts_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postService.getPublishedPosts());
@@ -140,8 +138,8 @@ class PostServiceTest {
     @Test
     void getPostById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postService.getPostById(1L));
@@ -167,9 +165,8 @@ class PostServiceTest {
     void getPostsByUser_shouldReturnPosts_whenAuthenticated() {
         // Given
         final var userId = 1L;
-        final var expectedPosts = Arrays.asList(
-                MockDataUtil.createPostResponseDto(),
-                MockDataUtil.createPostResponseDto());
+        final var expectedPosts =
+                Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.postClient.getPostsByUser(userId, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
@@ -184,8 +181,8 @@ class PostServiceTest {
     @Test
     void getPostsByUser_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postService.getPostsByUser(1L));
@@ -195,9 +192,8 @@ class PostServiceTest {
     void getPostsByCategory_shouldReturnPosts_whenAuthenticated() {
         // Given
         final var categoryId = 1L;
-        final var expectedPosts = Arrays.asList(
-                MockDataUtil.createPostResponseDto(),
-                MockDataUtil.createPostResponseDto());
+        final var expectedPosts =
+                Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.postClient.getPostsByCategory(categoryId, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
@@ -212,8 +208,8 @@ class PostServiceTest {
     @Test
     void getPostsByCategory_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postService.getPostsByCategory(1L));
@@ -241,8 +237,8 @@ class PostServiceTest {
     void createPost_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var newPost = MockDataUtil.createPostDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.postService.createPost(newPost));
@@ -258,8 +254,7 @@ class PostServiceTest {
         when(this.postClient.createPost(newPost, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.postService.createPost(newPost))
-                .isInstanceOf(ServiceException.class)
+        assertThatThrownBy(() -> this.postService.createPost(newPost)).isInstanceOf(ServiceException.class)
                 .hasMessageContaining("Failed to create post");
     }
 
@@ -287,8 +282,8 @@ class PostServiceTest {
     void updatePost_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var postToUpdate = MockDataUtil.createPostDto();
-        when(this.authService.requireAuthorizationHeader()).thenThrow(
-                new AuthenticationException("Authentication required"));
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
 
         // When & Then
         ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.postService.updatePost(postToUpdate));
@@ -306,8 +301,7 @@ class PostServiceTest {
                 .thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.postService.updatePost(postToUpdate))
-                .isInstanceOf(ServiceException.class)
+        assertThatThrownBy(() -> this.postService.updatePost(postToUpdate)).isInstanceOf(ServiceException.class)
                 .hasMessageContaining("Failed to update post");
     }
 
@@ -337,7 +331,6 @@ class PostServiceTest {
         when(this.postClient.deletePost(postId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
-        assertThatThrownBy(() -> this.postService.deletePost(postId))
-                .isInstanceOf(ServiceException.class);
+        assertThatThrownBy(() -> this.postService.deletePost(postId)).isInstanceOf(ServiceException.class);
     }
 }

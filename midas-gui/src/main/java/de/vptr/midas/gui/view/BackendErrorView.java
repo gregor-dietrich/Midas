@@ -66,16 +66,13 @@ public class BackendErrorView extends VerticalLayout implements BeforeEnterObser
         final var buttonLayout = new HorizontalLayout();
 
         final var retryButton = new Button("Retry", e -> {
-            UiAsyncExecutor.execute(
-                    () -> this.backendAvailabilityService.isBackendAvailableRaw(),
-                    available -> {
-                        if (Boolean.TRUE.equals(available)) {
-                            this.getUI().ifPresent(ui -> ui.navigate(HomeView.class));
-                        } else {
-                            NotificationUtil.showError("Backend is still unavailable. Please try again later.");
-                        }
-                    },
-                    throwable -> NotificationUtil.showError("Failed to check backend status. Please try again."));
+            UiAsyncExecutor.execute(() -> this.backendAvailabilityService.isBackendAvailableRaw(), available -> {
+                if (Boolean.TRUE.equals(available)) {
+                    this.getUI().ifPresent(ui -> ui.navigate(HomeView.class));
+                } else {
+                    NotificationUtil.showError("Backend is still unavailable. Please try again later.");
+                }
+            }, throwable -> NotificationUtil.showError("Failed to check backend status. Please try again."));
         });
         retryButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 

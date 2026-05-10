@@ -14,20 +14,13 @@ import jakarta.inject.Inject;
  * Eagerly initializes REST clients at Quarkus startup on the main thread.
  *
  * <p>
- * REST clients are lazily initialized on first method call. In prod (built
- * JAR),
- * this happens during the build phase. In dev mode (quarkus:dev), lazy init
- * happens
- * at runtime, and if it occurs on a non-Quarkus thread,
- * ServiceConfigurationError
- * results.
+ * REST clients are lazily initialized on first method call. In prod (built JAR), this happens during the build phase.
+ * In dev mode (quarkus:dev), lazy init happens at runtime, and if it occurs on a non-Quarkus thread,
+ * ServiceConfigurationError results.
  *
  * <p>
- * This initializer runs at startup (on the main Quarkus thread) and touches
- * each
- * REST client to force initialization while context is correct. Afterwards,
- * REST
- * clients are ready for use from any thread (including executor threads with
+ * This initializer runs at startup (on the main Quarkus thread) and touches each REST client to force initialization
+ * while context is correct. Afterwards, REST clients are ready for use from any thread (including executor threads with
  * SmallRye Fault Tolerance).
  *
  * <p>

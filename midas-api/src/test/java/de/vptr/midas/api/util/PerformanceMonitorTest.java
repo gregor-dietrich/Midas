@@ -20,8 +20,8 @@ class PerformanceMonitorTest {
     void testTime_supplier_propagatesException() {
         final RuntimeException expected = new RuntimeException("supplier failed");
 
-        final RuntimeException thrown = assertThrows(RuntimeException.class,
-                () -> PerformanceMonitor.time("failing-op", () -> {
+        final RuntimeException thrown =
+                assertThrows(RuntimeException.class, () -> PerformanceMonitor.time("failing-op", () -> {
                     throw expected;
                 }));
 

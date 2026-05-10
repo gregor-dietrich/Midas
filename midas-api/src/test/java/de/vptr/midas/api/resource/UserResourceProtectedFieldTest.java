@@ -3,6 +3,7 @@ package de.vptr.midas.api.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.security.Principal;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.service.UserService;
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.SecurityContext;
 
 // NOTE: This is an intentional plain JUnit test, not a @QuarkusTest.
@@ -32,9 +34,10 @@ class UserResourceProtectedFieldTest {
 
         resource.updateUser(1L, dto);
 
-        assertEquals(2L, stubUserService.lastUpdatedUser.rankId);
-        assertEquals(false, stubUserService.lastUpdatedUser.banned);
-        assertEquals(true, stubUserService.lastUpdatedUser.activated);
+        final UserDto updatedUser = Objects.requireNonNull(stubUserService.lastUpdatedUser);
+        assertEquals(2L, updatedUser.rankId);
+        assertEquals(false, updatedUser.banned);
+        assertEquals(true, updatedUser.activated);
     }
 
     @Test
@@ -51,9 +54,10 @@ class UserResourceProtectedFieldTest {
 
         resource.patchUser(1L, dto);
 
-        assertEquals(3L, stubUserService.lastPatchedUser.rankId);
-        assertEquals(true, stubUserService.lastPatchedUser.banned);
-        assertEquals(false, stubUserService.lastPatchedUser.activated);
+        final UserDto patchedUser = Objects.requireNonNull(stubUserService.lastPatchedUser);
+        assertEquals(3L, patchedUser.rankId);
+        assertEquals(true, patchedUser.banned);
+        assertEquals(false, patchedUser.activated);
     }
 
     private static UserResponseDto existingUser(final Long rankId, final Boolean banned, final Boolean activated) {
@@ -66,7 +70,9 @@ class UserResourceProtectedFieldTest {
 
     private static final class StubUserService extends UserService {
         private final UserResponseDto existingUser;
+        @Nullable
         private UserDto lastUpdatedUser;
+        @Nullable
         private UserDto lastPatchedUser;
 
         private StubUserService(final UserResponseDto existingUser) {

@@ -43,21 +43,10 @@ class PaymentResourceTest {
 
     @Test
     void testGetPaymentById_authorizedWithExistingPayment() {
-        Integer id = authenticatedRequest()
-                .contentType(ContentType.JSON)
-                .body(createPaymentJsonWithTestAccounts())
-                .when()
-                .post(ENDPOINT_URL)
-                .then()
-                .statusCode(201)
-                .extract().path("id");
+        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
-        authenticatedRequest()
-                .when()
-                .get(ENDPOINT_URL + "/" + id)
-                .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON);
+        authenticatedRequest().when().get(ENDPOINT_URL + "/" + id).then().statusCode(200).contentType(ContentType.JSON);
     }
 
     @Test
@@ -72,11 +61,7 @@ class PaymentResourceTest {
 
     @Test
     void testGetPaymentsByUser_authorizedWithValidUser() {
-        authenticatedRequest()
-                .when()
-                .get(ENDPOINT_URL + "/user/1")
-                .then()
-                .statusCode(200)
+        authenticatedRequest().when().get(ENDPOINT_URL + "/user/1").then().statusCode(200)
                 .contentType(ContentType.JSON);
     }
 

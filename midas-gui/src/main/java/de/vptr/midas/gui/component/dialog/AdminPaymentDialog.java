@@ -27,8 +27,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing payments in the admin view.
- * Encapsulates form fields, binder, and save/cancel logic.
+ * Dialog for creating and editing payments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
 public class AdminPaymentDialog extends FormDialog {
 
@@ -43,9 +42,7 @@ public class AdminPaymentDialog extends FormDialog {
     private PaymentDto currentPayment;
 
     /** Initializes AdminPaymentDialog. */
-    public AdminPaymentDialog(final PaymentService paymentService,
-            final UserService userService,
-            final Runnable onSave,
+    public AdminPaymentDialog(final PaymentService paymentService, final UserService userService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super();
         this.paymentService = paymentService;
@@ -104,23 +101,16 @@ public class AdminPaymentDialog extends FormDialog {
         });
 
         // Bind fields
-        this.binder.forField(sourceAccountField)
-                .bind(
-                        _ -> null,
-                        (p, value) -> p.setSourceAccountId(value != null ? value.getId() : null));
+        this.binder.forField(sourceAccountField).bind(_ -> null,
+                (p, value) -> p.setSourceAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(targetAccountField)
-                .bind(
-                        _ -> null,
-                        (p, value) -> p.setTargetAccountId(value != null ? value.getId() : null));
+        this.binder.forField(targetAccountField).bind(_ -> null,
+                (p, value) -> p.setTargetAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(amountField)
-                .withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0,
-                        "Amount must not equal 0")
-                .bind(PaymentDto::getAmount, PaymentDto::setAmount);
+        this.binder.forField(amountField).withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0,
+                "Amount must not equal 0").bind(PaymentDto::getAmount, PaymentDto::setAmount);
 
-        this.binder.forField(dateField)
-                .withValidator(value -> value != null, "Payment date is required")
+        this.binder.forField(dateField).withValidator(value -> value != null, "Payment date is required")
                 .bind(PaymentDto::getDate, PaymentDto::setDate);
 
         this.binder.forField(commentField)
@@ -149,12 +139,10 @@ public class AdminPaymentDialog extends FormDialog {
 
         // Set account fields for editing
         if (this.currentPayment.getSourceAccountId() != null) {
-            sourceAccountField.setValue(
-                    findAccountById(accounts, this.currentPayment.getSourceAccountId()));
+            sourceAccountField.setValue(findAccountById(accounts, this.currentPayment.getSourceAccountId()));
         }
         if (this.currentPayment.getTargetAccountId() != null) {
-            targetAccountField.setValue(
-                    findAccountById(accounts, this.currentPayment.getTargetAccountId()));
+            targetAccountField.setValue(findAccountById(accounts, this.currentPayment.getTargetAccountId()));
         }
 
         super.open();
@@ -169,8 +157,7 @@ public class AdminPaymentDialog extends FormDialog {
 
             this.binder.writeBean(this.currentPayment);
 
-            if (this.currentPayment.getSourceAccountId() == null
-                    && this.currentPayment.getTargetAccountId() == null) {
+            if (this.currentPayment.getSourceAccountId() == null && this.currentPayment.getTargetAccountId() == null) {
                 NotificationUtil.showError("At least one account (source or target) must be selected");
                 return;
             }
@@ -210,14 +197,10 @@ public class AdminPaymentDialog extends FormDialog {
         }
     }
 
-    private static AccountResponseDto findAccountById(final List<AccountResponseDto> accounts,
-            final Long accountId) {
+    private static AccountResponseDto findAccountById(final List<AccountResponseDto> accounts, final Long accountId) {
         if (accountId == null) {
             return null;
         }
-        return accounts.stream()
-                .filter(account -> account.getId().equals(accountId))
-                .findFirst()
-                .orElse(null);
+        return accounts.stream().filter(account -> account.getId().equals(accountId)).findFirst().orElse(null);
     }
 }

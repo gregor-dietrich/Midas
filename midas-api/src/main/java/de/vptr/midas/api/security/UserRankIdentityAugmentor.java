@@ -24,31 +24,21 @@ import jakarta.inject.Inject;
 public class UserRankIdentityAugmentor implements SecurityIdentityAugmentor {
 
     private static final Map<String, Function<UserRankEntity, Boolean>> PERMISSION_MAP = Map.ofEntries(
-            Map.entry("admin:view", r -> r.adminView),
-            Map.entry("page:add", r -> r.pageAdd),
-            Map.entry("page:delete", r -> r.pageDelete),
-            Map.entry("page:edit", r -> r.pageEdit),
-            Map.entry("post:add", r -> r.postAdd),
-            Map.entry("post:delete", r -> r.postDelete),
-            Map.entry("post:edit", r -> r.postEdit),
-            Map.entry("post-category:add", r -> r.postCategoryAdd),
+            Map.entry("admin:view", r -> r.adminView), Map.entry("page:add", r -> r.pageAdd),
+            Map.entry("page:delete", r -> r.pageDelete), Map.entry("page:edit", r -> r.pageEdit),
+            Map.entry("post:add", r -> r.postAdd), Map.entry("post:delete", r -> r.postDelete),
+            Map.entry("post:edit", r -> r.postEdit), Map.entry("post-category:add", r -> r.postCategoryAdd),
             Map.entry("post-category:delete", r -> r.postCategoryDelete),
             Map.entry("post-category:edit", r -> r.postCategoryEdit),
             Map.entry("post-comment:add", r -> r.postCommentAdd),
             Map.entry("post-comment:delete", r -> r.postCommentDelete),
-            Map.entry("post-comment:edit", r -> r.postCommentEdit),
-            Map.entry("user:add", r -> r.userAdd),
-            Map.entry("user:delete", r -> r.userDelete),
-            Map.entry("user:edit", r -> r.userEdit),
-            Map.entry("user-group:add", r -> r.userGroupAdd),
-            Map.entry("user-group:delete", r -> r.userGroupDelete),
-            Map.entry("user-group:edit", r -> r.userGroupEdit),
-            Map.entry("user-account:add", r -> r.userAccountAdd),
+            Map.entry("post-comment:edit", r -> r.postCommentEdit), Map.entry("user:add", r -> r.userAdd),
+            Map.entry("user:delete", r -> r.userDelete), Map.entry("user:edit", r -> r.userEdit),
+            Map.entry("user-group:add", r -> r.userGroupAdd), Map.entry("user-group:delete", r -> r.userGroupDelete),
+            Map.entry("user-group:edit", r -> r.userGroupEdit), Map.entry("user-account:add", r -> r.userAccountAdd),
             Map.entry("user-account:delete", r -> r.userAccountDelete),
-            Map.entry("user-account:edit", r -> r.userAccountEdit),
-            Map.entry("user-rank:add", r -> r.userRankAdd),
-            Map.entry("user-rank:delete", r -> r.userRankDelete),
-            Map.entry("user-rank:edit", r -> r.userRankEdit));
+            Map.entry("user-account:edit", r -> r.userAccountEdit), Map.entry("user-rank:add", r -> r.userRankAdd),
+            Map.entry("user-rank:delete", r -> r.userRankDelete), Map.entry("user-rank:edit", r -> r.userRankEdit));
 
     @Inject
     ManagedExecutor executor;
@@ -67,16 +57,18 @@ public class UserRankIdentityAugmentor implements SecurityIdentityAugmentor {
     SecurityIdentity augmentIdentity(final SecurityIdentity identity, final String username) {
         return QuarkusTransaction.joiningExisting().call(() -> {
             final Optional<UserEntity> userOpt = UserEntity.find("username", username).firstResultOptional();
-            if (userOpt.isEmpty() || userOpt.get().rank == null) {
+            if (userOpt.isEmpty()) {
                 return identity;
             }
             final UserEntity user = userOpt.get();
+            final UserRankEntity rank = user.rank;
+            if (rank == null) {
+                return identity;
+            }
 
-            final Set<String> roles = this.buildRolesFromUserRank(user.rank);
+            final Set<String> roles = this.buildRolesFromUserRank(rank);
 
-            return QuarkusSecurityIdentity.builder(identity)
-                    .addRoles(roles)
-                    .build();
+            return QuarkusSecurityIdentity.builder(identity).addRoles(roles).build();
         });
     }
 

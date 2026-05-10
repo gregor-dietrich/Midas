@@ -22,12 +22,12 @@ import jakarta.ws.rs.WebApplicationException;
 @ApplicationScoped
 public class AuthService {
     private static final Logger LOG = Logger.getLogger(AuthService.class);
-    private static final SessionAttribute<String> USERNAME_ATTRIBUTE = SessionAttribute.of("authenticated.username",
-            String.class);
-    private static final SessionAttribute<String> SESSION_ID_ATTRIBUTE = SessionAttribute.of("authenticated.session-id",
-            String.class);
-    private static final SessionAttribute<Boolean> AUTHENTICATED_ATTRIBUTE = SessionAttribute.of("authenticated.status",
-            Boolean.class);
+    private static final SessionAttribute<String> USERNAME_ATTRIBUTE =
+            SessionAttribute.of("authenticated.username", String.class);
+    private static final SessionAttribute<String> SESSION_ID_ATTRIBUTE =
+            SessionAttribute.of("authenticated.session-id", String.class);
+    private static final SessionAttribute<Boolean> AUTHENTICATED_ATTRIBUTE =
+            SessionAttribute.of("authenticated.status", Boolean.class);
 
     @Inject
     @RestClient
@@ -43,9 +43,8 @@ public class AuthService {
      * Authenticates the user credentials.
      *
      * <p>
-     * Note: Do NOT add @Timeout here. The UiAsyncExecutor applies timeout at the
-     * call site. Timeout interceptors fail on non-Quarkus threads that lack config
-     * context.
+     * Note: Do NOT add @Timeout here. The UiAsyncExecutor applies timeout at the call site. Timeout interceptors fail
+     * on non-Quarkus threads that lack config context.
      */
     public AuthResultDto authenticate(final String username, final String password) {
         LOG.trace("Starting authentication");
@@ -189,8 +188,7 @@ public class AuthService {
     }
 
     /**
-     * Returns the authorization header or throws when the session is not
-     * authenticated.
+     * Returns the authorization header or throws when the session is not authenticated.
      */
     public String requireAuthorizationHeader() {
         final var authHeader = this.getAuthorizationHeader();
@@ -201,8 +199,7 @@ public class AuthService {
     }
 
     /**
-     * Returns the username of the currently authenticated user, or null if not
-     * authenticated.
+     * Returns the username of the currently authenticated user, or null if not authenticated.
      */
     public String getUsername() {
         final var session = VaadinSession.getCurrent();

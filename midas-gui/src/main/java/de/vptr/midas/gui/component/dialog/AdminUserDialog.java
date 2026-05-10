@@ -29,8 +29,8 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /**
- * Dialog for creating and editing users in the admin view.
- * Encapsulates form fields, binder, password management, and save/cancel logic.
+ * Dialog for creating and editing users in the admin view. Encapsulates form fields, binder, password management, and
+ * save/cancel logic.
  */
 public class AdminUserDialog extends FormDialog {
 
@@ -47,9 +47,7 @@ public class AdminUserDialog extends FormDialog {
     private UserDto currentUser;
 
     /** Initializes AdminUserDialog. */
-    public AdminUserDialog(final UserService userService,
-            final Runnable onSave,
-            final Runnable onAuthFailure) {
+    public AdminUserDialog(final UserService userService, final Runnable onSave, final Runnable onAuthFailure) {
         super();
         this.userService = userService;
         this.onSave = onSave;
@@ -89,8 +87,7 @@ public class AdminUserDialog extends FormDialog {
             passwordField.setMaxLength(MAX_PASSWORD_LENGTH);
             passwordField.setInvalid(false);
             form.add(passwordField);
-            this.binder.forField(passwordField)
-                    .asRequired("Password is required")
+            this.binder.forField(passwordField).asRequired("Password is required")
                     .withValidator(this::isValidPassword,
                             "Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
                                     + " chars with at least one letter and one digit")
@@ -129,41 +126,31 @@ public class AdminUserDialog extends FormDialog {
         form.add(rankField, activatedField, bannedField);
 
         // Bind fields with proper validation
-        this.binder.forField(usernameField)
-                .asRequired("Username is required")
-                .bind(UserDto::getUsername, UserDto::setUsername);
+        this.binder.forField(usernameField).asRequired("Username is required").bind(UserDto::getUsername,
+                UserDto::setUsername);
 
-        this.binder.forField(emailField)
-                .withValidator(email -> {
-                    if (email == null || email.trim().isEmpty()) {
-                        return true;
-                    }
-                    return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-                }, "Email must be valid or empty")
-                .bind(UserDto::getEmail,
-                        (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
+        this.binder.forField(emailField).withValidator(email -> {
+            if (email == null || email.trim().isEmpty()) {
+                return true;
+            }
+            return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+        }, "Email must be valid or empty").bind(UserDto::getEmail,
+                (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
 
         this.binder.bind(activatedField, u -> u.getActivated() != null ? u.getActivated() : false,
                 UserDto::setActivated);
-        this.binder.bind(bannedField, u -> u.getBanned() != null ? u.getBanned() : false,
-                UserDto::setBanned);
+        this.binder.bind(bannedField, u -> u.getBanned() != null ? u.getBanned() : false, UserDto::setBanned);
 
         // Rank binding - convert between UserRankResponseDto and rankId
-        this.binder.forField(rankField)
-                .asRequired("Rank is required")
-                .bind(
-                        u -> {
-                            if (u.getRankId() != null && availableRanks != null) {
-                                return availableRanks.stream()
-                                        .filter(rank -> rank.getId().equals(u.getRankId()))
-                                        .findFirst()
-                                        .orElse(null);
-                            }
-                            return null;
-                        },
-                        (u, value) -> {
-                            u.setRankId(value != null ? value.getId() : null);
-                        });
+        this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {
+            if (u.getRankId() != null && availableRanks != null) {
+                return availableRanks.stream().filter(rank -> rank.getId().equals(u.getRankId())).findFirst()
+                        .orElse(null);
+            }
+            return null;
+        }, (u, value) -> {
+            u.setRankId(value != null ? value.getId() : null);
+        });
 
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
@@ -218,9 +205,8 @@ public class AdminUserDialog extends FormDialog {
             }
 
             if (!this.isValidPassword(newPassword)) {
-                NotificationUtil.showError(
-                        "Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
-                                + " chars with at least one letter and one digit");
+                NotificationUtil.showError("Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
+                        + " chars with at least one letter and one digit");
                 return;
             }
 
@@ -296,9 +282,7 @@ public class AdminUserDialog extends FormDialog {
     }
 
     private boolean isValidPassword(final String password) {
-        if (password == null
-                || password.length() < MIN_PASSWORD_LENGTH
-                || password.length() > MAX_PASSWORD_LENGTH) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
             return false;
         }
         boolean hasLetter = false;

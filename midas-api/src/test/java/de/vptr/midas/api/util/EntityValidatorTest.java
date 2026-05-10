@@ -42,8 +42,8 @@ class EntityValidatorTest {
     void testCheckUnique_messageContainsFieldNameAndValue() {
         final Optional<String> existing = Optional.of("existing-entity");
 
-        final ValidationException exception = assertThrows(ValidationException.class,
-                () -> EntityValidator.checkUnique(existing, "slug", "my-post"));
+        final ValidationException exception =
+                assertThrows(ValidationException.class, () -> EntityValidator.checkUnique(existing, "slug", "my-post"));
 
         assertTrue(exception.getMessage().contains("slug"));
         assertTrue(exception.getMessage().contains("my-post"));

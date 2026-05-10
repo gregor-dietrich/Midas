@@ -3,8 +3,7 @@ package de.vptr.midas.gui.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Response DTO for user group operations.
- * Contains computed fields and safe data for client responses.
+ * Response DTO for user group operations. Contains computed fields and safe data for client responses.
  */
 public class UserGroupResponseDto {
 

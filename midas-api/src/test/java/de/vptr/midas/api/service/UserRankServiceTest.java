@@ -48,8 +48,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateRank() {
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(
-                ServiceTestUtil.createUniqueTestName("Test Rank"), // always non-blank
+        final var newRank = ServiceTestDataBuilder.createUserRankDto(ServiceTestUtil.createUniqueTestName("Test Rank"), // always
+                                                                                                                        // non-blank
                 true, // userAdd
                 true, // userEdit
                 false, // userDelete
@@ -87,8 +87,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         final var createdRank = this.userRankService.createRank(firstRank);
 
         // Try to create another rank with the same name
-        final var secondRank = ServiceTestDataBuilder.createUserRankDto(
-                createdRank.name, true, true, true, false, false, false);
+        final var secondRank =
+                ServiceTestDataBuilder.createUserRankDto(createdRank.name, true, true, true, false, false, false);
 
         assertThrows(Exception.class, () -> {
             this.userRankService.createRank(secondRank);
@@ -99,14 +99,12 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testUpdateRank() {
         // First create a rank
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(
-                "Update Test Rank", false, false, false, false, false, false);
+        final var newRank =
+                ServiceTestDataBuilder.createUserRankDto("Update Test Rank", false, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
         // Update the rank
-        final var updateDto = ServiceTestDataBuilder.createUserRankUpdateDto(
-                "Updated Rank Name",
-                true, // userAdd
+        final var updateDto = ServiceTestDataBuilder.createUserRankUpdateDto("Updated Rank Name", true, // userAdd
                 true, // userEdit
                 false, // userDelete
                 true, // postAdd
@@ -130,8 +128,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testDeleteRank() {
         // First create a rank
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(
-                "Delete Test Rank", false, false, false, false, false, false);
+        final var newRank =
+                ServiceTestDataBuilder.createUserRankDto("Delete Test Rank", false, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
         final Long rankId = createdRank.id;
@@ -153,8 +151,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindById() {
         // First create a rank
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(
-                "Find By ID Rank", true, false, false, false, false, false);
+        final var newRank =
+                ServiceTestDataBuilder.createUserRankDto("Find By ID Rank", true, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
         final var foundRank = this.userRankService.findById(createdRank.id);
@@ -174,8 +172,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByName() {
         // First create a rank
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(
-                "Find By Name Rank", false, true, false, false, false, false);
+        final var newRank =
+                ServiceTestDataBuilder.createUserRankDto("Find By Name Rank", false, true, false, false, false, false);
         this.userRankService.createRank(newRank);
 
         final var foundRank = this.userRankService.findByName("Find By Name Rank");
@@ -210,14 +208,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     void testSearchRanksAppliesSharedResultLimit() {
         final String token = "rank-limit-" + generateUniqueTestSuffix();
         for (int i = 0; i < PaginationUtil.MAX_SIZE + 5; i++) {
-            final var rank = ServiceTestDataBuilder.createUserRankDto(
-                    token + "-" + i,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false);
+            final var rank =
+                    ServiceTestDataBuilder.createUserRankDto(token + "-" + i, false, false, false, false, false, false);
             this.userRankService.createRank(rank);
         }
 
@@ -230,17 +222,16 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testGetRanksWithUserPermissions() {
         // Create ranks with different user permissions
-        final var userRank = ServiceTestDataBuilder.createUserRankDto(
-                "User Permission Rank", true, true, true, false, false, false);
+        final var userRank =
+                ServiceTestDataBuilder.createUserRankDto("User Permission Rank", true, true, true, false, false, false);
         this.userRankService.createRank(userRank);
 
-        final var noUserRank = ServiceTestDataBuilder.createUserRankDto(
-                "No User Permission Rank", false, false, false, true, true, true);
+        final var noUserRank = ServiceTestDataBuilder.createUserRankDto("No User Permission Rank", false, false, false,
+                true, true, true);
         this.userRankService.createRank(noUserRank);
 
         final var userPermissionRanks = this.userRankService.getAllRanks().stream()
-                .filter(rank -> rank.userAdd || rank.userEdit || rank.userDelete)
-                .toList();
+                .filter(rank -> rank.userAdd || rank.userEdit || rank.userDelete).toList();
 
         assertNotNull(userPermissionRanks);
         // Verify all returned ranks have at least one user permission
@@ -253,17 +244,16 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testGetRanksWithPostPermissions() {
         // Create ranks with different post permissions
-        final var postRank = ServiceTestDataBuilder.createUserRankDto(
-                "Post Permission Rank", false, false, false, true, true, true);
+        final var postRank =
+                ServiceTestDataBuilder.createUserRankDto("Post Permission Rank", false, false, false, true, true, true);
         this.userRankService.createRank(postRank);
 
-        final var noPostRank = ServiceTestDataBuilder.createUserRankDto(
-                "No Post Permission Rank", true, true, true, false, false, false);
+        final var noPostRank = ServiceTestDataBuilder.createUserRankDto("No Post Permission Rank", true, true, true,
+                false, false, false);
         this.userRankService.createRank(noPostRank);
 
         final var postPermissionRanks = this.userRankService.getAllRanks().stream()
-                .filter(rank -> rank.postAdd || rank.postEdit || rank.postDelete)
-                .toList();
+                .filter(rank -> rank.postAdd || rank.postEdit || rank.postDelete).toList();
 
         assertNotNull(postPermissionRanks);
         // Verify all returned ranks have at least one post permission

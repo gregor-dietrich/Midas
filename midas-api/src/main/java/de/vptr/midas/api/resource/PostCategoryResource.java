@@ -4,7 +4,6 @@ import java.util.List;
 
 import de.vptr.midas.api.dto.PostCategoryDto;
 import de.vptr.midas.api.dto.PostCategoryResponseDto;
-import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.service.PostCategoryService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -39,8 +38,7 @@ public class PostCategoryResource {
     /** Returns all categories with normalized pagination parameters. */
     @GET
     @Authenticated
-    public List<PostCategoryResponseDto> getAllCategories(
-            @QueryParam("page") @DefaultValue("0") final int page,
+    public List<PostCategoryResponseDto> getAllCategories(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -59,9 +57,7 @@ public class PostCategoryResource {
     @Path("/{id}")
     @Authenticated
     public Response getCategory(@PathParam("id") final Long id) {
-        return this.categoryService.findById(id)
-                .map(ResponseUtil::ok)
-                .orElse(ResponseUtil.notFound());
+        return this.categoryService.findById(id).map(ResponseUtil::ok).orElse(ResponseUtil.notFound());
     }
 
     @GET

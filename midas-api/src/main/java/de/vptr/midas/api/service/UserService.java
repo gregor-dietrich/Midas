@@ -9,23 +9,25 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
+import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.EntityValidator;
 import de.vptr.midas.api.util.SearchQueryUtil;
-import de.vptr.midas.api.security.PasswordHashingService;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /** Service for user business logic. */
 @ApplicationScoped
@@ -35,6 +37,7 @@ public class UserService {
     PasswordHashingService passwordHashingService;
 
     @ConfigProperty(name = "midas.default-rank-id", defaultValue = "2")
+    @Nullable
     Long defaultRankId;
 
     /** Returns all users with default pagination. */
@@ -45,43 +48,34 @@ public class UserService {
     /** Returns all users with the given pagination. */
     public List<UserResponseDto> getAllUsers(final int page, final int size) {
         final List<UserEntity> users = UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank ORDER BY u.id")
-                .page(page, size)
-                .list();
+                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank ORDER BY u.id").page(page, size).list();
         return this.toResponseDtos(users);
     }
 
     /** Returns the user with the given username. */
-    public Optional<UserResponseDto> findByUsername(final String username) {
-        return UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.username = ?1", username)
-                .<UserEntity>firstResultOptional()
-                .map(this::toResponseDto);
+    public Optional<UserResponseDto> findByUsername(@Nullable final String username) {
+        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.username = ?1", username)
+                .<UserEntity>firstResultOptional().map(this::toResponseDto);
     }
 
     /** Returns the user with the given id. */
     public Optional<UserResponseDto> findById(final Long id) {
-        return UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id = ?1", id)
-                .<UserEntity>firstResultOptional()
-                .map(this::toResponseDto);
+        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id = ?1", id)
+                .<UserEntity>firstResultOptional().map(this::toResponseDto);
     }
 
     /** Returns the user with the given email. */
-    public Optional<UserResponseDto> findByEmail(final String email) {
-        return UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.email = ?1", email)
-                .<UserEntity>firstResultOptional()
-                .map(this::toResponseDto);
+    public Optional<UserResponseDto> findByEmail(@Nullable final String email) {
+        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.email = ?1", email)
+                .<UserEntity>firstResultOptional().map(this::toResponseDto);
     }
 
     /**
-     * Normalizes email field by converting empty/blank strings to null.
-     * This ensures that only null or valid email addresses are stored in the
-     * database,
-     * preventing unique constraint violations from multiple empty strings.
+     * Normalizes email field by converting empty/blank strings to null. This ensures that only null or valid email
+     * addresses are stored in the database, preventing unique constraint violations from multiple empty strings.
      */
-    private String normalizeEmail(final String email) {
+    @Nullable
+    private String normalizeEmail(@Nullable final String email) {
         if (email == null || email.trim().isEmpty()) {
             return null;
         }
@@ -106,8 +100,9 @@ public class UserService {
         return this.toResponseDto(user);
     }
 
-    @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
-    private UserEntity buildUserEntity(final UserDto userDto, final String normalizedEmail) {
+    @SuppressFBWarnings(value = "UC_USELESS_OBJECT",
+            justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
+    private UserEntity buildUserEntity(final UserDto userDto, @Nullable final String normalizedEmail) {
         final UserEntity user = new UserEntity();
         user.username = userDto.username;
         user.email = normalizedEmail;
@@ -134,6 +129,9 @@ public class UserService {
             }
             user.rank = rank;
         } else {
+            if (this.defaultRankId == null) {
+                throw new ValidationException("Default rank ID is not configured");
+            }
             final UserRankEntity defaultRank = UserRankEntity.findById(this.defaultRankId);
             if (defaultRank == null) {
                 throw new ValidationException("Default rank with ID " + this.defaultRankId + " not found");
@@ -153,7 +151,7 @@ public class UserService {
         }
 
         // Check for duplicate username (only if username is different from current)
-        if (!userDto.username.equals(existingUser.username)) {
+        if (!Objects.equals(userDto.username, existingUser.username)) {
             EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
         }
 
@@ -191,6 +189,9 @@ public class UserService {
             }
             existingUser.rank = rank;
         } else {
+            if (this.defaultRankId == null) {
+                throw new ValidationException("Default rank ID is not configured");
+            }
             final UserRankEntity defaultRank = UserRankEntity.findById(this.defaultRankId);
             if (defaultRank == null) {
                 throw new ValidationException("Default rank with ID " + this.defaultRankId + " not found");
@@ -284,10 +285,10 @@ public class UserService {
         if (searchTerm == null) {
             return this.getAllUsers();
         }
-        final List<UserEntity> users = SearchQueryUtil.applyDefaultSearchLimit(UserEntity.find(
-                "SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank "
-                        + "WHERE LOWER(u.username) LIKE ?1 ESCAPE '\\' OR LOWER(u.email) LIKE ?1 ESCAPE '\\'",
-                searchTerm)).list();
+        final List<UserEntity> users = SearchQueryUtil.applyDefaultSearchLimit(UserEntity.find("""
+                SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank \
+                WHERE LOWER(u.username) LIKE ?1 ESCAPE '\\' OR LOWER(u.email) LIKE ?1 ESCAPE '\\'""", searchTerm))
+                .list();
         return this.toResponseDtos(users);
     }
 
@@ -302,31 +303,24 @@ public class UserService {
         final List<Long> ids = users.stream().map(u -> u.id).toList();
 
         final List<Object[]> postResults = PostEntity.getEntityManager()
-                .createQuery(
-                        "SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
+                .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
                         Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+                .setParameter("ids", ids).getResultList();
         final Map<Long, Long> postCounts = new HashMap<>();
         for (final Object[] row : postResults) {
             postCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        final List<Object[]> commentResults = PostCommentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
-                        Object[].class)
-                .setParameter("ids", ids)
-                .getResultList();
+        final List<Object[]> commentResults = PostCommentEntity.getEntityManager().createQuery(
+                "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
+                Object[].class).setParameter("ids", ids).getResultList();
         final Map<Long, Long> commentCounts = new HashMap<>();
         for (final Object[] row : commentResults) {
             commentCounts.put((Long) row[0], (Long) row[1]);
         }
 
-        return users.stream()
-                .map(u -> new UserResponseDto(u,
-                        postCounts.getOrDefault(u.id, 0L),
-                        commentCounts.getOrDefault(u.id, 0L)))
+        return users.stream().map(
+                u -> new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L)))
                 .toList();
     }
 }

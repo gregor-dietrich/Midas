@@ -11,7 +11,6 @@ import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -29,9 +28,7 @@ public class AccountService {
 
     /** Returns all accounts with the given pagination. */
     public List<AccountResponseDto> getAllAccounts(final int page, final int size) {
-        final List<AccountEntity> accounts = AccountEntity.findAll()
-                .page(page, size)
-                .list();
+        final List<AccountEntity> accounts = AccountEntity.findAll().page(page, size).list();
         return this.accountResponseAssembler.toAccountResponseDtos(accounts);
     }
 
@@ -92,8 +89,7 @@ public class AccountService {
         }
 
         // Check if account has any payments
-        final long paymentCount = PaymentEntity.count(
-                "sourceAccount.id = ?1 OR targetAccount.id = ?1", id);
+        final long paymentCount = PaymentEntity.count("sourceAccount.id = ?1 OR targetAccount.id = ?1", id);
         if (paymentCount > 0) {
             throw new WebApplicationException("Cannot delete account with existing payments", Response.Status.CONFLICT);
         }
@@ -108,12 +104,12 @@ public class AccountService {
             return this.getAllAccounts();
         }
 
-        final List<AccountEntity> accounts = SearchQueryUtil.applyDefaultSearchLimit(AccountEntity.find(
-                "SELECT DISTINCT a FROM AccountEntity a "
-                        + "LEFT JOIN a.userAccountMetas uam "
-                        + "LEFT JOIN uam.user u "
-                        + "WHERE LOWER(a.name) LIKE ?1 ESCAPE '\\' OR LOWER(u.username) LIKE ?1 ESCAPE '\\'",
-                searchTerm)).list();
+        final List<AccountEntity> accounts = SearchQueryUtil.applyDefaultSearchLimit(AccountEntity.find("""
+                SELECT DISTINCT a FROM AccountEntity a \
+                LEFT JOIN a.userAccountMetas uam \
+                LEFT JOIN uam.user u \
+                WHERE LOWER(a.name) LIKE ?1 ESCAPE '\\' OR LOWER(u.username) LIKE ?1 ESCAPE '\\'""", searchTerm))
+                .list();
 
         return this.accountResponseAssembler.toAccountResponseDtos(accounts);
     }
@@ -125,6 +121,5 @@ public class AccountService {
         }
         return existingAccount;
     }
-
 
 }

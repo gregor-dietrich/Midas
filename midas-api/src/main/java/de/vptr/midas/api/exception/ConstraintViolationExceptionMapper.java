@@ -12,10 +12,8 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
 
     @Override
     public Response toResponse(final ConstraintViolationException exception) {
-        final var message = exception.getConstraintViolations().stream()
-                .map(violation -> violation.getMessage())
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("Validation failed");
+        final var message = exception.getConstraintViolations().stream().map(violation -> violation.getMessage())
+                .reduce((a, b) -> a + ", " + b).orElse("Validation failed");
 
         return ResponseUtil.unprocessable(new ApiErrorResponse(422, "Validation failed", message));
     }

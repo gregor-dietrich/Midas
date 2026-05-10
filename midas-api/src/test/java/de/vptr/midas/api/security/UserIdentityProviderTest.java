@@ -42,8 +42,8 @@ class UserIdentityProviderTest {
         final var password = "password";
 
         // when / then
-        final var exception = assertThrows(Exception.class,
-                () -> this.userIdentityProvider.authenticateUser(username, password));
+        final var exception =
+                assertThrows(Exception.class, () -> this.userIdentityProvider.authenticateUser(username, password));
         assertEquals("Invalid credentials", exception.getMessage());
     }
 
@@ -54,8 +54,8 @@ class UserIdentityProviderTest {
         final var password = "wrongpassword";
 
         // when / then
-        final var exception = assertThrows(Exception.class,
-                () -> this.userIdentityProvider.authenticateUser(username, password));
+        final var exception =
+                assertThrows(Exception.class, () -> this.userIdentityProvider.authenticateUser(username, password));
         assertEquals("Invalid credentials", exception.getMessage());
     }
 
@@ -66,8 +66,8 @@ class UserIdentityProviderTest {
         final var password = "bannedUser";
 
         // when / then
-        final var exception = assertThrows(Exception.class,
-                () -> this.userIdentityProvider.authenticateUser(username, password));
+        final var exception =
+                assertThrows(Exception.class, () -> this.userIdentityProvider.authenticateUser(username, password));
         assertEquals("User is banned", exception.getMessage());
     }
 
@@ -78,8 +78,8 @@ class UserIdentityProviderTest {
         final var password = "notActivatedUser";
 
         // when / then
-        final var exception = assertThrows(Exception.class,
-                () -> this.userIdentityProvider.authenticateUser(username, password));
+        final var exception =
+                assertThrows(Exception.class, () -> this.userIdentityProvider.authenticateUser(username, password));
         assertEquals("User is not activated", exception.getMessage());
     }
 }

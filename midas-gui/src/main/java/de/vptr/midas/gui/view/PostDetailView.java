@@ -30,8 +30,7 @@ import jakarta.inject.Inject;
 
 /** PostDetailView view. */
 @Route(value = "posts", layout = MainLayout.class)
-public class PostDetailView extends AbstractAsyncDataView
-        implements HasUrlParameter<String>, BeforeEnterObserver {
+public class PostDetailView extends AbstractAsyncDataView implements HasUrlParameter<String>, BeforeEnterObserver {
 
     private static final Logger LOG = Logger.getLogger(PostDetailView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm");
@@ -113,8 +112,8 @@ public class PostDetailView extends AbstractAsyncDataView
 
     private void buildPostContent(final PostResponseDto post) {
         // Back button
-        final var backButton = new Button("← Back to Posts",
-                _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+        final var backButton =
+                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         // Title
@@ -164,11 +163,8 @@ public class PostDetailView extends AbstractAsyncDataView
     private void loadCommentsAsync(final Long postId) {
         LOG.infof("Loading comments for post: %s", postId);
 
-        this.loadDataAsync(
-                () -> this.postCommentService.getCommentsByPost(postId),
-                this::buildCommentsSection,
-                this::handleCommentLoadError,
-                15);
+        this.loadDataAsync(() -> this.postCommentService.getCommentsByPost(postId), this::buildCommentsSection,
+                this::handleCommentLoadError, 15);
     }
 
     void handleCommentLoadError(final Throwable throwable) {
@@ -232,8 +228,8 @@ public class PostDetailView extends AbstractAsyncDataView
     }
 
     private void showNotFound() {
-        final var backButton = new Button("← Back to Posts",
-                _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+        final var backButton =
+                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         final var message = new H2("Post Not Found");
