@@ -36,6 +36,7 @@
 **Plan:**
 
 1. Classify sensitive fields across entities (starting with `UserEntity.email`, `UserEntity.lastIp`) and record lookup requirements (display-only vs searchable).
+   - Note: lastIp should be removed permanently anyway.
 2. Implement field encryption using AES-256-GCM with random IV per value and versioned ciphertext envelope.
 3. Add blind-index/hash companion columns for fields requiring equality search.
 4. Introduce key management via `MIDAS_ENCRYPTION_KEY_FILE`:
