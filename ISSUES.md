@@ -76,14 +76,17 @@ These are unused or trivial DTOs with no test footprint. Easy to knock out:
 1. **PasswordChangeDto** (6 lines, 0% lines coverage)
    - Exists but unused (see X-CONS-02)
    - Add basic DTO serialization tests (getter/setter round-trip) once the password change endpoint is implemented (tied to X-CONS-02 timeline)
+   - **✅ COMPLETED:** 100% coverage via DtoSerializationTest
 
 2. **AccountAccessResponseDto** (1 line, 0% lines)
    - Add minimal DTO test (serialization round-trip)
+   - **✅ COMPLETED:** 100% coverage (AccountResource tests + DtoSerializationTest)
 
 3. **AccountAssociationResponseDto** (1 line, 0% lines)
    - Add minimal DTO test
+   - **✅ COMPLETED:** 100% coverage via DtoSerializationTest
 
-**Effort:** ~1-2 hours total. Unblocks removal of 0% coverage anomalies.
+**Effort:** ~1-2 hours total. ✅ PHASE 1 COMPLETE - all 0% anomalies removed.
 
 ### Phase 2: Highest Impact Resources (API)
 
