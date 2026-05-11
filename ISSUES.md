@@ -62,6 +62,7 @@
 **Goal:** Raise overall test coverage to 80%+ lines / 62%+ branches across all API packages, with GUI services (excl. views/components) reaching same target.
 
 **Current State (from .coverage.md):**
+
 - API: 74.4% lines / 57.1% branches
 - GUI: 80.8% lines / 55.0% branches
 - Total: 77.7% lines / 56.2% branches
@@ -100,6 +101,7 @@ These resource classes are <40% coverage and handle critical CRUD paths. Priorit
    - Add comprehensive resource tests: GET, POST, PUT, DELETE with various auth scenarios
    - **Target:** 80% lines, 62%+ branches
    - **Effort:** ~4-5 hours
+   - **✅ COMPLETED:** 89.7% lines / 50.0% branches
 
 3. **PaymentResource** (36.7% lines, 0% branches) — 19 lines uncovered
    - Missing: create, list with pagination, error cases
@@ -149,9 +151,11 @@ Focus on services with <70% lines coverage:
 Entity classes are currently 58.1% lines, 12.5% branches. These are Active Record pattern classes and often require integration tests to exercise properly:
 
 **Affected entities (worst first):**
+
 - UserGroupEntity (7.7%), UserGroupMetaEntity (14.3%), PostCommentEntity (16.7%), PageEntity (20.0%), PostCategoryEntity (25.0%), AccountEntity (28.6%), UserEntity (33.3%)
 
 **Strategy:** Rather than unit-testing entities in isolation, leverage existing repository/service integration tests and add missing scenarios:
+
 - Constructor variants, lifecycle hooks, lazy-load relationships
 - Business logic methods (if any)
 - Validation constraints
