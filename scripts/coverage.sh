@@ -31,9 +31,9 @@ run_tests() {
     local module_name="$2"
 
     echo "=== Running tests with JaCoCo for $module_name ==="
-    cd "$PROJECT_ROOT"
+    cd "$PROJECT_ROOT/$module_dir"
 
-    ${MVN_CMD} -q verify -pl "$module_dir" -am -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}" -Dmaven.test.failure.ignore=true || maven_status=$?
+    ${MVN_CMD} -q verify -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}" -Dmaven.test.failure.ignore=true || maven_status=$?
 }
 
 case $MODULE in
@@ -51,6 +51,8 @@ case $MODULE in
         CSV_FILES="midas-api/target/site/jacoco/jacoco.csv midas-gui/target/site/jacoco/jacoco.csv"
         ;;
 esac
+
+cd "$PROJECT_ROOT"
 
 echo "Generating combined coverage report..."
 

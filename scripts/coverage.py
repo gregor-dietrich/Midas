@@ -6,6 +6,31 @@ import sys
 from typing import Dict, List, Tuple
 
 
+def get_module_from_path(csv_path: str) -> str:
+    """Extract module name from CSV file path."""
+    if "midas-api" in csv_path:
+        return "API"
+    elif "midas-gui" in csv_path:
+        return "GUI"
+    return "Unknown"
+
+
+def calculate_coverage(rows_list: List[Dict[str, str]]) -> Tuple[float, float]:
+    """Calculate line and branch coverage percentages."""
+    total_lm = sum(int(r["LINE_MISSED"]) for r in rows_list)
+    total_lc = sum(int(r["LINE_COVERED"]) for r in rows_list)
+    total_bm = sum(int(r["BRANCH_MISSED"]) for r in rows_list)
+    total_bc = sum(int(r["BRANCH_COVERED"]) for r in rows_list)
+
+    tl = total_lm + total_lc
+    tb = total_bm + total_bc
+
+    line_pct = (total_lc / tl * 100) if tl > 0 else 100.0
+    branch_pct = (total_bc / tb * 100) if tb > 0 else 100.0
+
+    return line_pct, branch_pct
+
+
 def main() -> None:
     if len(sys.argv) < 3:
         print("Usage: coverage.py <report_path> <csv_path1> [csv_path2 ...]")
@@ -15,16 +40,45 @@ def main() -> None:
     csv_paths: List[str] = sys.argv[2:]
 
     rows: List[Dict[str, str]] = []
+    module_rows: Dict[str, List[Dict[str, str]]] = {}
+
     for csv_path in csv_paths:
+        module = get_module_from_path(csv_path)
+        if module not in module_rows:
+            module_rows[module] = []
         try:
             with open(csv_path, "r") as file:
-                rows.extend(list(csv.DictReader(file)))
+                csv_data = list(csv.DictReader(file))
+                rows.extend(csv_data)
+                module_rows[module].extend(csv_data)
         except FileNotFoundError:
             print(f"Warning: CSV file not found: {csv_path}")
 
     if not rows:
         print("Error: No coverage data found.")
         sys.exit(1)
+
+    md: str = "# Coverage Report\n\n"
+
+    # Generate module summary section
+    md += "## Summary by Module\n\n"
+    md += "| Module | Line % | Branch % |\n"
+    md += "|--------|-------:|---------:|\n"
+
+    module_coverages: Dict[str, Tuple[float, float]] = {}
+    for module in sorted(module_rows.keys()):
+        if module_rows[module]:
+            line_pct, branch_pct = calculate_coverage(module_rows[module])
+            module_coverages[module] = (line_pct, branch_pct)
+            md += f"| {module} | {line_pct:.1f}% | {branch_pct:.1f}% |\n"
+
+    # Add average row
+    if module_coverages:
+        avg_line = sum(pct[0] for pct in module_coverages.values()) / len(module_coverages)
+        avg_branch = sum(pct[1] for pct in module_coverages.values()) / len(module_coverages)
+        md += f"| **Average** | **{avg_line:.1f}%** | **{avg_branch:.1f}%** |\n"
+
+    md += "\n"
 
     pkg_data: Dict[str, Dict[str, int]] = {}
     for r in rows:
@@ -45,7 +99,6 @@ def main() -> None:
         ),
     )
 
-    md: str = "# Coverage Report\n\n"
     md += "## By Package (sorted by line coverage)\n\n"
     md += "| Package | Lines Missed | Lines Covered | Line % | Branch % |\n"
     md += "|---------|-------------:|--------------:|-------:|---------:|\n"
