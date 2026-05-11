@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -48,15 +50,9 @@ class UserRankServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateRank() {
-        final var newRank = ServiceTestDataBuilder.createUserRankDto(ServiceTestUtil.createUniqueTestName("Test Rank"), // always
-                                                                                                                        // non-blank
-                true, // userAdd
-                true, // userEdit
-                false, // userDelete
-                true, // postAdd
-                false, // postEdit
-                false // postDelete
-        );
+        // args: name, userAdd, userEdit, userDelete, postAdd, postEdit, postDelete
+        final var newRank = ServiceTestDataBuilder.createUserRankDto(ServiceTestUtil.createUniqueTestName("Test Rank"),
+                true, true, false, true, false, false);
         // Override some permissions for testing
         newRank.userDelete = false;
         newRank.postEdit = false;
@@ -67,12 +63,12 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         assertNotNull(createdRank);
         assertNotNull(createdRank.id);
         assertEquals(newRank.name, createdRank.name);
-        assertTrue(createdRank.userAdd);
-        assertTrue(createdRank.userEdit);
-        assertFalse(createdRank.userDelete);
-        assertTrue(createdRank.postAdd);
-        assertFalse(createdRank.postEdit);
-        assertFalse(createdRank.postDelete);
+        assertTrue(Boolean.TRUE.equals(createdRank.userAdd));
+        assertTrue(Boolean.TRUE.equals(createdRank.userEdit));
+        assertFalse(Boolean.TRUE.equals(createdRank.userDelete));
+        assertTrue(Boolean.TRUE.equals(createdRank.postAdd));
+        assertFalse(Boolean.TRUE.equals(createdRank.postEdit));
+        assertFalse(Boolean.TRUE.equals(createdRank.postDelete));
     }
 
     @Test
@@ -87,8 +83,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         final var createdRank = this.userRankService.createRank(firstRank);
 
         // Try to create another rank with the same name
-        final var secondRank =
-                ServiceTestDataBuilder.createUserRankDto(createdRank.name, true, true, true, false, false, false);
+        final var secondRank = ServiceTestDataBuilder.createUserRankDto(Objects.requireNonNull(createdRank.name), true,
+                true, true, false, false, false);
 
         assertThrows(Exception.class, () -> {
             this.userRankService.createRank(secondRank);
@@ -112,16 +108,16 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 false // postDelete
         );
 
-        final var updatedRank = this.userRankService.updateRank(createdRank.id, updateDto);
+        final var updatedRank = this.userRankService.updateRank(Objects.requireNonNull(createdRank.id), updateDto);
 
         assertNotNull(updatedRank);
         assertEquals("Updated Rank Name", updatedRank.name);
-        assertTrue(updatedRank.userAdd);
-        assertTrue(updatedRank.userEdit);
-        assertTrue(updatedRank.postAdd);
-        assertFalse(updatedRank.userDelete);
-        assertFalse(updatedRank.postEdit);
-        assertFalse(updatedRank.postDelete);
+        assertTrue(Boolean.TRUE.equals(updatedRank.userAdd));
+        assertTrue(Boolean.TRUE.equals(updatedRank.userEdit));
+        assertTrue(Boolean.TRUE.equals(updatedRank.postAdd));
+        assertFalse(Boolean.TRUE.equals(updatedRank.userDelete));
+        assertFalse(Boolean.TRUE.equals(updatedRank.postEdit));
+        assertFalse(Boolean.TRUE.equals(updatedRank.postDelete));
     }
 
     @Test
@@ -132,7 +128,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 ServiceTestDataBuilder.createUserRankDto("Delete Test Rank", false, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
-        final Long rankId = createdRank.id;
+        final Long rankId = Objects.requireNonNull(createdRank.id);
 
         final var deleted = this.userRankService.deleteRank(rankId);
 
@@ -155,11 +151,11 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 ServiceTestDataBuilder.createUserRankDto("Find By ID Rank", true, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
-        final var foundRank = this.userRankService.findById(createdRank.id);
+        final var foundRank = this.userRankService.findById(Objects.requireNonNull(createdRank.id));
 
         assertTrue(foundRank.isPresent());
         assertEquals("Find By ID Rank", foundRank.get().name);
-        assertTrue(foundRank.get().userAdd);
+        assertTrue(Boolean.TRUE.equals(foundRank.get().userAdd));
     }
 
     @Test
@@ -180,8 +176,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
         assertTrue(foundRank.isPresent());
         assertEquals("Find By Name Rank", foundRank.get().name);
-        assertFalse(foundRank.get().userAdd);
-        assertTrue(foundRank.get().userEdit);
+        assertFalse(Boolean.TRUE.equals(foundRank.get().userAdd));
+        assertTrue(Boolean.TRUE.equals(foundRank.get().userEdit));
     }
 
     @Test
@@ -230,13 +226,15 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 true, true, true);
         this.userRankService.createRank(noUserRank);
 
-        final var userPermissionRanks = this.userRankService.getAllRanks().stream()
-                .filter(rank -> rank.userAdd || rank.userEdit || rank.userDelete).toList();
+        final var userPermissionRanks =
+                this.userRankService.getAllRanks().stream().filter(rank -> Boolean.TRUE.equals(rank.userAdd)
+                        || Boolean.TRUE.equals(rank.userEdit) || Boolean.TRUE.equals(rank.userDelete)).toList();
 
         assertNotNull(userPermissionRanks);
         // Verify all returned ranks have at least one user permission
         for (final UserRankResponseDto rank : userPermissionRanks) {
-            assertTrue(rank.userAdd || rank.userEdit || rank.userDelete);
+            assertTrue(Boolean.TRUE.equals(rank.userAdd) || Boolean.TRUE.equals(rank.userEdit)
+                    || Boolean.TRUE.equals(rank.userDelete));
         }
     }
 
@@ -252,13 +250,15 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 false, false, false);
         this.userRankService.createRank(noPostRank);
 
-        final var postPermissionRanks = this.userRankService.getAllRanks().stream()
-                .filter(rank -> rank.postAdd || rank.postEdit || rank.postDelete).toList();
+        final var postPermissionRanks =
+                this.userRankService.getAllRanks().stream().filter(rank -> Boolean.TRUE.equals(rank.postAdd)
+                        || Boolean.TRUE.equals(rank.postEdit) || Boolean.TRUE.equals(rank.postDelete)).toList();
 
         assertNotNull(postPermissionRanks);
         // Verify all returned ranks have at least one post permission
         for (final UserRankResponseDto rank : postPermissionRanks) {
-            assertTrue(rank.postAdd || rank.postEdit || rank.postDelete);
+            assertTrue(Boolean.TRUE.equals(rank.postAdd) || Boolean.TRUE.equals(rank.postEdit)
+                    || Boolean.TRUE.equals(rank.postDelete));
         }
     }
 }

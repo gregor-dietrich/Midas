@@ -4,6 +4,7 @@ import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+/** Base class providing transaction and persistence-context helpers for integration tests. */
 public abstract class AbstractIntegrationTest {
 
     @Inject

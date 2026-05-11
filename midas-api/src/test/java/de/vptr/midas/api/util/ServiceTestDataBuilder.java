@@ -22,7 +22,7 @@ import jakarta.annotation.Nullable;
 /**
  * Builder utility for creating test data objects for service tests
  */
-public class ServiceTestDataBuilder {
+public final class ServiceTestDataBuilder {
 
     private ServiceTestDataBuilder() {
         // Utility class
@@ -265,8 +265,9 @@ public class ServiceTestDataBuilder {
     /**
      * Creates a PostDto with all fields set
      */
-    public static PostDto createPostDto(final String title, final String content, final boolean published,
-            final boolean commentable, final Long userId, final Long categoryId) {
+    public static PostDto createPostDto(@Nullable final String title, @Nullable final String content,
+            final boolean published, final boolean commentable, @Nullable final Long userId,
+            @Nullable final Long categoryId) {
         final var dto = new PostDto();
         dto.title = title;
         dto.content = content;

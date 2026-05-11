@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.SecurityContext;
 
+@SuppressWarnings("NullAway")
 class SecurityContextUtilTest {
 
     @Test

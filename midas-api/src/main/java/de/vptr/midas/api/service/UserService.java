@@ -100,8 +100,8 @@ public class UserService {
         return this.toResponseDto(user);
     }
 
-    @SuppressFBWarnings(value = "UC_USELESS_OBJECT",
-            justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
+    @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache;"
+            + " SpotBugs cannot see Panache's bytecode-generated persist()")
     private UserEntity buildUserEntity(final UserDto userDto, @Nullable final String normalizedEmail) {
         final UserEntity user = new UserEntity();
         user.username = userDto.username;

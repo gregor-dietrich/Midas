@@ -11,7 +11,7 @@ import de.vptr.midas.api.service.UserService;
 /**
  * Utility class for service testing patterns
  */
-public class ServiceTestUtil {
+public final class ServiceTestUtil {
 
     private static final Logger LOG = Logger.getLogger(ServiceTestUtil.class);
 

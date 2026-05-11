@@ -253,25 +253,21 @@ public class PaymentService {
 
     private void verifyAccountAccessForPayment(final String username, final Long accountId,
             final PaymentDto paymentDto) {
-        if (paymentDto.sourceAccountId != null && paymentDto.sourceAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
-                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-            }
+        if (paymentDto.sourceAccountId != null && paymentDto.sourceAccountId.equals(accountId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.targetAccountId != null && paymentDto.targetAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
-                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-            }
+        if (paymentDto.targetAccountId != null && paymentDto.targetAccountId.equals(accountId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.sourceAccountId != null && !paymentDto.sourceAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
-                throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-            }
+        if (paymentDto.sourceAccountId != null && !paymentDto.sourceAccountId.equals(accountId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
+            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.targetAccountId != null && !paymentDto.targetAccountId.equals(accountId)) {
-            if (!this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
-                throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-            }
+        if (paymentDto.targetAccountId != null && !paymentDto.targetAccountId.equals(accountId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
+            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
     }
 

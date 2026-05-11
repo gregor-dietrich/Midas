@@ -4,6 +4,8 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.TestDataBuilder;
@@ -64,16 +66,14 @@ class PostCommentResourceTest {
     @Test
     void testCreateComment_authorized() {
         final Long postId = TestUtil.createTestPost();
-        final String commentJson =
-                TestDataBuilder.createDefaultPostCommentJson(java.util.Objects.requireNonNull(postId));
+        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithCreation(ENDPOINT_URL, commentJson);
     }
 
     @Test
     void testCreateComment_authorizedWithInsufficientRole() {
         final Long postId = TestUtil.createTestPost();
-        final String commentJson =
-                TestDataBuilder.createDefaultPostCommentJson(java.util.Objects.requireNonNull(postId));
+        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithInsufficientRole(ENDPOINT_URL, commentJson);
     }
 

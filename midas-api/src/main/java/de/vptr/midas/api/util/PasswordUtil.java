@@ -20,9 +20,9 @@ import de.vptr.midas.api.security.PasswordHashingService;
  *
  * Usage: generate &lt;password&gt; Outputs: salt and hash suitable for insertion into init.sql.
  */
-public class PasswordUtil {
+public final class PasswordUtil {
 
-    private static final SecureRandom random = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private static final int PBKDF2_ITERATIONS = 100000;
     private static final int SALT_LENGTH = 32;
@@ -57,7 +57,7 @@ public class PasswordUtil {
 
     private static String generateSalt() {
         final var saltBytes = new byte[SALT_LENGTH];
-        random.nextBytes(saltBytes);
+        RANDOM.nextBytes(saltBytes);
         return Base64.getEncoder().encodeToString(saltBytes);
     }
 

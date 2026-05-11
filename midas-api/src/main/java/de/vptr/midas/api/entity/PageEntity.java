@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
@@ -47,7 +48,7 @@ public class PageEntity extends PanacheEntityBase {
 
     // Helper method to search pages
     public static List<PageEntity> searchPages(final String searchTerm) {
-        final var searchPattern = "%" + searchTerm.toLowerCase() + "%";
+        final var searchPattern = "%" + searchTerm.toLowerCase(Locale.ROOT) + "%";
         return find("LOWER(title) LIKE ?1 OR LOWER(content) LIKE ?1", searchPattern).list();
     }
 

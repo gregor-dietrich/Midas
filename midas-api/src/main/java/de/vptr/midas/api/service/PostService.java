@@ -123,8 +123,8 @@ public class PostService {
         return this.toResponseDto(post);
     }
 
-    @SuppressFBWarnings(value = "UC_USELESS_OBJECT",
-            justification = "Entity populated then persisted via Panache; SpotBugs cannot see Panache's bytecode-generated persist()")
+    @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache;"
+            + " SpotBugs cannot see Panache's bytecode-generated persist()")
     private PostEntity buildPostEntity(final PostDto postDto) {
         final PostEntity post = new PostEntity();
         post.title = postDto.title;

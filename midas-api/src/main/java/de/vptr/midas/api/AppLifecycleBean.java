@@ -32,7 +32,8 @@ public class AppLifecycleBean {
 
     @Nullable
     private String readBanner() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("banner.txt")) {
+        try (InputStream inputStream =
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("banner.txt")) {
             if (inputStream == null) {
                 return null;
             }

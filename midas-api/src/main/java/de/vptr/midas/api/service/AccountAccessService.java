@@ -59,7 +59,7 @@ public class AccountAccessService {
         final List<UserAccountMetaEntity> metas = UserAccountMetaEntity.findByAccountId(accountId);
         final Map<Long, Boolean> isNegativeByUser = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
-            final de.vptr.midas.api.entity.UserEntity u = m.user;
+            final UserEntity u = m.user;
             if (u != null && u.id != null) {
                 isNegativeByUser.put(u.id, m.isNegative);
             }
@@ -239,10 +239,7 @@ public class AccountAccessService {
         if (user == null) {
             return false;
         }
-        if (user.id == null) {
-            return false;
-        }
-        return this.isUserAssociatedWithAccount(user.id, accountId);
+        return user.id != null && this.isUserAssociatedWithAccount(user.id, accountId);
     }
 
     /** Returns the balance of the account for the current user. */
@@ -290,7 +287,7 @@ public class AccountAccessService {
                 UserAccountMetaEntity.find("user.id = ?1 AND account.id IN ?2", userId, accountIds).list();
         final Map<Long, Boolean> result = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
-            final de.vptr.midas.api.entity.AccountEntity a = m.account;
+            final AccountEntity a = m.account;
             if (a != null && a.id != null) {
                 result.put(a.id, m.isNegative);
             }

@@ -7,9 +7,14 @@ import org.jboss.logging.Logger;
 /**
  * Utility class for monitoring and logging performance metrics
  */
-public class PerformanceMonitor {
+public final class PerformanceMonitor {
 
     private static final Logger LOG = Logger.getLogger(PerformanceMonitor.class);
+
+    private PerformanceMonitor() {
+        // utility class
+    }
+
     private static final long SLOW_THRESHOLD_MS = 1000;
     private static final long INFO_THRESHOLD_MS = 100;
 

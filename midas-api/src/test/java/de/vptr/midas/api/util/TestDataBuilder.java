@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Builder utility for creating test data JSON strings
  */
-public class TestDataBuilder {
+public final class TestDataBuilder {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -27,7 +27,7 @@ public class TestDataBuilder {
             data.put("password", password);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize user test data", e);
+            throw new IllegalArgumentException("Failed to serialize user test data", e);
         }
     }
 
@@ -52,7 +52,7 @@ public class TestDataBuilder {
             data.put("userId", userId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize post test data", e);
+            throw new IllegalArgumentException("Failed to serialize post test data", e);
         }
     }
 
@@ -71,7 +71,7 @@ public class TestDataBuilder {
             data.put("categoryId", categoryId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize post test data", e);
+            throw new IllegalArgumentException("Failed to serialize post test data", e);
         }
     }
 
@@ -98,7 +98,7 @@ public class TestDataBuilder {
             data.put("name", name);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize account test data", e);
+            throw new IllegalArgumentException("Failed to serialize account test data", e);
         }
     }
 
@@ -127,8 +127,41 @@ public class TestDataBuilder {
             data.put("currency", currency);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize payment test data", e);
+            throw new IllegalArgumentException("Failed to serialize payment test data", e);
         }
+    }
+
+    /**
+     * Creates a payment JSON for testing with full payment fields.
+     */
+    public static String createPaymentJson(final Long targetAccountId, final Long sourceAccountId, final Long userId,
+            final String amount, final String comment, final String date) {
+        try {
+            final var data = new LinkedHashMap<String, Object>();
+            data.put("targetAccountId", targetAccountId);
+            data.put("sourceAccountId", sourceAccountId);
+            data.put("userId", userId);
+            data.put("amount", amount);
+            data.put("comment", comment);
+            data.put("date", date);
+            return MAPPER.writeValueAsString(data);
+        } catch (final JsonProcessingException e) {
+            throw new IllegalArgumentException("Failed to serialize payment test data", e);
+        }
+    }
+
+    /**
+     * Creates a default test payment JSON.
+     */
+    public static String createDefaultPaymentJson() {
+        return createPaymentJson(1L, 2L, 1L, "100.00", "Test payment", "2024-01-01");
+    }
+
+    /**
+     * Creates an updated test payment JSON.
+     */
+    public static String createUpdatedPaymentJson() {
+        return createPaymentJson(1L, 2L, 1L, "150.00", "Updated payment", "2024-01-01");
     }
 
     /**
@@ -141,7 +174,7 @@ public class TestDataBuilder {
             data.put("description", description);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize post category test data", e);
+            throw new IllegalArgumentException("Failed to serialize post category test data", e);
         }
     }
 
@@ -168,7 +201,7 @@ public class TestDataBuilder {
             data.put("name", name);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize user group test data", e);
+            throw new IllegalArgumentException("Failed to serialize user group test data", e);
         }
     }
 
@@ -258,11 +291,14 @@ public class TestDataBuilder {
             data.put("userAccountDelete", userAccountDelete);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize user rank test data", e);
+            throw new IllegalArgumentException("Failed to serialize user rank test data", e);
         }
     }
 
     // PostComment builders
+    /**
+     * Creates a post comment JSON for testing.
+     */
     public static String createPostCommentJson(final String content, final Long postId) {
         try {
             final var data = new LinkedHashMap<String, Object>();
@@ -270,14 +306,20 @@ public class TestDataBuilder {
             data.put("postId", postId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize post comment test data", e);
+            throw new IllegalArgumentException("Failed to serialize post comment test data", e);
         }
     }
 
+    /**
+     * Creates a default post comment JSON for testing.
+     */
     public static String createDefaultPostCommentJson(final Long postId) {
         return createPostCommentJson("Test comment", postId);
     }
 
+    /**
+     * Creates an updated post comment JSON for testing.
+     */
     public static String createUpdatedPostCommentJson() {
         return """
                 {
@@ -286,6 +328,9 @@ public class TestDataBuilder {
                 """;
     }
 
+    /**
+     * Creates a patched post comment JSON for testing.
+     */
     public static String createPatchedPostCommentJson() {
         return """
                 {
@@ -295,6 +340,9 @@ public class TestDataBuilder {
     }
 
     // Page builders
+    /**
+     * Creates a page JSON for testing.
+     */
     public static String createPageJson(final String title, final String content) {
         try {
             final var data = new LinkedHashMap<String, Object>();
@@ -302,45 +350,26 @@ public class TestDataBuilder {
             data.put("content", content);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize page test data", e);
+            throw new IllegalArgumentException("Failed to serialize page test data", e);
         }
     }
 
+    /**
+     * Creates a default test page JSON.
+     */
     public static String createDefaultPageJson() {
         return createPageJson("Test Page", "Test content");
     }
 
+    /**
+     * Creates an updated test page JSON.
+     */
     public static String createUpdatedPageJson() {
         return createPageJson("Updated Page", "Updated content");
     }
 
-    // Payment builders
-    public static String createPaymentJson(final Long targetAccountId, final Long sourceAccountId, final Long userId,
-            final String amount, final String comment, final String date) {
-        try {
-            final var data = new LinkedHashMap<String, Object>();
-            data.put("targetAccountId", targetAccountId);
-            data.put("sourceAccountId", sourceAccountId);
-            data.put("userId", userId);
-            data.put("amount", amount);
-            data.put("comment", comment);
-            data.put("date", date);
-            return MAPPER.writeValueAsString(data);
-        } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize payment test data", e);
-        }
-    }
-
-    public static String createDefaultPaymentJson() {
-        return createPaymentJson(1L, 2L, 1L, "100.00", "Test payment", "2024-01-01");
-    }
-
-    public static String createUpdatedPaymentJson() {
-        return createPaymentJson(1L, 2L, 1L, "150.00", "Updated payment", "2024-01-01");
-    }
-
     /**
-     * Creates a default test user rank JSON
+     * Creates a default test user rank JSON.
      */
     public static String createDefaultUserRankJson() {
         return createUserRankJson("Test Rank", true, true, true, true, true, true, true, true, true, true, true, true,
@@ -369,7 +398,7 @@ public class TestDataBuilder {
             data.put("isNegative", isNegative);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize user account meta test data", e);
+            throw new IllegalArgumentException("Failed to serialize user account meta test data", e);
         }
     }
 
@@ -383,7 +412,7 @@ public class TestDataBuilder {
             data.put("email", email);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize user update test data", e);
+            throw new IllegalArgumentException("Failed to serialize user update test data", e);
         }
     }
 
@@ -396,7 +425,7 @@ public class TestDataBuilder {
             data.put("title", title);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize post patch test data", e);
+            throw new IllegalArgumentException("Failed to serialize post patch test data", e);
         }
     }
 

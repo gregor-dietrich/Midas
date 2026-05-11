@@ -18,6 +18,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
+/** Integration tests for {@link UserRankIdentityAugmentor} role-building and identity augmentation. */
 @QuarkusTest
 public class UserRankIdentityAugmentorTest {
 
@@ -153,7 +154,7 @@ public class UserRankIdentityAugmentorTest {
         final var rankName = "InvalidRank";
 
         // when & then
-        assertThrows(NullPointerException.class, () -> this.getRolesByUserRank(rankName));
+        assertTrue(this.getRolesByUserRank(rankName).isEmpty());
     }
 
     @Test

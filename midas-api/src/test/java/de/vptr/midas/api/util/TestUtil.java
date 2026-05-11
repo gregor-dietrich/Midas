@@ -1,5 +1,6 @@
 package de.vptr.midas.api.util;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -12,7 +13,7 @@ import jakarta.annotation.Nullable;
 /**
  * General test utilities for REST API testing
  */
-public class TestUtil {
+public final class TestUtil {
 
     public static final String ADMIN_USERNAME = System.getProperty("test.admin.username", "admin");
     public static final String ADMIN_PASSWORD = System.getProperty("test.admin.password", "admin");
@@ -67,6 +68,21 @@ public class TestUtil {
     }
 
     /**
+     * Tests unauthorized access with specific HTTP method
+     */
+    public static ValidatableResponse testUnauthorizedAccess(final String endpoint, final String httpMethod) {
+        return switch (httpMethod.toUpperCase(Locale.ROOT)) {
+            case "GET" -> given().when().get(endpoint).then().statusCode(401);
+            case "POST" -> given().when().post(endpoint).then().statusCode(401);
+            case "PUT" -> given().when().put(endpoint).then().statusCode(401);
+            case "PATCH" -> given().when().patch(endpoint).then().statusCode(401);
+            case "DELETE" -> given().when().delete(endpoint).then().statusCode(401);
+            case "HEAD" -> given().when().head(endpoint).then().statusCode(401);
+            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + httpMethod);
+        };
+    }
+
+    /**
      * Tests unauthorized POST access to an endpoint
      */
     public static ValidatableResponse testUnauthorizedPost(final String endpoint, final String jsonBody) {
@@ -92,7 +108,7 @@ public class TestUtil {
      */
     private static ValidatableResponse testUnauthorizedAccessWithBody(final String endpoint, final String httpMethod,
             final String jsonBody) {
-        return switch (httpMethod.toUpperCase()) {
+        return switch (httpMethod.toUpperCase(Locale.ROOT)) {
             case "POST" ->
                 given().contentType(ContentType.JSON).body(jsonBody).when().post(endpoint).then().statusCode(401);
             case "PUT" ->
@@ -263,21 +279,6 @@ public class TestUtil {
         final Long sourceAccountId = createTestAccount();
         return TestDataBuilder.createPaymentJson(Objects.requireNonNull(targetAccountId),
                 Objects.requireNonNull(sourceAccountId), 1L, "100.00", "Test payment", "2024-01-01");
-    }
-
-    /**
-     * Tests unauthorized access with specific HTTP method
-     */
-    public static ValidatableResponse testUnauthorizedAccess(final String endpoint, final String httpMethod) {
-        return switch (httpMethod.toUpperCase()) {
-            case "GET" -> given().when().get(endpoint).then().statusCode(401);
-            case "POST" -> given().when().post(endpoint).then().statusCode(401);
-            case "PUT" -> given().when().put(endpoint).then().statusCode(401);
-            case "PATCH" -> given().when().patch(endpoint).then().statusCode(401);
-            case "DELETE" -> given().when().delete(endpoint).then().statusCode(401);
-            case "HEAD" -> given().when().head(endpoint).then().statusCode(401);
-            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + httpMethod);
-        };
     }
 
     /**

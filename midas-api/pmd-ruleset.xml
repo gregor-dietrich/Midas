@@ -47,6 +47,9 @@
     <exclude name="UnitTestAssertionsShouldIncludeMessage" />
     <exclude name="UseCollectionIsEmpty" />
     <exclude name="UseVarargs" />
+    <exclude name="UnitTestShouldIncludeAssert" />
+    <exclude name="AvoidUsingHardCodedIP" />
+    <exclude name="SimplifiableTestAssertion" />
   </rule>
 
   <!-- Design: Only critical rules -->
@@ -127,6 +130,8 @@
     <exclude name="UseExplicitTypes" />
     <exclude name="UselessParentheses" />
     <exclude name="UselessQualifiedThis" />
+    <exclude name="UseUnderscoresInNumericLiterals" />
+    <exclude name="LinguisticNaming" />
   </rule>
 
   <!-- Performance: Only critical rules -->

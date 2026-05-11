@@ -26,6 +26,7 @@ import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
+@SuppressWarnings("NullAway")
 class UserServiceTest {
     @Inject
     UserService userService;

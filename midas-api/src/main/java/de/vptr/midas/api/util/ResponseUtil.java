@@ -7,7 +7,7 @@ import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.Response;
 
 /** ResponseUtil class. */
-public class ResponseUtil {
+public final class ResponseUtil {
     private ResponseUtil() {
     }
 
@@ -42,7 +42,7 @@ public class ResponseUtil {
     /**
      * Returns 200 OK with the entity body, or 204 No Content if entity is null.
      */
-    public static <T> Response ok(final T entity) {
+    public static <T> Response ok(@Nullable final T entity) {
         return entity == null ? noContent() : Response.status(Response.Status.OK).entity(entity).build();
     }
 

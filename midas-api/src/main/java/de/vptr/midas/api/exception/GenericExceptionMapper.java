@@ -13,7 +13,8 @@ import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 
-// Note: ExceptionMapper<Exception> intentionally excludes Error subclasses (OOM, SOE) which should propagate to the container.
+// Note: ExceptionMapper<Exception> intentionally excludes Error subclasses
+// (OOM, SOE) which should propagate to the container.
 /** Catch-all mapper that prevents stack trace leaks to API clients. */
 @Provider
 @Priority(Priorities.USER + 1000)

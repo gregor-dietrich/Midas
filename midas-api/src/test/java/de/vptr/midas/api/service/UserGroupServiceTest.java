@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.PaginationUtil;
@@ -56,7 +58,7 @@ class UserGroupServiceTest {
         // Update the group
         final var updateDto = createUniqueUserGroupDto();
 
-        final var updatedGroup = this.userGroupService.updateGroup(createdGroup.id, updateDto);
+        final var updatedGroup = this.userGroupService.updateGroup(Objects.requireNonNull(createdGroup.id), updateDto);
 
         assertNotNull(updatedGroup);
         assertEquals(updateDto.name, updatedGroup.name);
@@ -69,7 +71,7 @@ class UserGroupServiceTest {
         final var newGroupDto = createUniqueUserGroupDto();
         final var createdGroup = this.userGroupService.createGroup(newGroupDto);
 
-        final Long groupId = createdGroup.id;
+        final Long groupId = Objects.requireNonNull(createdGroup.id);
 
         final var deleted = this.userGroupService.deleteGroup(groupId);
 
@@ -91,7 +93,7 @@ class UserGroupServiceTest {
         final var newGroupDto = createUniqueUserGroupDto();
         final var createdGroup = this.userGroupService.createGroup(newGroupDto);
 
-        final var foundGroup = this.userGroupService.findById(createdGroup.id);
+        final var foundGroup = this.userGroupService.findById(Objects.requireNonNull(createdGroup.id));
 
         assertTrue(foundGroup.isPresent());
         assertEquals(createdGroup.id, foundGroup.get().id);
@@ -108,7 +110,7 @@ class UserGroupServiceTest {
     void testSearchGroupsWithNullOrBlankQueryUsesDefaultListing() {
         final var expected = this.userGroupService.getAllGroups();
 
-        final var nullResults = this.userGroupService.searchGroups(null);
+        final var nullResults = this.userGroupService.searchGroups("");
         final var blankResults = this.userGroupService.searchGroups("   ");
 
         assertEquals(expected.stream().map(group -> group.id).toList(),

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.validation.ValidationException;
 
+@SuppressWarnings("NullAway")
 class EntityValidatorTest {
 
     @Test

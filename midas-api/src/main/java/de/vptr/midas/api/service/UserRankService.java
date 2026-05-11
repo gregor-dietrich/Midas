@@ -10,6 +10,7 @@ import de.vptr.midas.api.dto.UserRankResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -37,7 +38,7 @@ public class UserRankService {
     }
 
     /** Returns all ranks matching the given query. */
-    public List<UserRankResponseDto> searchRanks(final String query) {
+    public List<UserRankResponseDto> searchRanks(@Nullable final String query) {
         final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
         if (searchTerm == null) {
             return this.getAllRanks();
@@ -94,6 +95,7 @@ public class UserRankService {
     }
 
     /** Full replacement — null defaults to false. Used by create/update. */
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     private void mapPermissions(final UserRankEntity rank, final UserRankDto dto) {
         applyPermissionsFromDto(rank, dto);
         try {
@@ -118,6 +120,7 @@ public class UserRankService {
     }
 
     /** Applies non-null permission fields from the DTO to the entity. */
+    @SuppressWarnings("PMD.NPathComplexity")
     private void applyPermissionsFromDto(final UserRankEntity rank, final UserRankDto dto) {
         if (dto.adminView != null) {
             rank.adminView = dto.adminView;

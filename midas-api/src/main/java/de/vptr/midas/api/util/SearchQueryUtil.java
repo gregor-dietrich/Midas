@@ -1,5 +1,7 @@
 package de.vptr.midas.api.util;
 
+import java.util.Locale;
+
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.annotation.Nullable;
 
@@ -19,7 +21,7 @@ public final class SearchQueryUtil {
         if (query == null) {
             return null;
         }
-        final String normalizedQuery = query.trim().toLowerCase();
+        final String normalizedQuery = query.trim().toLowerCase(Locale.ROOT);
         if (normalizedQuery.isEmpty()) {
             return null;
         }

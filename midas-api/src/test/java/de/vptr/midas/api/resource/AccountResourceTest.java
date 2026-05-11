@@ -201,7 +201,7 @@ class AccountResourceTest {
         forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).when()
                 .post(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(201);
 
-        return accountId.longValue();
+        return accountId;
     }
 
     private static RequestSpecification forwardedAuthenticatedRequest(final String clientKey) {
