@@ -2,9 +2,11 @@ package de.vptr.midas.gui.service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -133,7 +135,7 @@ public class PaymentService {
                 ServiceHelper.execute(() -> this.paymentClient.getPaymentsByTargetAccount(accountId, authHeader),
                         this.authService, LOG, "fetching target payments for account " + accountId);
 
-        final java.util.Set<PaymentResponseDto> allPayments = new java.util.HashSet<>(sourcePayments);
+        final Set<PaymentResponseDto> allPayments = new HashSet<>(sourcePayments);
         allPayments.addAll(targetPayments);
 
         return allPayments.stream().sorted((p1, p2) -> p2.getDate() != null ? p2.getDate().compareTo(p1.getDate()) : 0)
@@ -160,9 +162,8 @@ public class PaymentService {
         LOG.debugf("Updating payment: %s", payment);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var paymentId = Objects.requireNonNull(payment.getId(), "Payment ID must not be null for update");
-        return ServiceHelper.executeWithResponse(
-                () -> this.paymentClient.updatePayment(paymentId, payment, authHeader), this.authService, LOG,
-                "updating payment " + payment.getId(), "Failed to update payment", response -> {
+        return ServiceHelper.executeWithResponse(() -> this.paymentClient.updatePayment(paymentId, payment, authHeader),
+                this.authService, LOG, "updating payment " + payment.getId(), "Failed to update payment", response -> {
                     if (response.getStatus() == 200) {
                         final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,
                                 PaymentResponseDto.class, "updated payment response");

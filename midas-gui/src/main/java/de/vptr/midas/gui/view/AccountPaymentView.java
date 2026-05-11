@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
@@ -33,8 +36,6 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
-import de.vptr.midas.gui.exception.AuthenticationException;
-import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.component.button.CreateButton;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
@@ -42,6 +43,8 @@ import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PaymentService;
@@ -278,12 +281,13 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         if (this.allPayments == null) {
             return;
         }
+        final var queryLower = query.toLowerCase(Locale.ROOT);
         final var filtered = this.allPayments.stream()
-                .filter(p -> (p.getComment() != null && p.getComment().toLowerCase().contains(query.toLowerCase()))
+                .filter(p -> (p.getComment() != null && p.getComment().toLowerCase(Locale.ROOT).contains(queryLower))
                         || (p.getSourceAccountName() != null
-                                && p.getSourceAccountName().toLowerCase().contains(query.toLowerCase()))
+                                && p.getSourceAccountName().toLowerCase(Locale.ROOT).contains(queryLower))
                         || (p.getTargetAccountName() != null
-                                && p.getTargetAccountName().toLowerCase().contains(query.toLowerCase())))
+                                && p.getTargetAccountName().toLowerCase(Locale.ROOT).contains(queryLower)))
                 .toList();
         Objects.requireNonNull(this.grid).setItems(filtered);
     }
@@ -430,8 +434,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
     }
 
-    private <T> void loadDataAsync(final java.util.function.Supplier<T> supplier,
-            final java.util.function.Consumer<T> consumer) {
+    private <T> void loadDataAsync(final Supplier<T> supplier, final Consumer<T> consumer) {
         UiAsyncExecutor.execute(supplier, consumer, MidasErrorHandler::handleInUiContext);
     }
 

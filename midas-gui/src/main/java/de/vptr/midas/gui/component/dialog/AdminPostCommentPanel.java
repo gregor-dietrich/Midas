@@ -18,16 +18,19 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-@SuppressWarnings("NullAway")
 /**
  * Dialog for adding comments to posts in the admin view. Encapsulates the comment form, binder, and save logic.
  */
+@SuppressWarnings("NullAway")
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" },
+        justification = "Fields initialized lazily in open(), not constructor")
 public class AdminPostCommentPanel extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminPostCommentPanel.class);
 
-    private final PostCommentService postCommentService;
+    private final transient PostCommentService postCommentService;
     private final Runnable onAuthFailure;
 
     private Binder<PostCommentDto> binder;
@@ -42,6 +45,8 @@ public class AdminPostCommentPanel extends FormDialog {
     }
 
     /** Opens the dialog. */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Post reference intentionally stored for use in save operation")
     public void open(final PostResponseDto post) {
         this.selectedPost = post;
         this.removeAll();
@@ -70,10 +75,10 @@ public class AdminPostCommentPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Post Comment", _ -> this.saveComment());
+        final var saveButton = new Button("Post Comment", e -> this.saveComment());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.close());
+        final var cancelButton = new Button("Cancel", e -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

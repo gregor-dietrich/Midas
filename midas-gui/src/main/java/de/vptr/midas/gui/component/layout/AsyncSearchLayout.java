@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 import de.vptr.midas.gui.component.button.SearchButton;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /**
@@ -103,14 +104,20 @@ public class AsyncSearchLayout extends HorizontalLayout {
         this.clearButton.setEnabled(!searching);
     }
 
-    public TextField getTextField() {
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose TextField intentionally so parent views can use it")
+    public TextField getTextfield() {
         return this.textField;
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose search button intentionally so parent views can use it")
     public Button getSearchButton() {
         return this.searchButton;
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose clear button intentionally so parent views can use it")
     public Button getClearButton() {
         return this.clearButton;
     }

@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -52,6 +53,8 @@ public class BackendAvailabilityService {
         }
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD",
+            justification = "Called reflectively by SmallRye Fault Tolerance @Fallback")
     @SuppressWarnings("unused")
     private boolean fallbackAvailability() {
         LOG.error("Backend availability check failed after retries, assuming unavailable");

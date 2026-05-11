@@ -105,7 +105,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private void buildUi() {
         this.removeAll();
 
-        final var backButton = new Button("Back to Groups", new Icon(VaadinIcon.ARROW_LEFT), _ -> {
+        final var backButton = new Button("Back to Groups", new Icon(VaadinIcon.ARROW_LEFT), e -> {
             this.getUI().ifPresent(ui -> ui.navigate(UserGroupView.class));
         });
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);

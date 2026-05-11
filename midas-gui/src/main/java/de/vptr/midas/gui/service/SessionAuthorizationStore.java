@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
@@ -123,7 +124,7 @@ public final class SessionAuthorizationStore {
             System.arraycopy(iv, 0, combined, 0, iv.length);
             System.arraycopy(ciphertext, 0, combined, iv.length, ciphertext.length);
             return Base64.getEncoder().encodeToString(combined);
-        } catch (final Exception e) {
+        } catch (final GeneralSecurityException e) {
             throw new IllegalStateException("Failed to encrypt authorization header", e);
         }
     }
@@ -142,7 +143,7 @@ public final class SessionAuthorizationStore {
             final var cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, ENCRYPTION_KEY, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
             return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
-        } catch (final Exception e) {
+        } catch (final GeneralSecurityException e) {
             throw new IllegalStateException("Failed to decrypt authorization header", e);
         }
     }

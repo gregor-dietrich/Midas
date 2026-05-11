@@ -50,7 +50,7 @@ class ServiceHelperTest {
         when(this.response.getStatus()).thenReturn(401);
 
         assertThatThrownBy(() -> ServiceHelper.executeWithResponse(() -> this.response, this.authService, LOG,
-                "reading payload", _ -> "ignored")).isInstanceOf(AuthenticationException.class)
+                "reading payload", e -> "ignored")).isInstanceOf(AuthenticationException.class)
                 .hasMessage("Session expired");
 
         verify(this.authService).logout();
@@ -68,7 +68,7 @@ class ServiceHelperTest {
 
         assertThatThrownBy(() -> ServiceHelper.executeWithResponse(() -> {
             throw new WebApplicationException(this.response);
-        }, this.authService, LOG, "creating account", "Failed to create account", _ -> "ignored"))
+        }, this.authService, LOG, "creating account", "Failed to create account", e -> "ignored"))
                 .isInstanceOf(ServiceException.class).hasMessage("Backend request failed");
 
         verify(this.response).bufferEntity();

@@ -28,19 +28,22 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing users in the admin view. Encapsulates form fields, binder, password management, and
  * save/cancel logic.
  */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Service reference intentionally stored for runtime behavior")
 public class AdminUserDialog extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminUserDialog.class);
     private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int MAX_PASSWORD_LENGTH = 100;
 
-    private final UserService userService;
+    private final transient UserService userService;
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 
@@ -110,7 +113,7 @@ public class AdminUserDialog extends FormDialog {
 
             final var passwordButton = new Button("Change Password");
             passwordButton.setPrefixComponent(LineAwesomeIcon.LOCK_SOLID.create());
-            passwordButton.addClickListener(_ -> this.openPasswordDialog(user));
+            passwordButton.addClickListener(e -> this.openPasswordDialog(user));
 
             passwordLayout.add(passwordLabel, passwordButton);
             form.add(passwordLayout);
@@ -162,10 +165,10 @@ public class AdminUserDialog extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", _ -> this.saveUser());
+        final var saveButton = new Button("Save", e -> this.saveUser());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.close());
+        final var cancelButton = new Button("Cancel", e -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -202,7 +205,7 @@ public class AdminUserDialog extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Change Password", _ -> {
+        final var saveButton = new Button("Change Password", e -> {
             final String newPassword = newPasswordField.getValue();
             final String confirmPassword = confirmPasswordField.getValue();
 
@@ -226,7 +229,7 @@ public class AdminUserDialog extends FormDialog {
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.passwordDialog.close());
+        final var cancelButton = new Button("Cancel", e -> this.passwordDialog.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

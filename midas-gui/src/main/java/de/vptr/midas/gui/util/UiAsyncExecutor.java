@@ -16,6 +16,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.server.VaadinSession;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /** Detached-safe async execution for Vaadin views. */
@@ -60,6 +61,7 @@ public final class UiAsyncExecutor {
     /**
      * Executes a background task with timeout, session propagation, and detached-safe UI dispatch.
      */
+    @SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE", justification = "Side effect: start async computation")
     public static <T> void execute(final Supplier<T> backgroundTask, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
@@ -97,6 +99,7 @@ public final class UiAsyncExecutor {
     /**
      * Executes an async stage supplier with timeout, session propagation, and detached-safe UI dispatch.
      */
+    @SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE", justification = "Side effect: start async computation")
     @SuppressWarnings("FutureReturnValueIgnored")
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError, final int timeoutSeconds) {
@@ -117,6 +120,7 @@ public final class UiAsyncExecutor {
                 }, throwable));
     }
 
+    @SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE", justification = "Side effect: UI access dispatch")
     static void dispatch(@Nullable final UI ui, @Nullable final VaadinSession session,
             final SerializableRunnable callback, @Nullable final Throwable throwable) {
         if (ui == null || !ui.isAttached()) {

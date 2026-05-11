@@ -12,6 +12,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
+import com.vaadin.flow.server.ErrorHandler;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
@@ -176,7 +178,7 @@ class MidasErrorHandlerTest {
     @Test
     void handleDetached_shouldDispatchToSessionErrorHandler_whenSessionAvailable() {
         final var session = mock(VaadinSession.class);
-        final var sessionErrorHandler = mock(com.vaadin.flow.server.ErrorHandler.class);
+        final var sessionErrorHandler = mock(ErrorHandler.class);
         final var ex = new RuntimeException("detached");
 
         lenient().when(session.getErrorHandler()).thenReturn(sessionErrorHandler);
@@ -189,7 +191,7 @@ class MidasErrorHandlerTest {
     @Test
     void handleDetached_shouldUnwrapCompletionExceptionBeforeDispatching() {
         final var session = mock(VaadinSession.class);
-        final var sessionErrorHandler = mock(com.vaadin.flow.server.ErrorHandler.class);
+        final var sessionErrorHandler = mock(ErrorHandler.class);
         final var dispatchedEvent = new AtomicReference<ErrorEvent>();
         final var rootCause = new ServiceException("detached");
 
@@ -201,14 +203,14 @@ class MidasErrorHandlerTest {
 
         MidasErrorHandler.handleDetached(new CompletionException(rootCause), session);
 
-        assertThat(dispatchedEvent.get()).isNotNull();
-        assertThat(dispatchedEvent.get().getThrowable()).isSameAs(rootCause);
+        final var event2 = Objects.requireNonNull(dispatchedEvent.get());
+        assertThat(event2.getThrowable()).isSameAs(rootCause);
     }
 
     @Test
     void handleDetached_shouldNotPropagate_whenSessionErrorHandlerThrows() {
         final var session = mock(VaadinSession.class);
-        final var sessionErrorHandler = mock(com.vaadin.flow.server.ErrorHandler.class);
+        final var sessionErrorHandler = mock(ErrorHandler.class);
 
         when(session.getErrorHandler()).thenReturn(sessionErrorHandler);
         doThrow(new IllegalStateException("handler failed")).when(sessionErrorHandler).error(any(ErrorEvent.class));

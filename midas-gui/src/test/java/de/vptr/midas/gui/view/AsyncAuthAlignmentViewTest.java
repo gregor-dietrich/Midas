@@ -61,7 +61,7 @@ class AsyncAuthAlignmentViewTest {
         view.authService = authService;
         view.pageService = pageService;
         when(pageService.searchPages(anyString())).thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(_ -> {
+        doAnswer(e -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);
@@ -82,7 +82,7 @@ class AsyncAuthAlignmentViewTest {
         view.userGroupService = userGroupService;
         when(userGroupService.getGroupsByUser(ArgumentMatchers.anyLong()))
                 .thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(_ -> {
+        doAnswer(e -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);
@@ -103,7 +103,7 @@ class AsyncAuthAlignmentViewTest {
         view.accountService = accountService;
         when(accountService.getMyAccountsWithBalances())
                 .thenThrow(new AuthenticationException("Authentication required"));
-        doAnswer(_ -> {
+        doAnswer(e -> {
             latch.countDown();
             return null;
         }).when(this.ui).navigate(LoginView.class);

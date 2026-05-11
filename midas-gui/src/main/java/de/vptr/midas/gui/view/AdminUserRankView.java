@@ -106,7 +106,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.loadRanksAsync();
             }
-        }, _ -> this.searchRanks(), "Search by name...", "Search Ranks");
+        }, e -> this.searchRanks(), "Search by name...", "Search Ranks");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -118,8 +118,8 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.rankDialog).open(null));
-        final var refreshButton = new RefreshButton(_ -> this.loadRanksAsync());
+        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.rankDialog).open(null));
+        final var refreshButton = new RefreshButton(e -> this.loadRanksAsync());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -138,7 +138,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
+            nameSpan.addClickListener(e -> Objects.requireNonNull(this.rankDialog).open(rank));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
 
@@ -222,8 +222,8 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
-        final var deleteButton = new DeleteButton(_ -> this.deleteRank(rank));
+        final var editButton = new EditButton(e -> Objects.requireNonNull(this.rankDialog).open(rank));
+        final var deleteButton = new DeleteButton(e -> this.deleteRank(rank));
 
         layout.add(editButton, deleteButton);
         return layout;

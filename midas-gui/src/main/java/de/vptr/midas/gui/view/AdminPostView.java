@@ -152,22 +152,22 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProviderAllPosts();
             }
-        }, _ -> this.searchPosts(), "Search by title or content...", "Search Posts");
+        }, e -> this.searchPosts(), "Search by title or content...", "Search Posts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        this.showPublishedButton = new Button("Show Published Only", _ -> this.setupLazyDataProviderPublishedPosts());
+        this.showPublishedButton = new Button("Show Published Only", e -> this.setupLazyDataProviderPublishedPosts());
         this.showPublishedButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(this.showPublishedButton, dateFilterLayout, userFilterLayout);
@@ -179,8 +179,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var createButton =
-                new CreateButton(_ -> Objects.requireNonNull(this.postDialog).open(null, this.availableCategories));
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProviderAllPosts());
+                new CreateButton(e -> Objects.requireNonNull(this.postDialog).open(null, this.availableCategories));
+        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProviderAllPosts());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -203,7 +203,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
             titleSpan.addClickListener(
-                    _ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
+                    e -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(2);
 
@@ -240,9 +240,9 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var editButton =
-                new EditButton(_ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
-        final var deleteButton = new DeleteButton(_ -> this.deletePost(post));
-        final var commentButton = new AddCommentButton(_ -> Objects.requireNonNull(this.commentPanel).open(post));
+                new EditButton(e -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
+        final var deleteButton = new DeleteButton(e -> this.deletePost(post));
+        final var commentButton = new AddCommentButton(e -> Objects.requireNonNull(this.commentPanel).open(post));
 
         layout.add(editButton, deleteButton, commentButton);
         return layout;

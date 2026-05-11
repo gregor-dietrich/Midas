@@ -106,8 +106,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
                 this.showNotFound();
             } else {
                 this.buildPostContent(post);
-                this.loadCommentsAsync(Objects.requireNonNull(post.getId())); // ensure this method uses loadDataAsync
-                                                                              // too
+                this.loadCommentsAsync(Objects.requireNonNull(post.getId())); // ensure uses loadDataAsync
             }
         }, throwable -> {
             LOG.errorf(throwable, "Error loading post: %s", throwable.getMessage());
@@ -118,7 +117,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     private void buildPostContent(final PostResponseDto post) {
         // Back button
         final var backButton =
-                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+                new Button("← Back to Posts", e -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         // Title
@@ -234,7 +233,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
 
     private void showNotFound() {
         final var backButton =
-                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+                new Button("← Back to Posts", e -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         final var message = new H2("Post Not Found");

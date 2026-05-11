@@ -4,7 +4,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /** Data transfer object for post category. */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP",
+        justification = "DTO used only within GUI; not serialized across trust boundaries")
 public class PostCategoryDto {
 
     @JsonProperty("id")

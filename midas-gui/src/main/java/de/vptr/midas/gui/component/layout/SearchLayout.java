@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 import de.vptr.midas.gui.component.button.SearchButton;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Layout for search. */
 public class SearchLayout extends HorizontalLayout {
@@ -51,7 +52,7 @@ public class SearchLayout extends HorizontalLayout {
 
         this.textField.addKeyPressListener(Key.ENTER, event -> this.executeSearch());
 
-        this.button = new SearchButton(_ -> this.executeSearch(), tooltipText);
+        this.button = new SearchButton(e -> this.executeSearch(), tooltipText);
 
         this.add(this.textField, this.button);
     }
@@ -97,10 +98,14 @@ public class SearchLayout extends HorizontalLayout {
         }
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose button intentionally so parent views can use it")
     public Button getButton() {
         return this.button;
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose text field intentionally so parent views can use it")
     public TextField getTextfield() {
         return this.textField;
     }

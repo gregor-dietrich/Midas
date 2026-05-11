@@ -33,7 +33,8 @@ public class ServiceTestUtil {
         // Given
         setupAuthHeader(authService);
         final WebApplicationException webAppException = new WebApplicationException(401);
-        doThrow(webAppException).when(client);
+        @SuppressWarnings("CheckReturnValue")
+        final var _ = doThrow(webAppException).when(client);
         clientMethodCall.run();
 
         // When & Then

@@ -12,40 +12,40 @@ class AsyncSearchLayoutTest {
 
     @Test
     void constructor_shouldCreateComponentsWithDefaults() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         });
 
-        assertThat(layout.getTextField()).isNotNull();
+        assertThat(layout.getTextfield()).isNotNull();
         assertThat(layout.getSearchButton()).isNotNull();
         assertThat(layout.getClearButton()).isNotNull();
     }
 
     @Test
     void constructor_shouldApplyCustomPlaceholderAndTooltip() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         }, "Find users", "Search users");
 
-        assertThat(layout.getTextField().getPlaceholder()).isEqualTo("Find users");
+        assertThat(layout.getTextfield().getPlaceholder()).isEqualTo("Find users");
     }
 
     @Test
     void setSearching_shouldDisableAllComponents_whenTrue() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         });
 
         layout.setSearching(true);
 
         assertThat(layout.getSearchButton().isEnabled()).isFalse();
-        assertThat(layout.getTextField().isEnabled()).isFalse();
+        assertThat(layout.getTextfield().isEnabled()).isFalse();
         assertThat(layout.getClearButton().isEnabled()).isFalse();
     }
 
     @Test
     void setSearching_shouldEnableAllComponents_whenFalse() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         });
         layout.setSearching(true);
@@ -53,23 +53,23 @@ class AsyncSearchLayoutTest {
         layout.setSearching(false);
 
         assertThat(layout.getSearchButton().isEnabled()).isTrue();
-        assertThat(layout.getTextField().isEnabled()).isTrue();
+        assertThat(layout.getTextfield().isEnabled()).isTrue();
         assertThat(layout.getClearButton().isEnabled()).isTrue();
     }
 
     @Test
     void getValue_shouldReturnTextFieldValue() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         });
-        layout.getTextField().setValue("test query");
+        layout.getTextfield().setValue("test query");
 
         assertThat(layout.getValue()).isEqualTo("test query");
     }
 
     @Test
     void getValue_shouldReturnEmptyString_whenNoInput() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         });
 
@@ -79,23 +79,23 @@ class AsyncSearchLayoutTest {
     @Test
     void clearButton_shouldClearTextField() {
         final var cleared = new AtomicBoolean(false);
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> cleared.set(true));
 
-        layout.getTextField().setValue("something");
+        layout.getTextfield().setValue("something");
         layout.getClearButton().click();
 
-        assertThat(layout.getTextField().getValue()).isEmpty();
+        assertThat(layout.getTextfield().getValue()).isEmpty();
         assertThat(cleared.get()).isTrue();
     }
 
     @Test
     void constructor_shouldApplyCustomWidth() {
-        final var layout = new AsyncSearchLayout(_ -> {
+        final var layout = new AsyncSearchLayout(e -> {
         }, () -> {
         }, "Search...", "Tooltip", "500px");
 
-        assertThat(layout.getTextField().getWidth()).isEqualTo("500px");
+        assertThat(layout.getTextfield().getWidth()).isEqualTo("500px");
     }
 
     @Test
@@ -107,20 +107,20 @@ class AsyncSearchLayoutTest {
         }, () -> {
         }, "Search...", "Search", "300px", new SearchExecutionSupport());
 
-        layout.getTextField().setValue("  users  ");
+        layout.getTextfield().setValue("  users  ");
         layout.getSearchButton().click();
 
-        assertThat(layout.getTextField().getValue()).isEqualTo("users");
+        assertThat(layout.getTextfield().getValue()).isEqualTo("users");
         assertThat(executedSearches.get()).isEqualTo(1);
     }
 
     @Test
     void searchButton_shouldIgnoreBlankQuery() {
         final var executedSearches = new AtomicInteger();
-        final var layout = new AsyncSearchLayout(_ -> executedSearches.incrementAndGet(), () -> {
+        final var layout = new AsyncSearchLayout(e -> executedSearches.incrementAndGet(), () -> {
         }, "Search...", "Search", "300px", new SearchExecutionSupport());
 
-        layout.getTextField().setValue("   ");
+        layout.getTextfield().setValue("   ");
         layout.getSearchButton().click();
 
         assertThat(executedSearches.get()).isZero();
@@ -130,10 +130,10 @@ class AsyncSearchLayoutTest {
     void searchButton_shouldThrottleRepeatedQuery() {
         final var executedSearches = new AtomicInteger();
         final var currentTimeMillis = new AtomicLong(1_000L);
-        final var layout = new AsyncSearchLayout(_ -> executedSearches.incrementAndGet(), () -> {
+        final var layout = new AsyncSearchLayout(e -> executedSearches.incrementAndGet(), () -> {
         }, "Search...", "Search", "300px", new SearchExecutionSupport(currentTimeMillis::get, 400L));
 
-        layout.getTextField().setValue("users");
+        layout.getTextfield().setValue("users");
         layout.getSearchButton().click();
         currentTimeMillis.addAndGet(200L);
         layout.getSearchButton().click();

@@ -48,14 +48,14 @@ class PostServiceTest {
                 Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.postClient.getAllPosts(null, null, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
+        when(this.postClient.getAllPosts(0, 20, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
 
         // When
         final var result = this.postService.getAllPosts();
 
         // Then
         assertThat(result).isEqualTo(expectedPosts);
-        verify(this.postClient).getAllPosts(null, null, TestUtil.TEST_AUTH_HEADER);
+        verify(this.postClient).getAllPosts(0, 20, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
@@ -72,7 +72,7 @@ class PostServiceTest {
     void getAllPosts_shouldThrowServiceException_whenProcessingException() {
         // Given
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.postClient.getAllPosts(null, null, TestUtil.TEST_AUTH_HEADER))
+        when(this.postClient.getAllPosts(0, 20, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(new ProcessingException("Connection failed"));
 
         // When & Then
@@ -84,7 +84,7 @@ class PostServiceTest {
         // Given
         ServiceTestUtil.setupAuthHeader(this.authService);
         final WebApplicationException webAppException = new WebApplicationException(401);
-        when(this.postClient.getAllPosts(null, null, TestUtil.TEST_AUTH_HEADER)).thenThrow(webAppException);
+        when(this.postClient.getAllPosts(0, 20, TestUtil.TEST_AUTH_HEADER)).thenThrow(webAppException);
 
         // When & Then
         ExceptionTestUtil.assertHandles401WithLogout(() -> this.postService.getAllPosts(), this.authService);
@@ -97,14 +97,14 @@ class PostServiceTest {
                 Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.postClient.getPublishedPosts(null, null, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
+        when(this.postClient.getPublishedPosts(0, 20, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
 
         // When
         final var result = this.postService.getPublishedPosts();
 
         // Then
         assertThat(result).isEqualTo(expectedPosts);
-        verify(this.postClient).getPublishedPosts(null, null, TestUtil.TEST_AUTH_HEADER);
+        verify(this.postClient).getPublishedPosts(0, 20, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test

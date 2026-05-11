@@ -148,7 +148,7 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.updateTreeGrid();
             }
-        }, _ -> this.searchCategories(), "Search by name...", "Search Categories");
+        }, e -> this.searchCategories(), "Search by name...", "Search Categories");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -160,9 +160,9 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.categoryDialog).open(null,
+        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.categoryDialog).open(null,
                 this.allCategories != null ? this.allCategories : List.of()));
-        final var refreshButton = new RefreshButton(_ -> this.loadCategoriesAsync());
+        final var refreshButton = new RefreshButton(e -> this.loadCategoriesAsync());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -196,9 +196,9 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.categoryDialog)
+        final var editButton = new EditButton(e -> Objects.requireNonNull(this.categoryDialog)
                 .open(category.toPostCategoryDto(), this.allCategories != null ? this.allCategories : List.of()));
-        final var deleteButton = new DeleteButton(_ -> this.deleteCategory(category));
+        final var deleteButton = new DeleteButton(e -> this.deleteCategory(category));
 
         layout.add(editButton, deleteButton);
         return layout;

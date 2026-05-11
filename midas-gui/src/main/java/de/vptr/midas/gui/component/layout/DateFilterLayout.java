@@ -7,6 +7,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 import de.vptr.midas.gui.component.button.FilterButton;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Layout for date filter. */
 public class DateFilterLayout extends HorizontalLayout {
@@ -43,14 +44,20 @@ public class DateFilterLayout extends HorizontalLayout {
         this(filterAction, DEFAULT_TOOLTIP);
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose button intentionally so parent views can use it")
     public Button getButton() {
         return this.button;
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose start date picker intentionally so parent views can use it")
     public DatePicker getStartDatePicker() {
         return this.startDatePicker;
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose end date picker intentionally so parent views can use it")
     public DatePicker getEndDatePicker() {
         return this.endDatePicker;
     }

@@ -135,27 +135,27 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, _ -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
+        }, e -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // Recent payments filter
         final var recentFilterLayout =
-                new IntegerFilterLayout(_ -> this.loadRecentPayments(), "How many?", "Load Recent", "100px");
+                new IntegerFilterLayout(e -> this.loadRecentPayments(), "How many?", "Load Recent", "100px");
         this.limitField = recentFilterLayout.getIntegerField();
         this.limitField.setMin(1);
         this.limitField.setMax(1000);
         this.limitField.setValue(10);
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(recentFilterLayout, dateFilterLayout, userFilterLayout);
@@ -166,8 +166,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
-        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.paymentDialog).open(null,
+        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.paymentDialog).open(null,
                 this.availableAccounts != null ? this.availableAccounts : List.of()), "Create Payment");
 
         buttonLayout.add(refreshButton, createButton);
@@ -205,9 +205,9 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.paymentDialog)
+        final var editButton = new EditButton(e -> Objects.requireNonNull(this.paymentDialog)
                 .open(payment.toPaymentDto(), this.availableAccounts != null ? this.availableAccounts : List.of()));
-        final var deleteButton = new DeleteButton(_ -> this.deletePayment(payment.toPaymentDto()));
+        final var deleteButton = new DeleteButton(e -> this.deletePayment(payment.toPaymentDto()));
 
         layout.add(editButton, deleteButton);
         return layout;

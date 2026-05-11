@@ -17,10 +17,10 @@ import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupDto;
 import de.vptr.midas.gui.dto.UserRankDto;
 
-@SuppressWarnings("NullAway")
 /**
  * Builder utility for creating test data objects for GUI service tests
  */
+@SuppressWarnings("NullAway")
 public class TestDataBuilder {
 
     private TestDataBuilder() {

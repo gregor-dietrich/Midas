@@ -71,7 +71,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         passwordField.setWidth("300px");
 
         final var loginButton = new Button("Login");
-        loginButton.addClickListener(_ -> {
+        loginButton.addClickListener(e -> {
             final var username = usernameField.getValue();
             final var password = passwordField.getValue();
 

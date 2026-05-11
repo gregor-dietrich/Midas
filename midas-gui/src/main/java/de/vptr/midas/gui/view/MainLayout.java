@@ -20,6 +20,7 @@ import de.vptr.midas.gui.component.tabs.NavigationTabs;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
@@ -55,6 +56,8 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
      * Get the shared top bar for views that need to add additional components
      */
     @Nullable
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Expose top bar intentionally so child views can add components")
     public HorizontalLayout getTopBar() {
         return this.topBar;
     }
@@ -207,7 +210,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         }
 
         // Create new logout button
-        this.logoutButton = new LogoutButton(_ -> {
+        this.logoutButton = new LogoutButton(e -> {
             this.authService.logout();
             // Clear cached user rank on logout
             this.userRankService.clearCachedUserRank();
@@ -222,7 +225,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         }
         if (this.cachedAdminPermission) {
             this.adminViewButton =
-                    new AdminViewButton(_ -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
+                    new AdminViewButton(e -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
         }
 
         // Add buttons

@@ -20,17 +20,20 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing user groups in the admin view. Encapsulates form fields, binder, and save/cancel
  * logic.
  */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Service reference intentionally stored for runtime behavior")
 public class AdminUserGroupDialog extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminUserGroupDialog.class);
 
-    private final UserGroupService groupService;
+    private final transient UserGroupService groupService;
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 
@@ -73,10 +76,10 @@ public class AdminUserGroupDialog extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", _ -> this.saveGroup());
+        final var saveButton = new Button("Save", e -> this.saveGroup());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.close());
+        final var cancelButton = new Button("Cancel", e -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

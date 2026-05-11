@@ -105,19 +105,19 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, _ -> this.searchComments(), "Search by author or content...", "Search Comments");
+        }, e -> this.searchComments(), "Search by author or content...", "Search Comments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(dateFilterLayout, userFilterLayout);
@@ -128,7 +128,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
 
         layout.add(refreshButton);
         return layout;
@@ -177,8 +177,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         layout.setSpacing(true);
 
         final var editButton =
-                new EditButton(_ -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
-        final var deleteButton = new DeleteButton(_ -> this.deleteComment(comment));
+                new EditButton(e -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
+        final var deleteButton = new DeleteButton(e -> this.deleteComment(comment));
 
         layout.add(editButton, deleteButton);
         return layout;

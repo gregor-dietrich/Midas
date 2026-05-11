@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -18,6 +19,7 @@ import org.mockito.MockedStatic;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
+import com.vaadin.flow.server.ErrorHandler;
 import com.vaadin.flow.server.VaadinSession;
 
 class UiAsyncExecutorTest {
@@ -42,7 +44,7 @@ class UiAsyncExecutorTest {
     void dispatch_shouldRouteDetachedErrorsToSessionHandler() {
         final var ui = mock(UI.class);
         final var session = mock(VaadinSession.class);
-        final var sessionErrorHandler = mock(com.vaadin.flow.server.ErrorHandler.class);
+        final var sessionErrorHandler = mock(ErrorHandler.class);
         final var callbackExecuted = new AtomicBoolean(false);
         final var dispatchedError = new AtomicReference<ErrorEvent>();
         final var failure = new RuntimeException("boom");
@@ -53,13 +55,12 @@ class UiAsyncExecutorTest {
             dispatchedError.set(invocation.getArgument(0));
             return null;
         }).when(sessionErrorHandler).error(any(ErrorEvent.class));
-        doAnswer(_ -> sessionErrorHandler).when(session).getErrorHandler();
+        doAnswer(e -> sessionErrorHandler).when(session).getErrorHandler();
 
         UiAsyncExecutor.dispatch(ui, session, () -> callbackExecuted.set(true), failure);
 
         assertThat(callbackExecuted).isFalse();
-        final var error = dispatchedError.get();
-        assertThat(error).isNotNull();
+        final var error = Objects.requireNonNull(dispatchedError.get());
         assertThat(error.getThrowable()).isSameAs(failure);
         verify(sessionErrorHandler).error(any(ErrorEvent.class));
     }

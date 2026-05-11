@@ -27,17 +27,20 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /**
  * Dialog panel for managing user group membership. Shows a grid of current members and allows adding/removing users.
  */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Service reference intentionally stored for runtime behavior")
 public class AdminUserGroupMemberPanel extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminUserGroupMemberPanel.class);
 
-    private final UserGroupService groupService;
-    private final UserService userService;
+    private final transient UserGroupService groupService;
+    private final transient UserService userService;
     private final Runnable onAuthFailure;
 
     @Nullable
@@ -57,6 +60,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     }
 
     /** Opens the member management dialog for the given group. */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP",
+            justification = "Group reference intentionally stored for use in panel methods")
     public void open(@Nullable final UserGroupResponseDto group) {
         if (group == null) {
             return;
@@ -77,7 +82,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
                 .setFlexGrow(1);
 
         this.userGrid.addComponentColumn(user -> {
-            final var removeButton = new RemoveUserButton(_ -> this.removeUserFromGroup(user));
+            final var removeButton = new RemoveUserButton(e -> this.removeUserFromGroup(user));
             return removeButton;
         }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
@@ -91,7 +96,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.availableUsersCombo.setWidth("300px");
         this.availableUsersCombo.setPlaceholder("Select a user to add...");
 
-        final var addButton = new Button("Add User", _ -> this.addUserToGroup());
+        final var addButton = new Button("Add User", e -> this.addUserToGroup());
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         addUserLayout.add(this.availableUsersCombo, addButton);
@@ -99,8 +104,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadGroupUsers());
-        final var closeButton = new Button("Close", _ -> this.close());
+        final var refreshButton = new RefreshButton(e -> this.loadGroupUsers());
+        final var closeButton = new Button("Close", e -> this.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);

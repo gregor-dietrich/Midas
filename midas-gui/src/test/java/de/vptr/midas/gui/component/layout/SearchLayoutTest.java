@@ -12,8 +12,8 @@ class SearchLayoutTest {
     @Test
     void searchButton_shouldTrimQueryBeforeExecutingSearch() {
         final var executedSearches = new AtomicInteger();
-        final var layout = new SearchLayout(_ -> {
-        }, _ -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
+        final var layout = new SearchLayout(e -> {
+        }, e -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
                 new SearchExecutionSupport());
 
         layout.getTextfield().setValue("  users  ");
@@ -26,8 +26,8 @@ class SearchLayoutTest {
     @Test
     void searchButton_shouldIgnoreBlankQuery() {
         final var executedSearches = new AtomicInteger();
-        final var layout = new SearchLayout(_ -> {
-        }, _ -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
+        final var layout = new SearchLayout(e -> {
+        }, e -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
                 new SearchExecutionSupport());
 
         layout.getTextfield().setValue("   ");
@@ -40,8 +40,8 @@ class SearchLayoutTest {
     void searchButton_shouldThrottleRepeatedQuery() {
         final var executedSearches = new AtomicInteger();
         final var currentTimeMillis = new AtomicLong(1_000L);
-        final var layout = new SearchLayout(_ -> {
-        }, _ -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
+        final var layout = new SearchLayout(e -> {
+        }, e -> executedSearches.incrementAndGet(), "Search...", "Search", "Search", "300px",
                 new SearchExecutionSupport(currentTimeMillis::get, 400L));
 
         layout.getTextfield().setValue("users");

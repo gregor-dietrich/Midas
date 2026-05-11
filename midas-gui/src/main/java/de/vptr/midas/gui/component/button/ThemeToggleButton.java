@@ -5,16 +5,19 @@ import org.vaadin.lineawesome.LineAwesomeIcon;
 import com.vaadin.flow.component.button.Button;
 
 import de.vptr.midas.gui.service.ThemeService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Button for theme toggle actions. */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Service reference intentionally stored for runtime behavior")
 public class ThemeToggleButton extends Button {
 
-    private final ThemeService themeService;
+    private final transient ThemeService themeService;
 
     /** Creates a new instance with the given parameters. */
     public ThemeToggleButton(final ThemeService themeService) {
         this.themeService = themeService;
-        this.addClickListener(e -> this.toggleTheme());
+        this.addClickListener(_ -> this.toggleTheme());
         this.updateButton();
     }
 
@@ -39,6 +42,7 @@ public class ThemeToggleButton extends Button {
                 this.setIcon(LineAwesomeIcon.DESKTOP_SOLID.create());
                 this.setTooltipText("Switch to Light Theme");
             }
+            default -> {}
         }
     }
 }

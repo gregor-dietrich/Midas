@@ -25,18 +25,21 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
-@SuppressWarnings("NullAway")
 /**
  * Dialog for creating and editing posts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
+@SuppressWarnings("NullAway")
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" },
+        justification = "Fields initialized lazily in open(), not constructor")
 public class AdminPostDialog extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminPostDialog.class);
 
-    private final PostService postService;
-    private final UserService userService;
+    private final transient PostService postService;
+    private final transient UserService userService;
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 

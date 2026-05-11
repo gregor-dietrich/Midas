@@ -76,7 +76,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
         this.removeAll();
 
         final var backButton =
-                new Button("← Back to Users", _ -> this.getUI().ifPresent(ui -> ui.navigate(UserView.class)));
+                new Button("← Back to Users", e -> this.getUI().ifPresent(ui -> ui.navigate(UserView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);

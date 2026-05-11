@@ -5,9 +5,13 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Response DTO for account operations. Contains computed fields and safe data for client responses.
  */
+@SuppressFBWarnings(value = "EI_EXPOSE_REP",
+        justification = "DTO used only within GUI; not serialized across trust boundaries")
 public class AccountResponseDto {
 
     @JsonProperty("id")

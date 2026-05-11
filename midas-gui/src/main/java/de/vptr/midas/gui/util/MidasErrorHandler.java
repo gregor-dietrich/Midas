@@ -14,6 +14,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.ProcessingException;
 
@@ -29,6 +30,7 @@ public final class MidasErrorHandler {
      * Centralized async error handler. Unwraps CompletionException, then dispatches to auth/service/generic handling on
      * the UI thread.
      */
+    @SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE", justification = "Side effect: dispatch error on UI thread")
     public static void handle(final Throwable throwable, final UI ui) {
         final Throwable cause = unwrapAsyncThrowable(throwable);
 

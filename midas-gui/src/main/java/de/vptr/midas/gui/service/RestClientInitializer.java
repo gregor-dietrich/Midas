@@ -5,6 +5,7 @@ import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.client.BackendHealthClient;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -38,6 +39,8 @@ public class RestClientInitializer {
     @RestClient
     AuthClient authClient;
 
+    @SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE",
+            justification = "Side effect: force REST client proxy class loading")
     void onStartup(@Observes final StartupEvent event) {
         // Skip in test mode (detected by checking if we're running under Surefire)
         final String testMode = System.getProperty("maven.surefire.plugin.version");

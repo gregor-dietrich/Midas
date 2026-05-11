@@ -40,6 +40,13 @@ public class ResponseTestUtil {
     }
 
     /**
+     * Create a 200 OK response without entity
+     */
+    public static Response createOkResponse() {
+        return Response.status(200).build();
+    }
+
+    /**
      * Create a 201 Created response with entity
      */
     public static <T> Response createCreatedResponse(final T entity) {
@@ -88,10 +95,4 @@ public class ResponseTestUtil {
         return Response.status(204).build();
     }
 
-    /**
-     * Create a 200 OK response without entity
-     */
-    public static Response createOkResponse() {
-        return Response.status(200).build();
-    }
 }

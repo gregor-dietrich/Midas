@@ -22,10 +22,10 @@ import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 
-@SuppressWarnings("NullAway")
 /**
  * Utility class for creating mock data objects for GUI tests
  */
+@SuppressWarnings("NullAway")
 public class MockDataUtil {
 
     private MockDataUtil() {

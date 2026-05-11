@@ -107,7 +107,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, _ -> this.searchPages(), "Search by title or content...", "Search Pages");
+        }, e -> this.searchPages(), "Search by title or content...", "Search Pages");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -119,8 +119,8 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.openPageDialog(null));
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
+        final var createButton = new CreateButton(e -> this.openPageDialog(null));
+        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -142,7 +142,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(_ -> this.openPageDialog(page.toPageDto()));
+            titleSpan.addClickListener(e -> this.openPageDialog(page.toPageDto()));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(2);
 
@@ -154,8 +154,8 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.openPageDialog(page.toPageDto()));
-        final var deleteButton = new DeleteButton(_ -> this.deletePage(page.toPageDto()));
+        final var editButton = new EditButton(e -> this.openPageDialog(page.toPageDto()));
+        final var deleteButton = new DeleteButton(e -> this.deletePage(page.toPageDto()));
 
         layout.add(editButton, deleteButton);
         return layout;
@@ -201,10 +201,10 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", _ -> this.savePage());
+        final var saveButton = new Button("Save", e -> this.savePage());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> pd.close());
+        final var cancelButton = new Button("Cancel", e -> pd.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

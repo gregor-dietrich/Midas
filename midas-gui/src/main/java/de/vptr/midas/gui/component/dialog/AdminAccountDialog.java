@@ -18,17 +18,20 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
-@SuppressWarnings("NullAway")
 /**
  * Dialog for creating and editing accounts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
+@SuppressWarnings("NullAway")
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP2", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" },
+        justification = "Fields initialized lazily in open(), not constructor")
 public class AdminAccountDialog extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminAccountDialog.class);
 
-    private final AccountService accountService;
+    private final transient AccountService accountService;
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 
@@ -69,10 +72,10 @@ public class AdminAccountDialog extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", _ -> this.saveAccount());
+        final var saveButton = new Button("Save", e -> this.saveAccount());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.close());
+        final var cancelButton = new Button("Cancel", e -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

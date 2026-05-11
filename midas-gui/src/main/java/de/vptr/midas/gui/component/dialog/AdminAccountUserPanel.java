@@ -29,18 +29,21 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-@SuppressWarnings("NullAway")
 /**
  * Dialog panel for managing users associated with an account. Shows a grid of current users with remove capability and
  * a combo to add new users.
  */
+@SuppressWarnings("NullAway")
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2",
+        justification = "Service reference intentionally stored for runtime behavior")
 public class AdminAccountUserPanel extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminAccountUserPanel.class);
 
-    private final AccountService accountService;
-    private final UserService userService;
+    private final transient AccountService accountService;
+    private final transient UserService userService;
     private final Runnable onAuthFailure;
 
     private Grid<UserResponseDto> userGrid;
@@ -83,7 +86,7 @@ public class AdminAccountUserPanel extends FormDialog {
         }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
 
         this.userGrid.addComponentColumn(user -> {
-            final var removeButton = new RemoveUserButton(_ -> this.removeUserFromAccount(user));
+            final var removeButton = new RemoveUserButton(e -> this.removeUserFromAccount(user));
             return removeButton;
         }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
@@ -97,7 +100,7 @@ public class AdminAccountUserPanel extends FormDialog {
         this.availableUsersCombo.setWidth("300px");
         this.availableUsersCombo.setPlaceholder("Select a user to add...");
 
-        final var addButton = new Button("Add User", _ -> this.addUserToAccount());
+        final var addButton = new Button("Add User", e -> this.addUserToAccount());
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         addUserLayout.add(this.availableUsersCombo, addButton);
@@ -105,8 +108,8 @@ public class AdminAccountUserPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadAccountUsers());
-        final var closeButton = new Button("Close", _ -> this.close());
+        final var refreshButton = new RefreshButton(e -> this.loadAccountUsers());
+        final var closeButton = new Button("Close", e -> this.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);
