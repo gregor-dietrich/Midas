@@ -117,6 +117,28 @@ public class PaymentService {
                 this.authService, LOG, "fetching payments for target account " + targetId);
     }
 
+    /** Returns the payments by account (source or target). */
+    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            abortOn = AuthenticationException.class)
+    public List<PaymentResponseDto> getPaymentsByAccount(final Long accountId) {
+        LOG.debugf("Fetching all payments for account: %s", accountId);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+
+        final List<PaymentResponseDto> sourcePayments =
+                ServiceHelper.execute(() -> this.paymentClient.getPaymentsBySourceAccount(accountId, authHeader),
+                        this.authService, LOG, "fetching source payments for account " + accountId);
+
+        final List<PaymentResponseDto> targetPayments =
+                ServiceHelper.execute(() -> this.paymentClient.getPaymentsByTargetAccount(accountId, authHeader),
+                        this.authService, LOG, "fetching target payments for account " + accountId);
+
+        final java.util.Set<PaymentResponseDto> allPayments = new java.util.HashSet<>(sourcePayments);
+        allPayments.addAll(targetPayments);
+
+        return allPayments.stream().sorted((p1, p2) -> p2.getDate() != null ? p2.getDate().compareTo(p1.getDate()) : 0)
+                .toList();
+    }
+
     /** Creates a new payment. */
     public PaymentDto createPayment(final PaymentDto payment) {
         LOG.debugf("Creating new payment: %s", payment);

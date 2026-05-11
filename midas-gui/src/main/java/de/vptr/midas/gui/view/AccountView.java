@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
@@ -24,6 +25,7 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** View for managing user accounts. */
@@ -41,7 +43,9 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     @Inject
     UserService userService;
 
+    @Nullable
     private Grid<AccountResponseDto> grid;
+    @Nullable
     private Span totalBalanceLabel;
     private Map<Long, BigDecimal> accountBalances = new HashMap<>();
     private List<AccountResponseDto> accountsList = new ArrayList<>();
@@ -77,7 +81,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());
             this.accountBalances = result.balances;
             this.accountsList = result.accounts;
-            this.grid.setItems(result.accounts);
+            Objects.requireNonNull(this.grid).setItems(result.accounts);
             this.updateTotalBalance();
             LOG.infof("Grid updated with %s accounts", result.accounts.size());
         }, throwable -> {
@@ -111,7 +115,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
         this.createGrid();
 
-        this.add(headerLayout, this.grid);
+        this.add(headerLayout, Objects.requireNonNull(this.grid));
     }
 
     private void createGrid() {

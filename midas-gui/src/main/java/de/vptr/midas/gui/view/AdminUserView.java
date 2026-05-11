@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -32,6 +33,7 @@ import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing application users. */
@@ -49,11 +51,16 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     @Inject
     UserRankService userRankService;
 
+    @Nullable
     private Grid<UserResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
 
+    @Nullable
     private AdminUserDialog userDialog;
+    @Nullable
     private List<UserRankResponseDto> availableRanks;
     private boolean initialized = false;
 
@@ -79,7 +86,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.userService.getAllUsers(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.userService.getAllUsers(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadRanksAsync() {
@@ -95,6 +103,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void buildUi() {
+        this.removeAll();
+
         final var header = new H2("Users");
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
@@ -103,7 +113,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.userDialog = new AdminUserDialog(this.userService, this::setupLazyDataProvider, authFailure);
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -123,7 +133,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.userDialog.open(null, this.availableRanks));
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.userDialog).open(null,
+                this.availableRanks != null ? this.availableRanks : List.of()));
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
@@ -146,7 +157,8 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(_ -> this.userDialog.open(user, this.availableRanks));
+            usernameSpan.addClickListener(_ -> Objects.requireNonNull(this.userDialog).open(user,
+                    this.availableRanks != null ? this.availableRanks : List.of()));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
 
@@ -177,8 +189,13 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.userDialog.open(user, this.availableRanks));
-        final var deleteButton = new DeleteButton(_ -> this.deleteUser(user));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.userDialog).open(user,
+                this.availableRanks != null ? this.availableRanks : List.of()));
+        final var deleteButton = new DeleteButton(_ -> {
+            if (user != null) {
+                this.deleteUser(user);
+            }
+        });
 
         layout.add(editButton, deleteButton);
         return layout;
@@ -186,7 +203,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void deleteUser(final UserResponseDto user) {
         try {
-            if (this.userService.deleteUser(user.getId())) {
+            if (this.userService.deleteUser(Objects.requireNonNull(user.getId()))) {
                 NotificationUtil.showSuccess("User deleted successfully");
                 this.setupLazyDataProvider();
             } else {
@@ -204,21 +221,22 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void searchUsers() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        this.searchButton.setEnabled(false);
-        this.searchButton.setText("Searching...");
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
+        sb.setText("Searching...");
 
         this.loadDataAsync(() -> this.userService.searchUsers(query.trim()), users -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
-            this.grid.setItems(users);
+            sb.setEnabled(true);
+            sb.setText("Search");
+            Objects.requireNonNull(this.grid).setItems(users);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
+            sb.setEnabled(true);
+            sb.setText("Search");
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }

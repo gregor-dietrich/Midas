@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.AttachEvent;
@@ -21,15 +23,20 @@ import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Layout for admin main. */
 public class AdminMainLayout extends VerticalLayout implements RouterLayout, BeforeEnterObserver {
 
     private static final Logger LOG = Logger.getLogger(AdminMainLayout.class);
+    @Nullable
     private Button userViewButton;
+    @Nullable
     private Button logoutButton;
+    @Nullable
     private Tabs navigationTabs;
+    @Nullable
     private UserRankResponseDto cachedUserRank = null;
     private boolean cachedUserRankValid = false;
 
@@ -42,16 +49,22 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
     @Inject
     UserRankService userRankService;
 
+    @Nullable
     private HorizontalLayout topBar;
+    @Nullable
     private HorizontalLayout rightSide;
+    @Nullable
     private HorizontalLayout mainLayout;
+    @Nullable
     private VerticalLayout sidebar;
+    @Nullable
     private VerticalLayout contentArea;
     private boolean initialized = false;
 
     /**
      * Get the shared top bar for views that need to add additional components
      */
+    @Nullable
     public HorizontalLayout getTopBar() {
         return this.topBar;
     }
@@ -199,7 +212,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
 
         // Create navigation tabs (use cached rank)
         this.navigationTabs = new AdminNavigationTabs(this.getCachedUserRank());
-        this.sidebar.add(this.navigationTabs);
+        Objects.requireNonNull(this.sidebar).add(this.navigationTabs);
 
         // Create content area where the actual views will be displayed
         this.contentArea = new VerticalLayout();
@@ -283,6 +296,6 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             this.cachedUserRank = this.userRankService.getCurrentUserRank();
             this.cachedUserRankValid = true;
         }
-        return this.cachedUserRank;
+        return Objects.requireNonNull(this.cachedUserRank);
     }
 }

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -42,6 +43,7 @@ import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing posts. */
@@ -65,16 +67,26 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     @Inject
     PostCommentService postCommentService;
 
+    @Nullable
     private Grid<PostResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private Button showPublishedButton;
+    @Nullable
     private DatePicker startDatePicker;
+    @Nullable
     private DatePicker endDatePicker;
+    @Nullable
     private IntegerField userIdField;
 
+    @Nullable
     private AdminPostDialog postDialog;
+    @Nullable
     private AdminPostCommentPanel commentPanel;
+    @Nullable
     private List<PostCategoryResponseDto> availableCategories;
 
     /** Initializes AdminPostView. */
@@ -97,11 +109,13 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void setupLazyDataProviderAllPosts() {
-        this.grid.setItems(query -> this.postService.getAllPosts(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.postService.getAllPosts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void setupLazyDataProviderPublishedPosts() {
-        this.grid.setItems(query -> this.postService.getPublishedPosts(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.postService.getPublishedPosts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadCategoriesAsync() {
@@ -130,7 +144,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
                 authFailure);
         this.commentPanel = new AdminPostCommentPanel(this.postCommentService, authFailure);
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -164,7 +178,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.postDialog.open(null, this.availableCategories));
+        final var createButton =
+                new CreateButton(_ -> Objects.requireNonNull(this.postDialog).open(null, this.availableCategories));
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProviderAllPosts());
 
         layout.add(createButton, refreshButton);
@@ -187,7 +202,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(_ -> this.postDialog.open(post, this.availableCategories));
+            titleSpan.addClickListener(
+                    _ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(2);
 
@@ -223,9 +239,10 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.postDialog.open(post, this.availableCategories));
+        final var editButton =
+                new EditButton(_ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
         final var deleteButton = new DeleteButton(_ -> this.deletePost(post));
-        final var commentButton = new AddCommentButton(_ -> this.commentPanel.open(post));
+        final var commentButton = new AddCommentButton(_ -> Objects.requireNonNull(this.commentPanel).open(post));
 
         layout.add(editButton, deleteButton, commentButton);
         return layout;
@@ -233,7 +250,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void deletePost(final PostResponseDto post) {
         try {
-            this.postService.deletePost(post.getId());
+            this.postService.deletePost(Objects.requireNonNull(post.getId()));
             NotificationUtil.showSuccess("Post deleted successfully");
             this.setupLazyDataProviderAllPosts();
         } catch (final AuthenticationException e) {
@@ -248,28 +265,29 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void searchPosts() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        this.searchButton.setEnabled(false);
-        this.searchButton.setText("Searching...");
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
+        sb.setText("Searching...");
 
         this.loadDataAsync(() -> this.postService.searchPosts(query.trim()), posts -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
-            this.grid.setItems(posts);
+            sb.setEnabled(true);
+            sb.setText("Search");
+            Objects.requireNonNull(this.grid).setItems(posts);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
+            sb.setEnabled(true);
+            sb.setText("Search");
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
 
     private void filterByDateRange() {
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
+        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (startDate == null || endDate == null) {
             NotificationUtil.showWarning("Please select both start and end dates");
@@ -282,17 +300,17 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         }
 
         this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
-                posts -> this.grid.setItems(posts));
+                posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
 
     private void filterByUser() {
-        final Integer userId = this.userIdField.getValue();
+        final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
         if (userId == null) {
             NotificationUtil.showWarning("Please enter a user ID");
             return;
         }
 
         this.loadDataAsync(() -> this.postService.getPostsByUser(userId.longValue()),
-                posts -> this.grid.setItems(posts));
+                posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
 }

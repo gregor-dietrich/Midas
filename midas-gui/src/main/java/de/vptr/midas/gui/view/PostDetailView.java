@@ -2,6 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -26,6 +27,7 @@ import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** PostDetailView view. */
@@ -44,6 +46,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     @Inject
     AuthService authService;
 
+    @Nullable
     private String identifier;
 
     /** Initializes PostDetailView. */
@@ -76,22 +79,23 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     }
 
     private void loadPostAsync() {
-        LOG.infof("Loading post with identifier: %s", this.identifier);
+        final var idStr = Objects.requireNonNull(this.identifier);
+        LOG.infof("Loading post with identifier: %s", idStr);
 
         this.loadDataAsync(() -> {
             // Try parsing as ID first
             try {
-                final var id = Long.parseLong(this.identifier);
+                final var id = Long.parseLong(idStr);
                 final var post = this.postService.getPostById(id);
                 if (post.isPresent()) {
                     return post.get();
                 }
             } catch (final NumberFormatException e) {
-                LOG.debugf("Identifier '%s' is not a numeric ID, trying search", this.identifier);
+                LOG.debugf("Identifier '%s' is not a numeric ID, trying search", idStr);
             }
 
             // Fallback: search by title
-            final var results = this.postService.searchPosts(this.identifier);
+            final var results = this.postService.searchPosts(idStr);
             if (results != null && !results.isEmpty()) {
                 return results.get(0);
             }
@@ -102,7 +106,8 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
                 this.showNotFound();
             } else {
                 this.buildPostContent(post);
-                this.loadCommentsAsync(post.getId()); // ensure this method uses loadDataAsync too
+                this.loadCommentsAsync(Objects.requireNonNull(post.getId())); // ensure this method uses loadDataAsync
+                                                                              // too
             }
         }, throwable -> {
             LOG.errorf(throwable, "Error loading post: %s", throwable.getMessage());

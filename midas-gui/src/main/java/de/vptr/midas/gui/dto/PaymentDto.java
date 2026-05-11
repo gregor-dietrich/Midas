@@ -7,44 +7,58 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.Nullable;
+
 /** Data transfer object for payment. */
 public class PaymentDto {
 
     @JsonProperty("id")
+    @Nullable
     private Long id;
 
     @JsonProperty("userId")
+    @Nullable
     private Long userId;
 
     @JsonProperty("sourceAccountId")
+    @Nullable
     private Long sourceAccountId;
 
     @JsonProperty("targetAccountId")
+    @Nullable
     private Long targetAccountId;
 
     @JsonProperty("amount")
+    @Nullable
     private BigDecimal amount;
 
     @JsonProperty("date")
     @JsonFormat(pattern = "yyyy-MM-dd")
+    @Nullable
     private LocalDate date;
 
     @JsonProperty("comment")
+    @Nullable
     private String comment;
 
     @JsonProperty("created")
+    @Nullable
     private LocalDateTime created;
 
     @JsonProperty("lastEdit")
+    @Nullable
     private LocalDateTime lastEdit;
 
     @JsonProperty("targetAccountName")
+    @Nullable
     private String targetAccountName;
 
     @JsonProperty("sourceAccountName")
+    @Nullable
     private String sourceAccountName;
 
     @JsonProperty("username")
+    @Nullable
     private String username;
 
     public PaymentDto() {
@@ -52,9 +66,10 @@ public class PaymentDto {
     }
 
     /** Creates a new instance. */
-    public PaymentDto(final Long userId, final Long sourceAccountId, final Long targetAccountId,
-            final BigDecimal amount, final LocalDate date, final String comment, final LocalDateTime created,
-            final LocalDateTime lastEdit) {
+    public PaymentDto(@Nullable final Long userId, @Nullable final Long sourceAccountId,
+            @Nullable final Long targetAccountId, @Nullable final BigDecimal amount, @Nullable final LocalDate date,
+            @Nullable final String comment, @Nullable final LocalDateTime created,
+            @Nullable final LocalDateTime lastEdit) {
         this.userId = userId;
         this.sourceAccountId = sourceAccountId;
         this.targetAccountId = targetAccountId;
@@ -65,99 +80,111 @@ public class PaymentDto {
         this.lastEdit = lastEdit;
     }
 
+    @Nullable
     public Long getId() {
         return this.id;
     }
 
+    @Nullable
     public Long getUserId() {
         return this.userId;
     }
 
+    @Nullable
     public Long getSourceAccountId() {
         return this.sourceAccountId;
     }
 
+    @Nullable
     public Long getTargetAccountId() {
         return this.targetAccountId;
     }
 
+    @Nullable
     public BigDecimal getAmount() {
         return this.amount;
     }
 
+    @Nullable
     public LocalDate getDate() {
         return this.date;
     }
 
+    @Nullable
     public String getComment() {
         return this.comment;
     }
 
+    @Nullable
     public LocalDateTime getCreated() {
         return this.created;
     }
 
+    @Nullable
     public LocalDateTime getLastEdit() {
         return this.lastEdit;
     }
 
+    @Nullable
     public String getTargetAccountName() {
         return this.targetAccountName;
     }
 
+    @Nullable
     public String getSourceAccountName() {
         return this.sourceAccountName;
     }
 
+    @Nullable
     public String getUsername() {
         return this.username;
     }
 
-    public void setId(final Long id) {
+    public void setId(@Nullable final Long id) {
         this.id = id;
     }
 
-    public void setUserId(final Long userId) {
+    public void setUserId(@Nullable final Long userId) {
         this.userId = userId;
     }
 
-    public void setSourceAccountId(final Long sourceAccountId) {
+    public void setSourceAccountId(@Nullable final Long sourceAccountId) {
         this.sourceAccountId = sourceAccountId;
     }
 
-    public void setTargetAccountId(final Long targetAccountId) {
+    public void setTargetAccountId(@Nullable final Long targetAccountId) {
         this.targetAccountId = targetAccountId;
     }
 
-    public void setAmount(final BigDecimal amount) {
+    public void setAmount(@Nullable final BigDecimal amount) {
         this.amount = amount;
     }
 
-    public void setDate(final LocalDate paymentDate) {
+    public void setDate(@Nullable final LocalDate paymentDate) {
         this.date = paymentDate;
     }
 
-    public void setComment(final String description) {
+    public void setComment(@Nullable final String description) {
         this.comment = description;
     }
 
-    public void setCreated(final LocalDateTime created) {
+    public void setCreated(@Nullable final LocalDateTime created) {
         this.created = created;
     }
 
-    public void setLastEdit(final LocalDateTime lastEdit) {
+    public void setLastEdit(@Nullable final LocalDateTime lastEdit) {
         this.lastEdit = lastEdit;
     }
 
-    public void setTargetAccountName(final String targetAccountName) {
+    public void setTargetAccountName(@Nullable final String targetAccountName) {
         this.targetAccountName = targetAccountName;
     }
 
-    public void setSourceAccountName(final String sourceAccountName) {
+    public void setSourceAccountName(@Nullable final String sourceAccountName) {
         this.sourceAccountName = sourceAccountName;
     }
 
-    public void setUsername(final String username) {
+    public void setUsername(@Nullable final String username) {
         this.username = username;
     }
 

@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -15,6 +16,7 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** View for browsing post categories. */
@@ -29,7 +31,9 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     @Inject
     AuthService authService;
 
+    @Nullable
     private TreeGrid<PostCategoryResponseDto> treeGrid;
+    @Nullable
     private List<PostCategoryResponseDto> allCategories;
 
     /** Initializes PostCategoryView. */
@@ -59,7 +63,7 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
         final var header = new H2("Categories");
         this.createTreeGrid();
 
-        this.add(header, this.treeGrid);
+        this.add(header, Objects.requireNonNull(this.treeGrid));
     }
 
     private void createTreeGrid() {
@@ -91,13 +95,20 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void updateTreeGrid() {
+        if (this.allCategories == null) {
+            return;
+        }
         final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
 
-        this.treeGrid.setItems(rootCategories, this::loadChildren);
-        this.treeGrid.expandRecursively(rootCategories, 1);
+        final var tg = Objects.requireNonNull(this.treeGrid);
+        tg.setItems(rootCategories, this::loadChildren);
+        tg.expandRecursively(rootCategories, 1);
     }
 
     private List<PostCategoryResponseDto> loadChildren(final PostCategoryResponseDto parent) {
+        if (this.allCategories == null) {
+            return List.of();
+        }
         return this.allCategories.stream()
                 .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(parent.getId())).toList();
     }

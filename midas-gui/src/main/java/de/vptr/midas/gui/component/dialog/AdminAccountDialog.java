@@ -18,6 +18,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing accounts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
@@ -43,7 +44,7 @@ public class AdminAccountDialog extends FormDialog {
     }
 
     /** Opens the dialog for creating or editing an account. */
-    public void open(final AccountResponseDto account) {
+    public void open(final @Nullable AccountResponseDto account) {
         this.removeAll();
         this.currentAccount = account != null ? account.toAccountDto() : new AccountDto();
         this.binder = new Binder<>(AccountDto.class);

@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -32,6 +34,7 @@ import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing user groups. */
@@ -49,12 +52,18 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     @Inject
     UserService userService;
 
+    @Nullable
     private Grid<UserGroupResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private IntegerField userIdField;
 
+    @Nullable
     private AdminUserGroupDialog groupDialog;
+    @Nullable
     private AdminUserGroupMemberPanel memberPanel;
 
     /** Initializes AdminUserGroupView. */
@@ -79,7 +88,8 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.groupService.getAllGroups(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.groupService.getAllGroups(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -95,7 +105,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         this.memberPanel =
                 new AdminUserGroupMemberPanel(this.groupService, this.userService, this.authService, onAuthFailure);
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -121,7 +131,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.groupDialog.open(null));
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.groupDialog).open(null));
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
@@ -144,7 +154,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> this.groupDialog.open(group));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.groupDialog).open(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
 
@@ -159,9 +169,9 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.groupDialog.open(group));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.groupDialog).open(group));
         final var deleteButton = new DeleteButton(_ -> this.deleteGroup(group));
-        final var manageUsersButton = new ManageUsersButton(_ -> this.memberPanel.open(group));
+        final var manageUsersButton = new ManageUsersButton(_ -> Objects.requireNonNull(this.memberPanel).open(group));
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;
@@ -169,7 +179,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
 
     private void deleteGroup(final UserGroupResponseDto group) {
         try {
-            if (this.groupService.deleteGroup(group.getId())) {
+            if (this.groupService.deleteGroup(Objects.requireNonNull(group.getId()))) {
                 NotificationUtil.showSuccess("Group deleted successfully");
                 this.setupLazyDataProvider();
             } else {
@@ -187,31 +197,32 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     }
 
     private void searchGroups() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             this.setupLazyDataProvider();
             return;
         }
 
-        this.searchButton.setEnabled(false);
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
 
         this.loadDataAsync(() -> this.groupService.searchGroups(query), result -> {
-            this.searchButton.setEnabled(true);
-            this.grid.setItems(result);
+            sb.setEnabled(true);
+            Objects.requireNonNull(this.grid).setItems(result);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
 
     private void filterByUser() {
-        final Integer userId = this.userIdField.getValue();
+        final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
         if (userId == null) {
             this.setupLazyDataProvider();
             return;
         }
 
         this.loadDataAsync(() -> this.groupService.getGroupsByUser(userId.longValue()),
-                result -> this.grid.setItems(result));
+                result -> Objects.requireNonNull(this.grid).setItems(result));
     }
 }

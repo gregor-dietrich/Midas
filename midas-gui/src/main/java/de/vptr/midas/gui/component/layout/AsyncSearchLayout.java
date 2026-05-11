@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 import de.vptr.midas.gui.component.button.SearchButton;
+import jakarta.annotation.Nullable;
 
 /**
  * Reusable search layout with text field, search button, and clear button. Includes built-in search-in-progress state
@@ -27,15 +28,22 @@ public class AsyncSearchLayout extends HorizontalLayout {
     private final Runnable clearAction;
     private final SearchExecutionSupport searchExecutionSupport;
 
-    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
-            final String tooltip) {
-        this(searchAction, clearAction, placeholder, tooltip, DEFAULT_WIDTH, new SearchExecutionSupport());
+    public AsyncSearchLayout(final Consumer<String> searchAction, final String placeholder, final String tooltip) {
+        this(searchAction, () -> {
+        }, placeholder, tooltip, DEFAULT_WIDTH, new SearchExecutionSupport());
+    }
+
+    public AsyncSearchLayout(final Consumer<String> searchAction, @Nullable final Runnable clearAction,
+            final String placeholder, final String tooltip) {
+        this(searchAction, clearAction != null ? clearAction : () -> {
+        }, placeholder, tooltip, DEFAULT_WIDTH, new SearchExecutionSupport());
     }
 
     /** Initializes AsyncSearchLayout. */
-    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
-            final String tooltip, final String fieldWidth) {
-        this(searchAction, clearAction, placeholder, tooltip, fieldWidth, new SearchExecutionSupport());
+    public AsyncSearchLayout(final Consumer<String> searchAction, @Nullable final Runnable clearAction,
+            final String placeholder, final String tooltip, final String fieldWidth) {
+        this(searchAction, clearAction != null ? clearAction : () -> {
+        }, placeholder, tooltip, fieldWidth, new SearchExecutionSupport());
     }
 
     AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction, final String placeholder,
@@ -63,8 +71,9 @@ public class AsyncSearchLayout extends HorizontalLayout {
         this.add(this.textField, this.searchButton, this.clearButton);
     }
 
-    public AsyncSearchLayout(final Consumer<String> searchAction, final Runnable clearAction) {
-        this(searchAction, clearAction, DEFAULT_PLACEHOLDER, "Search");
+    public AsyncSearchLayout(final Consumer<String> searchAction, @Nullable final Runnable clearAction) {
+        this(searchAction, clearAction != null ? clearAction : () -> {
+        }, DEFAULT_PLACEHOLDER, "Search");
     }
 
     private void executeSearch() {

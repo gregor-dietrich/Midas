@@ -25,6 +25,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing posts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
@@ -52,7 +53,8 @@ public class AdminPostDialog extends FormDialog {
     }
 
     /** Opens the dialog. */
-    public void open(final PostResponseDto post, final List<PostCategoryResponseDto> availableCategories) {
+    public void open(@Nullable final PostResponseDto post,
+            @Nullable final List<PostCategoryResponseDto> availableCategories) {
         this.removeAll();
         this.currentPost = post != null ? post.toPostDto() : new PostDto();
         this.binder = new Binder<>(PostDto.class);

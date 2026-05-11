@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.AttachEvent;
@@ -18,14 +20,18 @@ import de.vptr.midas.gui.component.tabs.NavigationTabs;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Layout for main. */
 public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEnterObserver {
 
     private static final Logger LOG = Logger.getLogger(MainLayout.class);
+    @Nullable
     private Button adminViewButton;
+    @Nullable
     private Button logoutButton;
+    @Nullable
     private Tabs navigationTabs;
     private boolean cachedAdminPermission = false;
     private boolean cachedAdminPermissionValid = false;
@@ -39,13 +45,16 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
     @Inject
     UserRankService userRankService;
 
+    @Nullable
     private HorizontalLayout topBar;
+    @Nullable
     private HorizontalLayout rightSide;
     private boolean initialized = false;
 
     /**
      * Get the shared top bar for views that need to add additional components
      */
+    @Nullable
     public HorizontalLayout getTopBar() {
         return this.topBar;
     }
@@ -164,9 +173,11 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
             return;
         }
 
-        this.topBar.removeAll();
-        this.topBar.add(this.navigationTabs, this.rightSide);
-        this.topBar.setJustifyContentMode(JustifyContentMode.BETWEEN);
+        final var tb = Objects.requireNonNull(this.topBar);
+        final var rs = Objects.requireNonNull(this.rightSide);
+        tb.removeAll();
+        tb.add(this.navigationTabs, rs);
+        tb.setJustifyContentMode(JustifyContentMode.BETWEEN);
     }
 
     private void hideNavigationTabs() {
@@ -174,22 +185,25 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
             return;
         }
 
-        this.topBar.removeAll();
-        this.topBar.add(this.rightSide);
-        this.topBar.setJustifyContentMode(JustifyContentMode.END);
+        final var tb = Objects.requireNonNull(this.topBar);
+        final var rs = Objects.requireNonNull(this.rightSide);
+        tb.removeAll();
+        tb.add(rs);
+        tb.setJustifyContentMode(JustifyContentMode.END);
     }
 
     private void addButtonsToTopBar() {
         if (this.rightSide == null) {
             return;
         }
+        final var rs = Objects.requireNonNull(this.rightSide);
 
         // Remove existing buttons if present
         if (this.logoutButton != null) {
-            this.rightSide.remove(this.logoutButton);
+            rs.remove(this.logoutButton);
         }
         if (this.adminViewButton != null) {
-            this.rightSide.remove(this.adminViewButton);
+            rs.remove(this.adminViewButton);
         }
 
         // Create new logout button
@@ -212,32 +226,33 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         }
 
         // Add buttons
-        final var componentCount = this.rightSide.getComponentCount();
+        final var componentCount = rs.getComponentCount();
         if (componentCount > 0) {
-            this.rightSide.addComponentAtIndex(componentCount - 1, this.logoutButton);
+            rs.addComponentAtIndex(componentCount - 1, Objects.requireNonNull(this.logoutButton));
             if (this.adminViewButton != null) {
-                this.rightSide.addComponentAtIndex(componentCount - 1, this.adminViewButton);
+                rs.addComponentAtIndex(componentCount - 1, this.adminViewButton);
             }
             return;
         }
 
         if (this.adminViewButton != null) {
-            this.rightSide.add(this.adminViewButton);
+            rs.add(this.adminViewButton);
         }
-        this.rightSide.add(this.logoutButton);
+        rs.add(Objects.requireNonNull(this.logoutButton));
     }
 
     private void removeButtonsFromTopBar() {
         if (this.rightSide == null) {
             return;
         }
+        final var rs = Objects.requireNonNull(this.rightSide);
 
         if (this.logoutButton != null) {
-            this.rightSide.remove(this.logoutButton);
+            rs.remove(this.logoutButton);
             this.logoutButton = null;
         }
         if (this.adminViewButton != null) {
-            this.rightSide.remove(this.adminViewButton);
+            rs.remove(this.adminViewButton);
             this.adminViewButton = null;
         }
     }

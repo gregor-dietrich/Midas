@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -18,6 +19,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiConstants;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** User view for browsing users. */
@@ -33,7 +35,9 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<UserResponseDto> grid;
+    @Nullable
     private AsyncSearchLayout searchLayout;
 
     /** Initializes UserView. */
@@ -59,7 +63,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
 
         this.loadDataAsync(() -> this.userService.getAllUsers(0, UiConstants.DEFAULT_PAGE_SIZE), users -> {
             LOG.infof("Successfully loaded %s users", users.size());
-            this.grid.setItems(users);
+            Objects.requireNonNull(this.grid).setItems(users);
         });
     }
 
@@ -71,7 +75,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
                 new AsyncSearchLayout(this::searchUsers, this::loadUsersAsync, "Search by username...", "Search Users");
         this.createGrid();
 
-        this.add(header, this.searchLayout, this.grid);
+        this.add(header, this.searchLayout, Objects.requireNonNull(this.grid));
     }
 
     private void createGrid() {
@@ -87,7 +91,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
+            usernameSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
 
@@ -98,14 +102,15 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void searchUsers(final String query) {
-        this.searchLayout.setSearching(true);
+        final var sl = Objects.requireNonNull(this.searchLayout);
+        sl.setSearching(true);
 
         this.loadDataAsync(() -> this.userService.searchUsers(query), users -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             LOG.infof("Search found %s users", users.size());
-            this.grid.setItems(users);
+            Objects.requireNonNull(this.grid).setItems(users);
         }, throwable -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }

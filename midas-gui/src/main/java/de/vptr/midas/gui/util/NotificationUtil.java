@@ -3,6 +3,8 @@ package de.vptr.midas.gui.util;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 
+import jakarta.annotation.Nullable;
+
 /** Utility class for notification. */
 public final class NotificationUtil {
 
@@ -42,7 +44,7 @@ public final class NotificationUtil {
      * @param fallbackMessage
      *            The safe fallback message to show for non-auth errors
      */
-    public static void showError(final Throwable throwable, final String fallbackMessage) {
+    public static void showError(@Nullable final Throwable throwable, final String fallbackMessage) {
         MidasErrorHandler.showSanitizedError(throwable, fallbackMessage);
     }
 

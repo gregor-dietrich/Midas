@@ -137,7 +137,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         try {
             final var allUsers = this.userService.getAllUsers(0, 100);
 
-            final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+            final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>())
+                    .collect(Collectors.toList());
             final var currentUserIds = currentUsers.stream().map(UserDto::getId).collect(Collectors.toSet());
 
             final var availableUsers = allUsers.stream().filter(user -> !currentUserIds.contains(user.getId()))
@@ -158,7 +159,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
             return;
         }
 
-        final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+        final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>())
+                .collect(Collectors.toList());
         final boolean alreadyInGroup =
                 currentUsers.stream().anyMatch(user -> user.getId().equals(selectedUser.getId()));
 
@@ -169,7 +171,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         }
 
         try {
-            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedGroup).getId(), selectedUser.getId())) {
+            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedGroup).getId(),
+                    selectedUser.getId())) {
                 NotificationUtil.showSuccess("User added to group successfully");
                 this.loadGroupUsers();
                 this.loadAvailableUsers();
@@ -190,7 +193,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
 
     private void removeUserFromGroup(final UserDto user) {
         try {
-            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedGroup).getId(), user.getId())) {
+            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedGroup).getId(),
+                    Objects.requireNonNull(user.getId()))) {
                 NotificationUtil.showSuccess("User removed from group successfully");
                 this.loadGroupUsers();
                 this.loadAvailableUsers();

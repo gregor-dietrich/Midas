@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -36,6 +38,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing pages. */
@@ -50,12 +53,18 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<PageResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
 
+    @Nullable
     private Dialog pageDialog;
+    @Nullable
     private Binder<PageDto> binder;
+    @Nullable
     private PageDto currentPage;
 
     /** Initializes AdminPageView. */
@@ -77,7 +86,8 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.pageService.getAllPages(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.pageService.getAllPages(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -89,7 +99,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.createGrid();
         this.pageDialog = new FormDialog();
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -151,8 +161,9 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         return layout;
     }
 
-    private void openPageDialog(final PageDto page) {
-        this.pageDialog.removeAll();
+    private void openPageDialog(@Nullable final PageDto page) {
+        final var pd = Objects.requireNonNull(this.pageDialog);
+        pd.removeAll();
         this.currentPage = page != null ? page : new PageDto();
 
         this.binder = new Binder<>(PageDto.class);
@@ -193,7 +204,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var saveButton = new Button("Save", _ -> this.savePage());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.pageDialog.close());
+        final var cancelButton = new Button("Cancel", _ -> pd.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -203,33 +214,35 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         dialogLayout.setPadding(false);
         dialogLayout.setSizeFull();
 
-        this.pageDialog.add(dialogLayout);
+        pd.add(dialogLayout);
 
         // Load current page data
         this.binder.readBean(this.currentPage);
 
-        this.pageDialog.open();
+        pd.open();
     }
 
     private void savePage() {
         try {
+            final var b = Objects.requireNonNull(this.binder);
+            final var cp = Objects.requireNonNull(this.currentPage);
             // Validate the form before attempting to save
-            if (!this.binder.validate().isOk()) {
+            if (!b.validate().isOk()) {
                 NotificationUtil.showError("Please check the form for errors");
                 return;
             }
 
-            this.binder.writeBean(this.currentPage);
+            b.writeBean(cp);
 
-            if (this.currentPage.getId() == null) {
-                this.pageService.createPage(this.currentPage);
+            if (cp.getId() == null) {
+                this.pageService.createPage(cp);
                 NotificationUtil.showSuccess("Page created successfully");
             } else {
-                this.pageService.updatePage(this.currentPage);
+                this.pageService.updatePage(cp);
                 NotificationUtil.showSuccess("Page updated successfully");
             }
 
-            this.pageDialog.close();
+            Objects.requireNonNull(this.pageDialog).close();
             this.setupLazyDataProvider();
 
         } catch (final ValidationException e) {
@@ -247,7 +260,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
 
     private void deletePage(final PageDto page) {
         try {
-            this.pageService.deletePage(page.getId());
+            this.pageService.deletePage(Objects.requireNonNull(page.getId()));
             NotificationUtil.showSuccess("Page deleted successfully");
             this.setupLazyDataProvider();
         } catch (final AuthenticationException e) {
@@ -262,19 +275,20 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void searchPages() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
 
-        this.searchButton.setEnabled(false);
-        this.searchButton.setText("Searching...");
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
+        sb.setText("Searching...");
 
         this.loadDataAsync(() -> this.pageService.searchPages(query.trim()), pages -> {
             this.resetSearchButton();
             LOG.infof("Search found %s pages", pages.size());
-            this.grid.setItems(pages);
+            Objects.requireNonNull(this.grid).setItems(pages);
         }, this::handleSearchError);
     }
 
@@ -284,7 +298,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void resetSearchButton() {
-        this.searchButton.setEnabled(true);
+        Objects.requireNonNull(this.searchButton).setEnabled(true);
         this.searchButton.setText("Search Pages");
     }
 }

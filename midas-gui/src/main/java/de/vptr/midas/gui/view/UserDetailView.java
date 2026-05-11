@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -25,6 +26,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Detail view for a single user. */
@@ -43,7 +45,9 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
     @Inject
     AuthService authService;
 
+    @Nullable
     private String identifier;
+    @Nullable
     private Grid<UserGroupResponseDto> groupsGrid;
 
     /** Initializes UserDetailView. */
@@ -86,17 +90,19 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
             return;
         }
 
-        LOG.infof("Loading user with identifier: %s", this.identifier);
+        final var idStr = Objects.requireNonNull(this.identifier);
+        LOG.infof("Loading user with identifier: %s", idStr);
 
-        final Long userId = this.tryParseId(this.identifier);
+        final @Nullable Long userId = this.tryParseId(idStr);
 
         if (userId != null) {
             this.loadUserById(userId);
         } else {
-            this.loadUserByUsername(this.identifier);
+            this.loadUserByUsername(idStr);
         }
     }
 
+    @Nullable
     private Long tryParseId(final String value) {
         try {
             return Long.valueOf(value);
@@ -153,9 +159,10 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
         final var groupsHeader = new H3("Groups");
         this.createGroupsGrid();
 
-        this.add(titleHeader, memberSince, activityHeader, statsLayout, groupsHeader, this.groupsGrid);
+        this.add(titleHeader, memberSince, activityHeader, statsLayout, groupsHeader,
+                Objects.requireNonNull(this.groupsGrid));
 
-        this.loadGroupsAsync(user.getId());
+        this.loadGroupsAsync(Objects.requireNonNull(user.getId()));
     }
 
     private void createGroupsGrid() {
@@ -173,7 +180,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
             return this.userGroupService.getGroupsByUser(userId);
         }, groups -> {
             LOG.infof("Successfully loaded %s groups for user", groups.size());
-            this.groupsGrid.setItems(groups);
+            Objects.requireNonNull(this.groupsGrid).setItems(groups);
         });
     }
 

@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -15,6 +17,7 @@ import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** User view for browsing pages. */
@@ -29,7 +32,9 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<PageResponseDto> grid;
+    @Nullable
     private AsyncSearchLayout searchLayout;
 
     /** Initializes PageView. */
@@ -55,7 +60,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
 
         this.loadDataAsync(() -> this.pageService.getAllPages(), pages -> {
             LOG.infof("Successfully loaded %s pages", pages.size());
-            this.grid.setItems(pages);
+            Objects.requireNonNull(this.grid).setItems(pages);
         });
     }
 
@@ -67,7 +72,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
                 "Search by title or content...", "Search Pages");
         this.createGrid();
 
-        this.add(header, this.searchLayout, this.grid);
+        this.add(header, this.searchLayout, Objects.requireNonNull(this.grid));
     }
 
     private void createGrid() {
@@ -83,7 +88,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
+            titleSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(1);
 
@@ -98,14 +103,15 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void searchPages(final String query) {
-        this.searchLayout.setSearching(true);
+        final var sl = Objects.requireNonNull(this.searchLayout);
+        sl.setSearching(true);
 
         this.loadDataAsync(() -> this.pageService.searchPages(query), pages -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             LOG.infof("Search found %s pages", pages.size());
-            this.grid.setItems(pages);
+            Objects.requireNonNull(this.grid).setItems(pages);
         }, throwable -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }

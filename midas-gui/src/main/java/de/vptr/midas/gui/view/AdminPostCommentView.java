@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -32,6 +33,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** AdminPostCommentView view. */
@@ -46,13 +48,20 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<PostCommentResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private DatePicker startDatePicker;
+    @Nullable
     private DatePicker endDatePicker;
+    @Nullable
     private IntegerField userIdField;
 
+    @Nullable
     private AdminPostCommentDialog commentDialog;
 
     /** Initializes AdminPostCommentView. */
@@ -74,7 +83,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -87,7 +97,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.commentDialog = new AdminPostCommentDialog(this.commentService, this::setupLazyDataProvider,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -166,7 +176,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.commentDialog.open(comment.toPostCommentDto()));
+        final var editButton =
+                new EditButton(_ -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
         final var deleteButton = new DeleteButton(_ -> this.deleteComment(comment));
 
         layout.add(editButton, deleteButton);
@@ -175,7 +186,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
 
     private void deleteComment(final PostCommentResponseDto comment) {
         try {
-            this.commentService.deleteComment(comment.getId());
+            this.commentService.deleteComment(Objects.requireNonNull(comment.getId()));
             NotificationUtil.showSuccess("Comment deleted successfully");
             this.setupLazyDataProvider();
         } catch (final AuthenticationException e) {
@@ -190,28 +201,29 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     }
 
     private void searchComments() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             this.setupLazyDataProvider();
             return;
         }
 
-        this.searchButton.setEnabled(false);
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
         LOG.infof("Starting async comment search with query: %s", query);
 
         this.loadDataAsync(() -> this.commentService.searchComments(query.trim()), comments -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             LOG.infof("Successfully found %s comments", comments.size());
-            this.grid.setItems(comments);
+            Objects.requireNonNull(this.grid).setItems(comments);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
 
     private void filterByDateRange() {
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
+        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (startDate == null || endDate == null) {
             NotificationUtil.showWarning("Please select both start and end dates");
@@ -224,17 +236,17 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         }
 
         this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
-                comments -> this.grid.setItems(comments));
+                comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
 
     private void filterByUser() {
-        final Integer userId = this.userIdField.getValue();
+        final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
         if (userId == null) {
             NotificationUtil.showWarning("Please enter a user ID");
             return;
         }
 
         this.loadDataAsync(() -> this.commentService.getCommentsByUser(userId.longValue()),
-                comments -> this.grid.setItems(comments));
+                comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
 }

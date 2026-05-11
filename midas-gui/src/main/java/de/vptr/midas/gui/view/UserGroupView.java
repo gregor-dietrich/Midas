@@ -2,6 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiConstants;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** View for browsing and searching user groups. */
@@ -42,10 +44,14 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     @Inject
     UserService userService;
 
+    @Nullable
     private Grid<UserGroupResponseDto> myGroupsGrid;
+    @Nullable
     private Grid<UserGroupResponseDto> otherGroupsGrid;
+    @Nullable
     private AsyncSearchLayout searchLayout;
 
+    @Nullable
     private Long currentUserId;
 
     /** Initializes UserGroupView. */
@@ -82,7 +88,8 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         final var myGroupsHeader = new H3("My Groups");
         final var otherGroupsHeader = new H3("Other Groups");
 
-        this.add(title, this.searchLayout, myGroupsHeader, this.myGroupsGrid, otherGroupsHeader, this.otherGroupsGrid);
+        this.add(title, this.searchLayout, myGroupsHeader, Objects.requireNonNull(this.myGroupsGrid), otherGroupsHeader,
+                Objects.requireNonNull(this.otherGroupsGrid));
     }
 
     private void createMyGroupsGrid() {
@@ -97,7 +104,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> this.navigateToGroup(group));
+            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
@@ -118,7 +125,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> this.navigateToGroup(group));
+            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
@@ -142,7 +149,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
             List<UserGroupResponseDto> myGroups = Collections.emptyList();
             if (currentUser != null) {
-                myGroups = this.groupService.getGroupsByUser(currentUser.getId());
+                myGroups = this.groupService.getGroupsByUser(Objects.requireNonNull(currentUser.getId()));
             }
 
             return new GroupLoadResult(allGroups, myGroups, currentUser);
@@ -163,12 +170,13 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
         final var otherGroups = allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
 
-        this.myGroupsGrid.setItems(myGroups);
-        this.otherGroupsGrid.setItems(otherGroups);
+        Objects.requireNonNull(this.myGroupsGrid).setItems(myGroups);
+        Objects.requireNonNull(this.otherGroupsGrid).setItems(otherGroups);
     }
 
     private void searchGroups(final String query) {
-        this.searchLayout.setSearching(true);
+        final var sl = Objects.requireNonNull(this.searchLayout);
+        sl.setSearching(true);
         LOG.infof("Starting async group search with query: %s", query);
 
         final Long capturedUserId = this.currentUserId;
@@ -184,7 +192,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
             return new GroupLoadResult(searchResults, myGroups, null);
         }, result -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             LOG.infof("Successfully found %s groups matching query", result.allGroups.size());
 
             final Set<Long> myGroupIds =
@@ -196,10 +204,10 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             final var otherResults =
                     result.allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
 
-            this.myGroupsGrid.setItems(myResults);
-            this.otherGroupsGrid.setItems(otherResults);
+            Objects.requireNonNull(this.myGroupsGrid).setItems(myResults);
+            Objects.requireNonNull(this.otherGroupsGrid).setItems(otherResults);
         }, throwable -> {
-            this.searchLayout.setSearching(false);
+            sl.setSearching(false);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
@@ -207,10 +215,11 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     private static class GroupLoadResult {
         final List<UserGroupResponseDto> allGroups;
         final List<UserGroupResponseDto> myGroups;
+        @Nullable
         final UserResponseDto currentUser;
 
         GroupLoadResult(final List<UserGroupResponseDto> allGroups, final List<UserGroupResponseDto> myGroups,
-                final UserResponseDto currentUser) {
+                @Nullable final UserResponseDto currentUser) {
             this.allGroups = allGroups;
             this.myGroups = myGroups;
             this.currentUser = currentUser;

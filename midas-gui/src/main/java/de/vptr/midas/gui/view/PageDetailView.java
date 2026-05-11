@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -15,6 +17,7 @@ import com.vaadin.flow.router.Route;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** PageDetailView view. */
@@ -29,6 +32,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
     @Inject
     AuthService authService;
 
+    @Nullable
     private String identifier;
 
     /** Initializes PageDetailView. */
@@ -57,7 +61,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
         this.removeAll();
 
         final var backButton =
-                new Button("← Back to Pages", e -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
+                new Button("← Back to Pages", _ -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);
@@ -71,18 +75,20 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
             return;
         }
 
-        LOG.infof("Loading page with identifier: %s", this.identifier);
+        final var id = Objects.requireNonNull(this.identifier);
+        LOG.infof("Loading page with identifier: %s", id);
 
         // Try parsing as Long (ID) first, fall back to search by title
-        final Long pageId = this.tryParseId(this.identifier);
+        final Long pageId = this.tryParseId(id);
 
         if (pageId != null) {
             this.loadPageById(pageId);
         } else {
-            this.loadPageByTitle(this.identifier);
+            this.loadPageByTitle(id);
         }
     }
 
+    @Nullable
     private Long tryParseId(final String value) {
         try {
             return Long.valueOf(value);
@@ -117,8 +123,8 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
         });
     }
 
-    private void renderPage(final String title, final String content) {
-        final var titleHeader = new H2(title);
+    private void renderPage(final @Nullable String title, final @Nullable String content) {
+        final var titleHeader = new H2(title != null ? title : "Untitled");
 
         final var contentDiv = new Div();
         contentDiv.setText(content != null ? content : "");

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -26,6 +27,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** View for browsing published posts. */
@@ -46,12 +48,18 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<PostResponseDto> grid;
+    @Nullable
     private AsyncSearchLayout searchLayout;
+    @Nullable
     private ComboBox<PostCategoryResponseDto> categoryFilter;
+    @Nullable
     private DatePicker startDatePicker;
+    @Nullable
     private DatePicker endDatePicker;
 
+    @Nullable
     private List<PostCategoryResponseDto> availableCategories;
 
     /** Initializes PostView. */
@@ -80,7 +88,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         final var filterLayout = this.createFilterLayout();
         this.createGrid();
 
-        this.add(header, filterLayout, this.grid);
+        this.add(header, filterLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createFilterLayout() {
@@ -93,10 +101,10 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.categoryFilter.setItemLabelGenerator(PostCategoryResponseDto::getName);
         this.categoryFilter.setClearButtonVisible(true);
         this.categoryFilter.setWidth("200px");
-        this.categoryFilter.addValueChangeListener(e -> this.loadPostsAsync());
+        this.categoryFilter.addValueChangeListener(_ -> this.loadPostsAsync());
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.loadPostsAsync());
+        final var dateFilterLayout = new DateFilterLayout(_ -> this.loadPostsAsync());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -166,12 +174,12 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         card.add(title, metaLayout, excerpt);
 
         // Navigate to detail view on click
-        card.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+        card.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
 
         return card;
     }
 
-    private String createExcerpt(final String content) {
+    private String createExcerpt(final @Nullable String content) {
         if (content == null || content.isEmpty()) {
             return "";
         }
@@ -184,25 +192,25 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     private void loadPostsAsync() {
         LOG.info("Starting async published post loading");
 
-        final var selectedCategory = this.categoryFilter.getValue();
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
+        final var selectedCategory = Objects.requireNonNull(this.categoryFilter).getValue();
+        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (selectedCategory != null) {
             this.loadDataAsync(() -> this.postService.getPostsByCategory(selectedCategory.getId()), posts -> {
                 LOG.infof("Successfully loaded %s posts for category %s", posts.size(), selectedCategory.getName());
-                this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+                Objects.requireNonNull(this.grid).setItems(this.applyDateFilter(posts, startDate, endDate));
             });
         } else {
             this.loadDataAsync(() -> this.postService.getPublishedPosts(), posts -> {
                 LOG.infof("Successfully loaded %s published posts", posts.size());
-                this.grid.setItems(this.applyDateFilter(posts, startDate, endDate));
+                Objects.requireNonNull(this.grid).setItems(this.applyDateFilter(posts, startDate, endDate));
             });
         }
     }
 
-    private List<PostResponseDto> applyDateFilter(final List<PostResponseDto> posts, final LocalDate startDate,
-            final LocalDate endDate) {
+    private List<PostResponseDto> applyDateFilter(final List<PostResponseDto> posts,
+            final @Nullable LocalDate startDate, final @Nullable LocalDate endDate) {
         if (startDate == null && endDate == null) {
             return posts;
         }
@@ -232,7 +240,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.loadDataAsync(() -> this.postCategoryService.getRootCategories(), categories -> {
             LOG.infof("Successfully loaded %s categories", categories.size());
             this.availableCategories = categories;
-            this.categoryFilter.setItems(this.availableCategories);
+            Objects.requireNonNull(this.categoryFilter).setItems(this.availableCategories);
         }, throwable -> {
             LOG.error("Error loading categories", throwable);
             this.availableCategories = List.of();
@@ -242,7 +250,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
 
     private void searchPosts(final String query) {
         this.loadDataAsync(() -> this.postService.searchPosts(query), posts -> {
-            final var selectedCategory = this.categoryFilter.getValue();
+            final var selectedCategory = Objects.requireNonNull(this.categoryFilter).getValue();
             var filtered = posts;
             if (selectedCategory != null) {
                 final Long categoryId = selectedCategory.getId();
@@ -250,9 +258,9 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
                         .filter(post -> post.getCategoryId() != null && post.getCategoryId().equals(categoryId))
                         .toList();
             }
-            final LocalDate startDate = this.startDatePicker.getValue();
-            final LocalDate endDate = this.endDatePicker.getValue();
-            this.grid.setItems(this.applyDateFilter(filtered, startDate, endDate));
+            final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+            final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
+            Objects.requireNonNull(this.grid).setItems(this.applyDateFilter(filtered, startDate, endDate));
         });
     }
 }

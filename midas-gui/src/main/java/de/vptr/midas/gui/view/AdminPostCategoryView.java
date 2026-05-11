@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
@@ -29,6 +30,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** AdminPostCategoryView view. */
@@ -43,11 +45,16 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     @Inject
     AuthService authService;
 
+    @Nullable
     private TreeGrid<PostCategoryResponseDto> treeGrid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private List<PostCategoryResponseDto> allCategories;
 
+    @Nullable
     private AdminPostCategoryDialog categoryDialog;
 
     /** Initializes AdminPostCategoryView. */
@@ -79,11 +86,15 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     }
 
     private void updateTreeGrid() {
+        if (this.allCategories == null) {
+            return;
+        }
         // Find root categories (categories without parent)
         final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
 
-        this.treeGrid.setItems(rootCategories, this::getChildrenOfCategory);
-        this.treeGrid.expandRecursively(rootCategories, 2); // Expand up to 2 levels
+        final var tg = Objects.requireNonNull(this.treeGrid);
+        tg.setItems(rootCategories, this::getChildrenOfCategory);
+        tg.expandRecursively(rootCategories, 2); // Expand up to 2 levels
     }
 
     private void updateSearchTreeGrid(final List<PostCategoryResponseDto> searchResults) {
@@ -102,14 +113,18 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var topLevelCategories = searchResults.stream()
                 .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId())).toList();
 
-        this.treeGrid.setItems(topLevelCategories, category -> searchResults.stream()
+        final var tg = Objects.requireNonNull(this.treeGrid);
+        tg.setItems(topLevelCategories, category -> searchResults.stream()
                 .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId())).toList());
 
         // Expand all search results for better visibility
-        this.treeGrid.expandRecursively(topLevelCategories, 10);
+        tg.expandRecursively(topLevelCategories, 10);
     }
 
     private List<PostCategoryResponseDto> getChildrenOfCategory(final PostCategoryResponseDto parent) {
+        if (this.allCategories == null) {
+            return List.of();
+        }
         return this.allCategories.stream()
                 .filter(category -> category.getParentId() != null && category.getParentId().equals(parent.getId()))
                 .toList();
@@ -125,7 +140,7 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         this.categoryDialog = new AdminPostCategoryDialog(this.categoryService, this::loadCategoriesAsync,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
-        this.add(header, searchLayout, buttonLayout, this.treeGrid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.treeGrid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -145,7 +160,8 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.categoryDialog.open(null, this.allCategories));
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.categoryDialog).open(null,
+                this.allCategories != null ? this.allCategories : List.of()));
         final var refreshButton = new RefreshButton(_ -> this.loadCategoriesAsync());
 
         layout.add(createButton, refreshButton);
@@ -180,8 +196,8 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton =
-                new EditButton(_ -> this.categoryDialog.open(category.toPostCategoryDto(), this.allCategories));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.categoryDialog)
+                .open(category.toPostCategoryDto(), this.allCategories != null ? this.allCategories : List.of()));
         final var deleteButton = new DeleteButton(_ -> this.deleteCategory(category));
 
         layout.add(editButton, deleteButton);
@@ -189,6 +205,9 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     }
 
     private void deleteCategory(final PostCategoryResponseDto category) {
+        if (this.allCategories == null) {
+            return;
+        }
         // Check if category has children
         final boolean hasChildren = this.allCategories.stream()
                 .anyMatch(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId()));
@@ -218,19 +237,20 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     }
 
     private void searchCategories() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             this.updateTreeGrid();
             return;
         }
 
-        this.searchButton.setEnabled(false);
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
 
         this.loadDataAsync(() -> this.categoryService.searchCategories(query.trim()), categories -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             this.updateSearchTreeGrid(categories);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }

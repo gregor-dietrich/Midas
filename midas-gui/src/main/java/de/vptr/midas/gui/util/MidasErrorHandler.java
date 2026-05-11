@@ -44,7 +44,11 @@ public final class MidasErrorHandler {
     }
 
     /** Unwraps async wrapper exceptions. */
-    public static Throwable unwrapAsyncThrowable(final Throwable throwable) {
+    @Nullable
+    public static Throwable unwrapAsyncThrowable(@Nullable final Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
         Throwable rootCause = throwable;
         while ((rootCause instanceof CompletionException || rootCause instanceof ExecutionException)
                 && rootCause.getCause() != null) {
@@ -54,7 +58,7 @@ public final class MidasErrorHandler {
     }
 
     /** Dispatches detached async errors through session handler or logs them. */
-    public static void handleDetached(final Throwable throwable, final VaadinSession session) {
+    public static void handleDetached(@Nullable final Throwable throwable, @Nullable final VaadinSession session) {
         final Throwable cause = unwrapAsyncThrowable(throwable);
 
         if (session != null && session.getErrorHandler() != null) {
@@ -70,8 +74,8 @@ public final class MidasErrorHandler {
     }
 
     /** Logs exception details and shows a sanitized notification. */
-    public static void showSanitizedError(@Nullable final Throwable throwable, final String fallbackMessage) {
-        final Throwable cause = throwable == null ? null : unwrapAsyncThrowable(throwable);
+    public static void showSanitizedError(@Nullable final Throwable throwable, @Nullable final String fallbackMessage) {
+        final Throwable cause = unwrapAsyncThrowable(throwable);
         logUserFacing(cause, fallbackMessage);
         NotificationUtil.showError(resolveUserMessage(cause, fallbackMessage));
     }
@@ -91,13 +95,16 @@ public final class MidasErrorHandler {
         } else if (cause instanceof ServiceException) {
             LOG.error("Service error during async operation", cause);
             NotificationUtil.showError("Operation failed. Please try again.");
-        } else {
+        } else if (cause != null) {
             LOG.error("Unexpected error during async operation", cause);
+            NotificationUtil.showError("An unexpected error occurred");
+        } else {
+            LOG.error("Unknown error during async operation");
             NotificationUtil.showError("An unexpected error occurred");
         }
     }
 
-    private static boolean isConnectionFailure(final Throwable throwable) {
+    private static boolean isConnectionFailure(@Nullable final Throwable throwable) {
         Throwable current = throwable;
         while (current != null) {
             if (current instanceof ProcessingException) {
@@ -108,19 +115,21 @@ public final class MidasErrorHandler {
         return false;
     }
 
-    private static void logDetached(final Throwable cause) {
+    private static void logDetached(@Nullable final Throwable cause) {
         if (cause instanceof TimeoutException) {
             LOG.warn("Detached async operation timed out", cause);
         } else if (cause instanceof AuthenticationException) {
             LOG.warn("Detached async authentication failure", cause);
         } else if (cause instanceof ServiceException) {
             LOG.error("Detached async service failure", cause);
-        } else {
+        } else if (cause != null) {
             LOG.error("Detached async operation failed", cause);
+        } else {
+            LOG.error("Detached async operation failed with unknown cause");
         }
     }
 
-    static String resolveUserMessage(final Throwable cause, final String fallbackMessage) {
+    static String resolveUserMessage(@Nullable final Throwable cause, @Nullable final String fallbackMessage) {
         if (cause instanceof AuthenticationException) {
             return "Session expired. Please log in again.";
         }
@@ -136,7 +145,7 @@ public final class MidasErrorHandler {
         return "An unexpected error occurred";
     }
 
-    private static void logUserFacing(final Throwable cause, final String fallbackMessage) {
+    private static void logUserFacing(@Nullable final Throwable cause, @Nullable final String fallbackMessage) {
         final String message = resolveUserMessage(cause, fallbackMessage);
         if (cause instanceof AuthenticationException) {
             LOG.warnf(cause, "Authentication failure shown to user: %s", message);

@@ -25,6 +25,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing payments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
@@ -52,7 +53,7 @@ public class AdminPaymentDialog extends FormDialog {
     }
 
     /** Opens the dialog for creating or editing a payment. */
-    public void open(final PaymentDto payment, final List<AccountResponseDto> availableAccounts) {
+    public void open(final @Nullable PaymentDto payment, final @Nullable List<AccountResponseDto> availableAccounts) {
         this.removeAll();
         this.currentPayment = payment != null ? payment : new PaymentDto();
         this.binder = new Binder<>(PaymentDto.class);

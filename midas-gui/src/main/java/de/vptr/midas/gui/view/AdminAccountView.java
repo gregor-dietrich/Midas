@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -32,6 +34,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing accounts. */
@@ -49,12 +52,18 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     @Inject
     UserService userService;
 
+    @Nullable
     private Grid<AccountResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private IntegerField userIdField;
 
+    @Nullable
     private AdminAccountDialog accountDialog;
+    @Nullable
     private AdminAccountUserPanel userPanel;
 
     /** Initializes AdminAccountView. */
@@ -73,7 +82,8 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.accountService.getAllAccounts(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.accountService.getAllAccounts(query.getPage(), query.getPageSize()).stream());
     }
 
     private void buildUi() {
@@ -89,7 +99,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         this.userPanel =
                 new AdminAccountUserPanel(this.accountService, this.authService, this.userService, onAuthFailure);
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -115,7 +125,8 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         buttonLayout.setSpacing(true);
 
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
-        final var createButton = new CreateButton(_ -> this.accountDialog.open(null), "Create Account");
+        final var createButton =
+                new CreateButton(_ -> Objects.requireNonNull(this.accountDialog).open(null), "Create Account");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
@@ -137,7 +148,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> this.accountDialog.open(account));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.accountDialog).open(account));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(1);
 
@@ -149,42 +160,43 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.accountDialog.open(account));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.accountDialog).open(account));
         final var deleteButton = new DeleteButton(_ -> this.deleteAccount(account));
-        final var manageUsersButton = new ManageUsersButton(_ -> this.userPanel.open(account));
+        final var manageUsersButton = new ManageUsersButton(_ -> Objects.requireNonNull(this.userPanel).open(account));
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;
     }
 
     private void searchAccounts() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
-        this.searchButton.setEnabled(false);
-        this.searchButton.setText("Searching...");
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
+        sb.setText("Searching...");
         this.loadDataAsync(() -> this.accountService.searchAccounts(query.trim()), accounts -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search Accounts");
-            this.grid.setItems(accounts);
+            sb.setEnabled(true);
+            sb.setText("Search Accounts");
+            Objects.requireNonNull(this.grid).setItems(accounts);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search Accounts");
+            sb.setEnabled(true);
+            sb.setText("Search Accounts");
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
 
     private void filterByUser() {
-        final Integer value = this.userIdField.getValue();
+        final Integer value = Objects.requireNonNull(this.userIdField).getValue();
         if (value == null) {
             NotificationUtil.showWarning("Please enter a user ID");
             return;
         }
 
         this.loadDataAsync(() -> this.accountService.getAccountsByUser((long) value),
-                accounts -> this.grid.setItems(accounts));
+                accounts -> Objects.requireNonNull(this.grid).setItems(accounts));
     }
 
     private void deleteAccount(final AccountResponseDto account) {

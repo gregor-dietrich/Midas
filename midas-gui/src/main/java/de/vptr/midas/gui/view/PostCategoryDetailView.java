@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -22,6 +23,7 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Detail view for a single post category. */
@@ -41,9 +43,13 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     @Inject
     AuthService authService;
 
+    @Nullable
     private String identifier;
+    @Nullable
     private Grid<PostResponseDto> postGrid;
+    @Nullable
     private H2 header;
+    @Nullable
     private PostCategoryResponseDto category;
 
     /** Initializes PostCategoryDetailView. */
@@ -65,7 +71,9 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
             return;
         }
 
-        this.resolveCategoryAsync(this.identifier);
+        if (this.identifier != null) {
+            this.resolveCategoryAsync(this.identifier);
+        }
     }
 
     private void resolveCategoryAsync(final String identifier) {
@@ -101,13 +109,13 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
         this.removeAll();
 
         final var backButton = new Button("← Back to Categories",
-                e -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
+                _ -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        this.header = new H2(this.category.getName());
+        this.header = new H2(Objects.requireNonNull(this.category).getName());
         this.createPostGrid();
 
-        this.add(backButton, this.header, this.postGrid);
+        this.add(backButton, this.header, Objects.requireNonNull(this.postGrid));
     }
 
     private void createPostGrid() {
@@ -117,7 +125,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
 
         this.postGrid.addComponentColumn(post -> {
             final var titleButton = new Button(post.getTitle(),
-                    e -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+                    _ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
             titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);
@@ -131,11 +139,12 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     }
 
     private void loadPostsAsync() {
-        LOG.infof("Loading posts for category: %s", this.category.getName());
+        final var cat = Objects.requireNonNull(this.category);
+        LOG.infof("Loading posts for category: %s", cat.getName());
 
-        this.loadDataAsync(() -> this.postService.getPostsByCategory(this.category.getId()), posts -> {
+        this.loadDataAsync(() -> this.postService.getPostsByCategory(cat.getId()), posts -> {
             LOG.infof("Successfully loaded %s posts", posts.size());
-            this.postGrid.setItems(posts);
+            Objects.requireNonNull(this.postGrid).setItems(posts);
         }, MidasErrorHandler::handleInUiContext, 30);
     }
 }

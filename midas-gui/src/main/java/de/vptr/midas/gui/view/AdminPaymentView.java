@@ -2,6 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -38,6 +39,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing payments. */
@@ -58,15 +60,24 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     @Inject
     AccountService accountService;
 
+    @Nullable
     private Grid<PaymentResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
+    @Nullable
     private IntegerField limitField;
+    @Nullable
     private DatePicker startDatePicker;
+    @Nullable
     private DatePicker endDatePicker;
+    @Nullable
     private IntegerField userIdField;
 
+    @Nullable
     private AdminPaymentDialog paymentDialog;
+    @Nullable
     private List<AccountResponseDto> availableAccounts;
 
     /** Initializes AdminPaymentView. */
@@ -86,7 +97,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void setupLazyDataProvider() {
-        this.grid.setItems(query -> this.paymentService.getAllPayments(query.getPage(), query.getPageSize()).stream());
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.paymentService.getAllPayments(query.getPage(), query.getPageSize()).stream());
     }
 
     private void loadAccountsAsync() {
@@ -115,7 +127,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 new AdminPaymentDialog(this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
         this.availableAccounts = List.of();
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -155,8 +167,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         buttonLayout.setSpacing(true);
 
         final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
-        final var createButton =
-                new CreateButton(_ -> this.paymentDialog.open(null, this.availableAccounts), "Create Payment");
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.paymentDialog).open(null,
+                this.availableAccounts != null ? this.availableAccounts : List.of()), "Create Payment");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
@@ -193,8 +205,8 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton =
-                new EditButton(_ -> this.paymentDialog.open(payment.toPaymentDto(), this.availableAccounts));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.paymentDialog)
+                .open(payment.toPaymentDto(), this.availableAccounts != null ? this.availableAccounts : List.of()));
         final var deleteButton = new DeleteButton(_ -> this.deletePayment(payment.toPaymentDto()));
 
         layout.add(editButton, deleteButton);
@@ -203,7 +215,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
 
     private void deletePayment(final PaymentDto payment) {
         try {
-            if (this.paymentService.deletePayment(payment.getId())) {
+            if (this.paymentService.deletePayment(Objects.requireNonNull(payment.getId()))) {
                 NotificationUtil.showSuccess("Payment deleted successfully");
                 this.setupLazyDataProvider();
             } else {
@@ -221,14 +233,14 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     }
 
     private void loadRecentPayments() {
-        final int limit = this.limitField.getValue() != null ? this.limitField.getValue() : 10;
+        final int limit = Objects.requireNonNull(this.limitField).getValue() != null ? this.limitField.getValue() : 10;
         this.loadDataAsync(() -> this.paymentService.getRecentPayments(limit),
-                payments -> this.grid.setItems(payments));
+                payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
     private void filterByDateRange() {
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
+        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (startDate == null || endDate == null) {
             NotificationUtil.showWarning("Please select both start and end dates");
@@ -241,37 +253,38 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         }
 
         this.loadDataAsync(() -> this.paymentService.getPaymentsByDateRange(startDate, endDate),
-                payments -> this.grid.setItems(payments));
+                payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
     private void filterByUser() {
-        final Integer userId = this.userIdField.getValue();
+        final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
         if (userId == null) {
             NotificationUtil.showWarning("Please enter a user ID");
             return;
         }
 
         this.loadDataAsync(() -> this.paymentService.getPaymentsByUser(userId.longValue()),
-                payments -> this.grid.setItems(payments));
+                payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
     private void searchPayments() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             NotificationUtil.showWarning("Please enter a search query");
             return;
         }
 
-        this.searchButton.setEnabled(false);
-        this.searchButton.setText("Searching...");
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
+        sb.setText("Searching...");
 
         this.loadDataAsync(() -> this.paymentService.searchPayments(query.trim()), payments -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
-            this.grid.setItems(payments);
+            sb.setEnabled(true);
+            sb.setText("Search");
+            Objects.requireNonNull(this.grid).setItems(payments);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
-            this.searchButton.setText("Search");
+            sb.setEnabled(true);
+            sb.setText("Search");
             LOG.errorf(throwable, "Error searching payments: %s", throwable.getMessage());
             MidasErrorHandler.handleInUiContext(throwable);
         });

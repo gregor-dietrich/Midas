@@ -66,7 +66,7 @@ public final class UiAsyncExecutor {
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        final var _ = CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask), ASYNC_EXECUTOR)
+        final var _ = CompletableFuture.<T>supplyAsync(() -> withSession(session, tccl, backgroundTask), ASYNC_EXECUTOR)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {

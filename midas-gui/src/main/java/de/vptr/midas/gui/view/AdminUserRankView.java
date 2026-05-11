@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.jboss.logging.Logger;
@@ -31,6 +32,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Admin view for managing user ranks and permissions. */
@@ -45,10 +47,14 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<UserRankResponseDto> grid;
+    @Nullable
     private TextField searchField;
+    @Nullable
     private Button searchButton;
 
+    @Nullable
     private AdminUserRankDialog rankDialog;
     private boolean initialized = false;
 
@@ -77,11 +83,13 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
 
         this.loadDataAsync(() -> this.rankService.getAllRanks(), ranks -> {
             LOG.infof("Successfully loaded %s ranks", ranks.size());
-            this.grid.setItems(ranks);
+            Objects.requireNonNull(this.grid).setItems(ranks);
         });
     }
 
     private void buildUi() {
+        this.removeAll();
+
         final var header = new H2("User Ranks");
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
@@ -90,7 +98,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.rankDialog = new AdminUserRankDialog(this.rankService, this::loadRanksAsync, authFailure);
 
-        this.add(header, searchLayout, buttonLayout, this.grid);
+        this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
@@ -110,7 +118,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> this.rankDialog.open(null));
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.rankDialog).open(null));
         final var refreshButton = new RefreshButton(_ -> this.loadRanksAsync());
 
         layout.add(createButton, refreshButton);
@@ -130,7 +138,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> this.rankDialog.open(rank));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
 
@@ -185,7 +193,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private void addCrudPermissionColumn(final String header, final Function<UserRankResponseDto, Boolean> canAdd,
             final String addTooltip, final Function<UserRankResponseDto, Boolean> canEdit, final String editTooltip,
             final Function<UserRankResponseDto, Boolean> canDelete, final String deleteTooltip) {
-        this.grid.addComponentColumn(rank -> {
+        Objects.requireNonNull(this.grid).addComponentColumn(rank -> {
             final var layout = new HorizontalLayout();
             layout.setSpacing(true);
             layout.setPadding(false);
@@ -214,7 +222,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> this.rankDialog.open(rank));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
         final var deleteButton = new DeleteButton(_ -> this.deleteRank(rank));
 
         layout.add(editButton, deleteButton);
@@ -223,7 +231,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
 
     private void deleteRank(final UserRankResponseDto rank) {
         try {
-            this.rankService.deleteRank(rank.getId());
+            this.rankService.deleteRank(Objects.requireNonNull(rank.getId()));
             NotificationUtil.showSuccess("Rank deleted successfully");
             this.loadRanksAsync();
         } catch (final AuthenticationException e) {
@@ -238,21 +246,22 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     }
 
     private void searchRanks() {
-        final String query = this.searchField.getValue();
+        final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
             this.loadRanksAsync();
             return;
         }
 
-        this.searchButton.setEnabled(false);
+        final var sb = Objects.requireNonNull(this.searchButton);
+        sb.setEnabled(false);
         LOG.infof("Starting async rank search with query: %s", query);
 
         this.loadDataAsync(() -> this.rankService.searchRanks(query), ranks -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             LOG.infof("Successfully found %s ranks", ranks.size());
-            this.grid.setItems(ranks);
+            Objects.requireNonNull(this.grid).setItems(ranks);
         }, throwable -> {
-            this.searchButton.setEnabled(true);
+            sb.setEnabled(true);
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
@@ -24,6 +25,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Detail view for a single user group. */
@@ -39,10 +41,14 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     @Inject
     AuthService authService;
 
+    @Nullable
     private Grid<UserDto> membersGrid;
+    @Nullable
     private H2 groupTitle;
 
+    @Nullable
     private Long groupId;
+    @Nullable
     private UserGroupResponseDto currentGroup;
 
     /** Initializes UserGroupDetailView. */
@@ -99,7 +105,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private void buildUi() {
         this.removeAll();
 
-        final var backButton = new Button("Back to Groups", new Icon(VaadinIcon.ARROW_LEFT), e -> {
+        final var backButton = new Button("Back to Groups", new Icon(VaadinIcon.ARROW_LEFT), _ -> {
             this.getUI().ifPresent(ui -> ui.navigate(UserGroupView.class));
         });
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -109,11 +115,11 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
         headerLayout.setSpacing(true);
         headerLayout.add(backButton);
 
-        this.groupTitle = new H2(this.currentGroup.getName());
+        this.groupTitle = new H2(Objects.requireNonNull(this.currentGroup).getName());
 
         this.createMembersGrid();
 
-        this.add(headerLayout, this.groupTitle, this.membersGrid);
+        this.add(headerLayout, this.groupTitle, Objects.requireNonNull(this.membersGrid));
     }
 
     private void createMembersGrid() {
@@ -132,14 +138,15 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     }
 
     private void loadMembersAsync() {
-        LOG.infof("Starting async member loading for group: %s", this.groupId);
+        final var id = Objects.requireNonNull(this.groupId);
+        LOG.infof("Starting async member loading for group: %s", id);
 
         this.loadDataAsync(() -> {
             LOG.info("Making REST call to load group members");
-            return this.groupService.getUsersInGroup(this.groupId);
+            return this.groupService.getUsersInGroup(id);
         }, members -> {
             LOG.infof("Successfully loaded %s members", members.size());
-            this.membersGrid.setItems(members);
+            Objects.requireNonNull(this.membersGrid).setItems(members);
         }, MidasErrorHandler::handleInUiContext, 30);
     }
 }

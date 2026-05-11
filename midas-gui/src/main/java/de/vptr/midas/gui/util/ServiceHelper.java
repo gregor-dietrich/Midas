@@ -254,7 +254,8 @@ public final class ServiceHelper {
     }
 
     private static RuntimeException translateWebApplicationException(final WebApplicationException exception,
-            final AuthService authService, final Logger log, final String operation, @Nullable final String failurePrefix) {
+            final AuthService authService, final Logger log, final String operation,
+            @Nullable final String failurePrefix) {
         final Response response = exception.getResponse();
         final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
         final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);
