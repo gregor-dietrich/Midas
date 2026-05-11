@@ -78,18 +78,12 @@ public class PostEntity extends PanacheEntityBase {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || this.getClass() != o.getClass()) {
-            return false;
-        }
-        final PostEntity that = (PostEntity) o;
-        return this.id != null && this.id.equals(that.id);
+        return this == o || (o instanceof PostEntity that && Objects.equals(this.id, that.id));
     }
 
     @Override
     public int hashCode() {
         return Objects.hashCode(this.id);
     }
+
 }

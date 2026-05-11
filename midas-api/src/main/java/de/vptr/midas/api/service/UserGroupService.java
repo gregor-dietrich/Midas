@@ -7,14 +7,13 @@ import java.util.Optional;
 import de.vptr.midas.api.dto.UserGroupDto;
 import de.vptr.midas.api.dto.UserGroupResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
-import de.vptr.midas.api.entity.PostCommentEntity;
-import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserGroupEntity;
 import de.vptr.midas.api.entity.UserGroupMetaEntity;
 import de.vptr.midas.api.util.QueryAggregationUtil;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -22,6 +21,9 @@ import jakarta.ws.rs.core.Response;
 /** Service for user group business logic. */
 @ApplicationScoped
 public class UserGroupService {
+
+    @Inject
+    UserResponseAssembler userResponseAssembler;
 
     /** Returns all groups with default pagination. */
     public List<UserGroupResponseDto> getAllGroups() {
@@ -53,7 +55,7 @@ public class UserGroupService {
         final List<UserEntity> users = UserEntity.find("""
                 SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN \
                 (SELECT m.user.id FROM UserGroupMetaEntity m WHERE m.group.id = ?1)""", groupId).list();
-        return this.toUserResponseDtos(users);
+        return this.userResponseAssembler.toResponseDtos(users);
     }
 
     /** Returns all groups that the given user belongs to. */
@@ -177,27 +179,5 @@ public class UserGroupService {
         final Map<Long, Long> userCounts = QueryAggregationUtil.toLongCountMap(countResults);
 
         return groups.stream().map(g -> new UserGroupResponseDto(g, userCounts.getOrDefault(g.id, 0L))).toList();
-    }
-
-    private List<UserResponseDto> toUserResponseDtos(final List<UserEntity> users) {
-        if (users.isEmpty()) {
-            return List.of();
-        }
-        final List<Long> ids = users.stream().map(u -> u.id).toList();
-
-        final List<Object[]> postResults = PostEntity.getEntityManager()
-                .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
-                        Object[].class)
-                .setParameter("ids", ids).getResultList();
-        final Map<Long, Long> postCounts = QueryAggregationUtil.toLongCountMap(postResults);
-
-        final List<Object[]> commentResults = PostCommentEntity.getEntityManager().createQuery(
-                "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
-                Object[].class).setParameter("ids", ids).getResultList();
-        final Map<Long, Long> commentCounts = QueryAggregationUtil.toLongCountMap(commentResults);
-
-        return users.stream().map(
-                u -> new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L)))
-                .toList();
     }
 }

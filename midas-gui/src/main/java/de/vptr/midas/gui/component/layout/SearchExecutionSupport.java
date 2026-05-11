@@ -2,6 +2,8 @@ package de.vptr.midas.gui.component.layout;
 
 import java.util.function.LongSupplier;
 
+import jakarta.annotation.Nullable;
+
 final class SearchExecutionSupport {
 
     static final int MAX_QUERY_LENGTH = 255;
@@ -9,7 +11,7 @@ final class SearchExecutionSupport {
 
     private final LongSupplier currentTimeMillisSupplier;
     private final long throttleMillis;
-    private String lastSubmittedQuery;
+    private String lastSubmittedQuery = "";
     private long lastSubmittedAtMillis = Long.MIN_VALUE;
 
     SearchExecutionSupport() {
@@ -21,6 +23,7 @@ final class SearchExecutionSupport {
         this.throttleMillis = throttleMillis;
     }
 
+    @Nullable
     String normalize(final String value) {
         if (value == null) {
             return null;

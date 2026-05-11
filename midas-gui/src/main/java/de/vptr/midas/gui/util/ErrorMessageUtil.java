@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -44,6 +45,7 @@ public class ErrorMessageUtil {
         return "HTTP " + response.getStatus();
     }
 
+    @Nullable
     private static String parseMessageFromBody(final String body) {
         try {
             final JsonNode root = OBJECT_MAPPER.readTree(body);
@@ -64,6 +66,7 @@ public class ErrorMessageUtil {
         return trimmed;
     }
 
+    @Nullable
     private static String firstNonBlankText(final JsonNode root, final String... fieldNames) {
         for (final String fieldName : fieldNames) {
             final JsonNode field = root.get(fieldName);

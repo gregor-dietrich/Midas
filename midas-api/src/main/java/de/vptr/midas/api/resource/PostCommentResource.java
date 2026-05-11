@@ -77,10 +77,10 @@ public class PostCommentResource {
     @Path("/user/{userId}")
     @Authenticated
     public List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") @Min(1) final Long userId,
-            @QueryParam("page") @DefaultValue("0") final int page,
-            @QueryParam("size") @DefaultValue("20") final int size) {
-        final int safePage = PaginationUtil.sanitizePage(page);
-        final int safeSize = PaginationUtil.sanitizeSize(size);
+            @QueryParam("page") @DefaultValue("0") final int pageIdx,
+            @QueryParam("size") @DefaultValue("20") final int pageSize) {
+        final int safePage = PaginationUtil.sanitizePage(pageIdx);
+        final int safeSize = PaginationUtil.sanitizeSize(pageSize);
         return this.commentService.findByUserId(userId, safePage, safeSize);
     }
 

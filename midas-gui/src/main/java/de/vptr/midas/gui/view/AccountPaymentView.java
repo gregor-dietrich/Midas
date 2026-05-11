@@ -3,6 +3,7 @@ package de.vptr.midas.gui.view;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
 import org.jboss.logging.Logger;
@@ -49,6 +50,7 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** AccountPaymentView view. */
@@ -76,19 +78,31 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     @Inject
     AccountService accountService;
 
+    @Nullable
     private Grid<PaymentResponseDto> grid;
+    @Nullable
     private DatePicker startDatePicker;
+    @Nullable
     private DatePicker endDatePicker;
+    @Nullable
     private Span balanceLabel;
 
+    @Nullable
     private Long accountId;
+    @Nullable
     private AccountResponseDto currentAccount;
+    @Nullable
     private BigDecimal accountBalance;
+    @Nullable
     private List<PaymentResponseDto> allPayments; // Store all payments for client-side filtering
+    @Nullable
     private List<AccountResponseDto> userAccounts; // Store user's accessible accounts
 
+    @Nullable
     private Dialog paymentDialog;
+    @Nullable
     private Binder<PaymentDto> binder;
+    @Nullable
     private PaymentDto currentPayment;
 
     /** Initializes AccountPaymentView. */
@@ -118,10 +132,10 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
 
         // Verify user has access to this account
-        this.verifyAccountAccess(event);
+        this.verifyAccountAccess();
     }
 
-    private void verifyAccountAccess(final BeforeEnterEvent event) {
+    private void verifyAccountAccess() {
         UiAsyncExecutor.execute(() -> {
             final var userAccounts = this.accountService.getMyAccounts();
             final var account = userAccounts.stream().filter(acc -> acc.getId().equals(this.accountId)).findFirst()
@@ -141,16 +155,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         UiAsyncExecutor.execute(() -> {
             LOG.info("Making REST call to load account payments");
-            final var payments = this.accountService.getMyAccountPayments(this.accountId);
+            final var payments = this.accountService.getMyAccountPayments(Objects.requireNonNull(this.accountId));
             LOG.info("Loading account balance");
-            final var balance = this.accountService.getMyAccountBalance(this.accountId);
+            final var balance = this.accountService.getMyAccountBalance(Objects.requireNonNull(this.accountId));
             return new AccountPaymentData(payments, balance);
         }, result -> {
             LOG.infof("Successfully loaded %s payments and balance: %s", result.payments().size(), result.balance());
 
             this.allPayments = result.payments();
             this.accountBalance = result.balance();
-            this.grid.setItems(result.payments());
+            Objects.requireNonNull(this.grid).setItems(result.payments());
             this.updateBalanceDisplay();
             LOG.infof("UI updated with %s payments and balance", result.payments().size());
         }, throwable -> {
@@ -200,8 +214,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
     private void buildUi() {
         this.removeAll();
-
-        final H2 title = new H2("Payments for Account: " + this.currentAccount.getName());
+        final var acc = Objects.requireNonNull(this.currentAccount);
+        final H2 title = new H2("Payments for Account: " + acc.getName());
         title.addClassName("view-title");
 
         // Balance display
@@ -248,7 +262,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new AsyncSearchLayout(this::searchPayments, () -> {
             if (this.allPayments != null) {
-                this.grid.setItems(this.allPayments);
+                Objects.requireNonNull(this.grid).setItems(this.allPayments);
             }
         }, "Search by comment or other account...", "Search Payments");
 
@@ -275,7 +289,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             final Long otherAccountId;
 
             // Show the "other" account (not the current one)
-            if (this.accountId.equals(payment.getSourceAccountId())) {
+            if (Objects.requireNonNull(this.accountId).equals(payment.getSourceAccountId())) {
                 otherAccountName = payment.getTargetAccountName() != null ? payment.getTargetAccountName() : "";
                 otherAccountId = payment.getTargetAccountId();
             } else {
@@ -309,7 +323,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                 String amountText;
                 boolean isPositive;
 
-                if (this.accountId.equals(payment.getSourceAccountId())) {
+                if (Objects.requireNonNull(this.accountId).equals(payment.getSourceAccountId())) {
                     // Current account is sending money - show as negative (red)
                     final var oppositeAmount = payment.getAmount().negate();
                     amountText = "€ " + oppositeAmount.toString();
@@ -350,8 +364,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void filterByDateRange() {
-        final LocalDate startDate = this.startDatePicker.getValue();
-        final LocalDate endDate = this.endDatePicker.getValue();
+        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
+        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (startDate == null || endDate == null) {
             NotificationUtil.showWarning("Please select both start and end dates");
@@ -376,7 +390,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return false;
         }).toList();
 
-        this.grid.setItems(filteredPayments);
+        Objects.requireNonNull(this.grid).setItems(filteredPayments);
         LOG.infof("Filtered %s payments by date range %s to %s", filteredPayments.size(), startDate, endDate);
     }
 
@@ -419,7 +433,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return false;
         }).toList();
 
-        this.grid.setItems(filteredPayments);
+        Objects.requireNonNull(this.grid).setItems(filteredPayments);
         LOG.infof("Filtered %s payments by search term '%s'", filteredPayments.size(), searchTerm);
     }
 
@@ -438,7 +452,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void openPaymentDialog(final PaymentDto payment, final boolean openAsRecipient) {
-        this.paymentDialog.removeAll();
+        Objects.requireNonNull(this.paymentDialog).removeAll();
         this.currentPayment = payment != null ? payment : new PaymentDto();
 
         this.binder = new Binder<>(PaymentDto.class);
@@ -524,7 +538,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.paymentDialog.add(dialogLayout);
 
         // Load current payment data
-        this.binder.readBean(this.currentPayment);
+        Objects.requireNonNull(this.binder).readBean(this.currentPayment);
 
         // Pre-select current account and today's date for new payments
         if (payment == null) {
@@ -542,7 +556,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private void savePayment() {
         try {
             // Validate form fields first
-            if (!this.binder.validate().isOk()) {
+            if (!Objects.requireNonNull(this.binder).validate().isOk()) {
                 NotificationUtil.showError("Please check the form for errors");
                 return;
             }

@@ -78,14 +78,7 @@ public class UserAccountMetaEntity extends PanacheEntityBase {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || this.getClass() != o.getClass()) {
-            return false;
-        }
-        final UserAccountMetaEntity that = (UserAccountMetaEntity) o;
-        return this.id != null && this.id.equals(that.id);
+        return this == o || (o instanceof UserAccountMetaEntity that && Objects.equals(this.id, that.id));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.component.dialog;
 
+import java.util.Objects;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -18,6 +20,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing user groups in the admin view. Encapsulates form fields, binder, and save/cancel
@@ -31,7 +34,9 @@ public class AdminUserGroupDialog extends FormDialog {
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 
+    @Nullable
     private Binder<UserGroupDto> binder;
+    @Nullable
     private UserGroupDto currentGroup;
 
     /** Initializes AdminUserGroupDialog. */
@@ -44,7 +49,7 @@ public class AdminUserGroupDialog extends FormDialog {
     }
 
     /** Opens the dialog for creating or editing a user group. */
-    public void open(final UserGroupResponseDto group) {
+    public void open(@Nullable final UserGroupResponseDto group) {
         this.removeAll();
         this.currentGroup = group != null ? group.toUserGroupDto() : new UserGroupDto();
         this.binder = new Binder<>(UserGroupDto.class);
@@ -88,18 +93,21 @@ public class AdminUserGroupDialog extends FormDialog {
 
     private void saveGroup() {
         try {
-            if (!this.binder.validate().isOk()) {
+            final var b = Objects.requireNonNull(this.binder);
+            final var g = Objects.requireNonNull(this.currentGroup);
+
+            if (!b.validate().isOk()) {
                 NotificationUtil.showError("Please check the form for errors");
                 return;
             }
 
-            this.binder.writeBean(this.currentGroup);
+            b.writeBean(g);
 
-            if (this.currentGroup.getId() == null) {
-                this.groupService.createGroup(this.currentGroup);
+            if (g.getId() == null) {
+                this.groupService.createGroup(g);
                 NotificationUtil.showSuccess("Group created successfully");
             } else {
-                this.groupService.updateGroup(this.currentGroup);
+                this.groupService.updateGroup(g);
                 NotificationUtil.showSuccess("Group updated successfully");
             }
 

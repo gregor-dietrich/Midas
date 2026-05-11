@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.component.dialog;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.jboss.logging.Logger;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -27,6 +28,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing users in the admin view. Encapsulates form fields, binder, password management, and
@@ -43,7 +45,9 @@ public class AdminUserDialog extends FormDialog {
     private final Runnable onAuthFailure;
 
     private final FormDialog passwordDialog;
+    @Nullable
     private Binder<UserDto> binder;
+    @Nullable
     private UserDto currentUser;
 
     /** Initializes AdminUserDialog. */
@@ -56,7 +60,7 @@ public class AdminUserDialog extends FormDialog {
     }
 
     /** Opens the dialog. */
-    public void open(final UserResponseDto user, final List<UserRankResponseDto> availableRanks) {
+    public void open(final UserResponseDto user, @Nullable final List<UserRankResponseDto> availableRanks) {
         this.removeAll();
         this.currentUser = user != null ? user.toUserDto() : new UserDto();
         this.binder = new Binder<>(UserDto.class);
@@ -114,7 +118,7 @@ public class AdminUserDialog extends FormDialog {
 
         final var rankField = new ComboBox<UserRankResponseDto>("Rank");
         rankField.setItems(availableRanks != null ? availableRanks : List.of());
-        rankField.setItemLabelGenerator(UserRankResponseDto::getName);
+        rankField.setItemLabelGenerator(r -> r != null ? r.getName() : "");
         rankField.setRequired(true);
         rankField.setPlaceholder("Select a rank");
         rankField.setClearButtonVisible(false);
@@ -137,9 +141,8 @@ public class AdminUserDialog extends FormDialog {
         }, "Email must be valid or empty").bind(UserDto::getEmail,
                 (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
 
-        this.binder.bind(activatedField, u -> u.getActivated() != null ? u.getActivated() : false,
-                UserDto::setActivated);
-        this.binder.bind(bannedField, u -> u.getBanned() != null ? u.getBanned() : false, UserDto::setBanned);
+        this.binder.bind(activatedField, u -> Boolean.TRUE.equals(u.getActivated()), UserDto::setActivated);
+        this.binder.bind(bannedField, u -> Boolean.TRUE.equals(u.getBanned()), UserDto::setBanned);
 
         // Rank binding - convert between UserRankResponseDto and rankId
         this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {
@@ -149,7 +152,11 @@ public class AdminUserDialog extends FormDialog {
             }
             return null;
         }, (u, value) -> {
-            u.setRankId(value != null ? value.getId() : null);
+            if (value != null) {
+                u.setRankId(value.getId());
+            } else {
+                u.setRankId(null);
+            }
         });
 
         final var buttonLayout = new HorizontalLayout();
@@ -255,13 +262,16 @@ public class AdminUserDialog extends FormDialog {
 
     private void saveUser() {
         try {
-            this.binder.writeBean(this.currentUser);
+            final var b = Objects.requireNonNull(this.binder);
+            final var u = Objects.requireNonNull(this.currentUser);
 
-            if (this.currentUser.getId() == null) {
-                this.userService.createUser(this.currentUser);
+            b.writeBean(u);
+
+            if (u.getId() == null) {
+                this.userService.createUser(u);
                 NotificationUtil.showSuccess("User created successfully");
             } else {
-                this.userService.updateUser(this.currentUser);
+                this.userService.updateUser(u);
                 NotificationUtil.showSuccess("User updated successfully");
             }
 
@@ -281,7 +291,7 @@ public class AdminUserDialog extends FormDialog {
         }
     }
 
-    private boolean isValidPassword(final String password) {
+    private boolean isValidPassword(@Nullable final String password) {
         if (password == null || password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
             return false;
         }

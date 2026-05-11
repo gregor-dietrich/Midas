@@ -136,14 +136,7 @@ public class UserRankEntity extends PanacheEntityBase {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || this.getClass() != o.getClass()) {
-            return false;
-        }
-        final UserRankEntity that = (UserRankEntity) o;
-        return this.id != null && this.id.equals(that.id);
+        return this == o || (o instanceof UserRankEntity that && Objects.equals(this.id, that.id));
     }
 
     @Override

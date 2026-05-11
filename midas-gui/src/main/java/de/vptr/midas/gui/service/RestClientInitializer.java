@@ -61,7 +61,7 @@ public class RestClientInitializer {
             // For AuthClient, we can't safely call a method (no valid credentials at
             // startup).
             // Just ensure the proxy class is loaded/cached.
-            this.authClient.getClass().getName();
+            final String _ = this.authClient.getClass().getName();
             LOG.debug("AuthClient initialized successfully");
         } catch (final Exception e) {
             LOG.debugf("AuthClient initialization error: %s", e.getMessage());

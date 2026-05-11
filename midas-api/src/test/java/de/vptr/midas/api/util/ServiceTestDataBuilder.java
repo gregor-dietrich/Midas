@@ -224,14 +224,7 @@ public final class ServiceTestDataBuilder {
     public static PaymentDto createPaymentDto(@Nullable final Long sourceAccountId,
             @Nullable final Long targetAccountId, @Nullable final Long userId, final String comment,
             final LocalDate date, final BigDecimal amount) {
-        final var dto = new PaymentDto();
-        dto.sourceAccountId = sourceAccountId;
-        dto.targetAccountId = targetAccountId;
-        dto.userId = userId;
-        dto.comment = comment;
-        dto.date = date;
-        dto.amount = amount;
-        return dto;
+        return createPaymentUpdateDto(sourceAccountId, targetAccountId, userId, comment, date, amount);
     }
 
     /**
@@ -239,8 +232,7 @@ public final class ServiceTestDataBuilder {
      */
     public static PostCommentEntity createPostCommentEntity(final String content, final UserEntity user,
             final PostEntity post) {
-        final var entity = new PostCommentEntity();
-        entity.content = content;
+        final var entity = createPostCommentUpdateEntity(content);
         entity.user = user;
         entity.post = post;
         return entity;
@@ -251,15 +243,7 @@ public final class ServiceTestDataBuilder {
      */
     public static UserRankDto createUserRankDto(final String name, final boolean userAdd, final boolean userEdit,
             final boolean userDelete, final boolean postAdd, final boolean postEdit, final boolean postDelete) {
-        final var dto = new UserRankDto();
-        dto.name = name;
-        dto.userAdd = userAdd;
-        dto.userEdit = userEdit;
-        dto.userDelete = userDelete;
-        dto.postAdd = postAdd;
-        dto.postEdit = postEdit;
-        dto.postDelete = postDelete;
-        return dto;
+        return createUserRankUpdateDto(name, userAdd, userEdit, userDelete, postAdd, postEdit, postDelete);
     }
 
     /**

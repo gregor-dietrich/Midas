@@ -11,6 +11,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
+import jakarta.annotation.Nullable;
 
 @QuarkusTest
 @TestProfile(RateLimitFilterTest.RateLimitTestProfile.class)
@@ -134,18 +135,17 @@ class RateLimitFilterTest {
                 .body("message", equalTo("Too many invalid authentication attempts"));
     }
 
-    private static void assertRateLimitResponse(final String ip, final String path, final String method,
+    private static void assertRateLimitResponse(@Nullable final String ip, final String path, final String method,
             final String message) {
-        TestUtil.given().header(FORWARDED_FOR_HEADER, ip).when().request(method, path).then().statusCode(429)
-                .contentType(ContentType.JSON).header("Retry-After", equalTo("60")).body("status", equalTo(429))
+        final var request = (ip != null) ? TestUtil.given().header(FORWARDED_FOR_HEADER, ip) : TestUtil.given();
+        request.when().request(method, path).then().statusCode(429).contentType(ContentType.JSON)
+                .header("Retry-After", equalTo("60")).body("status", equalTo(429))
                 .body("error", equalTo("Too Many Requests")).body("message", equalTo(message));
     }
 
     private static void assertRateLimitResponseWithoutForwardedHeaders(final String path, final String method,
             final String message) {
-        TestUtil.given().when().request(method, path).then().statusCode(429).contentType(ContentType.JSON)
-                .header("Retry-After", equalTo("60")).body("status", equalTo(429))
-                .body("error", equalTo("Too Many Requests")).body("message", equalTo(message));
+        assertRateLimitResponse(null, path, method, message);
     }
 
     public static class RateLimitTestProfile implements QuarkusTestProfile {

@@ -16,6 +16,8 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.server.VaadinSession;
 
+import jakarta.annotation.Nullable;
+
 /** Detached-safe async execution for Vaadin views. */
 public final class UiAsyncExecutor {
 
@@ -64,7 +66,7 @@ public final class UiAsyncExecutor {
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask), ASYNC_EXECUTOR)
+        final var _ = CompletableFuture.supplyAsync(() -> withSession(session, tccl, backgroundTask), ASYNC_EXECUTOR)
                 .orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {
@@ -101,7 +103,7 @@ public final class UiAsyncExecutor {
         final VaadinSession session = VaadinSession.getCurrent();
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 
-        CompletableFuture
+        final var _ = CompletableFuture
                 .supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()),
                         ASYNC_EXECUTOR)
                 .thenCompose(stage -> stage).orTimeout(timeoutSeconds, TimeUnit.SECONDS)
@@ -114,8 +116,8 @@ public final class UiAsyncExecutor {
                 }, throwable));
     }
 
-    static void dispatch(final UI ui, final VaadinSession session, final SerializableRunnable callback,
-            final Throwable throwable) {
+    static void dispatch(@Nullable final UI ui, @Nullable final VaadinSession session,
+            final SerializableRunnable callback, @Nullable final Throwable throwable) {
         if (ui == null || !ui.isAttached()) {
             handleDetachedDispatch(throwable, session);
             return;
@@ -123,7 +125,7 @@ public final class UiAsyncExecutor {
 
         try {
             // access() acquires the VaadinSession lock and enqueues on the UI thread.
-            ui.access(() -> callback.run());
+            final var _ = ui.access(() -> callback.run());
         } catch (final RuntimeException e) {
             if (throwable != null) {
                 MidasErrorHandler.handleDetached(throwable, session);
@@ -133,7 +135,8 @@ public final class UiAsyncExecutor {
         }
     }
 
-    private static <T> T withSession(final VaadinSession session, final ClassLoader tccl, final Supplier<T> supplier) {
+    private static <T> T withSession(@Nullable final VaadinSession session, final ClassLoader tccl,
+            final Supplier<T> supplier) {
         final VaadinSession previousSession = VaadinSession.getCurrent();
         final ClassLoader previousTccl = Thread.currentThread().getContextClassLoader();
         VaadinSession.setCurrent(session);
@@ -146,7 +149,8 @@ public final class UiAsyncExecutor {
         }
     }
 
-    private static void handleDetachedDispatch(final Throwable throwable, final VaadinSession session) {
+    private static void handleDetachedDispatch(@Nullable final Throwable throwable,
+            @Nullable final VaadinSession session) {
         if (throwable != null) {
             MidasErrorHandler.handleDetached(throwable, session);
         } else {

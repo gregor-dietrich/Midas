@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.component.dialog;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
@@ -26,6 +27,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog panel for managing user group membership. Shows a grid of current members and allows adding/removing users.
@@ -38,8 +40,11 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     private final UserService userService;
     private final Runnable onAuthFailure;
 
+    @Nullable
     private Grid<UserDto> userGrid;
+    @Nullable
     private ComboBox<UserResponseDto> availableUsersCombo;
+    @Nullable
     private UserGroupResponseDto selectedGroup;
 
     /** Initializes AdminUserGroupMemberPanel. */
@@ -52,7 +57,10 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     }
 
     /** Opens the member management dialog for the given group. */
-    public void open(final UserGroupResponseDto group) {
+    public void open(@Nullable final UserGroupResponseDto group) {
+        if (group == null) {
+            return;
+        }
         this.selectedGroup = group;
         this.removeAll();
 
@@ -112,8 +120,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
 
     private void loadGroupUsers() {
         try {
-            final var users = this.groupService.getUsersInGroup(this.selectedGroup.getId());
-            this.userGrid.setItems(users);
+            final var users = this.groupService.getUsersInGroup(Objects.requireNonNull(this.selectedGroup).getId());
+            Objects.requireNonNull(this.userGrid).setItems(users);
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.onAuthFailure.run();
@@ -129,13 +137,13 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         try {
             final var allUsers = this.userService.getAllUsers(0, 100);
 
-            final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+            final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
             final var currentUserIds = currentUsers.stream().map(UserDto::getId).collect(Collectors.toSet());
 
             final var availableUsers = allUsers.stream().filter(user -> !currentUserIds.contains(user.getId()))
                     .collect(Collectors.toList());
 
-            this.availableUsersCombo.setItems(availableUsers);
+            Objects.requireNonNull(this.availableUsersCombo).setItems(availableUsers);
         } catch (final RuntimeException e) {
             LOG.error("Error loading available users", e);
             NotificationUtil.showError("Error loading available users");
@@ -143,28 +151,29 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     }
 
     private void addUserToGroup() {
-        final var selectedUser = this.availableUsersCombo.getValue();
+        final var combo = Objects.requireNonNull(this.availableUsersCombo);
+        final var selectedUser = combo.getValue();
         if (selectedUser == null) {
             NotificationUtil.showWarning("Please select a user to add");
             return;
         }
 
-        final var currentUsers = this.userGrid.getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
+        final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>()).collect(Collectors.toList());
         final boolean alreadyInGroup =
                 currentUsers.stream().anyMatch(user -> user.getId().equals(selectedUser.getId()));
 
         if (alreadyInGroup) {
             NotificationUtil.showWarning("User is already a member of this group");
-            this.availableUsersCombo.clear();
+            Objects.requireNonNull(this.availableUsersCombo).clear();
             return;
         }
 
         try {
-            if (this.groupService.addUserToGroup(this.selectedGroup.getId(), selectedUser.getId())) {
+            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedGroup).getId(), selectedUser.getId())) {
                 NotificationUtil.showSuccess("User added to group successfully");
                 this.loadGroupUsers();
                 this.loadAvailableUsers();
-                this.availableUsersCombo.clear();
+                Objects.requireNonNull(this.availableUsersCombo).clear();
             } else {
                 NotificationUtil.showError("Failed to add user to group");
             }
@@ -181,7 +190,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
 
     private void removeUserFromGroup(final UserDto user) {
         try {
-            if (this.groupService.removeUserFromGroup(this.selectedGroup.getId(), user.getId())) {
+            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedGroup).getId(), user.getId())) {
                 NotificationUtil.showSuccess("User removed from group successfully");
                 this.loadGroupUsers();
                 this.loadAvailableUsers();

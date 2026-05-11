@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.component.dialog;
 
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -22,6 +23,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserRankService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing user ranks in the admin view. Encapsulates form fields, binder, permission
@@ -35,7 +37,9 @@ public class AdminUserRankDialog extends FormDialog {
     private final Runnable onSave;
     private final Runnable onAuthFailure;
 
+    @Nullable
     private Binder<UserRankDto> binder;
+    @Nullable
     private UserRankDto currentRank;
 
     /** Initializes AdminUserRankDialog. */
@@ -47,7 +51,7 @@ public class AdminUserRankDialog extends FormDialog {
     }
 
     /** Opens the dialog for creating or editing a rank. */
-    public void open(final UserRankResponseDto rank) {
+    public void open(@Nullable final UserRankResponseDto rank) {
         this.removeAll();
         this.currentRank = rank != null ? rank.toUserRankDto() : new UserRankDto();
         this.binder = new Binder<>(UserRankDto.class);
@@ -155,7 +159,7 @@ public class AdminUserRankDialog extends FormDialog {
 
     private void bindCheckbox(final Checkbox checkbox, final Function<UserRankDto, Boolean> getter,
             final BiConsumer<UserRankDto, Boolean> setter) {
-        this.binder.bind(checkbox, rank -> {
+        Objects.requireNonNull(this.binder).bind(checkbox, rank -> {
             final Boolean value = getter.apply(rank);
             return value != null ? value : false;
         }, setter::accept);
@@ -163,18 +167,21 @@ public class AdminUserRankDialog extends FormDialog {
 
     private void saveRank() {
         try {
-            if (!this.binder.validate().isOk()) {
+            final var b = Objects.requireNonNull(this.binder);
+            final var r = Objects.requireNonNull(this.currentRank);
+
+            if (!b.validate().isOk()) {
                 NotificationUtil.showError("Please check the form for errors");
                 return;
             }
 
-            this.binder.writeBean(this.currentRank);
+            b.writeBean(r);
 
-            if (this.currentRank.getId() == null) {
-                this.rankService.createRank(this.currentRank);
+            if (r.getId() == null) {
+                this.rankService.createRank(r);
                 NotificationUtil.showSuccess("Rank created successfully");
             } else {
-                this.rankService.updateRank(this.currentRank);
+                this.rankService.updateRank(r);
                 NotificationUtil.showSuccess("Rank updated successfully");
             }
 

@@ -14,6 +14,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.ProcessingException;
 
 /** Handler for error events. */
@@ -31,7 +32,7 @@ public final class MidasErrorHandler {
     public static void handle(final Throwable throwable, final UI ui) {
         final Throwable cause = unwrapAsyncThrowable(throwable);
 
-        ui.access(() -> dispatch(cause, ui));
+        final var _ = ui.access(() -> dispatch(cause, ui));
     }
 
     /**
@@ -69,13 +70,13 @@ public final class MidasErrorHandler {
     }
 
     /** Logs exception details and shows a sanitized notification. */
-    public static void showSanitizedError(final Throwable throwable, final String fallbackMessage) {
+    public static void showSanitizedError(@Nullable final Throwable throwable, final String fallbackMessage) {
         final Throwable cause = throwable == null ? null : unwrapAsyncThrowable(throwable);
         logUserFacing(cause, fallbackMessage);
         NotificationUtil.showError(resolveUserMessage(cause, fallbackMessage));
     }
 
-    private static void dispatch(final Throwable cause, final UI ui) {
+    private static void dispatch(@Nullable final Throwable cause, final UI ui) {
         if (cause instanceof AuthenticationException) {
             LOG.warn("Authentication error, redirecting to login", cause);
             // Navigate first — notification is secondary and must not block the redirect.

@@ -105,7 +105,7 @@ public class UserRankService {
                     if (dtoField.get(dto) == null) {
                         final var entityField = UserRankEntity.class.getDeclaredField(dtoField.getName());
                         entityField.setAccessible(true);
-                        entityField.set(rank, Boolean.FALSE);
+                        entityField.set(rank, false);
                     }
                 }
             }

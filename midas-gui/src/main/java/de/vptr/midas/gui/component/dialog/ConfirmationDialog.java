@@ -3,6 +3,8 @@ package de.vptr.midas.gui.component.dialog;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 
+import jakarta.annotation.Nullable;
+
 /** Dialog for confirmation. */
 public class ConfirmationDialog extends ConfirmDialog {
     private static final String DEFAULT_CANCEL_BUTTON_TEXT = "Cancel";
@@ -12,8 +14,8 @@ public class ConfirmationDialog extends ConfirmDialog {
 
     /** Initializes ConfirmationDialog. */
     public ConfirmationDialog(final ComponentEventListener<ConfirmDialog.ConfirmEvent> confirmAction,
-            final String dialogTitle, final String dialogText, final String confirmButtonText,
-            final String cancelButtonText) {
+            @Nullable final String dialogTitle, @Nullable final String dialogText,
+            @Nullable final String confirmButtonText, @Nullable final String cancelButtonText) {
         this.setHeader(dialogTitle != null ? dialogTitle : DEFAULT_DIALOG_TITLE);
         this.setText(dialogText != null ? dialogText : DEFAULT_DIALOG_TEXT);
         this.setConfirmText(confirmButtonText != null ? confirmButtonText : DEFAULT_CONFIRM_BUTTON_TEXT);
@@ -25,17 +27,18 @@ public class ConfirmationDialog extends ConfirmDialog {
     }
 
     public ConfirmationDialog(final ComponentEventListener<ConfirmDialog.ConfirmEvent> confirmAction,
-            final String dialogTitle, final String dialogText, final String confirmButtonText) {
+            @Nullable final String dialogTitle, @Nullable final String dialogText,
+            @Nullable final String confirmButtonText) {
         this(confirmAction, dialogTitle, dialogText, confirmButtonText, null);
     }
 
     public ConfirmationDialog(final ComponentEventListener<ConfirmDialog.ConfirmEvent> confirmAction,
-            final String dialogTitle, final String dialogText) {
+            @Nullable final String dialogTitle, @Nullable final String dialogText) {
         this(confirmAction, dialogTitle, dialogText, null);
     }
 
     public ConfirmationDialog(final ComponentEventListener<ConfirmDialog.ConfirmEvent> confirmAction,
-            final String dialogTitle) {
+            @Nullable final String dialogTitle) {
         this(confirmAction, dialogTitle, null);
     }
 

@@ -11,6 +11,7 @@ import de.vptr.midas.api.dto.PostCategoryResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
@@ -60,13 +61,7 @@ public class PostCategoryService {
     public PostCategoryResponseDto createCategory(final PostCategoryDto dto) {
         final PostCategoryEntity category = new PostCategoryEntity();
         category.name = dto.name;
-        if (dto.parentId != null) {
-            final var existingParent = (PostCategoryEntity) PostCategoryEntity.findById(dto.parentId);
-            if (existingParent == null) {
-                throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
-            }
-            category.parent = existingParent;
-        }
+        this.applyParent(category, dto.parentId, false);
         category.persistAndFlush();
         return this.toCategoryResponseDto(category);
     }
@@ -79,21 +74,7 @@ public class PostCategoryService {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
         }
         existingCategory.name = dto.name;
-        if (dto.parentId != null) {
-            final PostCategoryEntity newParent = PostCategoryEntity.findById(dto.parentId);
-            if (newParent == null) {
-                throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
-            }
-            if (newParent.id != null && existingCategory.id != null
-                    && this.isDescendantOf(newParent.id, existingCategory.id)) {
-                throw new WebApplicationException("Cannot set parent to a descendant category",
-                        Response.Status.BAD_REQUEST);
-            }
-            existingCategory.parent = newParent;
-        } else {
-            // Explicitly null parentId = make root category (PUT replaces all fields)
-            existingCategory.parent = null;
-        }
+        this.applyParent(existingCategory, dto.parentId, true);
         existingCategory.persistAndFlush();
         return this.toCategoryResponseDto(existingCategory);
     }
@@ -108,22 +89,28 @@ public class PostCategoryService {
         if (dto.name != null) {
             existingCategory.name = dto.name;
         }
-        // PATCH: only change parent if parentId is explicitly provided
         if (dto.parentId != null) {
-            final PostCategoryEntity newParent = (PostCategoryEntity) PostCategoryEntity.findById(dto.parentId);
+            this.applyParent(existingCategory, dto.parentId, false);
+        }
+        existingCategory.persistAndFlush();
+        return this.toCategoryResponseDto(existingCategory);
+    }
+
+    private void applyParent(final PostCategoryEntity category, @Nullable final Long parentId,
+            final boolean clearIfNull) {
+        if (parentId != null) {
+            final PostCategoryEntity newParent = (PostCategoryEntity) PostCategoryEntity.findById(parentId);
             if (newParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
-            if (newParent.id != null && existingCategory.id != null
-                    && this.isDescendantOf(newParent.id, existingCategory.id)) {
+            if (newParent.id != null && category.id != null && this.isDescendantOf(newParent.id, category.id)) {
                 throw new WebApplicationException("Cannot set parent to a descendant category",
                         Response.Status.BAD_REQUEST);
             }
-            existingCategory.parent = newParent;
+            category.parent = newParent;
+        } else if (clearIfNull) {
+            category.parent = null;
         }
-        // null parentId in PATCH = "don't change parent" (not "make root")
-        existingCategory.persistAndFlush();
-        return this.toCategoryResponseDto(existingCategory);
     }
 
     /**
@@ -135,6 +122,7 @@ public class PostCategoryService {
             return true;
         }
 
+        @SuppressWarnings("unchecked")
         final List<Long> ancestors = PostCategoryEntity.getEntityManager().createNativeQuery("""
                 WITH RECURSIVE ancestors AS (
                     SELECT id, parent_id FROM post_categories WHERE id = :startId
@@ -143,7 +131,7 @@ public class PostCategoryService {
                     INNER JOIN ancestors a ON c.id = a.parent_id
                 )
                 SELECT id FROM ancestors
-                """, Long.class).setParameter("startId", potentialParentId).getResultList();
+                """).setParameter("startId", potentialParentId).getResultList();
 
         return ancestors.contains(categoryId);
     }

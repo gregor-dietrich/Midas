@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.GenericType;
@@ -50,7 +51,7 @@ public final class ServiceHelper {
     }
 
     private static <T> T execute(final Supplier<T> action, final AuthService authService, final Logger log,
-            final String operation, final String failurePrefix) {
+            final String operation, @Nullable final String failurePrefix) {
         try {
             return action.get();
         } catch (final ProcessingException e) {
@@ -145,7 +146,7 @@ public final class ServiceHelper {
      * @return the value produced by {@code responseHandler}
      */
     public static <T> T executeWithResponse(final Supplier<Response> action, final AuthService authService,
-            final Logger log, final String operation, final String failurePrefix,
+            final Logger log, final String operation, @Nullable final String failurePrefix,
             final Function<Response, T> responseHandler) {
         return execute(() -> {
             try (Response response = action.get()) {
@@ -220,7 +221,7 @@ public final class ServiceHelper {
      * @return translated service exception
      */
     public static ServiceException responseFailure(final String failurePrefix, final Response response,
-            final Throwable cause) {
+            @Nullable final Throwable cause) {
         return new ServiceException(failurePrefix + ": " + ErrorMessageUtil.extractErrorMessage(response), cause);
     }
 
@@ -244,7 +245,7 @@ public final class ServiceHelper {
      *            original cause
      * @return translated service exception
      */
-    public static ServiceException backendError(final Response response, final Throwable cause) {
+    public static ServiceException backendError(final Response response, @Nullable final Throwable cause) {
         final String message = backendErrorMessage(response);
         if (cause == null) {
             return new ServiceException(message);
@@ -253,7 +254,7 @@ public final class ServiceHelper {
     }
 
     private static RuntimeException translateWebApplicationException(final WebApplicationException exception,
-            final AuthService authService, final Logger log, final String operation, final String failurePrefix) {
+            final AuthService authService, final Logger log, final String operation, @Nullable final String failurePrefix) {
         final Response response = exception.getResponse();
         final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
         final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);
