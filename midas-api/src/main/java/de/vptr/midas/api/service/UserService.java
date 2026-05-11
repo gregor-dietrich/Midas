@@ -2,7 +2,6 @@ package de.vptr.midas.api.service;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +18,7 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
 import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.EntityValidator;
+import de.vptr.midas.api.util.QueryAggregationUtil;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
@@ -306,18 +306,12 @@ public class UserService {
                 .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
                         Object[].class)
                 .setParameter("ids", ids).getResultList();
-        final Map<Long, Long> postCounts = new HashMap<>();
-        for (final Object[] row : postResults) {
-            postCounts.put((Long) row[0], (Long) row[1]);
-        }
+        final Map<Long, Long> postCounts = QueryAggregationUtil.toLongCountMap(postResults);
 
         final List<Object[]> commentResults = PostCommentEntity.getEntityManager().createQuery(
                 "SELECT c.user.id, COUNT(c) FROM PostCommentEntity c WHERE c.user.id IN :ids GROUP BY c.user.id",
                 Object[].class).setParameter("ids", ids).getResultList();
-        final Map<Long, Long> commentCounts = new HashMap<>();
-        for (final Object[] row : commentResults) {
-            commentCounts.put((Long) row[0], (Long) row[1]);
-        }
+        final Map<Long, Long> commentCounts = QueryAggregationUtil.toLongCountMap(commentResults);
 
         return users.stream().map(
                 u -> new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L)))

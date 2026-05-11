@@ -338,17 +338,7 @@
           <suppressionFiles>
             <suppressionFile>dependency-check-suppression.xml</suppressionFile>
           </suppressionFiles>
-          <skip>${dependency-check.skip}</skip>
         </configuration>
-        <executions>
-          <execution>
-            <id>dependency-check</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -428,12 +418,6 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
-            <configuration>
-              <excludes>
-                <exclude>org/jboss/**</exclude>
-                <exclude>io/netty/**</exclude>
-              </excludes>
-            </configuration>
           </execution>
           <execution>
             <id>report</id>
@@ -482,7 +466,7 @@
         <configuration>
           <java>
             <eclipse>
-              <file>eclipse-formatter.xml</file>
+              <file>${maven.multiModuleProjectDirectory}/eclipse-formatter.xml</file>
               <version>${eclipse-formatter.version}</version>
             </eclipse>
             <importOrder>
