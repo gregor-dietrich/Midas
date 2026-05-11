@@ -22,11 +22,13 @@ public class PostCategoryDto {
     @JsonProperty("children")
     private List<PostCategoryDto> children;
 
+    @SuppressWarnings("NullAway")
     public PostCategoryDto() {
         // Default constructor for Jackson
     }
 
     /** Creates a new instance with the given parameters. */
+    @SuppressWarnings("NullAway")
     public PostCategoryDto(final Long id, final String name, final PostCategoryDto parent) {
         this.id = id;
         this.name = name;
@@ -36,6 +38,7 @@ public class PostCategoryDto {
 
     // Additional constructor for API usage
     /** Creates a new instance with the given parameters. */
+    @SuppressWarnings("NullAway")
     public PostCategoryDto(final Long id, final String name, final Long parentId) {
         this.id = id;
         this.name = name;
@@ -71,6 +74,7 @@ public class PostCategoryDto {
         return this.parent;
     }
 
+    @SuppressWarnings("NullAway")
     public void setParent(final PostCategoryDto parent) {
         this.parent = parent;
         this.parentId = parent != null ? parent.getId() : null;

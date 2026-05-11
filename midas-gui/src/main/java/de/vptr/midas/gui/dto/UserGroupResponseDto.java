@@ -16,6 +16,7 @@ public class UserGroupResponseDto {
     @JsonProperty("userCount")
     private Long userCount;
 
+    @SuppressWarnings("NullAway")
     public UserGroupResponseDto() {
         // Default constructor for Jackson
     }

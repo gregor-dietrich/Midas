@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -115,7 +116,8 @@ public class UserService {
     public UserResponseDto updateUser(final UserDto user) {
         LOG.debugf("Updating user: %s", user.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.updateUser(user.getId(), user, authHeader),
+        final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for update");
+        return ServiceHelper.executeWithResponse(() -> this.userClient.updateUser(userId, user, authHeader),
                 this.authService, LOG, "updating user " + user.getId(), "Failed to update user", response -> {
                     if (response.getStatus() == 200) {
                         return ServiceHelper.readEntity(response, UserResponseDto.class, "updated user response");
@@ -128,7 +130,8 @@ public class UserService {
     public UserResponseDto updateUserPassword(final UserDto user) {
         LOG.debugf("Updating password for user: %s", user.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(user.getId(), user, authHeader),
+        final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for password update");
+        return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(userId, user, authHeader),
                 this.authService, LOG, "updating user password " + user.getId(), "Failed to update user password",
                 response -> {
                     if (response.getStatus() == 200) {

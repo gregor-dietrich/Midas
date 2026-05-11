@@ -3,6 +3,7 @@ package de.vptr.midas.gui.util;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import de.vptr.midas.gui.dto.AccountDto;
 import de.vptr.midas.gui.dto.AccountResponseDto;
@@ -21,6 +22,7 @@ import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 
+@SuppressWarnings("NullAway")
 /**
  * Utility class for creating mock data objects for GUI tests
  */
@@ -71,7 +73,7 @@ public class MockDataUtil {
         user.setRankName("User");
         user.setActivated(true);
         user.setBanned(false);
-        user.setCreated(LocalDateTime.now());
+        user.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return user;
     }
 
@@ -87,7 +89,7 @@ public class MockDataUtil {
         user.setRankName("User");
         user.setActivated(true);
         user.setBanned(false);
-        user.setCreated(LocalDateTime.now());
+        user.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return user;
     }
 
@@ -159,8 +161,8 @@ public class MockDataUtil {
         post.setCategoryName("Test Category");
         post.setPublished(true);
         post.setCommentable(true);
-        post.setCreated(LocalDateTime.now());
-        post.setLastEdit(LocalDateTime.now());
+        post.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
+        post.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         return post;
     }
 
@@ -178,9 +180,9 @@ public class MockDataUtil {
         payment.setTargetAccountName("Target Account");
         payment.setAmount(TestConstants.TEST_AMOUNT);
         payment.setComment(TestConstants.TEST_COMMENT);
-        payment.setDate(LocalDate.now());
-        payment.setCreated(LocalDateTime.now());
-        payment.setLastEdit(LocalDateTime.now());
+        payment.setDate(LocalDate.now(ZoneId.systemDefault()));
+        payment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
+        payment.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         return payment;
     }
 
@@ -200,9 +202,9 @@ public class MockDataUtil {
         payment.setTargetAccountName(targetAccountName);
         payment.setAmount(amount);
         payment.setComment(comment);
-        payment.setDate(LocalDate.now());
-        payment.setCreated(LocalDateTime.now());
-        payment.setLastEdit(LocalDateTime.now());
+        payment.setDate(LocalDate.now(ZoneId.systemDefault()));
+        payment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
+        payment.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         return payment;
     }
 
@@ -278,7 +280,7 @@ public class MockDataUtil {
         comment.setPostTitle(post.getTitle());
         comment.setUserId(user.getId());
         comment.setUsername(user.getUsername());
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return comment;
     }
 
@@ -294,7 +296,7 @@ public class MockDataUtil {
         dto.setPostTitle(postTitle);
         dto.setUserId(userId);
         dto.setUsername(username);
-        dto.setCreated(LocalDateTime.now());
+        dto.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return dto;
     }
 

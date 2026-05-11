@@ -35,7 +35,7 @@ class AbstractAsyncDataViewTest {
 
     /** Concrete subclass for testing the abstract base */
     private static class TestAsyncDataView extends AbstractAsyncDataView {
-        public <T> void testLoadWithErrorHandler(final Supplier<T> loader, final Consumer<T> onSuccess,
+        <T> void testLoadWithErrorHandler(final Supplier<T> loader, final Consumer<T> onSuccess,
                 final Consumer<Throwable> onError) {
             this.loadDataAsync(loader, onSuccess, onError);
         }

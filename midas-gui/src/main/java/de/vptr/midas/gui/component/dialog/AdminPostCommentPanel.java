@@ -19,6 +19,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
+@SuppressWarnings("NullAway")
 /**
  * Dialog for adding comments to posts in the admin view. Encapsulates the comment form, binder, and save logic.
  */

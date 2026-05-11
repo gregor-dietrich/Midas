@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -86,7 +87,7 @@ class AdminPaymentDialogTest {
         this.findComponent(dialog, BigDecimalField.class, field -> "Amount".equals(field.getLabel()))
                 .setValue(new BigDecimal("250.00"));
         this.findComponent(dialog, DatePicker.class, field -> "Payment Date".equals(field.getLabel()))
-                .setValue(LocalDate.now());
+                .setValue(LocalDate.now(ZoneId.systemDefault()));
         this.findComponent(dialog, TextField.class, field -> "Comment".equals(field.getLabel()))
                 .setValue("Test payment");
 
@@ -122,7 +123,7 @@ class AdminPaymentDialogTest {
         this.findComponent(dialog, BigDecimalField.class, field -> "Amount".equals(field.getLabel()))
                 .setValue(new BigDecimal("100.00"));
         this.findComponent(dialog, DatePicker.class, field -> "Payment Date".equals(field.getLabel()))
-                .setValue(LocalDate.now());
+                .setValue(LocalDate.now(ZoneId.systemDefault()));
         this.findComponent(dialog, TextField.class, field -> "Comment".equals(field.getLabel())).setValue("Auth test");
 
         this.findButton(dialog, "Save").click();

@@ -13,6 +13,7 @@ import com.vaadin.flow.server.VaadinSession;
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
@@ -68,7 +69,9 @@ public class AuthService {
 
             withSessionLock(session, () -> {
                 final var previousSessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-                this.sessionAuthorizationStore.revokeSession(previousSessionId);
+                if (previousSessionId != null) {
+                    this.sessionAuthorizationStore.revokeSession(previousSessionId);
+                }
                 final var sessionId = this.sessionAuthorizationStore.createSession(authHeader);
 
                 USERNAME_ATTRIBUTE.write(session, username);
@@ -107,7 +110,9 @@ public class AuthService {
         if (session != null) {
             withSessionLock(session, () -> {
                 final var sessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-                this.sessionAuthorizationStore.revokeSession(sessionId);
+                if (sessionId != null) {
+                    this.sessionAuthorizationStore.revokeSession(sessionId);
+                }
                 this.clearAuthenticationState(session);
                 session.close();
             });
@@ -157,6 +162,7 @@ public class AuthService {
     }
 
     /** Returns the authorization header for the current authenticated session. */
+    @Nullable
     public String getAuthorizationHeader() {
         if (!this.isAuthenticated()) {
             LOG.warn("Attempting to get auth header but user is not authenticated");
@@ -201,6 +207,7 @@ public class AuthService {
     /**
      * Returns the username of the currently authenticated user, or null if not authenticated.
      */
+    @Nullable
     public String getUsername() {
         final var session = VaadinSession.getCurrent();
         if (session == null) {

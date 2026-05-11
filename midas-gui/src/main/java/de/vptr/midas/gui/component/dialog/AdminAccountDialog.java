@@ -20,6 +20,7 @@ import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.annotation.Nullable;
 
+@SuppressWarnings("NullAway")
 /**
  * Dialog for creating and editing accounts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */

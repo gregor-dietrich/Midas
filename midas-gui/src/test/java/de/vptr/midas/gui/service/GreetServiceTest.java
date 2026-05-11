@@ -15,6 +15,7 @@ import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import jakarta.inject.Inject;
 
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class GreetServiceTest {
 

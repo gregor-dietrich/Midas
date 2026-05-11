@@ -3,6 +3,7 @@ package de.vptr.midas.gui.util;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import de.vptr.midas.gui.dto.AccountDto;
@@ -16,6 +17,7 @@ import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupDto;
 import de.vptr.midas.gui.dto.UserRankDto;
 
+@SuppressWarnings("NullAway")
 /**
  * Builder utility for creating test data objects for GUI service tests
  */
@@ -35,8 +37,8 @@ public class TestDataBuilder {
         user.setId(Long.valueOf(suffix));
         user.setActivated(false);
         user.setBanned(false);
-        user.setCreated(LocalDateTime.now());
-        user.setLastLogin(LocalDateTime.now());
+        user.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
+        user.setLastLogin(LocalDateTime.now(ZoneId.systemDefault()));
         return user;
     }
 
@@ -107,8 +109,8 @@ public class TestDataBuilder {
         post.setContent(TestUtil.createUniqueTestName("Test content"));
         post.setPublished(false);
         post.setCommentable(false);
-        post.setCreated(LocalDateTime.now());
-        post.setLastEdit(LocalDateTime.now());
+        post.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
+        post.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         final var user = createUniqueUser();
         post.setUserId(user.getId());
         post.setUsername(user.getUsername());
@@ -129,7 +131,7 @@ public class TestDataBuilder {
         comment.setPostTitle(post.getTitle());
         comment.setUserId(user.getId());
         comment.setUsername(user.getUsername());
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return comment;
     }
 
@@ -142,10 +144,10 @@ public class TestDataBuilder {
         final var fromAccountId = Long.valueOf(suffix + "1");
         final var toAccountId = Long.valueOf(suffix + "2");
         final var amount = new BigDecimal("100.00");
-        final var date = LocalDate.now();
+        final var date = LocalDate.now(ZoneId.systemDefault());
         final var comment = TestUtil.createUniqueTestName("Test payment");
-        final var created = LocalDateTime.now();
-        final var updated = LocalDateTime.now();
+        final var created = LocalDateTime.now(ZoneId.systemDefault());
+        final var updated = LocalDateTime.now(ZoneId.systemDefault());
 
         final var payment =
                 new PaymentDto(user.getId(), fromAccountId, toAccountId, amount, date, comment, created, updated);

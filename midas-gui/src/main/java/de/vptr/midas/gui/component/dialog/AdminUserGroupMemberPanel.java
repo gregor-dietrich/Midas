@@ -162,7 +162,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>())
                 .collect(Collectors.toList());
         final boolean alreadyInGroup =
-                currentUsers.stream().anyMatch(user -> user.getId().equals(selectedUser.getId()));
+                currentUsers.stream().anyMatch(user -> Objects.equals(user.getId(), selectedUser.getId()));
 
         if (alreadyInGroup) {
             NotificationUtil.showWarning("User is already a member of this group");

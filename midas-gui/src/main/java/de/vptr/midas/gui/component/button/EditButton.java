@@ -20,6 +20,6 @@ public class EditButton extends Button {
     }
 
     public EditButton(final ComponentEventListener<ClickEvent<Button>> editAction) {
-        this(editAction, null);
+        this(editAction, DEFAULT_TOOLTIP);
     }
 }

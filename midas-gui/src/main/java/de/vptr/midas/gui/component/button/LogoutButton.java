@@ -20,6 +20,6 @@ public class LogoutButton extends Button {
     }
 
     public LogoutButton(final ComponentEventListener<ClickEvent<Button>> logoutAction) {
-        this(logoutAction, null);
+        this(logoutAction, DEFAULT_TOOLTIP);
     }
 }

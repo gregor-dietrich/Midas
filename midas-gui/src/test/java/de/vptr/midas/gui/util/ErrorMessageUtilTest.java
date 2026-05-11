@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("NullAway")
 class ErrorMessageUtilTest {
 
     @Test

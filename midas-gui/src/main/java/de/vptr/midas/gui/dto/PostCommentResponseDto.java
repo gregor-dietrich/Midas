@@ -30,6 +30,7 @@ public class PostCommentResponseDto {
     @JsonProperty("created")
     private LocalDateTime created;
 
+    @SuppressWarnings("NullAway")
     public PostCommentResponseDto() {
         // Default constructor for Jackson
     }

@@ -104,6 +104,7 @@ public class UserRankResponseDto {
     @JsonProperty("usersCount")
     private Long usersCount;
 
+    @SuppressWarnings("NullAway")
     public UserRankResponseDto() {
         // Default constructor for Jackson
     }

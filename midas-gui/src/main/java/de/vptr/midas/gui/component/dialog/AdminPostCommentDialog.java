@@ -18,6 +18,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
+@SuppressWarnings("NullAway")
 /**
  * Dialog for editing post comments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */

@@ -11,12 +11,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class ThemeService {
 
     /** Theme component. */
+    @SuppressWarnings("NullAway")
     public enum Theme {
         LIGHT("Light", null), DARK("Dark", Lumo.DARK), SYSTEM("System", null);
 
         private final String displayName;
         private final String themeVariant;
 
+        @SuppressWarnings("NullAway")
         Theme(final String displayName, final String themeVariant) {
             this.displayName = displayName;
             this.themeVariant = themeVariant;
@@ -69,28 +71,22 @@ public class ThemeService {
             final var themeList = ui.getElement().getThemeList();
 
             switch (theme) {
-                case DARK:
-                    // Clear any document-level theme attributes and apply dark theme
+                case DARK -> {
                     ui.getPage().executeJs("document.documentElement.removeAttribute('theme');");
                     themeList.clear();
                     themeList.add(Lumo.DARK);
-                    break;
-                case LIGHT:
-                    // Clear any document-level theme attributes and ensure light theme
+                }
+                case LIGHT -> {
                     ui.getPage().executeJs("document.documentElement.removeAttribute('theme');");
                     themeList.clear();
-                    // Light theme is default, no need to add anything to themeList
-                    break;
-                case SYSTEM:
-                    // Clear Vaadin theme list and use CSS media query to detect system preference
+                }
+                case SYSTEM -> {
                     themeList.clear();
                     ui.getPage().executeJs(
                             "if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {"
                                     + "  document.documentElement.setAttribute('theme', 'dark');" + "} else {"
                                     + "  document.documentElement.removeAttribute('theme');" + "}");
-                    break;
-                default:
-                    break;
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -193,13 +194,13 @@ class PaymentServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.paymentService.getPaymentsByDateRange(LocalDate.now(), LocalDate.now()));
+                () -> this.paymentService.getPaymentsByDateRange(LocalDate.now(ZoneId.systemDefault()), LocalDate.now(ZoneId.systemDefault())));
     }
 
     @Test
     void createPayment_shouldReturnCreatedPayment_whenValidPayment() {
         final var user = TestDataBuilder.createUser("testuser", "test@example.com");
-        final var newPayment = new PaymentDto(user.getId(), 1L, 2L, new BigDecimal("100.00"), LocalDate.now(),
+        final var newPayment = new PaymentDto(user.getId(), 1L, 2L, new BigDecimal("100.00"), LocalDate.now(ZoneId.systemDefault()),
                 "New Payment", null, null);
         final var createdPayment = MockDataUtil.createPaymentResponseDto();
         createdPayment.setId(1L);

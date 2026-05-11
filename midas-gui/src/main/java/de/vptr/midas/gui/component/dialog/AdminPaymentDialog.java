@@ -27,6 +27,8 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.annotation.Nullable;
 
+@SuppressWarnings("NullAway")
+
 /**
  * Dialog for creating and editing payments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
@@ -198,6 +200,7 @@ public class AdminPaymentDialog extends FormDialog {
         }
     }
 
+    @Nullable
     private static AccountResponseDto findAccountById(final List<AccountResponseDto> accounts, final Long accountId) {
         if (accountId == null) {
             return null;

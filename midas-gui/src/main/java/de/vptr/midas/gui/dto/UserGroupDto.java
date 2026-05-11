@@ -23,10 +23,12 @@ public class UserGroupDto {
     @JsonProperty("created")
     private LocalDateTime created;
 
+    @SuppressWarnings("NullAway")
     public UserGroupDto() {
         // Default constructor for Jackson
     }
 
+    @SuppressWarnings("NullAway")
     public UserGroupDto(final Long id, final String name) {
         this.id = id;
         this.name = name;

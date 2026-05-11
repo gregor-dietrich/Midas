@@ -60,7 +60,7 @@ public class AdminUserDialog extends FormDialog {
     }
 
     /** Opens the dialog. */
-    public void open(final UserResponseDto user, @Nullable final List<UserRankResponseDto> availableRanks) {
+    public void open(@Nullable final UserResponseDto user, @Nullable final List<UserRankResponseDto> availableRanks) {
         this.removeAll();
         this.currentUser = user != null ? user.toUserDto() : new UserDto();
         this.binder = new Binder<>(UserDto.class);

@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
@@ -29,6 +30,7 @@ public class AppLifecycleBean {
         LOG.info("Midas GUI is shutting down. Goodbye! \\o");
     }
 
+    @Nullable
     private String readBanner() {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("banner.txt")) {
             if (inputStream == null) {

@@ -20,6 +20,6 @@ public class ManageUsersButton extends Button {
     }
 
     public ManageUsersButton(final ComponentEventListener<ClickEvent<Button>> addUserAction) {
-        this(addUserAction, null);
+        this(addUserAction, DEFAULT_TOOLTIP);
     }
 }

@@ -10,6 +10,7 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("NullAway")
 class SessionAuthorizationStoreTest {
 
     @Test

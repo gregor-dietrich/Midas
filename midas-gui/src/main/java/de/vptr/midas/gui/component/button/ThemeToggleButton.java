@@ -27,20 +27,18 @@ public class ThemeToggleButton extends Button {
     private void updateButton() {
         final var currentTheme = this.themeService.getCurrentTheme();
         switch (currentTheme) {
-            case LIGHT:
+            case LIGHT -> {
                 this.setIcon(LineAwesomeIcon.SUN_SOLID.create());
                 this.setTooltipText("Switch to Dark Theme");
-                break;
-            case DARK:
+            }
+            case DARK -> {
                 this.setIcon(LineAwesomeIcon.MOON_SOLID.create());
                 this.setTooltipText("Switch to System Theme");
-                break;
-            case SYSTEM:
+            }
+            case SYSTEM -> {
                 this.setIcon(LineAwesomeIcon.DESKTOP_SOLID.create());
                 this.setTooltipText("Switch to Light Theme");
-                break;
-            default:
-                break;
+            }
         }
     }
 }

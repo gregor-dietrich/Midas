@@ -97,6 +97,7 @@ public final class UiAsyncExecutor {
     /**
      * Executes an async stage supplier with timeout, session propagation, and detached-safe UI dispatch.
      */
+    @SuppressWarnings("FutureReturnValueIgnored")
     public static <T> void executeStage(final Supplier<? extends CompletionStage<T>> stageSupplier,
             final Consumer<T> onSuccess, final Consumer<Throwable> onError, final int timeoutSeconds) {
         final UI ui = UI.getCurrent();
@@ -106,7 +107,7 @@ public final class UiAsyncExecutor {
         final var _ = CompletableFuture
                 .supplyAsync(() -> withSession(session, tccl, () -> stageSupplier.get().toCompletableFuture()),
                         ASYNC_EXECUTOR)
-                .thenCompose(stage -> stage).orTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .<T>thenCompose(stage -> stage).orTimeout(timeoutSeconds, TimeUnit.SECONDS)
                 .whenComplete((result, throwable) -> dispatch(ui, session, () -> {
                     if (throwable != null) {
                         onError.accept(throwable);

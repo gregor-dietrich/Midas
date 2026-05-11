@@ -3,6 +3,7 @@ package de.vptr.midas.gui.service;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -158,8 +159,9 @@ public class PaymentService {
     public PaymentDto updatePayment(final PaymentDto payment) {
         LOG.debugf("Updating payment: %s", payment);
         final var authHeader = this.authService.requireAuthorizationHeader();
+        final var paymentId = Objects.requireNonNull(payment.getId(), "Payment ID must not be null for update");
         return ServiceHelper.executeWithResponse(
-                () -> this.paymentClient.updatePayment(payment.getId(), payment, authHeader), this.authService, LOG,
+                () -> this.paymentClient.updatePayment(paymentId, payment, authHeader), this.authService, LOG,
                 "updating payment " + payment.getId(), "Failed to update payment", response -> {
                     if (response.getStatus() == 200) {
                         final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,

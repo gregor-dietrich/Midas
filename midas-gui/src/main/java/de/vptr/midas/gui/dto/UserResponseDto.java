@@ -52,6 +52,7 @@ public class UserResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
+    @SuppressWarnings("NullAway")
     public UserResponseDto() {
         // Default constructor for Jackson
     }

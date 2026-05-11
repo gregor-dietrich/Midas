@@ -28,6 +28,7 @@ public class AccountResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
+    @SuppressWarnings("NullAway")
     public AccountResponseDto() {
         // Default constructor for Jackson
     }

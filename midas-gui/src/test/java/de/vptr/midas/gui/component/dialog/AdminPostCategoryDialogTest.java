@@ -32,6 +32,7 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.NotificationUtil;
 
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class AdminPostCategoryDialogTest {
 

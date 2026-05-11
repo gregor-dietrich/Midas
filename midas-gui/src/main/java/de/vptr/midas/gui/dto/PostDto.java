@@ -43,6 +43,7 @@ public class PostDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
+    @SuppressWarnings("NullAway")
     public PostDto() {
         // Default constructor for Jackson
     }

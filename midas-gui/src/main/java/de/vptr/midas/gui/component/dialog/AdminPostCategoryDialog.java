@@ -21,7 +21,9 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import jakarta.annotation.Nullable;
 
+@SuppressWarnings("NullAway")
 /**
  * Dialog for creating and editing post categories in the admin view. Encapsulates form fields, binder, parent category
  * filtering, and save/cancel logic.
@@ -49,7 +51,7 @@ public class AdminPostCategoryDialog extends FormDialog {
     /**
      * Opens the dialog for the given category, with available parent categories.
      */
-    public void open(final PostCategoryDto category, final List<PostCategoryResponseDto> allCategories) {
+    public void open(@Nullable final PostCategoryDto category, final List<PostCategoryResponseDto> allCategories) {
         this.removeAll();
         this.currentCategory = category != null ? category : new PostCategoryDto();
         this.binder = new Binder<>(PostCategoryDto.class);

@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 

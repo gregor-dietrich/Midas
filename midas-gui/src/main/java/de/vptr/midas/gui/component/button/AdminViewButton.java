@@ -18,6 +18,6 @@ public class AdminViewButton extends Button {
     }
 
     public AdminViewButton(final ComponentEventListener<ClickEvent<Button>> viewAction) {
-        this(viewAction, null);
+        this(viewAction, DEFAULT_TOOLTIP);
     }
 }

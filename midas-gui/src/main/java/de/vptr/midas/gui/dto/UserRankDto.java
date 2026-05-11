@@ -95,10 +95,12 @@ public class UserRankDto {
     @JsonProperty("userRankEdit")
     private Boolean userRankEdit = false;
 
+    @SuppressWarnings("NullAway")
     public UserRankDto() {
         // Default constructor for Jackson
     }
 
+    @SuppressWarnings("NullAway")
     public UserRankDto(final String name) {
         this.name = name;
     }

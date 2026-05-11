@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -199,7 +200,7 @@ class UserServiceTest {
         final var createdUser = MockDataUtil.createUserResponseDto(1L, "newuser", "new@example.com");
         createdUser.setActivated(false);
         createdUser.setBanned(false);
-        createdUser.setCreated(LocalDateTime.now());
+        createdUser.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdUser);
 
         ServiceTestUtil.setupAuthHeader(this.authService);

@@ -16,6 +16,7 @@ public class PageResponseDto {
     @JsonProperty("content")
     private String content;
 
+    @SuppressWarnings("NullAway")
     public PageResponseDto() {
         // Default constructor for Jackson
     }

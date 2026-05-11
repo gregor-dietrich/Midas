@@ -26,6 +26,7 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 import jakarta.inject.Inject;
 
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class PostCategoryServiceTest {
 

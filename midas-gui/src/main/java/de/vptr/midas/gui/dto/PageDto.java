@@ -14,6 +14,7 @@ public class PageDto {
     @JsonProperty("content")
     private String content;
 
+    @SuppressWarnings("NullAway")
     public PageDto() {
         // Default constructor for Jackson
     }

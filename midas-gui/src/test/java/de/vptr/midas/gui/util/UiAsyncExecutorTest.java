@@ -58,8 +58,9 @@ class UiAsyncExecutorTest {
         UiAsyncExecutor.dispatch(ui, session, () -> callbackExecuted.set(true), failure);
 
         assertThat(callbackExecuted).isFalse();
-        assertThat(dispatchedError.get()).isNotNull();
-        assertThat(dispatchedError.get().getThrowable()).isSameAs(failure);
+        final var error = dispatchedError.get();
+        assertThat(error).isNotNull();
+        assertThat(error.getThrowable()).isSameAs(failure);
         verify(sessionErrorHandler).error(any(ErrorEvent.class));
     }
 

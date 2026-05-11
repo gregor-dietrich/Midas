@@ -20,6 +20,6 @@ public class AddCommentButton extends Button {
     }
 
     public AddCommentButton(final ComponentEventListener<ClickEvent<Button>> addUserAction) {
-        this(addUserAction, null);
+        this(addUserAction, DEFAULT_TOOLTIP);
     }
 }

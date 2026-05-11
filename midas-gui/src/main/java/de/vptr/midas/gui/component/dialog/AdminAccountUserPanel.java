@@ -30,6 +30,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
+@SuppressWarnings("NullAway")
 /**
  * Dialog panel for managing users associated with an account. Shows a grid of current users with remove capability and
  * a combo to add new users.

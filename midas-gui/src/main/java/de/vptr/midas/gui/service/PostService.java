@@ -34,13 +34,11 @@ public class PostService {
     AuthService authService;
 
     /** Returns the all posts. */
+    @SuppressWarnings("NullAway")
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
     public List<PostResponseDto> getAllPosts() {
-        LOG.debug("Fetching all posts");
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.postClient.getAllPosts(null, null, authHeader), this.authService, LOG,
-                "fetching posts");
+        return this.getAllPosts(null, null);
     }
 
     /** Returns the all posts paginated. */
@@ -56,13 +54,11 @@ public class PostService {
     }
 
     /** Returns the published posts. */
+    @SuppressWarnings("NullAway")
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
     public List<PostResponseDto> getPublishedPosts() {
-        LOG.debug("Fetching published posts");
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.postClient.getPublishedPosts(null, null, authHeader), this.authService,
-                LOG, "fetching published posts");
+        return this.getPublishedPosts(null, null);
     }
 
     /** Returns the published posts paginated. */

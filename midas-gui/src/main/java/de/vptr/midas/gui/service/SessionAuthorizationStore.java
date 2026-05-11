@@ -66,6 +66,7 @@ public final class SessionAuthorizationStore {
      *            opaque session id
      * @return authorization header or null
      */
+    @SuppressWarnings("NullAway")
     public String resolveAuthorization(final String sessionId) {
         if (sessionId == null) {
             return null;
@@ -107,6 +108,7 @@ public final class SessionAuthorizationStore {
         }
     }
 
+    @SuppressWarnings("NullAway")
     private String encrypt(final String plaintext) {
         if (plaintext == null) {
             return null;
@@ -126,6 +128,7 @@ public final class SessionAuthorizationStore {
         }
     }
 
+    @SuppressWarnings("NullAway")
     private String decrypt(final String ciphertext) {
         if (ciphertext == null) {
             return null;

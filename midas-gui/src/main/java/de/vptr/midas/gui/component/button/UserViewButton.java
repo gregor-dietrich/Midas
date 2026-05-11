@@ -18,6 +18,6 @@ public class UserViewButton extends Button {
     }
 
     public UserViewButton(final ComponentEventListener<ClickEvent<Button>> viewAction) {
-        this(viewAction, null);
+        this(viewAction, DEFAULT_TOOLTIP);
     }
 }

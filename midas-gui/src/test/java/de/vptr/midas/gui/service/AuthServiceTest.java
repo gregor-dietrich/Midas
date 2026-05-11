@@ -34,6 +34,7 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 

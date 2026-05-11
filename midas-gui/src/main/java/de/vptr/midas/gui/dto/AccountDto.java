@@ -11,10 +11,12 @@ public class AccountDto {
     @JsonProperty("name")
     private String name;
 
+    @SuppressWarnings("NullAway")
     public AccountDto() {
         // Default constructor for Jackson
     }
 
+    @SuppressWarnings("NullAway")
     public AccountDto(final String name) {
         this.name = name;
     }

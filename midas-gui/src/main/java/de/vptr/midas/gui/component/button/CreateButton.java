@@ -20,6 +20,6 @@ public class CreateButton extends Button {
     }
 
     public CreateButton(final ComponentEventListener<ClickEvent<Button>> createAction) {
-        this(createAction, null);
+        this(createAction, DEFAULT_TOOLTIP);
     }
 }

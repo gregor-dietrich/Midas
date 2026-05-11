@@ -5,9 +5,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -30,6 +33,8 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.component.button.CreateButton;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
@@ -428,5 +433,30 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private <T> void loadDataAsync(final java.util.function.Supplier<T> supplier,
             final java.util.function.Consumer<T> consumer) {
         UiAsyncExecutor.execute(supplier, consumer, MidasErrorHandler::handleInUiContext);
+    }
+
+    /** Handles account access verification errors. */
+    void handleAccountAccessError(final CompletionException e, final UI ui) {
+        final var cause = MidasErrorHandler.unwrapAsyncThrowable(e);
+        if (cause instanceof AuthenticationException) {
+            NotificationUtil.showError("Session expired. Please log in again.");
+            ui.navigate(LoginView.class);
+        } else {
+            NotificationUtil.showError("Access denied or account not found");
+            ui.navigate(AccountView.class);
+        }
+    }
+
+    /** Handles account data loading errors. */
+    void handleAccountDataLoadError(final CompletionException e, final UI ui) {
+        final var cause = MidasErrorHandler.unwrapAsyncThrowable(e);
+        if (cause instanceof AuthenticationException) {
+            NotificationUtil.showError("Session expired. Please log in again.");
+            ui.navigate(LoginView.class);
+        } else if (cause instanceof TimeoutException) {
+            NotificationUtil.showError("Loading account data timed out. Please try again.");
+        } else if (cause instanceof ServiceException) {
+            NotificationUtil.showError((ServiceException) cause, "Loading account data failed. Please try again.");
+        }
     }
 }

@@ -26,7 +26,7 @@ public class DeleteButton extends Button {
     }
 
     public DeleteButton(final ComponentEventListener<ClickEvent<Button>> deleteAction) {
-        this(deleteAction, null);
+        this(deleteAction, DEFAULT_TOOLTIP);
     }
 
     private void showConfirmationDialog(final ClickEvent<Button> event) {

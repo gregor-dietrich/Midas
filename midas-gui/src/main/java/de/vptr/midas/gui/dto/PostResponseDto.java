@@ -45,6 +45,7 @@ public class PostResponseDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
+    @SuppressWarnings("NullAway")
     public PostResponseDto() {
         // Default constructor for Jackson
     }
