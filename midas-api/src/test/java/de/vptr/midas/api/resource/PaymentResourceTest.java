@@ -114,4 +114,80 @@ class PaymentResourceTest {
     void testDeletePayment_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/1", "DELETE");
     }
+
+    @Test
+    void testGetPaymentsBySourceAccount_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/source/1");
+    }
+
+    @Test
+    void testGetPaymentsBySourceAccount_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/source/1");
+    }
+
+    @Test
+    void testGetPaymentsByTargetAccount_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/target/1");
+    }
+
+    @Test
+    void testGetPaymentsByTargetAccount_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/target/1");
+    }
+
+    @Test
+    void testGetPaymentsByDateRange_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
+    void testGetPaymentsByDateRange_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
+    void testGetTotalAmountByUser_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/1/total");
+    }
+
+    @Test
+    void testGetTotalAmountByUser_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1/total");
+    }
+
+    @Test
+    void testUpdatePayment_authorized() {
+        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+
+        authenticatedRequest().contentType(ContentType.JSON).body(createUpdatedPaymentJson()).when()
+                .put(ENDPOINT_URL + "/" + id).then().statusCode(200);
+    }
+
+    @Test
+    void testPatchPayment_authorized() {
+        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+
+        authenticatedRequest().contentType(ContentType.JSON).body(createDefaultPaymentJson()).when()
+                .patch(ENDPOINT_URL + "/" + id).then().statusCode(200);
+    }
+
+    @Test
+    void testDeletePayment_authorized() {
+        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+    }
+
+    @Test
+    void testSearchPayments_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchPayments_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+    }
 }
