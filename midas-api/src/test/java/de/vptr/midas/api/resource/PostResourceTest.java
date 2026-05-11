@@ -19,6 +19,9 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPutWithJson;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPatchWithJson;
 
 import org.junit.jupiter.api.Test;
 
@@ -85,6 +88,26 @@ class PostResourceTest {
     }
 
     @Test
+    void testSearchPosts_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchPosts_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testGetPostsByDateRange_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
+    void testGetPostsByDateRange_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
     void testCreatePost_unauthorized() {
         testUnauthorizedPost(ENDPOINT_URL, createDefaultPostJson());
     }
@@ -120,12 +143,30 @@ class PostResourceTest {
     }
 
     @Test
+    void testUpdatePost_authorized() {
+        Long postId = createTestPost();
+        testAuthorizedPutWithJson(ENDPOINT_URL + "/" + postId, createUpdatedPostJson());
+    }
+
+    @Test
     void testPatchPost_unauthorized() {
         testUnauthorizedPatch(ENDPOINT_URL + "/1", createDefaultPostPatchJson());
     }
 
     @Test
+    void testPatchPost_authorized() {
+        Long postId = createTestPost();
+        testAuthorizedPatchWithJson(ENDPOINT_URL + "/" + postId, createDefaultPostPatchJson());
+    }
+
+    @Test
     void testDeletePost_unauthorized() {
         testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testDeletePost_authorized() {
+        Long postId = createTestPost();
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + postId).then().statusCode(204);
     }
 }
