@@ -57,6 +57,160 @@
 
 ---
 
+## Test Coverage Improvement Plan
+
+**Goal:** Raise overall test coverage to 80%+ lines / 62%+ branches across all API packages, with GUI services (excl. views/components) reaching same target.
+
+**Current State (from .coverage.md):**
+- API: 74.4% lines / 57.1% branches
+- GUI: 80.8% lines / 55.0% branches
+- Total: 77.7% lines / 56.2% branches
+
+**Target:** 80% lines / 62% branches per package on average. View and component classes excluded from GUI requirements.
+
+### Phase 1: Quick Wins (0% coverage stubs, <30 minutes)
+
+These are unused or trivial DTOs with no test footprint. Easy to knock out:
+
+1. **PasswordChangeDto** (6 lines, 0% lines coverage)
+   - Exists but unused (see X-CONS-02)
+   - Add basic DTO serialization tests (getter/setter round-trip) once the password change endpoint is implemented (tied to X-CONS-02 timeline)
+
+2. **AccountAccessResponseDto** (1 line, 0% lines)
+   - Add minimal DTO test (serialization round-trip)
+
+3. **AccountAssociationResponseDto** (1 line, 0% lines)
+   - Add minimal DTO test
+
+**Effort:** ~1-2 hours total. Unblocks removal of 0% coverage anomalies.
+
+### Phase 2: Highest Impact Resources (API)
+
+These resource classes are <40% coverage and handle critical CRUD paths. Prioritize in this order:
+
+1. **AccountResource** (44.8% lines, 10.3% branches) — 62 lines uncovered
+   - Missing: GET /accounts/{id}, PATCH operations, error cases (auth failures, not-found, validation)
+   - Add tests for GET list/paginated, GET by ID, create, update, delete, authorization checks
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~6-8 hours
+   - **✅ COMPLETED:** 95.4% lines / 62.5% branches
+
+2. **UserGroupResource** (27.6% lines, 0% branches) — 21 lines uncovered
+   - Missing: most CRUD paths
+   - Add comprehensive resource tests: GET, POST, PUT, DELETE with various auth scenarios
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~4-5 hours
+
+3. **PaymentResource** (36.7% lines, 0% branches) — 19 lines uncovered
+   - Missing: create, list with pagination, error cases
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~4-5 hours
+
+4. **PageResource** (38.9% lines, 0% branches) — 11 lines uncovered
+   - Missing: CRUD ops, search paths
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~3-4 hours
+
+5. **PostCommentResource** (51.5% lines, 0% branches) — 16 lines uncovered
+   - Missing: authorization, error cases
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~3-4 hours
+
+6. **PostResource** (51.6% lines, 0% branches) — 15 lines uncovered
+   - Missing: search, filtering, authorization edge cases
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~3-4 hours
+
+**Subtotal:** ~23-30 hours. Raises API resource coverage from 44.8% → ~78-80%, and branches from 10.3% → ~65%+.
+
+### Phase 3: Service Layer (API)
+
+Focus on services with <70% lines coverage:
+
+1. **AccountAccessService** (50.8% lines, 44.4% branches) — 58 lines uncovered
+   - Missing: permission checks, edge cases
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~5-6 hours
+
+2. **UserGroupService** (56.2% lines, 27.3% branches) — 28 lines uncovered
+   - Missing: validation, error paths
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~4-5 hours
+
+3. **PostCommentService** (67.5% lines, 41.7% branches) — 26 lines uncovered
+   - Missing: edge cases, authorization checks
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~3-4 hours
+
+**Subtotal:** ~12-15 hours. Raises API service coverage to ~78-80%+, branches to ~65%+.
+
+### Phase 4: Entity Coverage (API)
+
+Entity classes are currently 58.1% lines, 12.5% branches. These are Active Record pattern classes and often require integration tests to exercise properly:
+
+**Affected entities (worst first):**
+- UserGroupEntity (7.7%), UserGroupMetaEntity (14.3%), PostCommentEntity (16.7%), PageEntity (20.0%), PostCategoryEntity (25.0%), AccountEntity (28.6%), UserEntity (33.3%)
+
+**Strategy:** Rather than unit-testing entities in isolation, leverage existing repository/service integration tests and add missing scenarios:
+- Constructor variants, lifecycle hooks, lazy-load relationships
+- Business logic methods (if any)
+- Validation constraints
+
+**Target:** 80% lines, 65%+ branches via integration test coverage.
+**Effort:** ~6-8 hours (spread across service tests).
+
+### Phase 5: GUI Service Layer (non-view)
+
+**Current state:** GUI services are 84% lines / 68% branches — already strong. Remaining gaps:
+
+1. **BackendAvailabilityService** (36.4% lines, 50% branches) — 14 lines uncovered
+   - Missing: timeout/failure scenarios
+   - **Target:** 80% lines, 62%+ branches
+   - **Effort:** ~2 hours
+
+2. **UserRankService** (78.2% lines, 60% branches) — 19 lines uncovered
+   - Missing: edge cases
+   - **Effort:** ~2-3 hours
+
+**Subtotal:** ~4-5 hours.
+
+### Recommended Execution Order
+
+1. **Week 1 (Phase 1 + Phase 2.1-2.3)**
+   - Quick wins: 1-2 hours
+   - AccountResource, UserGroupResource, PaymentResource: ~14-18 hours
+   - Total: ~15-20 hours
+
+2. **Week 2 (Phase 2.4-2.6 + Phase 3)**
+   - PageResource, PostCommentResource, PostResource: ~10-12 hours
+   - AccountAccessService, UserGroupService, PostCommentService: ~12-15 hours
+   - Total: ~22-27 hours
+
+3. **Week 3 (Phase 4 + Phase 5)**
+   - Entity coverage (via integration tests): ~6-8 hours
+   - GUI services: ~4-5 hours
+   - Total: ~10-13 hours
+
+**Grand Total:** ~47-60 hours to reach 80% lines / 65% branches across API + GUI (services only).
+
+### Key Testing Patterns to Leverage
+
+- **Resource tests:** Use `@QuarkusTest` + `@TestHTTPEndpoint`, mock services where needed
+- **Service tests:** Unit test with mocked repositories; integration test with `@QuarkusTest` for complex logic
+- **Entity tests:** Cover via integration tests (CRUD, relationships, lifecycle)
+- **Branch coverage:** Pay special attention to error paths, authorization checks, edge cases (null, empty, boundaries)
+
+### Success Criteria
+
+- [ ] All API packages ≥80% lines, ≥62% branches
+- [ ] All API services ≥80% lines, ≥62% branches
+- [ ] All API resources ≥80% lines, ≥62% branches
+- [ ] GUI services (excl. views/components) ≥80% lines, ≥62% branches
+- [ ] No 0% coverage anomalies remain
+- [ ] `make coverage` passes and generates report
+
+---
+
 ## Code Review Findings — Security, Bugs, Performance, Architecture
 
 ## Cross-Module Consistency & Architecture

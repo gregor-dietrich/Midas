@@ -194,6 +194,83 @@ class AccountResourceTest {
                 .statusCode(200).body("[0].isNegative", equalTo(true));
     }
 
+    @Test
+    void testGetAccountByName_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/name/test-account");
+    }
+
+    @Test
+    void testGetMyAccountBalance_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/balance").then()
+                .statusCode(200).body("balance", equalTo(0));
+    }
+
+    @Test
+    void testGetMyAccountBalance_accessDenied() {
+        forwardedAuthenticatedRequest("not-authorized").when().get(ENDPOINT_URL + "/my/999/balance").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testGetMyAccountPayments_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/payments").then()
+                .statusCode(200);
+    }
+
+    @Test
+    void testGetMyAccountOutgoingPayments_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/payments/outgoing")
+                .then().statusCode(200);
+    }
+
+    @Test
+    void testGetMyAccountIncomingPayments_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/payments/incoming")
+                .then().statusCode(200);
+    }
+
+    @Test
+    void testGetMyAccounts_authorized() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/my").then().statusCode(200);
+    }
+
+    @Test
+    void testGetMyAccountsWithBalances_authorized() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/my/with-balances").then().statusCode(200);
+    }
+
+    @Test
+    void testCheckMyAccountAccess_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/check").then()
+                .statusCode(200).body("hasAccess", equalTo(true));
+    }
+
+    @Test
+    void testUpdateUserAccount_authorized() {
+        final Integer accountId = authenticatedRequest().contentType(ContentType.JSON).body(createDefaultAccountJson())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        authenticatedRequest().contentType(ContentType.JSON).body(createDefaultAccountJson()).when()
+                .put(ENDPOINT_URL + "/" + accountId).then().statusCode(200);
+    }
+
+    @Test
+    void testRemoveUserFromAccount_authorized() {
+        final String clientKey = uniqueClientKey();
+        final long accountId = this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when()
+                .delete(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
+    }
+
     private long createAdminAccessibleAccount(final String clientKey) {
         final Integer accountId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
                 .body(createUniqueAccountJson()).when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
