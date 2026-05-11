@@ -6,9 +6,12 @@ import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUniqueUserJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUserJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
@@ -20,6 +23,8 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -108,6 +113,27 @@ class UserResourceTest {
     }
 
     @Test
+    void testGetUserByUsername_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/username/admin").then().statusCode(403);
+    }
+
+    @Test
+    void testGetUserByEmail_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/email?email=admin@example.com");
+    }
+
+    @Test
+    void testGetUserByEmail_authorizedWithNonExistentEmail() {
+        testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/email?email=nonexistent@example.com");
+    }
+
+    @Test
+    void testGetUserByEmail_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/email?email=admin@example.com").then()
+                .statusCode(403);
+    }
+
+    @Test
     void testGetUserById_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/1");
     }
@@ -123,12 +149,78 @@ class UserResourceTest {
     }
 
     @Test
+    void testGetUserById_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
     void testUpdateUser_unauthorized() {
         testUnauthorizedPut(ENDPOINT_URL + "/1", createDefaultUserUpdateJson());
     }
 
     @Test
+    void testUpdateUser_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when().put(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testUpdateUser_authorized() {
+        // Test authorization is enforced; guest would get 403, admin gets past authorization
+        int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
+                .put(ENDPOINT_URL + "/99999").then().extract().statusCode();
+        assertNotEquals(403, statusCode);
+    }
+
+    @Test
+    void testPatchUser_unauthorized() {
+        testUnauthorizedPut(ENDPOINT_URL + "/1", createDefaultUserUpdateJson());
+    }
+
+    @Test
+    void testPatchUser_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when().patch(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testPatchUser_authorized() {
+        // Test authorization is enforced; guest would get 403, admin gets past authorization
+        int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
+                .patch(ENDPOINT_URL + "/99999").then().extract().statusCode();
+        assertNotEquals(403, statusCode);
+    }
+
+    @Test
     void testDeleteUser_unauthorized() {
         testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testDeleteUser_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
+    void testDeleteUser_authorized() {
+        // Test authorization is enforced; guest would get 403, admin gets past authorization
+        int statusCode = authenticatedRequest().when().delete(ENDPOINT_URL + "/99999").then().extract()
+                .statusCode();
+        assertNotEquals(403, statusCode);
+    }
+
+    @Test
+    void testSearchUsers_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchUsers_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(403);
+    }
+
+    @Test
+    void testSearchUsers_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
     }
 }

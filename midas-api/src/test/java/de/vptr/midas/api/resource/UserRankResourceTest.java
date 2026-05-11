@@ -7,6 +7,9 @@ import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedUserRankJson;
 import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
@@ -20,6 +23,7 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -37,6 +41,11 @@ class UserRankResourceTest {
     }
 
     @Test
+    void testGetAllUserRanks_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL).then().statusCode(403);
+    }
+
+    @Test
     void testGetUserRankById_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/1");
     }
@@ -49,6 +58,41 @@ class UserRankResourceTest {
     @Test
     void testGetUserRankById_authorizedWithNonExistentRank() {
         testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/999");
+    }
+
+    @Test
+    void testGetUserRankById_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
+    void testGetUserRankByName_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/name/testname");
+    }
+
+    @Test
+    void testGetUserRankByName_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/name/testname").then().statusCode(403);
+    }
+
+    @Test
+    void testGetUserRankByName_authorized() {
+        testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/name/nonexistent");
+    }
+
+    @Test
+    void testSearchUserRanks_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchUserRanks_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(403);
+    }
+
+    @Test
+    void testSearchUserRanks_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
     }
 
     @Test
@@ -90,7 +134,59 @@ class UserRankResourceTest {
     }
 
     @Test
+    void testUpdateUserRank_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createUpdatedUserRankJson()).when().put(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testUpdateUserRank_authorized() {
+        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("id");
+
+        authenticatedJsonRequest().body(createUpdatedUserRankJson()).when().put(ENDPOINT_URL + "/" + id).then()
+                .statusCode(200);
+
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+    }
+
+    @Test
+    void testPatchUserRank_unauthorized() {
+        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedUserRankJson());
+    }
+
+    @Test
+    void testPatchUserRank_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createUpdatedUserRankJson()).when().patch(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testPatchUserRank_authorized() {
+        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("id");
+
+        authenticatedJsonRequest().body(createUpdatedUserRankJson()).when().patch(ENDPOINT_URL + "/" + id).then()
+                .statusCode(200);
+
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+    }
+
+    @Test
     void testDeleteUserRank_unauthorized() {
         testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testDeleteUserRank_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
+    void testDeleteUserRank_authorized() {
+        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("id");
+
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }
 }

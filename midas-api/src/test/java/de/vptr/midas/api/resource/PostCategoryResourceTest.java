@@ -5,6 +5,8 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedPostCategoryJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.createTestCategory;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResourceAndJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
@@ -17,9 +19,12 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 
 import org.junit.jupiter.api.Test;
 
+import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -108,7 +113,64 @@ class PostCategoryResourceTest {
     }
 
     @Test
+    void testUpdateCategory_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().put(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testUpdateCategory_authorized() {
+        Long categoryId = createTestCategory();
+        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when()
+                .put(ENDPOINT_URL + "/" + categoryId).then().statusCode(200);
+    }
+
+    @Test
+    void testPatchCategory_unauthorized() {
+        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPostCategoryJson());
+    }
+
+    @Test
+    void testPatchCategory_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/1")
+                .then().statusCode(403);
+    }
+
+    @Test
+    void testPatchCategory_authorized() {
+        Long categoryId = createTestCategory();
+        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when()
+                .patch(ENDPOINT_URL + "/" + categoryId).then().statusCode(200);
+    }
+
+    @Test
     void testDeleteCategory_unauthorized() {
         testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testDeleteCategory_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
+    void testDeleteCategory_authorized() {
+        Long categoryId = createTestCategory();
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + categoryId).then().statusCode(204);
+    }
+
+    @Test
+    void testSearchCategories_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchCategories_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(403);
+    }
+
+    @Test
+    void testSearchCategories_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
     }
 }

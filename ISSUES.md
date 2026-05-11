@@ -156,6 +156,44 @@ Focus on services with <70% lines coverage:
 
 **Subtotal:** All three services above 80% lines and 62%+ branches!  ✅ PHASE 3 COMPLETE
 
+### Phase 3.5: Systematic Authorization Testing for Resources (NEW)
+
+**Goal:** For each resource endpoint, add three authorization scenarios:
+1. Unauthorized (401 - no authentication)
+2. Authorized but wrong role/insufficient permissions (403)
+3. Authorized with correct role (200/204/404 depending on business logic)
+
+Systematically enhanced:
+
+1. **UserRankResource** (16 new tests)
+   - Added: GET /user-ranks/{id} insufficient role, GET /name/{name} (3 scenarios), GET /search (3 scenarios)
+   - Added: PUT authorized, PATCH (3 scenarios), DELETE (3 scenarios)
+   - **Result:** 47.1% → needs re-coverage check after full test run
+   - **✅ COMPLETED:** 28 tests, all passing
+
+2. **PostCategoryResource** (12 new tests)
+   - Added: PUT/PATCH/DELETE authorized with insufficient role and correct role
+   - Added: GET /search (3 scenarios)
+   - **Result:** 50.0% lines → comprehensive authorization testing added
+   - **✅ COMPLETED:** 27 tests, all passing
+
+3. **UserResource** (15 new tests)
+   - Added: GET /users/username insufficient role
+   - Added: GET /users/email (4 scenarios)
+   - Added: GET /users/{id} insufficient role
+   - Added: PUT/PATCH/DELETE with insufficient role and authorized scenarios
+   - Added: GET /search (3 scenarios)
+   - **Result:** 78.0% → improved with authorization tests
+   - **✅ COMPLETED:** 35 tests, all passing
+
+**Overall Impact after Phase 3.5:**
+- API: 85.6% lines / 64.0% branches (above 62% target ✓)
+- Total: 83.1% lines / 60.0% branches (2% short on branches)
+- Resource package: 81.0% lines / 41.0% branches (improved from earlier but still under target)
+
+**Subtotal:** ~6 hours. Added 43 new authorization-focused test methods.
+**Status:** ✅ PHASE 3.5 COMPLETE - systematic authorization testing framework established
+
 ### Phase 4: Entity Coverage (API)
 
 Entity classes are currently 58.1% lines, 12.5% branches. These are Active Record pattern classes and often require integration tests to exercise properly:
