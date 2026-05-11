@@ -149,3 +149,35 @@ Located in `util/`:
 - AuthService: mock to control authentication state
 - Vaadin static methods: use `MockedStatic` sparingly — prefer testing logic in isolation
 - No real HTTP calls: all REST client calls are mocked. No Testcontainers needed.
+
+---
+
+## midas-test (Integration)
+
+### Framework
+
+- Pytest 9.0+
+- SQLAlchemy 2.0+ for direct database verification
+- Requests for API interaction
+
+### Naming
+
+- Files: `test_*.py`
+- Functions: `test_*`
+- Classes: `Test*`
+
+### Running Tests
+
+```shell
+cd midas-test
+pytest                                 # All tests
+pytest tests/test_config.py            # Specific file
+pytest -k "creation"                   # Tests matching keyword
+```
+
+### Conventions
+
+- **Arrange-Act-Assert**: Clear separation of test phases.
+- **Fixtures**: Use pytest fixtures for database sessions, API clients, and test data cleanup.
+- **Verification**: Use SQLAlchemy to check the database state after API actions to ensure persistence and correctness.
+- **Cleanup**: Ensure any data created during tests is removed or does not interfere with other tests.

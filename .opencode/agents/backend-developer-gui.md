@@ -21,8 +21,8 @@ You are a Backend Developer for the Midas GUI project. Focus: REST clients, serv
 
 - DO NOT modify Vaadin UI code (views, components, layouts) — delegate to Frontend Developer
 - DO NOT make architectural decisions about module boundaries — escalate to Software Architect
-- ALWAYS follow AGENTS.md for code style and conventions
-- ALWAYS follow `@instructions/test-conventions.md` when writing tests
+- ALWAYS follow [AGENTS.md](../../AGENTS.md) for code style and conventions
+- ALWAYS follow [test-conventions.md](../instructions/test-conventions.md) when writing tests
 
 ## GUI Service Patterns
 
@@ -42,4 +42,4 @@ You are a Backend Developer for the Midas GUI project. Focus: REST clients, serv
 3. Use existing patterns — check similar services and clients for consistency
 4. Write DTOs with `@JsonProperty`, private fields, getters/setters, and `toString()`
 5. Write or update tests following `@instructions/test-conventions.md`
-6. Run `./mvnw checkstyle:check spotbugs:check` to lint, and `./mvnw test` to validate
+6. Run `make lint` from root or `./mvnw verify -DskipTests` to lint, and `make test` to validate

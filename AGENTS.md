@@ -1,121 +1,101 @@
 # Midas Project
 
-Multi-module Quarkus 3 app. Java 25. PostgreSQL.
+Multi-module system. Java 25 / Quarkus 3 backend & frontend. Python 3.13 integration/monitoring.
 
-- **midas-api**: Backend REST API (Hibernate Panache, Basic Auth, PBKDF2-SHA256)
-- **midas-gui**: Frontend (Vaadin Flow 25, MicroProfile REST Client). No DB — talks to API
-- **midas-test**: Integration harness (Python 3.13+, Streamlit, SQLAlchemy). Separate from Java build
+- **midas-api**: Backend REST API (Hibernate Panache, Basic Auth, PBKDF2-SHA256).
+- **midas-gui**: Frontend (Vaadin Flow 25, MicroProfile REST Client). No DB.
+- **midas-test**: Integration suite (Python 3.13, Streamlit, SQLAlchemy, Pytest, Ruff).
 
 ## Communication Style
 
-Caveman mode: terse, exact, no fluff. Drop articles, filler, pleasantries. Fragments OK. Pattern: [thing] [action] [reason].
+Caveman mode: terse, exact, no fluff. Drop articles, filler, pleasantries. Pattern: [thing] [action] [reason].
 
 ## Exact Commands
 
-Both modules have `./mvnw`. Prefer wrapper.
+### Root Makefile (Orchestration)
 
 ```shell
-# Lint (never skip — severity=error, blocks build)
-./mvnw checkstyle:check spotbugs:check
-
-# Tests
-./mvnw test                                          # all
-./mvnw test -Dtest=PostResourceTest                  # single class
-./mvnw test -Dtest=PostResourceTest#testCreatePost   # single method
-
-# Dev mode (API port 8080, GUI port 8081)
-./mvnw quarkus:dev
-
-# Full verification
-./mvnw verify -DskipTests                            # compile + lint + license
-./mvnw verify -Ddependency-check.skip=false          # + OWASP (needs NVD_API_KEY)
-
-# Root Makefile shortcuts
-make dev-api          # API dev mode
-make dev-gui          # GUI dev mode
-make test             # both modules
-make install          # check + clean install -DskipTests
-make build            # check + package + docker buildx
-make password         # generate salt+hash for init.sql
+make install      # check + clean install -DskipTests (Java modules)
+make test         # execute all tests (Java + Python)
+make dev-api      # start API in dev mode (port 8080)
+make dev-gui      # start GUI in dev mode (port 8081)
+make build        # check + package + docker build
+make clean        # remove build artifacts
+make kill         # stop all processes/containers
 ```
 
-API tests require Docker (Testcontainers). GUI tests do not.
+### Java Modules (API & GUI)
 
-GUI production package: `./mvnw package -Pproduction`
+```shell
+# Comprehensive Lint (Severity=error, blocks build)
+# Includes Checkstyle, SpotBugs, PMD, CPD, Error Prone, NullAway
+./mvnw verify -DskipTests
 
-## Architecture
-
-### API
-
-```txt
-Resource (@Path, @Authenticated) → Service (@ApplicationScoped, @Transactional) → Entity (PanacheEntityBase)
-                                                                    ↕
-                                                              DTO (request + response)
+./mvnw test                              # Test all (API needs Docker)
+./mvnw quarkus:dev                       # Dev mode
 ```
 
-- All REST endpoints under `/api/v1` (via `@ApplicationPath`)
-- Basic Auth → `UserIdentityProvider` → PBKDF2-SHA256 (100k iterations, 256-bit salt)
-- `UserRankIdentityAugmentor` maps rank to fine-grained roles (`post:add`, `user:delete`, …)
-- Resources: `@Authenticated` class-level; mutating endpoints add `@RolesAllowed({"resource:action"})`
-- Dev Services auto-starts PostgreSQL on port 55432
-- Production schema: `validate`; dev/test: `drop-and-create`
+### Python Module (Test Suite)
 
-### GUI
-
-```txt
-View (@Route, BeforeEnterObserver) → Service → REST Client (@RegisterRestClient configKey="midas-api") → Backend API
+```shell
+cd midas-test
+ruff check .                             # Lint
+pytest                                   # Run integration tests
+streamlit run src/app.py                 # Start monitoring UI
 ```
 
-- UI built lazily in `beforeEnter()`, not constructors
-- Async loading: `CompletableFuture.supplyAsync()` + `.orTimeout(30, SECONDS)`, results via `ui.access(...)`
-- `AuthService` stores backend Basic Auth header server-side behind opaque session ID
-- Every service method checks `authService.getAuthorizationHeader()` first
-- `WebApplicationException` 401 → `authService.logout()` → `AuthenticationException`
+## Architecture & Conventions
 
-## Key Conventions
+Detailed instructions in `.opencode/instructions/`:
 
-### API
+- [Code Quality & Security](./.opencode/instructions/code-quality.md)
+- [Docker & Deployment](./.opencode/instructions/docker-conventions.md)
+- [Testing Conventions](./.opencode/instructions/test-conventions.md)
 
-- **Entities**: public fields (no getters/setters), `@ManyToOne(fetch = LAZY)`, manual `@Id @GeneratedValue(IDENTITY) public Long id`
-- **Request DTOs**: public fields with Bean Validation (`@Size`, `@Email`, `@NotBlank`)
-- **Response DTOs**: public fields with denormalized data (`username`, `categoryName`). Constructor takes entity. Never expose sensitive fields.
-- **REST responses**: use `ResponseUtil` helpers only — never build `Response` manually
-- **Validation**: `@Valid` on resource params; `ValidationException` from services → 422
-- **Testing**: `@QuarkusTest`, REST Assured via `TestUtil`, unique test data via `TestUtil.generateUniqueSuffix()`
-- **Style**: Google Java Style (Checkstyle severity=error), 4-space indent, SpotBugs clean
-- **Javadoc**: required on public methods (≥2 lines). `@Override` and `@Test` exempt.
-- **Database**: No Flyway. Project unreleased. Schema changes go in `src/main/resources/sql/init.sql`. Never create `db/migration/`.
+### Backend (API)
 
-### GUI
+- **Pattern**: Resource → Service → Entity (Active Record).
+- **Security**: Basic Auth via `UserIdentityProvider`. PBKDF2-SHA256 (100k iter, 256-bit salt).
+- **Authorization**: `@Authenticated` class-level. `@RolesAllowed` for mutations.
+- **DTOs**: Request (Validation) / Response (Entity constructor). No sensitive fields.
 
-- **Services**: `@ApplicationScoped`, `@Timeout(5s)`, `@Retry(maxRetries=2, abortOn=AuthenticationException.class)`
-- **REST Clients**: every method takes `@HeaderParam("Authorization") String authorization`
-- **DTOs**: plain Java classes (not records), `@JsonProperty`, getters/setters, `toString()`
-- **Views**: `@Route(value = "...", layout = MainLayout.class)` (admin views use `AdminMainLayout.class`)
-- **Notifications**: use `NotificationUtil` — never construct `Notification` directly
-- **Testing**: JUnit 5 + Mockito + AssertJ. Method naming: `methodName_shouldExpectedResult_whenCondition`
+### Frontend (GUI)
+
+- **Pattern**: View → Service → REST Client → API.
+- **UI**: Vaadin Flow. Lazy build in `beforeEnter()`. Async loading via `CompletableFuture`.
+- **Auth**: `AuthService` maps session to backend Basic Auth. 401 triggers logout.
+
+### Integration (Test)
+
+- **Stack**: Python 3.13, SQLAlchemy 2.0, Streamlit 1.55, Pytest 9.0.
+- **Linting**: Ruff (target py313).
+
+## Specialized Agents
+
+Invoke via `@name`:
+
+### API Agents
+
+- [@backend-developer-api](./.opencode/agents/backend-developer-api.md) — API implementation & DB
+- [@frontend-developer-api](./.opencode/agents/frontend-developer-api.md) — API contract design for GUI
+- [@code-reviewer-api](./.opencode/agents/code-reviewer-api.md) — API review (security, perf, style)
+- [@software-architect-api](./.opencode/agents/software-architect-api.md) — API design & structure
+
+### GUI Agents
+
+- [@backend-developer-gui](./.opencode/agents/backend-developer-gui.md) — GUI services, clients, auth
+- [@frontend-developer-gui](./.opencode/agents/frontend-developer-gui.md) — Vaadin views & components
+- [@code-reviewer-gui](./.opencode/agents/code-reviewer-gui.md) — GUI review (thread safety, async)
+- [@software-architect-gui](./.opencode/agents/software-architect-gui.md) — GUI design & async strategy
+
+### Integration Agents
+
+- [@integration-test-developer](./.opencode/agents/integration-test-developer.md) — Python test suite & monitoring
 
 ## Cross-Module Workflow
 
-- Cross-reference corresponding files between frontend and backend
-- Reference existing code in same package for consistency
-- When adding a feature, API endpoint + GUI REST client + GUI service + GUI view all change together
-
-## Supplementary Instructions
-
-- Code quality: @instructions/code-quality.md
-- Docker: @instructions/docker-conventions.md
-- Testing: @instructions/test-conventions.md
-
-## Agents
-
-Use `@` to invoke specialized agents:
-
-- `@backend-developer-api` — API resources, services, entities, DTOs, DB queries, security
-- `@backend-developer-gui` — GUI REST clients, service beans, DTOs, auth, error handling
-- `@frontend-developer-api` — API response DTOs, endpoint design for GUI consumption
-- `@frontend-developer-gui` — Vaadin views, components, dialogs, layouts, navigation
-- `@code-reviewer-api` — API code review: style, security, performance, architecture
-- `@code-reviewer-gui` — GUI code review: style, security, thread safety, async patterns
-- `@software-architect-api` — API architecture: module boundaries, resource/entity design
-- `@software-architect-gui` — GUI architecture: view/component design, async strategies
+1. Update API Resource/DTO.
+2. Update GUI REST Client/DTO.
+3. Update GUI Service.
+4. Update GUI View.
+5. Verify with `midas-test` integration suite.

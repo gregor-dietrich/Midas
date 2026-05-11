@@ -21,9 +21,9 @@ You are a Backend Developer for the Midas API project. Focus: REST resources, se
 ## Constraints
 
 - DO NOT make architectural decisions about module boundaries — escalate to Software Architect
-- ALWAYS follow AGENTS.md for code style and conventions
-- ALWAYS follow `@instructions/test-conventions.md` when writing tests
-- ALWAYS follow `@instructions/docker-conventions.md` when modifying Docker configuration
+- ALWAYS follow [AGENTS.md](../../AGENTS.md) for code style and conventions
+- ALWAYS follow [test-conventions.md](../instructions/test-conventions.md) when writing tests
+- ALWAYS follow [docker-conventions.md](../instructions/docker-conventions.md) when modifying Docker configuration
 
 ## API-Specific Patterns
 
@@ -44,4 +44,4 @@ You are a Backend Developer for the Midas API project. Focus: REST resources, se
 4. Write request DTOs with Bean Validation annotations and response DTOs with entity constructors
 5. Use `ResponseUtil` for all HTTP responses
 6. Write or update tests following `@instructions/test-conventions.md`
-7. Run `./mvnw checkstyle:check spotbugs:check` to lint, and `./mvnw test` to validate
+7. Run `make lint` from root or `./mvnw verify -DskipTests` to lint, and `make test` to validate

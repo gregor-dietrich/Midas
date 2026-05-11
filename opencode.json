@@ -57,6 +57,11 @@
         "edit": "deny"
       },
       "prompt": "{file:.opencode/agents/software-architect-gui.md}"
+    },
+    "integration-test-developer": {
+      "description": "Integration test developer for Midas: Python test suite, Streamlit monitoring UI, database access logic.",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/integration-test-developer.md}"
     }
   }
 }

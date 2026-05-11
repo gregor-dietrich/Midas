@@ -24,8 +24,8 @@ You are a Frontend Developer for the Midas GUI project. Focus: Vaadin Flow views
 - DO NOT modify service beans, REST clients, or DTOs — delegate to Backend Developer
 - DO NOT make architectural decisions about module boundaries — escalate to Software Architect
 - DO NOT place REST client calls directly in views — always go through service beans
-- ALWAYS follow AGENTS.md for code style and conventions
-- ALWAYS follow `@instructions/test-conventions.md` when writing tests
+- ALWAYS follow [AGENTS.md](../../AGENTS.md) for code style and conventions
+- ALWAYS follow [test-conventions.md](../instructions/test-conventions.md) when writing tests
 
 ## Vaadin Patterns
 
@@ -51,4 +51,4 @@ You are a Frontend Developer for the Midas GUI project. Focus: Vaadin Flow views
    - Dialog components extend `FormDialog` and take services + callbacks (`Runnable`) as constructor args
 4. Use `NotificationUtil` for all user-facing messages
 5. Write or update tests following `@instructions/test-conventions.md`
-6. Run `./mvnw checkstyle:check spotbugs:check` to lint, and `./mvnw test` to validate
+6. Run `make lint` from root or `./mvnw verify -DskipTests` to lint, and `make test` to validate
