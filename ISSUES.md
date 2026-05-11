@@ -187,14 +187,30 @@ Systematically enhanced:
    - **Result:** 78.0% → improved with authorization tests
    - **✅ COMPLETED:** 35 tests, all passing
 
+4. **AccountResource** (28 new tests)
+   - Added: GET /accounts/name (insufficient role + authorized)
+   - Added: GET /search (3 scenarios)
+   - Added: GET /{id}/users (3 scenarios)
+   - Added: GET /{id}/payments (3 scenarios)
+   - Added: GET /{id}/balance (3 scenarios)
+   - Added: GET /user/{userId} (3 scenarios)
+   - Added: PUT/PATCH/DELETE with full authorization scenarios
+   - **Result:** 77.0% lines → improved authorization coverage
+   - **✅ COMPLETED:** 54 tests total, all passing
+
 **Overall Impact after Phase 3.5:**
 
+- Total tests: 634 (up from 610; +24 new tests in Phase 3.5d)
 - API: 85.6% lines / 64.0% branches (above 62% target ✓)
 - Total: 83.1% lines / 60.0% branches (2% short on branches)
-- Resource package: 81.0% lines / 41.0% branches (improved from earlier but still under target)
+- Resource package: 81.0% lines / 41.0% branches
 
-**Subtotal:** ~6 hours. Added 43 new authorization-focused test methods.
-**Status:** ✅ PHASE 3.5 COMPLETE - systematic authorization testing framework established
+**Subtotal:** ~8 hours. Added 71 new authorization-focused test methods across 4 resources.
+**Status:** ✅ PHASE 3.5 COMPLETE - comprehensive authorization testing framework established
+
+**Next priorities before Phase 4 & 5:**
+- DTO coverage: 78.8% lines (need 1.2% more for 80%)
+- Resource branch coverage: 41.0% (need more conditional path testing)
 
 ### Phase 4: Entity Coverage (API)
 
