@@ -57,7 +57,6 @@ public class AccountService {
                 this.authService, LOG, "fetching accounts");
     }
 
-    // CPD-OFF
     /** Returns the account by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -97,7 +96,6 @@ public class AccountService {
                     }
                 });
     }
-    // CPD-ON
 
     /** Returns the accounts by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

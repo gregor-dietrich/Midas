@@ -44,7 +44,6 @@ class AdminPostCategoryDialogTest {
     private Runnable onAuthFailure;
     private MockedStatic<NotificationUtil> notificationMock;
 
-    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = new UI();
@@ -59,7 +58,6 @@ class AdminPostCategoryDialogTest {
         UI.setCurrent(null);
         this.notificationMock.close();
     }
-    // CPD-ON
 
     @Test
     void saveCategory_shouldCreateCategory_withNameAndParent() {
@@ -102,7 +100,6 @@ class AdminPostCategoryDialogTest {
         verify(this.onAuthFailure).run();
     }
 
-    // CPD-OFF
     private Button findButton(final Component root, final String text) {
         return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
@@ -127,5 +124,4 @@ class AdminPostCategoryDialogTest {
                 root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
-    // CPD-ON
 }

@@ -82,7 +82,6 @@ public class AdminPostDialog extends FormDialog {
             }
         }
 
-        // CPD-OFF
         final var title = new H3(post != null ? "Edit Post" : "Create Post");
 
         final var form = new FormLayout();
@@ -100,7 +99,6 @@ public class AdminPostDialog extends FormDialog {
         contentField.setHeight("200px");
         contentField.setMaxLength(50_000);
         contentField.setInvalid(false);
-        // CPD-ON
 
         final var publishedField = new Checkbox("Published");
         final var commentableField = new Checkbox("Commentable");
@@ -115,14 +113,13 @@ public class AdminPostDialog extends FormDialog {
         // Bind fields
         this.binder.forField(titleField)
                 .withValidator(value -> value != null && !value.trim().isEmpty(), "Title is required")
-                .bind(p -> p.getTitle(), (p, value) -> p.setTitle(value));
+                .bind(PostDto::getTitle, PostDto::setTitle);
         this.binder.forField(contentField)
                 .withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
-                .bind(p -> p.getContent(), (p, value) -> p.setContent(value));
-        this.binder.bind(publishedField, p -> p.isPublished() != null ? p.isPublished() : false,
-                (p, value) -> p.setPublished(value));
+                .bind(PostDto::getContent, PostDto::setContent);
+        this.binder.bind(publishedField, p -> p.isPublished() != null ? p.isPublished() : false, PostDto::setPublished);
         this.binder.bind(commentableField, p -> p.isCommentable() != null ? p.isCommentable() : false,
-                (p, value) -> p.setCommentable(value));
+                PostDto::setCommentable);
 
         // Category binding - convert between PostCategoryResponseDto and categoryId
         this.binder.bind(categoryField, p -> {
@@ -143,14 +140,13 @@ public class AdminPostDialog extends FormDialog {
 
         form.add(titleField, contentField, categoryField, publishedField, commentableField);
 
-        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.savePost());
+        final var saveButton = new Button("Save", _ -> this.savePost());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> this.close());
+        final var cancelButton = new Button("Cancel", _ -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -163,7 +159,6 @@ public class AdminPostDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentPost);
         super.open();
-        // CPD-ON
     }
 
     private void savePost() {

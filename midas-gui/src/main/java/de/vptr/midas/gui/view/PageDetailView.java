@@ -35,7 +35,6 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
     @Nullable
     private String identifier;
 
-    // CPD-OFF
     /** Initializes PageDetailView. */
     public PageDetailView() {
         this.setSizeFull();
@@ -57,13 +56,12 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
 
         this.buildUi();
     }
-    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
 
         final var backButton =
-                new Button("← Back to Pages", e -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
+                new Button("← Back to Pages", _ -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);

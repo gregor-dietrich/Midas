@@ -49,7 +49,6 @@ public class UserGroupService {
     /** Returns the group by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    // CPD-OFF
     public Optional<UserGroupResponseDto> getGroupById(final Long id) {
         LOG.debugf("Fetching group with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -65,7 +64,6 @@ public class UserGroupService {
                     }
                 });
     }
-    // CPD-ON
 
     /** Returns the users in group. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

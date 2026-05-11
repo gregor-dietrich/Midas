@@ -45,8 +45,8 @@ class UserGroupResourceTest {
 
     @Test
     void testGetGroupById_authorizedWithExistingGroup() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
 
         testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + id);
     }
@@ -166,38 +166,38 @@ class UserGroupResourceTest {
 
     @Test
     void testUpdateGroup_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().body(createUpdatedUserGroupJson()).when().put(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
     }
 
     @Test
     void testPatchGroup_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().patch(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
     }
 
     @Test
     void testDeleteGroup_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }
 
     @Test
     void testAddUserToGroup_authorized() {
-        Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(201);
     }
 
     @Test
     void testRemoveUserFromGroup_authorized() {
-        Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(201);
         authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(204);
     }

@@ -89,7 +89,6 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     @Nullable
     private List<PostCategoryResponseDto> availableCategories;
 
-    // CPD-OFF
     /** Initializes AdminPostView. */
     public AdminPostView() {
         this.setSizeFull();
@@ -108,7 +107,6 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadCategoriesAsync();
         this.setupLazyDataProviderAllPosts();
     }
-    // CPD-ON
 
     private void setupLazyDataProviderAllPosts() {
         Objects.requireNonNull(this.grid)
@@ -144,7 +142,6 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.postDialog = new AdminPostDialog(this.postService, this.userService, this::setupLazyDataProviderAllPosts,
                 authFailure);
-        // CPD-OFF
         this.commentPanel = new AdminPostCommentPanel(this.postCommentService, authFailure);
 
         this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
@@ -155,28 +152,25 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProviderAllPosts();
             }
-        }, e -> this.searchPosts(), "Search by title or content...", "Search Posts");
-        // CPD-ON
+        }, _ -> this.searchPosts(), "Search by title or content...", "Search Posts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        this.showPublishedButton = new Button("Show Published Only", e -> this.setupLazyDataProviderPublishedPosts());
+        this.showPublishedButton = new Button("Show Published Only", _ -> this.setupLazyDataProviderPublishedPosts());
         this.showPublishedButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
-        // CPD-OFF
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(this.showPublishedButton, dateFilterLayout, userFilterLayout);
-        // CPD-ON
         return searchLayout;
     }
 
@@ -185,8 +179,8 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var createButton =
-                new CreateButton(e -> Objects.requireNonNull(this.postDialog).open(null, this.availableCategories));
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProviderAllPosts());
+                new CreateButton(_ -> Objects.requireNonNull(this.postDialog).open(null, this.availableCategories));
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProviderAllPosts());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -209,7 +203,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
             titleSpan.addClickListener(
-                    e -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
+                    _ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(2);
 
@@ -246,9 +240,9 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         layout.setSpacing(true);
 
         final var editButton =
-                new EditButton(e -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
-        final var deleteButton = new DeleteButton(e -> this.deletePost(post));
-        final var commentButton = new AddCommentButton(e -> Objects.requireNonNull(this.commentPanel).open(post));
+                new EditButton(_ -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
+        final var deleteButton = new DeleteButton(_ -> this.deletePost(post));
+        final var commentButton = new AddCommentButton(_ -> Objects.requireNonNull(this.commentPanel).open(post));
 
         layout.add(editButton, deleteButton, commentButton);
         return layout;
@@ -270,7 +264,6 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         }
     }
 
-    // CPD-OFF
     private void searchPosts() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -291,9 +284,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
-    // CPD-ON
 
-    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -311,7 +302,6 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
                 posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
-    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();

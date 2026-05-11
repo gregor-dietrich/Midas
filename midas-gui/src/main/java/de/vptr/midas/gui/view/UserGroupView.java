@@ -54,7 +54,6 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     @Nullable
     private Long currentUserId;
 
-    // CPD-OFF
     /** Initializes UserGroupView. */
     public UserGroupView() {
         this.setSizeFull();
@@ -75,7 +74,6 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.buildUi();
         this.loadGroupsAsync();
     }
-    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
@@ -100,17 +98,15 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.myGroupsGrid.setWidthFull();
         this.myGroupsGrid.setHeight("400px");
 
-        // CPD-OFF
         this.myGroupsGrid.addComponentColumn(group -> {
             final var nameSpan = new Span(group.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> this.navigateToGroup(group));
+            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
-        // CPD-ON
 
         this.myGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
                 .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);
@@ -123,17 +119,15 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.otherGroupsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.otherGroupsGrid.setSizeFull();
 
-        // CPD-OFF
         this.otherGroupsGrid.addComponentColumn(group -> {
             final var nameSpan = new Span(group.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> this.navigateToGroup(group));
+            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
-        // CPD-ON
 
         this.otherGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
                 .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);

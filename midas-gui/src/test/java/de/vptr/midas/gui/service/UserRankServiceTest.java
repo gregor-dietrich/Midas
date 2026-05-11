@@ -52,7 +52,6 @@ class UserRankServiceTest {
     @InjectMocks
     UserRankService userRankService;
 
-    // CPD-OFF
     private VaadinSession vaadinSession;
     private MockedStatic<VaadinSession> vaadinSessionMock;
 
@@ -67,7 +66,6 @@ class UserRankServiceTest {
     void tearDown() {
         this.vaadinSessionMock.close();
     }
-    // CPD-ON
 
     @Test
     void getAllRanks_shouldReturnRankList_whenAuthenticationProvided() {

@@ -67,7 +67,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
     @Nullable
     private transient PageDto currentPage;
 
-    // CPD-OFF
     /** Initializes AdminPageView. */
     public AdminPageView() {
         this.setSizeFull();
@@ -85,14 +84,12 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.buildUi();
         this.setupLazyDataProvider();
     }
-    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
                 .setItems(query -> this.pageService.getAllPages(query.getPage(), query.getPageSize()).stream());
     }
 
-    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -110,7 +107,7 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchPages(), "Search by title or content...", "Search Pages");
+        }, _ -> this.searchPages(), "Search by title or content...", "Search Pages");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -122,13 +119,12 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(e -> this.openPageDialog(null));
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var createButton = new CreateButton(_ -> this.openPageDialog(null));
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
     }
-    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(PageResponseDto.class, false);
@@ -136,7 +132,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         this.grid.setSizeFull();
 
         // Configure columns
-        // CPD-OFF
         this.grid.addColumn((ValueProvider<PageResponseDto, ?>) PageResponseDto::getId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
@@ -147,10 +142,9 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(e -> this.openPageDialog(page.toPageDto()));
+            titleSpan.addClickListener(_ -> this.openPageDialog(page.toPageDto()));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(2);
-        // CPD-ON
 
         // Add action column
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
@@ -160,8 +154,8 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> this.openPageDialog(page.toPageDto()));
-        final var deleteButton = new DeleteButton(e -> this.deletePage(page.toPageDto()));
+        final var editButton = new EditButton(_ -> this.openPageDialog(page.toPageDto()));
+        final var deleteButton = new DeleteButton(_ -> this.deletePage(page.toPageDto()));
 
         layout.add(editButton, deleteButton);
         return layout;
@@ -174,7 +168,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
 
         this.binder = new Binder<>(PageDto.class);
 
-        // CPD-OFF
         final var title = new H3(page != null ? "Edit Page" : "Create Page");
 
         final var form = new FormLayout();
@@ -193,7 +186,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         contentField.setHeight("250px");
         contentField.setMaxLength(50_000);
         contentField.setInvalid(false); // Clear any previous validation state
-        // CPD-ON
 
         // Bind fields
         this.binder.forField(titleField)
@@ -209,10 +201,10 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.savePage());
+        final var saveButton = new Button("Save", _ -> this.savePage());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> pd.close());
+        final var cancelButton = new Button("Cancel", _ -> pd.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -282,7 +274,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
         }
     }
 
-    // CPD-OFF
     private void searchPages() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -300,7 +291,6 @@ public class AdminPageView extends AbstractAsyncDataView implements BeforeEnterO
             Objects.requireNonNull(this.grid).setItems(pages);
         }, this::handleSearchError);
     }
-    // CPD-ON
 
     void handleSearchError(final Throwable throwable) {
         this.resetSearchButton();

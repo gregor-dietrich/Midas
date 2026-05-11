@@ -36,7 +36,6 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
     @Nullable
     private List<PostCategoryResponseDto> allCategories;
 
-    // CPD-OFF
     /** Initializes PostCategoryView. */
     public PostCategoryView() {
         this.setSizeFull();
@@ -57,7 +56,6 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
         this.buildUi();
         this.loadCategoriesAsync();
     }
-    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
@@ -86,7 +84,6 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
         this.treeGrid.setPageSize(20);
     }
 
-    // CPD-OFF
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
@@ -107,7 +104,6 @@ public class PostCategoryView extends AbstractAsyncDataView implements BeforeEnt
         tg.setItems(rootCategories, this::loadChildren);
         tg.expandRecursively(rootCategories, 1);
     }
-    // CPD-ON
 
     private List<PostCategoryResponseDto> loadChildren(final PostCategoryResponseDto parent) {
         if (this.allCategories == null) {

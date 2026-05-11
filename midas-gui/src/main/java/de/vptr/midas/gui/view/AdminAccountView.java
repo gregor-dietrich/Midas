@@ -96,7 +96,6 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.accountDialog = new AdminAccountDialog(this.accountService, this::setupLazyDataProvider, onAuthFailure);
-        // CPD-OFF
         this.userPanel =
                 new AdminAccountUserPanel(this.accountService, this.authService, this.userService, onAuthFailure);
 
@@ -108,13 +107,12 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchAccounts(), "Search by name...", "Search Accounts");
-        // CPD-ON
+        }, _ -> this.searchAccounts(), "Search by name...", "Search Accounts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        final var filterLayout = new IntegerFilterLayout(e -> this.filterByUser(), "Enter ID...", "Filter by User");
+        final var filterLayout = new IntegerFilterLayout(_ -> this.filterByUser(), "Enter ID...", "Filter by User");
 
         this.userIdField = filterLayout.getIntegerField();
 
@@ -126,9 +124,9 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
         final var createButton =
-                new CreateButton(e -> Objects.requireNonNull(this.accountDialog).open(null), "Create Account");
+                new CreateButton(_ -> Objects.requireNonNull(this.accountDialog).open(null), "Create Account");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
@@ -144,17 +142,15 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
                 .setWidth("80px").setFlexGrow(0);
 
         // Make the name column clickable
-        // CPD-OFF
         this.grid.addComponentColumn(account -> {
             final var nameSpan = new Span(account.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> Objects.requireNonNull(this.accountDialog).open(account));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.accountDialog).open(account));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(1);
-        // CPD-ON
 
         // Add action column
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("180px").setFlexGrow(0);
@@ -164,15 +160,14 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> Objects.requireNonNull(this.accountDialog).open(account));
-        final var deleteButton = new DeleteButton(e -> this.deleteAccount(account));
-        final var manageUsersButton = new ManageUsersButton(e -> Objects.requireNonNull(this.userPanel).open(account));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.accountDialog).open(account));
+        final var deleteButton = new DeleteButton(_ -> this.deleteAccount(account));
+        final var manageUsersButton = new ManageUsersButton(_ -> Objects.requireNonNull(this.userPanel).open(account));
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;
     }
 
-    // CPD-OFF
     private void searchAccounts() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -192,7 +187,6 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
-    // CPD-ON
 
     private void filterByUser() {
         final Integer value = Objects.requireNonNull(this.userIdField).getValue();

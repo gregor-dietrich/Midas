@@ -58,7 +58,6 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
     private AdminUserRankDialog rankDialog;
     private boolean initialized = false;
 
-    // CPD-OFF
     /** Initializes AdminUserRankView. */
     public AdminUserRankView() {
         this.setSizeFull();
@@ -78,7 +77,6 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         }
         this.loadRanksAsync();
     }
-    // CPD-ON
 
     private void loadRanksAsync() {
         LOG.info("Starting async rank loading");
@@ -89,7 +87,6 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         });
     }
 
-    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -109,7 +106,7 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.loadRanksAsync();
             }
-        }, e -> this.searchRanks(), "Search by name...", "Search Ranks");
+        }, _ -> this.searchRanks(), "Search by name...", "Search Ranks");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -121,13 +118,12 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.rankDialog).open(null));
-        final var refreshButton = new RefreshButton(e -> this.loadRanksAsync());
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.rankDialog).open(null));
+        final var refreshButton = new RefreshButton(_ -> this.loadRanksAsync());
 
         layout.add(createButton, refreshButton);
         return layout;
     }
-    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(UserRankResponseDto.class, false);
@@ -136,17 +132,15 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
 
         this.grid.addColumn(UserRankResponseDto::getId).setHeader("ID").setWidth("80px").setFlexGrow(0);
 
-        // CPD-OFF
         this.grid.addComponentColumn(rank -> {
             final var nameSpan = new Span(rank.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> Objects.requireNonNull(this.rankDialog).open(rank));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
-        // CPD-ON
 
         // Admin view column (unique pattern: check/ban icons)
         this.grid.addComponentColumn(rank -> {
@@ -228,8 +222,8 @@ public class AdminUserRankView extends AbstractAsyncDataView implements BeforeEn
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> Objects.requireNonNull(this.rankDialog).open(rank));
-        final var deleteButton = new DeleteButton(e -> this.deleteRank(rank));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.rankDialog).open(rank));
+        final var deleteButton = new DeleteButton(_ -> this.deleteRank(rank));
 
         layout.add(editButton, deleteButton);
         return layout;

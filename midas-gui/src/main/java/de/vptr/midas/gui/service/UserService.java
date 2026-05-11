@@ -44,7 +44,6 @@ public class UserService {
                 this.authService, LOG, "fetching users");
     }
 
-    // CPD-OFF
     /** Returns the current user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -99,7 +98,6 @@ public class UserService {
                     }
                 });
     }
-    // CPD-ON
 
     /** Creates a new user. */
     public UserResponseDto createUser(final UserDto user) {

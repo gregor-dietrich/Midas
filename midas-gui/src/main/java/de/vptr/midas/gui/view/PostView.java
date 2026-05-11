@@ -62,7 +62,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     @Nullable
     private List<PostCategoryResponseDto> availableCategories;
 
-    // CPD-OFF
     /** Initializes PostView. */
     public PostView() {
         this.setSizeFull();
@@ -81,7 +80,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.loadCategoriesAsync();
         this.loadPostsAsync();
     }
-    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
@@ -103,10 +101,10 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.categoryFilter.setItemLabelGenerator(PostCategoryResponseDto::getName);
         this.categoryFilter.setClearButtonVisible(true);
         this.categoryFilter.setWidth("200px");
-        this.categoryFilter.addValueChangeListener(e -> this.loadPostsAsync());
+        this.categoryFilter.addValueChangeListener(_ -> this.loadPostsAsync());
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.loadPostsAsync());
+        final var dateFilterLayout = new DateFilterLayout(_ -> this.loadPostsAsync());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -152,7 +150,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
             metaLayout.add(new Span("By " + post.getUsername()));
         }
 
-        // CPD-OFF
         if (post.getCreated() != null) {
             metaLayout.add(new Span(post.getCreated().format(DATE_FORMATTER)));
         }
@@ -164,7 +161,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
             categoryBadge.getStyle().set("padding", "2px 8px");
             metaLayout.add(categoryBadge);
         }
-        // CPD-ON
 
         if (post.getCommentsCount() != null && post.getCommentsCount() > 0) {
             metaLayout.add(new Span(post.getCommentsCount() + " comments"));
@@ -178,7 +174,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         card.add(title, metaLayout, excerpt);
 
         // Navigate to detail view on click
-        card.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+        card.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
 
         return card;
     }

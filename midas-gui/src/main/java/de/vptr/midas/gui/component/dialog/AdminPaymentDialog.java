@@ -106,10 +106,10 @@ public class AdminPaymentDialog extends FormDialog {
         });
 
         // Bind fields
-        this.binder.forField(sourceAccountField).bind(e -> null,
+        this.binder.forField(sourceAccountField).bind(_ -> null,
                 (p, value) -> p.setSourceAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(targetAccountField).bind(e -> null,
+        this.binder.forField(targetAccountField).bind(_ -> null,
                 (p, value) -> p.setTargetAccountId(value != null ? value.getId() : null));
 
         this.binder.forField(amountField).withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0,
@@ -124,14 +124,13 @@ public class AdminPaymentDialog extends FormDialog {
 
         form.add(sourceAccountField, targetAccountField, amountField, dateField, commentField);
 
-        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.savePayment());
+        final var saveButton = new Button("Save", _ -> this.savePayment());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> this.close());
+        final var cancelButton = new Button("Cancel", _ -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -152,7 +151,6 @@ public class AdminPaymentDialog extends FormDialog {
         }
 
         super.open();
-        // CPD-ON
     }
 
     private void savePayment() {

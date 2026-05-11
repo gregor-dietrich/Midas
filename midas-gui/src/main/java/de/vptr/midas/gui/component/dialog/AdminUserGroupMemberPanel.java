@@ -81,11 +81,9 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.userGrid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
                 .setFlexGrow(1);
 
-        this.userGrid.addComponentColumn(user -> {
-            return new RemoveUserButton(e -> this.removeUserFromGroup(user));
-        }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
+        this.userGrid.addComponentColumn(user -> new RemoveUserButton(_ -> this.removeUserFromGroup(user)))
+                .setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
-        // CPD-OFF
         final var addUserLayout = new HorizontalLayout();
         addUserLayout.setAlignItems(VerticalLayout.Alignment.END);
         addUserLayout.setSpacing(true);
@@ -96,7 +94,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.availableUsersCombo.setWidth("300px");
         this.availableUsersCombo.setPlaceholder("Select a user to add...");
 
-        final var addButton = new Button("Add User", e -> this.addUserToGroup());
+        final var addButton = new Button("Add User", _ -> this.addUserToGroup());
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         addUserLayout.add(this.availableUsersCombo, addButton);
@@ -104,12 +102,11 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(e -> this.loadGroupUsers());
-        final var closeButton = new Button("Close", e -> this.close());
+        final var refreshButton = new RefreshButton(_ -> this.loadGroupUsers());
+        final var closeButton = new Button("Close", _ -> this.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);
-        // CPD-ON
 
         final var dialogLayout = new VerticalLayout(title, this.userGrid, addUserLayout, buttonLayout);
         dialogLayout.setSpacing(true);

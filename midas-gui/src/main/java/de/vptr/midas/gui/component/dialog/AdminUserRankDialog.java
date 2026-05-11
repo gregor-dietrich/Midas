@@ -59,7 +59,6 @@ public class AdminUserRankDialog extends FormDialog {
         this.currentRank = rank != null ? rank.toUserRankDto() : new UserRankDto();
         this.binder = new Binder<>(UserRankDto.class);
 
-        // CPD-OFF
         final var title = new H3(rank != null ? "Edit Rank" : "Create Rank");
 
         final var form = new FormLayout();
@@ -75,7 +74,6 @@ public class AdminUserRankDialog extends FormDialog {
                 .bind(UserRankDto::getName, UserRankDto::setName);
 
         form.add(nameField);
-        // CPD-ON
 
         // View permissions
         final var adminViewField = new Checkbox("Admin View");
@@ -124,14 +122,13 @@ public class AdminUserRankDialog extends FormDialog {
         form.getStyle().set("overflow-y", "auto");
         form.setMaxHeight("400px");
 
-        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.saveRank());
+        final var saveButton = new Button("Save", _ -> this.saveRank());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> this.close());
+        final var cancelButton = new Button("Cancel", _ -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -144,7 +141,6 @@ public class AdminUserRankDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentRank);
         super.open();
-        // CPD-ON
     }
 
     private void addPermissionSection(final FormLayout form, final String sectionTitle, final String addLabel,

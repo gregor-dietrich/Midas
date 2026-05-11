@@ -50,7 +50,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @SuppressWarnings("NullAway")
     @BeforeEach
     void setUp() {
-        runInIsolatedTransaction(() -> {
+        this.runInIsolatedTransaction(() -> {
             this.testCategory = setupTestCategory();
             this.testUser = setupTestUser(this.userService);
 
@@ -64,7 +64,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        runCleanup(() -> {
+        this.runCleanup(() -> {
             PostCommentEntity.deleteAll();
             PostEntity.deleteAll();
             UserEntity.delete("username like ?1", "testuser_%");
@@ -282,24 +282,24 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateCommentOnUnpublishedPost() {
-        final var unpublishedPost = this.postService.createPost(
-                ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+        final var unpublishedPost = this.postService
+                .createPost(ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
 
         final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.id);
-        assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+        assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
+                Objects.requireNonNull(this.testUser.username)));
     }
 
     @Test
     @TestTransaction
     void testCreateCommentOnNonCommentablePost() {
-        final var nonCommentablePost = this.postService.createPost(
-                ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+        final var nonCommentablePost = this.postService
+                .createPost(ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
         nonCommentablePost.commentable = false;
 
         final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", nonCommentablePost.id);
-        assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+        assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
+                Objects.requireNonNull(this.testUser.username)));
     }
 
     @Test
@@ -336,7 +336,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     void testFindByDateRangeWithInvalidDateFormat() {
         @SuppressWarnings("NullAway")
-        final var unused = assertThrows(ValidationException.class,
+        final var _ = assertThrows(ValidationException.class,
                 () -> this.postCommentService.findByDateRange("invalid-date", "2025-12-31"));
     }
 
@@ -349,7 +349,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
 
         final Long commentId = Objects.requireNonNull(createdComment.id);
         @SuppressWarnings("NullAway")
-        final var unused = assertThrows(ValidationException.class, () -> this.postCommentService.deleteComment(commentId, null));
+        final var _ =
+                assertThrows(ValidationException.class, () -> this.postCommentService.deleteComment(commentId, null));
     }
 
     @Test
@@ -375,7 +376,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
         final String username = Objects.requireNonNull(this.testUser.username);
         final Long userId = Objects.requireNonNull(this.testUser.id);
         for (int i = 0; i < 5; i++) {
-            final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("User paginated " + i, this.testPost.id);
+            final var comment =
+                    ServiceTestDataBuilder.createUniquePostCommentDto("User paginated " + i, this.testPost.id);
             this.postCommentService.createComment(comment, username);
         }
 

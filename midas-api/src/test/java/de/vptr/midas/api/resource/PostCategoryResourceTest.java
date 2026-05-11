@@ -5,6 +5,8 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedPostCategoryJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.createTestCategory;
@@ -19,12 +21,9 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
-import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
-import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -58,7 +57,7 @@ class PostCategoryResourceTest {
 
     @Test
     void testGetCategoryById_authorizedWithExistingCategory() {
-        Long id = createTestCategory();
+        final Long id = createTestCategory();
         testAuthorizedGetWithExistingResourceAndJson(ENDPOINT_URL + "/" + id);
     }
 
@@ -120,9 +119,9 @@ class PostCategoryResourceTest {
 
     @Test
     void testUpdateCategory_authorized() {
-        Long categoryId = createTestCategory();
-        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when()
-                .put(ENDPOINT_URL + "/" + categoryId).then().statusCode(200);
+        final Long categoryId = createTestCategory();
+        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when().put(ENDPOINT_URL + "/" + categoryId)
+                .then().statusCode(200);
     }
 
     @Test
@@ -132,15 +131,15 @@ class PostCategoryResourceTest {
 
     @Test
     void testPatchCategory_authorizedWithInsufficientRole() {
-        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/1")
-                .then().statusCode(403);
+        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
     }
 
     @Test
     void testPatchCategory_authorized() {
-        Long categoryId = createTestCategory();
-        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when()
-                .patch(ENDPOINT_URL + "/" + categoryId).then().statusCode(200);
+        final Long categoryId = createTestCategory();
+        authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/" + categoryId)
+                .then().statusCode(200);
     }
 
     @Test
@@ -155,8 +154,13 @@ class PostCategoryResourceTest {
 
     @Test
     void testDeleteCategory_authorized() {
-        Long categoryId = createTestCategory();
+        final Long categoryId = createTestCategory();
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + categoryId).then().statusCode(204);
+    }
+
+    @Test
+    void testDeleteCategory_authorizedWithNonExistentCategory() {
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/99999").then().statusCode(404);
     }
 
     @Test

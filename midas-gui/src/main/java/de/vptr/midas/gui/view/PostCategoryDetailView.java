@@ -52,7 +52,6 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     @Nullable
     private transient PostCategoryResponseDto category;
 
-    // CPD-OFF
     /** Initializes PostCategoryDetailView. */
     public PostCategoryDetailView() {
         this.setSizeFull();
@@ -64,7 +63,6 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     public void setParameter(final BeforeEvent event, final String parameter) {
         this.identifier = parameter;
     }
-    // CPD-ON
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
@@ -111,7 +109,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
         this.removeAll();
 
         final var backButton = new Button("← Back to Categories",
-                e -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
+                _ -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.header = new H2(Objects.requireNonNull(this.category).getName());
@@ -127,7 +125,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
 
         this.postGrid.addComponentColumn(post -> {
             final var titleButton = new Button(post.getTitle(),
-                    e -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+                    _ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
             titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);

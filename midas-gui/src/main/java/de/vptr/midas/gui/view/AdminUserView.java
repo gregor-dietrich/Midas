@@ -64,7 +64,6 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private List<UserRankResponseDto> availableRanks;
     private boolean initialized = false;
 
-    // CPD-OFF
     /** Initializes AdminUserView. */
     public AdminUserView() {
         this.setSizeFull();
@@ -85,7 +84,6 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadRanksAsync();
         this.setupLazyDataProvider();
     }
-    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
@@ -104,7 +102,6 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         });
     }
 
-    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -124,7 +121,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchUsers(), "Search by username or email...", "Search Users");
+        }, _ -> this.searchUsers(), "Search by username or email...", "Search Users");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -136,14 +133,13 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.userDialog).open(null,
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.userDialog).open(null,
                 this.availableRanks != null ? this.availableRanks : List.of()));
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
     }
-    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(UserResponseDto.class, false);
@@ -151,7 +147,6 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.grid.setSizeFull();
 
         // Configure columns
-        // CPD-OFF
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
@@ -162,11 +157,10 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(e -> Objects.requireNonNull(this.userDialog).open(user,
+            usernameSpan.addClickListener(_ -> Objects.requireNonNull(this.userDialog).open(user,
                     this.availableRanks != null ? this.availableRanks : List.of()));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
-        // CPD-ON
 
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getEmail).setHeader("Email")
                 .setFlexGrow(1);
@@ -195,9 +189,9 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> Objects.requireNonNull(this.userDialog).open(user,
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.userDialog).open(user,
                 this.availableRanks != null ? this.availableRanks : List.of()));
-        final var deleteButton = new DeleteButton(e -> {
+        final var deleteButton = new DeleteButton(_ -> {
             if (user != null) {
                 this.deleteUser(user);
             }
@@ -226,7 +220,6 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         }
     }
 
-    // CPD-OFF
     private void searchUsers() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -247,5 +240,4 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
-    // CPD-ON
 }

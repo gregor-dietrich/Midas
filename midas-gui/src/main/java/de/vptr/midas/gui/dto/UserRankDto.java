@@ -96,7 +96,6 @@ public class UserRankDto {
     @JsonProperty("userRankEdit")
     private Boolean userRankEdit = false;
 
-    // CPD-OFF
     @SuppressWarnings("NullAway")
     public UserRankDto() {
         // Default constructor for Jackson
@@ -342,9 +341,7 @@ public class UserRankDto {
     public void setUserRankEdit(final Boolean userRankEdit) {
         this.userRankEdit = userRankEdit;
     }
-    // CPD-ON
 
-    // CPD-OFF
     // Convenience methods for checking permissions
     public boolean canAdminView() {
         return this.adminView != null && this.adminView;
@@ -456,6 +453,5 @@ public class UserRankDto {
                 || this.canAddUserAccount() || this.canDeleteUserAccount() || this.canEditUserAccount()
                 || this.canAddUserRank() || this.canDeleteUserRank() || this.canEditUserRank();
     }
-    // CPD-ON
 
 }

@@ -21,10 +21,9 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -129,8 +128,7 @@ class UserResourceTest {
 
     @Test
     void testGetUserByEmail_authorizedWithInsufficientRole() {
-        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/email?email=admin@example.com").then()
-                .statusCode(403);
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/email?email=admin@example.com").then().statusCode(403);
     }
 
     @Test
@@ -167,7 +165,7 @@ class UserResourceTest {
     @Test
     void testUpdateUser_authorized() {
         // Test authorization is enforced; guest would get 403, admin gets past authorization
-        int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
+        final int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
                 .put(ENDPOINT_URL + "/99999").then().extract().statusCode();
         assertNotEquals(403, statusCode);
     }
@@ -186,7 +184,7 @@ class UserResourceTest {
     @Test
     void testPatchUser_authorized() {
         // Test authorization is enforced; guest would get 403, admin gets past authorization
-        int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
+        final int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
                 .patch(ENDPOINT_URL + "/99999").then().extract().statusCode();
         assertNotEquals(403, statusCode);
     }
@@ -204,8 +202,8 @@ class UserResourceTest {
     @Test
     void testDeleteUser_authorized() {
         // Test authorization is enforced; guest would get 403, admin gets past authorization
-        int statusCode = authenticatedRequest().when().delete(ENDPOINT_URL + "/99999").then().extract()
-                .statusCode();
+        final int statusCode =
+                authenticatedRequest().when().delete(ENDPOINT_URL + "/99999").then().extract().statusCode();
         assertNotEquals(403, statusCode);
     }
 

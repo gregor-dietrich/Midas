@@ -81,7 +81,6 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setSizeFull();
         this.grid.setPageSize(20);
 
-        // CPD-OFF
         // Clickable title column that navigates to detail view
         this.grid.addComponentColumn(page -> {
             final var titleSpan = new Span(page.getTitle());
@@ -89,10 +88,9 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
+            titleSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(1);
-        // CPD-ON
 
         // Content preview column (first 100 chars)
         this.grid.addColumn(page -> {

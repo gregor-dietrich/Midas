@@ -40,7 +40,6 @@ class BackendHealthCheckTest {
         assertThat(result.getStatus()).isEqualTo(HealthCheckResponse.Status.UP);
     }
 
-    // CPD-OFF
     @Test
     void call_shouldReturnDown_whenBackendReturnsNon200() {
         final var response = Mockito.mock(Response.class);
@@ -66,5 +65,4 @@ class BackendHealthCheckTest {
         assertThat(result.getData()).isPresent();
         assertThat(result.getData().get()).containsEntry("error", "Connection refused");
     }
-    // CPD-ON
 }

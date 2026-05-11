@@ -28,12 +28,12 @@ import static org.hamcrest.Matchers.equalTo;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.TestUtil;
-import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 @QuarkusTest
+@SuppressWarnings("PMD.TooManyMethods")
 class AccountResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/accounts";
     private static final long ADMIN_USER_ID = 1L; // admin user always created with id=1 in seed data
@@ -149,8 +149,8 @@ class AccountResourceTest {
 
     @Test
     void testDeleteUserAccount_authorized() {
-        final Integer accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when()
-                .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + accountId).then().statusCode(204);
     }
 

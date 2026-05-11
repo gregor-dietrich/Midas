@@ -6,22 +6,22 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedPostJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.createTestPost;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResourceAndJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPatchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPutWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
-import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
-import static de.vptr.midas.api.util.TestUtil.testAuthorizedPutWithJson;
-import static de.vptr.midas.api.util.TestUtil.testAuthorizedPatchWithJson;
 
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +58,7 @@ class PostResourceTest {
 
     @Test
     void testGetPost_authorizedWithExistingPost() {
-        Long id = createTestPost();
+        final Long id = createTestPost();
         testAuthorizedGetWithExistingResourceAndJson(ENDPOINT_URL + "/" + id);
     }
 
@@ -144,7 +144,7 @@ class PostResourceTest {
 
     @Test
     void testUpdatePost_authorized() {
-        Long postId = createTestPost();
+        final Long postId = createTestPost();
         testAuthorizedPutWithJson(ENDPOINT_URL + "/" + postId, createUpdatedPostJson());
     }
 
@@ -155,7 +155,7 @@ class PostResourceTest {
 
     @Test
     void testPatchPost_authorized() {
-        Long postId = createTestPost();
+        final Long postId = createTestPost();
         testAuthorizedPatchWithJson(ENDPOINT_URL + "/" + postId, createDefaultPostPatchJson());
     }
 
@@ -166,7 +166,7 @@ class PostResourceTest {
 
     @Test
     void testDeletePost_authorized() {
-        Long postId = createTestPost();
+        final Long postId = createTestPost();
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + postId).then().statusCode(204);
     }
 }

@@ -64,7 +64,6 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     @Nullable
     private AdminPostCommentDialog commentDialog;
 
-    // CPD-OFF
     /** Initializes AdminPostCommentView. */
     public AdminPostCommentView() {
         this.setSizeFull();
@@ -82,14 +81,12 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.buildUi();
         this.setupLazyDataProvider();
     }
-    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
                 .setItems(query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
     }
 
-    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -108,19 +105,19 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchComments(), "Search by author or content...", "Search Comments");
+        }, _ -> this.searchComments(), "Search by author or content...", "Search Comments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(dateFilterLayout, userFilterLayout);
@@ -131,12 +128,11 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(refreshButton);
         return layout;
     }
-    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(PostCommentResponseDto.class, false);
@@ -181,8 +177,8 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         layout.setSpacing(true);
 
         final var editButton =
-                new EditButton(e -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
-        final var deleteButton = new DeleteButton(e -> this.deleteComment(comment));
+                new EditButton(_ -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
+        final var deleteButton = new DeleteButton(_ -> this.deleteComment(comment));
 
         layout.add(editButton, deleteButton);
         return layout;
@@ -225,7 +221,6 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         });
     }
 
-    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -243,7 +238,6 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
                 comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
-    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();

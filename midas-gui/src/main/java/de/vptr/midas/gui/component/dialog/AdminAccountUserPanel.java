@@ -85,11 +85,9 @@ public class AdminAccountUserPanel extends FormDialog {
             return checkbox;
         }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
 
-        this.userGrid.addComponentColumn(user -> {
-            return new RemoveUserButton(e -> this.removeUserFromAccount(user));
-        }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
+        this.userGrid.addComponentColumn(user -> new RemoveUserButton(_ -> this.removeUserFromAccount(user)))
+                .setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
-        // CPD-OFF
         final var addUserLayout = new HorizontalLayout();
         addUserLayout.setAlignItems(VerticalLayout.Alignment.END);
         addUserLayout.setSpacing(true);
@@ -100,7 +98,7 @@ public class AdminAccountUserPanel extends FormDialog {
         this.availableUsersCombo.setWidth("300px");
         this.availableUsersCombo.setPlaceholder("Select a user to add...");
 
-        final var addButton = new Button("Add User", e -> this.addUserToAccount());
+        final var addButton = new Button("Add User", _ -> this.addUserToAccount());
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         addUserLayout.add(this.availableUsersCombo, addButton);
@@ -108,12 +106,11 @@ public class AdminAccountUserPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(e -> this.loadAccountUsers());
-        final var closeButton = new Button("Close", e -> this.close());
+        final var refreshButton = new RefreshButton(_ -> this.loadAccountUsers());
+        final var closeButton = new Button("Close", _ -> this.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);
-        // CPD-ON
 
         final var dialogLayout = new VerticalLayout(title, this.userGrid, addUserLayout, buttonLayout);
         dialogLayout.setSpacing(true);

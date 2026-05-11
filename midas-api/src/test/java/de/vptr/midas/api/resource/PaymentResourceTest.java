@@ -43,8 +43,9 @@ class PaymentResourceTest {
 
     @Test
     void testGetPaymentById_authorizedWithExistingPayment() {
-        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
-                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id =
+                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
+                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
         authenticatedRequest().when().get(ENDPOINT_URL + "/" + id).then().statusCode(200).contentType(ContentType.JSON);
     }
@@ -157,8 +158,9 @@ class PaymentResourceTest {
 
     @Test
     void testUpdatePayment_authorized() {
-        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
-                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id =
+                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
+                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
         authenticatedRequest().contentType(ContentType.JSON).body(createUpdatedPaymentJson()).when()
                 .put(ENDPOINT_URL + "/" + id).then().statusCode(200);
@@ -166,8 +168,9 @@ class PaymentResourceTest {
 
     @Test
     void testPatchPayment_authorized() {
-        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
-                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id =
+                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
+                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
         authenticatedRequest().contentType(ContentType.JSON).body(createDefaultPaymentJson()).when()
                 .patch(ENDPOINT_URL + "/" + id).then().statusCode(200);
@@ -175,8 +178,9 @@ class PaymentResourceTest {
 
     @Test
     void testDeletePayment_authorized() {
-        Integer id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
-                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id =
+                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
+                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }

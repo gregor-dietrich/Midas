@@ -125,7 +125,6 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.paymentDialog =
                 new AdminPaymentDialog(this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
-        // CPD-OFF
         this.availableAccounts = List.of();
 
         this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
@@ -136,33 +135,30 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
-        // CPD-ON
+        }, _ -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // Recent payments filter
         final var recentFilterLayout =
-                new IntegerFilterLayout(e -> this.loadRecentPayments(), "How many?", "Load Recent", "100px");
+                new IntegerFilterLayout(_ -> this.loadRecentPayments(), "How many?", "Load Recent", "100px");
         this.limitField = recentFilterLayout.getIntegerField();
         this.limitField.setMin(1);
         this.limitField.setMax(1000);
-        // CPD-OFF
         this.limitField.setValue(10);
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(_ -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(recentFilterLayout, dateFilterLayout, userFilterLayout);
-        // CPD-ON
         return searchLayout;
     }
 
@@ -170,15 +166,14 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
-        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.paymentDialog).open(null,
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.paymentDialog).open(null,
                 this.availableAccounts != null ? this.availableAccounts : List.of()), "Create Payment");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
     }
 
-    // CPD-OFF
     private void createGrid() {
         this.grid = new Grid<>(PaymentResponseDto.class, false);
         this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -205,15 +200,14 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         // Add action column
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
     }
-    // CPD-ON
 
     private HorizontalLayout createActionButtons(final PaymentResponseDto payment) {
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> Objects.requireNonNull(this.paymentDialog)
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.paymentDialog)
                 .open(payment.toPaymentDto(), this.availableAccounts != null ? this.availableAccounts : List.of()));
-        final var deleteButton = new DeleteButton(e -> this.deletePayment(payment.toPaymentDto()));
+        final var deleteButton = new DeleteButton(_ -> this.deletePayment(payment.toPaymentDto()));
 
         layout.add(editButton, deleteButton);
         return layout;
@@ -244,7 +238,6 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
-    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -262,7 +255,6 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.loadDataAsync(() -> this.paymentService.getPaymentsByDateRange(startDate, endDate),
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
-    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
@@ -275,7 +267,6 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
-    // CPD-OFF
     private void searchPayments() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -298,5 +289,4 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
-    // CPD-ON
 }

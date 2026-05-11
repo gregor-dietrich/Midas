@@ -49,7 +49,6 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     @Nullable
     private String identifier;
 
-    // CPD-OFF
     /** Initializes PostDetailView. */
     public PostDetailView() {
         this.setSizeFull();
@@ -61,7 +60,6 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     public void setParameter(final BeforeEvent event, final String parameter) {
         this.identifier = parameter;
     }
-    // CPD-ON
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
@@ -119,7 +117,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     private void buildPostContent(final PostResponseDto post) {
         // Back button
         final var backButton =
-                new Button("← Back to Posts", e -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         // Title
@@ -140,7 +138,6 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
             metaLayout.add(new Span("Published " + post.getCreated().format(DATE_FORMATTER)));
         }
 
-        // CPD-OFF
         if (post.getLastEdit() != null && !post.getLastEdit().equals(post.getCreated())) {
             metaLayout.add(new Span("(edited " + post.getLastEdit().format(DATE_FORMATTER) + ")"));
         }
@@ -152,7 +149,6 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
             categoryBadge.getStyle().set("padding", "2px 8px");
             metaLayout.add(categoryBadge);
         }
-        // CPD-ON
 
         // Full content
         final var contentDiv = new Div();
@@ -237,7 +233,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
 
     private void showNotFound() {
         final var backButton =
-                new Button("← Back to Posts", e -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
+                new Button("← Back to Posts", _ -> this.getUI().ifPresent(ui -> ui.navigate(PostView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         final var message = new H2("Post Not Found");

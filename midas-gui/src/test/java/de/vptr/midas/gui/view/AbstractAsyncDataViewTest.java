@@ -41,7 +41,6 @@ class AbstractAsyncDataViewTest {
         }
     }
 
-    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = mock(UI.class);
@@ -62,7 +61,6 @@ class AbstractAsyncDataViewTest {
         this.uiMock.close();
         this.notificationMock.close();
     }
-    // CPD-ON
 
     @Test
     void loadDataAsync_shouldCallOnSuccess_withCustomErrorHandler() throws Exception {
@@ -73,7 +71,7 @@ class AbstractAsyncDataViewTest {
         view.testLoadWithErrorHandler(() -> 42, value -> {
             result.set(value);
             latch.countDown();
-        }, e -> {
+        }, _ -> {
         });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -88,7 +86,7 @@ class AbstractAsyncDataViewTest {
 
         view.testLoadWithErrorHandler(() -> {
             throw new IllegalStateException("custom error");
-        }, e -> {
+        }, _ -> {
         }, error -> {
             errorRef.set(error);
             latch.countDown();
@@ -107,7 +105,7 @@ class AbstractAsyncDataViewTest {
         view.testLoadWithErrorHandler(() -> "async result", value -> {
             result.set(value);
             latch.countDown();
-        }, e -> {
+        }, _ -> {
         });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -127,7 +125,7 @@ class AbstractAsyncDataViewTest {
                 Thread.currentThread().interrupt();
             }
             return 42;
-        }, e -> {
+        }, _ -> {
         }, error -> {
             errorRef.set(error);
             latch.countDown();

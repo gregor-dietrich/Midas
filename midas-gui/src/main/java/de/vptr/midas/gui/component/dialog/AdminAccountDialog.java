@@ -69,14 +69,13 @@ public class AdminAccountDialog extends FormDialog {
 
         form.add(nameField);
 
-        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.saveAccount());
+        final var saveButton = new Button("Save", _ -> this.saveAccount());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> this.close());
+        final var cancelButton = new Button("Cancel", _ -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -88,7 +87,6 @@ public class AdminAccountDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentAccount);
         super.open();
-        // CPD-ON
     }
 
     private void saveAccount() {

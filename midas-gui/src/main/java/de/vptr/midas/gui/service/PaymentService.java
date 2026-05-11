@@ -47,7 +47,6 @@ public class PaymentService {
                 this.authService, LOG, "fetching payments");
     }
 
-    // CPD-OFF
     /** Returns the payment by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -67,7 +66,6 @@ public class PaymentService {
                     }
                 });
     }
-    // CPD-ON
 
     /** Returns the payments by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

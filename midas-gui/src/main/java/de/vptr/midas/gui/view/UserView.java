@@ -84,7 +84,6 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setSizeFull();
         this.grid.setPageSize(20);
 
-        // CPD-OFF
         // Clickable username column that navigates to detail view
         this.grid.addComponentColumn(user -> {
             final var usernameSpan = new Span(user.getUsername());
@@ -92,10 +91,9 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
+            usernameSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
-        // CPD-ON
 
         this.grid.addColumn(user -> {
             final var created = user.getCreated();

@@ -66,7 +66,6 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     @Nullable
     private AdminUserGroupMemberPanel memberPanel;
 
-    // CPD-OFF
     /** Initializes AdminUserGroupView. */
     public AdminUserGroupView() {
         this.setSizeFull();
@@ -87,7 +86,6 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         this.buildUi();
         this.setupLazyDataProvider();
     }
-    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
@@ -104,7 +102,6 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.groupDialog = new AdminUserGroupDialog(this.groupService, this::setupLazyDataProvider, onAuthFailure);
-        // CPD-OFF
         this.memberPanel =
                 new AdminUserGroupMemberPanel(this.groupService, this.userService, this.authService, onAuthFailure);
 
@@ -116,15 +113,14 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, e -> this.searchGroups(), "Search by name...", "Search Groups");
-        // CPD-ON
+        }, _ -> this.searchGroups(), "Search by name...", "Search Groups");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
         // User ID filter
         final var userFilterLayout =
-                new IntegerFilterLayout(e -> this.filterByUser(), "Enter User ID...", "Filter by User");
+                new IntegerFilterLayout(_ -> this.filterByUser(), "Enter User ID...", "Filter by User");
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(userFilterLayout);
@@ -135,8 +131,8 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(e -> Objects.requireNonNull(this.groupDialog).open(null));
-        final var refreshButton = new RefreshButton(e -> this.setupLazyDataProvider());
+        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.groupDialog).open(null));
+        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -152,17 +148,15 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
                 .setWidth("80px").setFlexGrow(0);
 
         // Make the name column clickable
-        // CPD-OFF
         this.grid.addComponentColumn(group -> {
             final var nameSpan = new Span(group.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(e -> Objects.requireNonNull(this.groupDialog).open(group));
+            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.groupDialog).open(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
-        // CPD-ON
 
         this.grid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0).setHeader("User Count")
                 .setWidth("120px").setFlexGrow(0);
@@ -175,9 +169,9 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(e -> Objects.requireNonNull(this.groupDialog).open(group));
-        final var deleteButton = new DeleteButton(e -> this.deleteGroup(group));
-        final var manageUsersButton = new ManageUsersButton(e -> Objects.requireNonNull(this.memberPanel).open(group));
+        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.groupDialog).open(group));
+        final var deleteButton = new DeleteButton(_ -> this.deleteGroup(group));
+        final var manageUsersButton = new ManageUsersButton(_ -> Objects.requireNonNull(this.memberPanel).open(group));
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;

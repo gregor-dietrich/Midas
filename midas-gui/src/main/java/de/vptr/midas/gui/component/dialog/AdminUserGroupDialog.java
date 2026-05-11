@@ -57,7 +57,6 @@ public class AdminUserGroupDialog extends FormDialog {
         this.currentGroup = group != null ? group.toUserGroupDto() : new UserGroupDto();
         this.binder = new Binder<>(UserGroupDto.class);
 
-        // CPD-OFF
         final var title = new H3(group != null ? "Edit Group" : "Create Group");
 
         final var form = new FormLayout();
@@ -73,16 +72,14 @@ public class AdminUserGroupDialog extends FormDialog {
                 .bind(UserGroupDto::getName, UserGroupDto::setName);
 
         form.add(nameField);
-        // CPD-ON
 
-        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Save", e -> this.saveGroup());
+        final var saveButton = new Button("Save", _ -> this.saveGroup());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", e -> this.close());
+        final var cancelButton = new Button("Cancel", _ -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);
@@ -95,7 +92,6 @@ public class AdminUserGroupDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentGroup);
         super.open();
-        // CPD-ON
     }
 
     private void saveGroup() {

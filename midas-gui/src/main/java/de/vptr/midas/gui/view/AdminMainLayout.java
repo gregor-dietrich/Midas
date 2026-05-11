@@ -89,7 +89,6 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
         this.updateLogoutButtonVisibility();
     }
 
-    // CPD-OFF
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
         if (!this.initialized) {
@@ -141,7 +140,6 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
 
         LOG.tracef("All checks passed for %s", targetView.getSimpleName());
     }
-    // CPD-ON
 
     private void updateLogoutButtonVisibility() {
         if (this.authService.isAuthenticated()) {
@@ -256,7 +254,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             }
 
             // Create new logout button
-            this.logoutButton = new LogoutButton(e -> {
+            this.logoutButton = new LogoutButton(_ -> {
                 this.authService.logout();
                 // Clear cached user rank on logout
                 this.userRankService.clearCachedUserRank();
@@ -265,7 +263,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             });
 
             // Create new AdminView button
-            this.userViewButton = new UserViewButton(e -> this.getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
+            this.userViewButton = new UserViewButton(_ -> this.getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
 
             // Add buttons
             final var componentCount = this.rightSide.getComponentCount();

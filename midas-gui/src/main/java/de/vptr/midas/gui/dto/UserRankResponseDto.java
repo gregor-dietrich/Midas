@@ -105,7 +105,6 @@ public class UserRankResponseDto {
     @JsonProperty("usersCount")
     private Long usersCount;
 
-    // CPD-OFF
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserRankResponseDto() {
         // Default constructor for Jackson
@@ -336,9 +335,7 @@ public class UserRankResponseDto {
     public void setUsersCount(final Long usersCount) {
         this.usersCount = usersCount;
     }
-    // CPD-ON
 
-    // CPD-OFF
     // Convenience methods for checking permissions
     public boolean canAdminView() {
         return this.adminView != null && this.adminView;
@@ -480,7 +477,6 @@ public class UserRankResponseDto {
                 || this.hasAnyUserRankPermission();
     }
 
-    // CPD-ON
     /** Handles the to user rank dto operation. */
     public UserRankDto toUserRankDto() {
         final UserRankDto dto = new UserRankDto();

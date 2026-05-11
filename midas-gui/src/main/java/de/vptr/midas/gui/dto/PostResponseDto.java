@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Response DTO for post operations. Contains computed fields and safe data for client responses.
  */
-// CPD-OFF
 public class PostResponseDto {
 
     @JsonProperty("id")
@@ -50,7 +49,6 @@ public class PostResponseDto {
     public PostResponseDto() {
         // Default constructor for Jackson
     }
-    // CPD-ON
 
     public Long getId() {
         return this.id;

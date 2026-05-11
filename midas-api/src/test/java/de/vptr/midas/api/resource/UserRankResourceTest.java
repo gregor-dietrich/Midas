@@ -5,11 +5,10 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedUserRankJson;
-import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
-import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
@@ -23,7 +22,6 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -102,7 +100,7 @@ class UserRankResourceTest {
 
     @Test
     void testCreateUserRank_authorizedWithSufficientRole() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
                 .statusCode(201).extract().path("id");
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
@@ -141,7 +139,7 @@ class UserRankResourceTest {
 
     @Test
     void testUpdateUserRank_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
                 .statusCode(201).extract().path("id");
 
         authenticatedJsonRequest().body(createUpdatedUserRankJson()).when().put(ENDPOINT_URL + "/" + id).then()
@@ -163,7 +161,7 @@ class UserRankResourceTest {
 
     @Test
     void testPatchUserRank_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
                 .statusCode(201).extract().path("id");
 
         authenticatedJsonRequest().body(createUpdatedUserRankJson()).when().patch(ENDPOINT_URL + "/" + id).then()
@@ -184,7 +182,7 @@ class UserRankResourceTest {
 
     @Test
     void testDeleteUserRank_authorized() {
-        Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
                 .statusCode(201).extract().path("id");
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);

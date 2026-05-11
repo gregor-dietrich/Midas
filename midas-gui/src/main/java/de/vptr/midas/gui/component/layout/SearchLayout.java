@@ -22,7 +22,7 @@ public class SearchLayout extends HorizontalLayout {
 
     private final ComponentEventListener<ClickEvent<Button>> searchAction;
     private final transient SearchExecutionSupport searchExecutionSupport;
-    private Button button;
+    private final Button button;
     private final TextField textField;
 
     /** Initializes SearchLayout. */
@@ -50,9 +50,9 @@ public class SearchLayout extends HorizontalLayout {
         this.textField.setMaxLength(SearchExecutionSupport.MAX_QUERY_LENGTH);
         this.textField.addValueChangeListener(listener);
 
-        this.textField.addKeyPressListener(Key.ENTER, event -> this.executeSearch());
+        this.textField.addKeyPressListener(Key.ENTER, _ -> this.executeSearch());
 
-        this.button = new SearchButton(e -> this.executeSearch(), tooltipText);
+        this.button = new SearchButton(_ -> this.executeSearch(), tooltipText);
 
         this.add(this.textField, this.button);
     }
@@ -79,7 +79,6 @@ public class SearchLayout extends HorizontalLayout {
         this(listener, searchAction, DEFAULT_PLACEHOLDER);
     }
 
-    // CPD-OFF
     private void executeSearch() {
         if (this.searchAction == null) {
             return;
@@ -98,7 +97,6 @@ public class SearchLayout extends HorizontalLayout {
             this.searchAction.onComponentEvent(new ClickEvent<>(this.button));
         }
     }
-    // CPD-ON
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",
             justification = "Expose button intentionally so parent views can use it")

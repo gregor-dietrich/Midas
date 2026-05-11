@@ -77,7 +77,6 @@ public class AsyncSearchLayout extends HorizontalLayout {
         }, DEFAULT_PLACEHOLDER, "Search");
     }
 
-    // CPD-OFF
     private void executeSearch() {
         final String query = this.searchExecutionSupport.normalize(this.textField.getValue());
         if (query == null) {
@@ -92,7 +91,6 @@ public class AsyncSearchLayout extends HorizontalLayout {
             this.searchAction.accept(query);
         }
     }
-    // CPD-ON
 
     private void executeClear() {
         this.textField.clear();
