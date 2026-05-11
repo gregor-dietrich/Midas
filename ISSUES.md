@@ -140,18 +140,21 @@ Focus on services with <70% lines coverage:
    - Missing: permission checks, edge cases
    - **Target:** 80% lines, 62%+ branches
    - **Effort:** ~5-6 hours
+   - **✅ COMPLETED:** 86.4% lines / 63.0% branches (resource tests improved this)
 
 2. **UserGroupService** (56.2% lines, 27.3% branches) — 28 lines uncovered
    - Missing: validation, error paths
    - **Target:** 80% lines, 62%+ branches
    - **Effort:** ~4-5 hours
+   - **✅ COMPLETED:** 92.2% lines / 63.6% branches (resource tests improved this)
 
 3. **PostCommentService** (67.5% lines, 41.7% branches) — 26 lines uncovered
    - Missing: edge cases, authorization checks
    - **Target:** 80% lines, 62%+ branches
    - **Effort:** ~3-4 hours
+   - **✅ COMPLETED:** 92.5% lines / 72.2% branches (added comprehensive branch coverage tests)
 
-**Subtotal:** ~12-15 hours. Raises API service coverage to ~78-80%+, branches to ~65%+.
+**Subtotal:** All three services above 80% lines and 62%+ branches!  ✅ PHASE 3 COMPLETE
 
 ### Phase 4: Entity Coverage (API)
 

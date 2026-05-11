@@ -26,6 +26,7 @@ import de.vptr.midas.api.util.ServiceTestDataBuilder;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
@@ -229,5 +230,159 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
 
         assertNotNull(recentComments);
         assertTrue(recentComments.size() >= 1);
+    }
+
+    @Test
+    @TestTransaction
+    void testPatchComment() {
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original patch", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
+
+        final var patchDto = new PostCommentDto();
+        patchDto.content = "Patched content";
+
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentId, patchDto,
+                Objects.requireNonNull(this.testUser.username));
+
+        assertNotNull(patchedComment);
+        assertEquals("Patched content", patchedComment.content);
+    }
+
+    @Test
+    @TestTransaction
+    void testPatchCommentWithoutContent() {
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Keep original", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
+
+        final var emptyPatchDto = new PostCommentDto();
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentId, emptyPatchDto,
+                Objects.requireNonNull(this.testUser.username));
+
+        assertEquals("Keep original", patchedComment.content);
+    }
+
+    @Test
+    @TestTransaction
+    void testDeleteCommentShouldDenyNonOwnerWithoutAdminAccess() {
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
+        final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
+
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String intruderUsername = Objects.requireNonNull(intruder.username);
+        assertThrows(WebApplicationException.class,
+                () -> this.postCommentService.deleteComment(commentId, intruderUsername));
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateCommentOnUnpublishedPost() {
+        final var unpublishedPost = this.postService.createPost(
+                ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+
+        final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.id);
+        assertThrows(WebApplicationException.class,
+                () -> this.postCommentService.createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateCommentOnNonCommentablePost() {
+        final var nonCommentablePost = this.postService.createPost(
+                ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+        nonCommentablePost.commentable = false;
+
+        final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", nonCommentablePost.id);
+        assertThrows(WebApplicationException.class,
+                () -> this.postCommentService.createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+    }
+
+    @Test
+    void testSearchCommentsWithEmptyQuery() {
+        final var results = this.postCommentService.searchComments("");
+        assertNotNull(results);
+    }
+
+    @Test
+    void testSearchCommentsWithNullQuery() {
+        @SuppressWarnings("NullAway")
+        final var results = this.postCommentService.searchComments(null);
+        assertNotNull(results);
+    }
+
+    @Test
+    @TestTransaction
+    void testFindByDateRangeWithNullDates() {
+        @SuppressWarnings("NullAway")
+        final var results = this.postCommentService.findByDateRange(null, null);
+        assertNotNull(results);
+    }
+
+    @Test
+    @TestTransaction
+    void testFindByDateRangeWithValidDates() {
+        final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Date test", this.testPost.id);
+        this.postCommentService.createComment(comment, Objects.requireNonNull(this.testUser.username));
+
+        final var results = this.postCommentService.findByDateRange("2024-01-01", "2025-12-31");
+        assertNotNull(results);
+    }
+
+    @Test
+    void testFindByDateRangeWithInvalidDateFormat() {
+        @SuppressWarnings("NullAway")
+        final var unused = assertThrows(ValidationException.class,
+                () -> this.postCommentService.findByDateRange("invalid-date", "2025-12-31"));
+    }
+
+    @Test
+    @TestTransaction
+    void testDeleteCommentWithNullUsername() {
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.id);
+        final PostCommentResponseDto createdComment =
+                this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
+
+        final Long commentId = Objects.requireNonNull(createdComment.id);
+        @SuppressWarnings("NullAway")
+        final var unused = assertThrows(ValidationException.class, () -> this.postCommentService.deleteComment(commentId, null));
+    }
+
+    @Test
+    @TestTransaction
+    void testFindByPostIdWithPagination() {
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final Long postId = Objects.requireNonNull(this.testPost.id);
+        for (int i = 0; i < 5; i++) {
+            final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Paginated comment " + i, postId);
+            this.postCommentService.createComment(comment, username);
+        }
+
+        final var page0 = this.postCommentService.findByPostId(postId, 0, 2);
+        final var page1 = this.postCommentService.findByPostId(postId, 1, 2);
+
+        assertTrue(page0.size() > 0);
+        assertTrue(page1.size() > 0);
+    }
+
+    @Test
+    @TestTransaction
+    void testFindByUserIdWithPagination() {
+        final String username = Objects.requireNonNull(this.testUser.username);
+        final Long userId = Objects.requireNonNull(this.testUser.id);
+        for (int i = 0; i < 5; i++) {
+            final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("User paginated " + i, this.testPost.id);
+            this.postCommentService.createComment(comment, username);
+        }
+
+        final var page0 = this.postCommentService.findByUserId(userId, 0, 2);
+        final var page1 = this.postCommentService.findByUserId(userId, 1, 2);
+
+        assertTrue(page0.size() > 0);
+        assertTrue(page1.size() > 0);
     }
 }
