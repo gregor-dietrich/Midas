@@ -130,4 +130,51 @@ class PostCommentResourceTest {
     void testDeleteComment_unauthorized() {
         TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/1", "DELETE");
     }
+
+    @Test
+    void testDeleteComment_authorized() {
+        final Long postId = TestUtil.createTestPost();
+        final Long commentId = TestUtil.createTestComment(postId);
+        TestUtil.authenticatedRequest().when().delete(ENDPOINT_URL + "/" + commentId).then().statusCode(204);
+    }
+
+    @Test
+    void testGetCommentsByUser_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+    }
+
+    @Test
+    void testGetCommentsByUser_authorized() {
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
+    }
+
+    @Test
+    void testGetRecentComments_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/recent");
+    }
+
+    @Test
+    void testGetRecentComments_authorized() {
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/recent");
+    }
+
+    @Test
+    void testSearchComments_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchComments_authorized() {
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testGetCommentsByDateRange_unauthorized() {
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
+    void testGetCommentsByDateRange_authorized() {
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
+    }
 }
