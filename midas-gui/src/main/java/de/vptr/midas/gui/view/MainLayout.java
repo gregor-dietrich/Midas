@@ -38,13 +38,13 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
     private boolean cachedAdminPermissionValid = false;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    ThemeService themeService;
+    transient ThemeService themeService;
 
     @Inject
-    UserRankService userRankService;
+    transient UserRankService userRankService;
 
     @Nullable
     private HorizontalLayout topBar;
@@ -68,6 +68,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         this.updateLogoutButtonVisibility();
     }
 
+    // CPD-OFF
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
         if (!this.initialized) {
@@ -111,6 +112,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
 
         LOG.tracef("All checks passed for %s", targetView.getSimpleName());
     }
+    // CPD-ON
 
     private void updateLogoutButtonVisibility() {
         if (!this.authService.isAuthenticated()) {

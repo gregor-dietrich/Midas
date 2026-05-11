@@ -32,7 +32,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     private static final Logger LOG = Logger.getLogger(LoginView.class);
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     private boolean initialized = false;
 

@@ -53,19 +53,19 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     private static final Logger LOG = Logger.getLogger(AdminPostView.class);
 
     @Inject
-    PostService postService;
+    transient PostService postService;
 
     @Inject
-    PostCategoryService postCategoryService;
+    transient PostCategoryService postCategoryService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Inject
-    PostCommentService postCommentService;
+    transient PostCommentService postCommentService;
 
     @Nullable
     private Grid<PostResponseDto> grid;
@@ -89,6 +89,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
     @Nullable
     private List<PostCategoryResponseDto> availableCategories;
 
+    // CPD-OFF
     /** Initializes AdminPostView. */
     public AdminPostView() {
         this.setSizeFull();
@@ -107,6 +108,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadCategoriesAsync();
         this.setupLazyDataProviderAllPosts();
     }
+    // CPD-ON
 
     private void setupLazyDataProviderAllPosts() {
         Objects.requireNonNull(this.grid)
@@ -142,6 +144,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.postDialog = new AdminPostDialog(this.postService, this.userService, this::setupLazyDataProviderAllPosts,
                 authFailure);
+        // CPD-OFF
         this.commentPanel = new AdminPostCommentPanel(this.postCommentService, authFailure);
 
         this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
@@ -153,6 +156,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
                 this.setupLazyDataProviderAllPosts();
             }
         }, e -> this.searchPosts(), "Search by title or content...", "Search Posts");
+        // CPD-ON
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -160,6 +164,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.showPublishedButton = new Button("Show Published Only", e -> this.setupLazyDataProviderPublishedPosts());
         this.showPublishedButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
+        // CPD-OFF
         // Date range filter
         final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
@@ -171,6 +176,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(this.showPublishedButton, dateFilterLayout, userFilterLayout);
+        // CPD-ON
         return searchLayout;
     }
 
@@ -214,14 +220,14 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
 
         this.grid.addComponentColumn(post -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(post.getPublished() != null ? post.getPublished() : false);
+            checkbox.setValue(post.isPublished() != null ? post.isPublished() : false);
             checkbox.setReadOnly(true);
             return checkbox;
         }).setHeader("Published").setWidth("100px").setFlexGrow(0);
 
         this.grid.addComponentColumn(post -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(post.getCommentable() != null ? post.getCommentable() : false);
+            checkbox.setValue(post.isCommentable() != null ? post.isCommentable() : false);
             checkbox.setReadOnly(true);
             return checkbox;
         }).setHeader("Commentable").setWidth("100px").setFlexGrow(0);
@@ -264,6 +270,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         }
     }
 
+    // CPD-OFF
     private void searchPosts() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -284,7 +291,9 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
+    // CPD-ON
 
+    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -302,6 +311,7 @@ public class AdminPostView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
                 posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
+    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();

@@ -12,7 +12,7 @@ import jakarta.ws.rs.WebApplicationException;
 /**
  * Utility class for common exception testing patterns
  */
-public class ExceptionTestUtil {
+public final class ExceptionTestUtil {
 
     private ExceptionTestUtil() {
         // Utility class

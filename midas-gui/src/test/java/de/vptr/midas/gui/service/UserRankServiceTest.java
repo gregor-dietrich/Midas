@@ -35,6 +35,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.LinguisticNaming")
 class UserRankServiceTest {
 
     @RestClient
@@ -51,6 +52,7 @@ class UserRankServiceTest {
     @InjectMocks
     UserRankService userRankService;
 
+    // CPD-OFF
     private VaadinSession vaadinSession;
     private MockedStatic<VaadinSession> vaadinSessionMock;
 
@@ -65,6 +67,7 @@ class UserRankServiceTest {
     void tearDown() {
         this.vaadinSessionMock.close();
     }
+    // CPD-ON
 
     @Test
     void getAllRanks_shouldReturnRankList_whenAuthenticationProvided() {
@@ -169,8 +172,8 @@ class UserRankServiceTest {
         // Then
         assertThat(result.getId()).isEqualTo(rankId);
         assertThat(result.getName()).isEqualTo("Test Rank");
-        assertThat(result.getUserAdd()).isTrue();
-        assertThat(result.getPostEdit()).isTrue();
+        assertThat(result.isUserAdd()).isTrue();
+        assertThat(result.isPostEdit()).isTrue();
     }
 
     @Test
@@ -217,7 +220,7 @@ class UserRankServiceTest {
         // Then
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("New Rank");
-        assertThat(result.getUserAdd()).isTrue();
+        assertThat(result.isUserAdd()).isTrue();
         verify(this.userRankClient).createRank(newRank, TestUtil.TEST_AUTH_HEADER);
     }
 
@@ -262,7 +265,7 @@ class UserRankServiceTest {
         // Then
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Updated Rank");
-        assertThat(result.getUserEdit()).isTrue();
+        assertThat(result.isUserEdit()).isTrue();
         verify(this.userRankClient).updateRank(1L, rankToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 

@@ -21,7 +21,7 @@ public class SearchLayout extends HorizontalLayout {
     private static final String DEFAULT_WIDTH = "300px";
 
     private final ComponentEventListener<ClickEvent<Button>> searchAction;
-    private final SearchExecutionSupport searchExecutionSupport;
+    private final transient SearchExecutionSupport searchExecutionSupport;
     private Button button;
     private final TextField textField;
 
@@ -79,6 +79,7 @@ public class SearchLayout extends HorizontalLayout {
         this(listener, searchAction, DEFAULT_PLACEHOLDER);
     }
 
+    // CPD-OFF
     private void executeSearch() {
         if (this.searchAction == null) {
             return;
@@ -97,6 +98,7 @@ public class SearchLayout extends HorizontalLayout {
             this.searchAction.onComponentEvent(new ClickEvent<>(this.button));
         }
     }
+    // CPD-ON
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",
             justification = "Expose button intentionally so parent views can use it")

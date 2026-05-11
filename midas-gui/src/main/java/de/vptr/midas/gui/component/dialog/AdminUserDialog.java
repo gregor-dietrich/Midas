@@ -51,7 +51,7 @@ public class AdminUserDialog extends FormDialog {
     @Nullable
     private Binder<UserDto> binder;
     @Nullable
-    private UserDto currentUser;
+    private transient UserDto currentUser;
 
     /** Initializes AdminUserDialog. */
     public AdminUserDialog(final UserService userService, final Runnable onSave, final Runnable onAuthFailure) {
@@ -144,8 +144,8 @@ public class AdminUserDialog extends FormDialog {
         }, "Email must be valid or empty").bind(UserDto::getEmail,
                 (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
 
-        this.binder.bind(activatedField, u -> Boolean.TRUE.equals(u.getActivated()), UserDto::setActivated);
-        this.binder.bind(bannedField, u -> Boolean.TRUE.equals(u.getBanned()), UserDto::setBanned);
+        this.binder.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
+        this.binder.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
 
         // Rank binding - convert between UserRankResponseDto and rankId
         this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {

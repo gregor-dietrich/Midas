@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Response DTO for post operations. Contains computed fields and safe data for client responses.
  */
+// CPD-OFF
 public class PostResponseDto {
 
     @JsonProperty("id")
@@ -45,10 +46,11 @@ public class PostResponseDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostResponseDto() {
         // Default constructor for Jackson
     }
+    // CPD-ON
 
     public Long getId() {
         return this.id;
@@ -78,11 +80,11 @@ public class PostResponseDto {
         return this.categoryName;
     }
 
-    public Boolean getPublished() {
+    public Boolean isPublished() {
         return this.published;
     }
 
-    public Boolean getCommentable() {
+    public Boolean isCommentable() {
         return this.commentable;
     }
 

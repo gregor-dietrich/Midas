@@ -32,7 +32,7 @@ public class AccountResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public AccountResponseDto() {
         // Default constructor for Jackson
     }

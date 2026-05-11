@@ -16,7 +16,7 @@ public class PageResponseDto {
     @JsonProperty("content")
     private String content;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PageResponseDto() {
         // Default constructor for Jackson
     }

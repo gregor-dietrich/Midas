@@ -30,10 +30,10 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private Grid<UserResponseDto> grid;
@@ -84,6 +84,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setSizeFull();
         this.grid.setPageSize(20);
 
+        // CPD-OFF
         // Clickable username column that navigates to detail view
         this.grid.addComponentColumn(user -> {
             final var usernameSpan = new Span(user.getUsername());
@@ -94,6 +95,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
             usernameSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
+        // CPD-ON
 
         this.grid.addColumn(user -> {
             final var created = user.getCreated();

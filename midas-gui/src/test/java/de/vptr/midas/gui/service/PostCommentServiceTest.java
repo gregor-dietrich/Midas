@@ -30,7 +30,7 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 import jakarta.inject.Inject;
 
-@SuppressWarnings("NullAway")
+@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 @ExtendWith(MockitoExtension.class)
 class PostCommentServiceTest {
 

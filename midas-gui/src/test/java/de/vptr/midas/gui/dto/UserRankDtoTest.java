@@ -76,31 +76,31 @@ class UserRankDtoTest {
         // Then
         assertThat(dto.getId()).isNull();
         assertThat(dto.getName()).isNull();
-        assertThat(dto.getAdminView()).isFalse();
-        assertThat(dto.getPageAdd()).isFalse();
-        assertThat(dto.getPageDelete()).isFalse();
-        assertThat(dto.getPageEdit()).isFalse();
-        assertThat(dto.getPostAdd()).isFalse();
-        assertThat(dto.getPostDelete()).isFalse();
-        assertThat(dto.getPostEdit()).isFalse();
-        assertThat(dto.getPostCategoryAdd()).isFalse();
-        assertThat(dto.getPostCategoryDelete()).isFalse();
-        assertThat(dto.getPostCategoryEdit()).isFalse();
-        assertThat(dto.getPostCommentAdd()).isFalse();
-        assertThat(dto.getPostCommentDelete()).isFalse();
-        assertThat(dto.getPostCommentEdit()).isFalse();
-        assertThat(dto.getUserAdd()).isFalse();
-        assertThat(dto.getUserDelete()).isFalse();
-        assertThat(dto.getUserEdit()).isFalse();
-        assertThat(dto.getUserGroupAdd()).isFalse();
-        assertThat(dto.getUserGroupDelete()).isFalse();
-        assertThat(dto.getUserGroupEdit()).isFalse();
-        assertThat(dto.getUserAccountAdd()).isFalse();
-        assertThat(dto.getUserAccountDelete()).isFalse();
-        assertThat(dto.getUserAccountEdit()).isFalse();
-        assertThat(dto.getUserRankAdd()).isFalse();
-        assertThat(dto.getUserRankDelete()).isFalse();
-        assertThat(dto.getUserRankEdit()).isFalse();
+        assertThat(dto.isAdminView()).isFalse();
+        assertThat(dto.isPageAdd()).isFalse();
+        assertThat(dto.isPageDelete()).isFalse();
+        assertThat(dto.isPageEdit()).isFalse();
+        assertThat(dto.isPostAdd()).isFalse();
+        assertThat(dto.isPostDelete()).isFalse();
+        assertThat(dto.isPostEdit()).isFalse();
+        assertThat(dto.isPostCategoryAdd()).isFalse();
+        assertThat(dto.isPostCategoryDelete()).isFalse();
+        assertThat(dto.isPostCategoryEdit()).isFalse();
+        assertThat(dto.isPostCommentAdd()).isFalse();
+        assertThat(dto.isPostCommentDelete()).isFalse();
+        assertThat(dto.isPostCommentEdit()).isFalse();
+        assertThat(dto.isUserAdd()).isFalse();
+        assertThat(dto.isUserDelete()).isFalse();
+        assertThat(dto.isUserEdit()).isFalse();
+        assertThat(dto.isUserGroupAdd()).isFalse();
+        assertThat(dto.isUserGroupDelete()).isFalse();
+        assertThat(dto.isUserGroupEdit()).isFalse();
+        assertThat(dto.isUserAccountAdd()).isFalse();
+        assertThat(dto.isUserAccountDelete()).isFalse();
+        assertThat(dto.isUserAccountEdit()).isFalse();
+        assertThat(dto.isUserRankAdd()).isFalse();
+        assertThat(dto.isUserRankDelete()).isFalse();
+        assertThat(dto.isUserRankEdit()).isFalse();
     }
 
     @Test

@@ -14,7 +14,7 @@ import jakarta.inject.Inject;
 public class AdminHomeView extends VerticalLayout implements BeforeEnterObserver {
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     public AdminHomeView() {
         this.setAlignItems(Alignment.START);

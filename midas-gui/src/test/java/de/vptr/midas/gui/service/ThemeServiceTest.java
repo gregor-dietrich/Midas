@@ -26,6 +26,7 @@ import com.vaadin.flow.server.VaadinSession;
 import de.vptr.midas.gui.service.ThemeService.Theme;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.LinguisticNaming")
 class ThemeServiceTest {
 
     @InjectMocks

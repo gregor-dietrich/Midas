@@ -35,8 +35,7 @@ public class PostCommentService {
     /** Returns the all comments. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getAllComments(final Integer page, final Integer size)
-            throws AuthenticationException, ServiceException {
+    public List<PostCommentResponseDto> getAllComments(final Integer page, final Integer size) {
         LOG.debug("Fetching all comments");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -48,8 +47,7 @@ public class PostCommentService {
     /** Returns the comments by post. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getCommentsByPost(final Long postId)
-            throws AuthenticationException, ServiceException {
+    public List<PostCommentResponseDto> getCommentsByPost(final Long postId) {
         LOG.infof("Getting comments for post: %s", postId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> {
@@ -62,8 +60,7 @@ public class PostCommentService {
     /** Returns the comments by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getCommentsByUser(final Long userId)
-            throws AuthenticationException, ServiceException {
+    public List<PostCommentResponseDto> getCommentsByUser(final Long userId) {
         LOG.debugf("Fetching comments for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.commentClient.getCommentsByUser(userId, authHeader), this.authService,
@@ -83,7 +80,7 @@ public class PostCommentService {
     /** Returns the comment by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public PostCommentDto getCommentById(final Long id) throws AuthenticationException, ServiceException {
+    public PostCommentDto getCommentById(final Long id) {
         LOG.infof("Getting comment by id: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.commentClient.getComment(id, authHeader), this.authService,
@@ -101,7 +98,7 @@ public class PostCommentService {
     }
 
     /** Creates a new comment. */
-    public PostCommentDto createComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
+    public PostCommentDto createComment(final PostCommentDto comment) {
         LOG.infof("Creating comment for post: %s", comment.getPostId() != null ? comment.getPostId() : "unknown");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
@@ -121,7 +118,7 @@ public class PostCommentService {
     }
 
     /** Updates the comment. */
-    public PostCommentDto updateComment(final PostCommentDto comment) throws AuthenticationException, ServiceException {
+    public PostCommentDto updateComment(final PostCommentDto comment) {
         LOG.infof("Updating comment: %s", comment.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
@@ -141,7 +138,7 @@ public class PostCommentService {
     }
 
     /** Handles the delete comment operation. */
-    public void deleteComment(final Long id) throws AuthenticationException, ServiceException {
+    public void deleteComment(final Long id) {
         LOG.infof("Deleting comment: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         ServiceHelper.executeWithResponse(() -> this.commentClient.deleteComment(id, authHeader), this.authService, LOG,

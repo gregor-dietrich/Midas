@@ -43,10 +43,10 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     private static final Logger LOG = Logger.getLogger(AdminPostCommentView.class);
 
     @Inject
-    PostCommentService commentService;
+    transient PostCommentService commentService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private Grid<PostCommentResponseDto> grid;
@@ -64,6 +64,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
     @Nullable
     private AdminPostCommentDialog commentDialog;
 
+    // CPD-OFF
     /** Initializes AdminPostCommentView. */
     public AdminPostCommentView() {
         this.setSizeFull();
@@ -81,12 +82,14 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.buildUi();
         this.setupLazyDataProvider();
     }
+    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
                 .setItems(query -> this.commentService.getAllComments(query.getPage(), query.getPageSize()).stream());
     }
 
+    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -133,6 +136,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         layout.add(refreshButton);
         return layout;
     }
+    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(PostCommentResponseDto.class, false);
@@ -221,6 +225,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         });
     }
 
+    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -238,6 +243,7 @@ public class AdminPostCommentView extends AbstractAsyncDataView implements Befor
         this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
                 comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
+    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();

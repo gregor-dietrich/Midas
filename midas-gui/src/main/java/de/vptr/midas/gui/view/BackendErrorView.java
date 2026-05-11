@@ -26,10 +26,10 @@ import jakarta.inject.Inject;
 public class BackendErrorView extends VerticalLayout implements BeforeEnterObserver {
 
     @Inject
-    ThemeService themeService;
+    transient ThemeService themeService;
 
     @Inject
-    BackendAvailabilityService backendAvailabilityService;
+    transient BackendAvailabilityService backendAvailabilityService;
 
     private boolean initialized = false;
 

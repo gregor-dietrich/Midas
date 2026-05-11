@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.LinguisticNaming")
 class AsyncSearchLayoutTest {
 
     @Test

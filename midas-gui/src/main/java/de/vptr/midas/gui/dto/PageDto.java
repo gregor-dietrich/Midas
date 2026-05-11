@@ -26,6 +26,7 @@ public class PageDto {
         this.content = content;
     }
 
+    // CPD-OFF
     // Getters and setters
     public Long getId() {
         return this.id;
@@ -50,5 +51,6 @@ public class PageDto {
     public void setContent(final String content) {
         this.content = content;
     }
+    // CPD-ON
 
 }

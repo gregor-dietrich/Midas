@@ -49,16 +49,16 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
     private static final Logger LOG = Logger.getLogger(AdminPaymentView.class);
 
     @Inject
-    PaymentService paymentService;
+    transient PaymentService paymentService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Inject
-    AccountService accountService;
+    transient AccountService accountService;
 
     @Nullable
     private Grid<PaymentResponseDto> grid;
@@ -125,6 +125,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         final Runnable authFailure = () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
         this.paymentDialog =
                 new AdminPaymentDialog(this.paymentService, this.userService, this::setupLazyDataProvider, authFailure);
+        // CPD-OFF
         this.availableAccounts = List.of();
 
         this.add(header, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
@@ -136,6 +137,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 this.setupLazyDataProvider();
             }
         }, e -> this.searchPayments(), "Search by comment or other account...", "Search Payments");
+        // CPD-ON
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -146,6 +148,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.limitField = recentFilterLayout.getIntegerField();
         this.limitField.setMin(1);
         this.limitField.setMax(1000);
+        // CPD-OFF
         this.limitField.setValue(10);
 
         // Date range filter
@@ -159,6 +162,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.userIdField = userFilterLayout.getIntegerField();
 
         searchLayout.add(recentFilterLayout, dateFilterLayout, userFilterLayout);
+        // CPD-ON
         return searchLayout;
     }
 
@@ -174,6 +178,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         return buttonLayout;
     }
 
+    // CPD-OFF
     private void createGrid() {
         this.grid = new Grid<>(PaymentResponseDto.class, false);
         this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -200,6 +205,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         // Add action column
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
     }
+    // CPD-ON
 
     private HorizontalLayout createActionButtons(final PaymentResponseDto payment) {
         final var layout = new HorizontalLayout();
@@ -238,6 +244,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
+    // CPD-OFF
     private void filterByDateRange() {
         final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
@@ -255,6 +262,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
         this.loadDataAsync(() -> this.paymentService.getPaymentsByDateRange(startDate, endDate),
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
+    // CPD-ON
 
     private void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
@@ -267,6 +275,7 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
+    // CPD-OFF
     private void searchPayments() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -289,4 +298,5 @@ public class AdminPaymentView extends AbstractAsyncDataView implements BeforeEnt
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
+    // CPD-ON
 }

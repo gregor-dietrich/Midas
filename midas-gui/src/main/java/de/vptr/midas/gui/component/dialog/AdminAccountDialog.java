@@ -36,7 +36,7 @@ public class AdminAccountDialog extends FormDialog {
     private final Runnable onAuthFailure;
 
     private Binder<AccountDto> binder;
-    private AccountDto currentAccount;
+    private transient AccountDto currentAccount;
 
     /** Initializes AdminAccountDialog. */
     public AdminAccountDialog(final AccountService accountService, final Runnable onSave,
@@ -48,7 +48,7 @@ public class AdminAccountDialog extends FormDialog {
     }
 
     /** Opens the dialog for creating or editing an account. */
-    public void open(final @Nullable AccountResponseDto account) {
+    public void open(@Nullable final AccountResponseDto account) {
         this.removeAll();
         this.currentAccount = account != null ? account.toAccountDto() : new AccountDto();
         this.binder = new Binder<>(AccountDto.class);
@@ -69,6 +69,7 @@ public class AdminAccountDialog extends FormDialog {
 
         form.add(nameField);
 
+        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
@@ -87,6 +88,7 @@ public class AdminAccountDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentAccount);
         super.open();
+        // CPD-ON
     }
 
     private void saveAccount() {

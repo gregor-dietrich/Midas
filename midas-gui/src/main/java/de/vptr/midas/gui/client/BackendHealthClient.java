@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Response;
  */
 @RegisterRestClient(configKey = "midas-api-health")
 @Path("/q/health")
+@FunctionalInterface
 public interface BackendHealthClient {
 
     @GET

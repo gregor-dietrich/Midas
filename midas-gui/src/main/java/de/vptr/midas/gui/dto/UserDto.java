@@ -104,14 +104,12 @@ public class UserDto {
         return this.email;
     }
 
-    @Nullable
-    public Boolean getBanned() {
-        return this.banned;
+    public boolean isBanned() {
+        return Boolean.TRUE.equals(this.banned);
     }
 
-    @Nullable
-    public Boolean getActivated() {
-        return this.activated;
+    public boolean isActivated() {
+        return Boolean.TRUE.equals(this.activated);
     }
 
     @Nullable
@@ -200,11 +198,4 @@ public class UserDto {
         this.commentsCount = commentsCount;
     }
 
-    public boolean isActivated() {
-        return this.activated != null && this.activated;
-    }
-
-    public boolean isBanned() {
-        return this.banned != null && this.banned;
-    }
 }

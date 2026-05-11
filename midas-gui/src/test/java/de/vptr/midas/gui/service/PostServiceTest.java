@@ -26,7 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 
-@SuppressWarnings("NullAway")
+@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 

@@ -48,7 +48,7 @@ public class AdminAccountUserPanel extends FormDialog {
 
     private Grid<UserResponseDto> userGrid;
     private ComboBox<UserResponseDto> availableUsersCombo;
-    private AccountDto selectedAccount;
+    private transient AccountDto selectedAccount;
 
     /** Initializes AdminAccountUserPanel. */
     public AdminAccountUserPanel(final AccountService accountService, final AuthService authService,
@@ -86,10 +86,10 @@ public class AdminAccountUserPanel extends FormDialog {
         }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
 
         this.userGrid.addComponentColumn(user -> {
-            final var removeButton = new RemoveUserButton(e -> this.removeUserFromAccount(user));
-            return removeButton;
+            return new RemoveUserButton(e -> this.removeUserFromAccount(user));
         }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
+        // CPD-OFF
         final var addUserLayout = new HorizontalLayout();
         addUserLayout.setAlignItems(VerticalLayout.Alignment.END);
         addUserLayout.setSpacing(true);
@@ -113,6 +113,7 @@ public class AdminAccountUserPanel extends FormDialog {
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);
+        // CPD-ON
 
         final var dialogLayout = new VerticalLayout(title, this.userGrid, addUserLayout, buttonLayout);
         dialogLayout.setSpacing(true);

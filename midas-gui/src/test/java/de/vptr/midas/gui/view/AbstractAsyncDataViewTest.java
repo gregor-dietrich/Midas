@@ -34,13 +34,14 @@ class AbstractAsyncDataViewTest {
     private MockedStatic<NotificationUtil> notificationMock;
 
     /** Concrete subclass for testing the abstract base */
-    private static class TestAsyncDataView extends AbstractAsyncDataView {
+    private static final class TestAsyncDataView extends AbstractAsyncDataView {
         <T> void testLoadWithErrorHandler(final Supplier<T> loader, final Consumer<T> onSuccess,
                 final Consumer<Throwable> onError) {
             this.loadDataAsync(loader, onSuccess, onError);
         }
     }
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = mock(UI.class);
@@ -61,6 +62,7 @@ class AbstractAsyncDataViewTest {
         this.uiMock.close();
         this.notificationMock.close();
     }
+    // CPD-ON
 
     @Test
     void loadDataAsync_shouldCallOnSuccess_withCustomErrorHandler() throws Exception {
@@ -85,7 +87,7 @@ class AbstractAsyncDataViewTest {
         final var latch = new CountDownLatch(1);
 
         view.testLoadWithErrorHandler(() -> {
-            throw new RuntimeException("custom error");
+            throw new IllegalStateException("custom error");
         }, e -> {
         }, error -> {
             errorRef.set(error);

@@ -19,7 +19,7 @@ import jakarta.ws.rs.core.Response;
 /**
  * Utility class for common service testing patterns in GUI tests
  */
-public class ServiceTestUtil {
+public final class ServiceTestUtil {
 
     private ServiceTestUtil() {
         // Utility class

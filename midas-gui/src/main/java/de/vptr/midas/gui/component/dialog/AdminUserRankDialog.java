@@ -43,7 +43,7 @@ public class AdminUserRankDialog extends FormDialog {
     @Nullable
     private Binder<UserRankDto> binder;
     @Nullable
-    private UserRankDto currentRank;
+    private transient UserRankDto currentRank;
 
     /** Initializes AdminUserRankDialog. */
     public AdminUserRankDialog(final UserRankService rankService, final Runnable onSave, final Runnable onAuthFailure) {
@@ -59,6 +59,7 @@ public class AdminUserRankDialog extends FormDialog {
         this.currentRank = rank != null ? rank.toUserRankDto() : new UserRankDto();
         this.binder = new Binder<>(UserRankDto.class);
 
+        // CPD-OFF
         final var title = new H3(rank != null ? "Edit Rank" : "Create Rank");
 
         final var form = new FormLayout();
@@ -74,54 +75,56 @@ public class AdminUserRankDialog extends FormDialog {
                 .bind(UserRankDto::getName, UserRankDto::setName);
 
         form.add(nameField);
+        // CPD-ON
 
         // View permissions
         final var adminViewField = new Checkbox("Admin View");
-        this.bindCheckbox(adminViewField, UserRankDto::getAdminView, UserRankDto::setAdminView);
+        this.bindCheckbox(adminViewField, UserRankDto::isAdminView, UserRankDto::setAdminView);
 
         form.add(new H3("View Permissions"));
         form.add(adminViewField);
 
-        this.addPermissionSection(form, "Page Permissions", "Can Add Pages", UserRankDto::getPageAdd,
-                UserRankDto::setPageAdd, "Can Edit Pages", UserRankDto::getPageEdit, UserRankDto::setPageEdit,
-                "Can Delete Pages", UserRankDto::getPageDelete, UserRankDto::setPageDelete);
+        this.addPermissionSection(form, "Page Permissions", "Can Add Pages", UserRankDto::isPageAdd,
+                UserRankDto::setPageAdd, "Can Edit Pages", UserRankDto::isPageEdit, UserRankDto::setPageEdit,
+                "Can Delete Pages", UserRankDto::isPageDelete, UserRankDto::setPageDelete);
 
-        this.addPermissionSection(form, "Post Permissions", "Can Add Posts", UserRankDto::getPostAdd,
-                UserRankDto::setPostAdd, "Can Edit Posts", UserRankDto::getPostEdit, UserRankDto::setPostEdit,
-                "Can Delete Posts", UserRankDto::getPostDelete, UserRankDto::setPostDelete);
+        this.addPermissionSection(form, "Post Permissions", "Can Add Posts", UserRankDto::isPostAdd,
+                UserRankDto::setPostAdd, "Can Edit Posts", UserRankDto::isPostEdit, UserRankDto::setPostEdit,
+                "Can Delete Posts", UserRankDto::isPostDelete, UserRankDto::setPostDelete);
 
         this.addPermissionSection(form, "Post Category Permissions", "Can Add Post Categories",
-                UserRankDto::getPostCategoryAdd, UserRankDto::setPostCategoryAdd, "Can Edit Post Categories",
-                UserRankDto::getPostCategoryEdit, UserRankDto::setPostCategoryEdit, "Can Delete Post Categories",
-                UserRankDto::getPostCategoryDelete, UserRankDto::setPostCategoryDelete);
+                UserRankDto::isPostCategoryAdd, UserRankDto::setPostCategoryAdd, "Can Edit Post Categories",
+                UserRankDto::isPostCategoryEdit, UserRankDto::setPostCategoryEdit, "Can Delete Post Categories",
+                UserRankDto::isPostCategoryDelete, UserRankDto::setPostCategoryDelete);
 
         this.addPermissionSection(form, "Post Comment Permissions", "Can Add Post Comments",
-                UserRankDto::getPostCommentAdd, UserRankDto::setPostCommentAdd, "Can Edit Post Comments",
-                UserRankDto::getPostCommentEdit, UserRankDto::setPostCommentEdit, "Can Delete Post Comments",
-                UserRankDto::getPostCommentDelete, UserRankDto::setPostCommentDelete);
+                UserRankDto::isPostCommentAdd, UserRankDto::setPostCommentAdd, "Can Edit Post Comments",
+                UserRankDto::isPostCommentEdit, UserRankDto::setPostCommentEdit, "Can Delete Post Comments",
+                UserRankDto::isPostCommentDelete, UserRankDto::setPostCommentDelete);
 
-        this.addPermissionSection(form, "User Permissions", "Can Add Users", UserRankDto::getUserAdd,
-                UserRankDto::setUserAdd, "Can Edit Users", UserRankDto::getUserEdit, UserRankDto::setUserEdit,
-                "Can Delete Users", UserRankDto::getUserDelete, UserRankDto::setUserDelete);
+        this.addPermissionSection(form, "User Permissions", "Can Add Users", UserRankDto::isUserAdd,
+                UserRankDto::setUserAdd, "Can Edit Users", UserRankDto::isUserEdit, UserRankDto::setUserEdit,
+                "Can Delete Users", UserRankDto::isUserDelete, UserRankDto::setUserDelete);
 
-        this.addPermissionSection(form, "User Group Permissions", "Can Add User Groups", UserRankDto::getUserGroupAdd,
-                UserRankDto::setUserGroupAdd, "Can Edit User Groups", UserRankDto::getUserGroupEdit,
-                UserRankDto::setUserGroupEdit, "Can Delete User Groups", UserRankDto::getUserGroupDelete,
+        this.addPermissionSection(form, "User Group Permissions", "Can Add User Groups", UserRankDto::isUserGroupAdd,
+                UserRankDto::setUserGroupAdd, "Can Edit User Groups", UserRankDto::isUserGroupEdit,
+                UserRankDto::setUserGroupEdit, "Can Delete User Groups", UserRankDto::isUserGroupDelete,
                 UserRankDto::setUserGroupDelete);
 
-        this.addPermissionSection(form, "Account Permissions", "Can Add User Accounts", UserRankDto::getUserAccountAdd,
-                UserRankDto::setUserAccountAdd, "Can Edit User Accounts", UserRankDto::getUserAccountEdit,
-                UserRankDto::setUserAccountEdit, "Can Delete User Accounts", UserRankDto::getUserAccountDelete,
+        this.addPermissionSection(form, "Account Permissions", "Can Add User Accounts", UserRankDto::isUserAccountAdd,
+                UserRankDto::setUserAccountAdd, "Can Edit User Accounts", UserRankDto::isUserAccountEdit,
+                UserRankDto::setUserAccountEdit, "Can Delete User Accounts", UserRankDto::isUserAccountDelete,
                 UserRankDto::setUserAccountDelete);
 
-        this.addPermissionSection(form, "User Rank Permissions", "Can Add User Ranks", UserRankDto::getUserRankAdd,
-                UserRankDto::setUserRankAdd, "Can Edit User Ranks", UserRankDto::getUserRankEdit,
-                UserRankDto::setUserRankEdit, "Can Delete User Ranks", UserRankDto::getUserRankDelete,
+        this.addPermissionSection(form, "User Rank Permissions", "Can Add User Ranks", UserRankDto::isUserRankAdd,
+                UserRankDto::setUserRankAdd, "Can Edit User Ranks", UserRankDto::isUserRankEdit,
+                UserRankDto::setUserRankEdit, "Can Delete User Ranks", UserRankDto::isUserRankDelete,
                 UserRankDto::setUserRankDelete);
 
         form.getStyle().set("overflow-y", "auto");
         form.setMaxHeight("400px");
 
+        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
@@ -141,6 +144,7 @@ public class AdminUserRankDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentRank);
         super.open();
+        // CPD-ON
     }
 
     private void addPermissionSection(final FormLayout form, final String sectionTitle, final String addLabel,

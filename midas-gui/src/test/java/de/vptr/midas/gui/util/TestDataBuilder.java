@@ -21,7 +21,7 @@ import de.vptr.midas.gui.dto.UserRankDto;
  * Builder utility for creating test data objects for GUI service tests
  */
 @SuppressWarnings("NullAway")
-public class TestDataBuilder {
+public final class TestDataBuilder {
 
     private TestDataBuilder() {
         // Utility class
@@ -78,8 +78,7 @@ public class TestDataBuilder {
      */
     public static UserGroupDto createUniqueUserGroup() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
-        final var group = new UserGroupDto(Long.valueOf(suffix), TestUtil.createUniqueTestName("Test Group"));
-        return group;
+        return new UserGroupDto(Long.valueOf(suffix), TestUtil.createUniqueTestName("Test Group"));
     }
 
     /**

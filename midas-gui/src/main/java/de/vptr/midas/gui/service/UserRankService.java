@@ -45,7 +45,7 @@ public class UserRankService {
     /** Returns the all ranks. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> getAllRanks() throws AuthenticationException, ServiceException {
+    public List<UserRankResponseDto> getAllRanks() {
         LOG.debug("Fetching all ranks");
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.userRankClient.getAllRanks(authHeader), this.authService, LOG,
@@ -120,7 +120,7 @@ public class UserRankService {
     /** Returns the rank by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public UserRankResponseDto getRankById(final Long id) throws AuthenticationException, ServiceException {
+    public UserRankResponseDto getRankById(final Long id) {
         LOG.infof("Getting user rank by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -137,7 +137,7 @@ public class UserRankService {
     }
 
     /** Creates a new rank. */
-    public UserRankDto createRank(final UserRankDto rank) throws AuthenticationException, ServiceException {
+    public UserRankDto createRank(final UserRankDto rank) {
         LOG.infof("Creating user rank: %s", rank.getName());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -153,7 +153,7 @@ public class UserRankService {
     }
 
     /** Updates the rank. */
-    public UserRankDto updateRank(final UserRankDto rank) throws AuthenticationException, ServiceException {
+    public UserRankDto updateRank(final UserRankDto rank) {
         LOG.infof("Updating user rank: %s (%s)", rank.getName(), rank.getId());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -171,7 +171,7 @@ public class UserRankService {
     /** Handles the search ranks operation. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<UserRankResponseDto> searchRanks(final String query) throws AuthenticationException, ServiceException {
+    public List<UserRankResponseDto> searchRanks(final String query) {
         LOG.debugf("Searching ranks with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query, authHeader), this.authService, LOG,
@@ -179,7 +179,7 @@ public class UserRankService {
     }
 
     /** Handles the delete rank operation. */
-    public void deleteRank(final Long id) throws AuthenticationException, ServiceException {
+    public void deleteRank(final Long id) {
         LOG.infof("Deleting user rank: %s", id);
         ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();

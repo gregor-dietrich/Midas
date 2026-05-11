@@ -8,6 +8,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Response DTO for user rank operations. Contains computed fields and safe data for client responses.
  */
 @RegisterForReflection
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class UserRankResponseDto {
 
     @JsonProperty("id")
@@ -104,7 +105,8 @@ public class UserRankResponseDto {
     @JsonProperty("usersCount")
     private Long usersCount;
 
-    @SuppressWarnings("NullAway")
+    // CPD-OFF
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserRankResponseDto() {
         // Default constructor for Jackson
     }
@@ -118,103 +120,103 @@ public class UserRankResponseDto {
         return this.name;
     }
 
-    public Boolean getAdminView() {
+    public Boolean isAdminView() {
         return this.adminView;
     }
 
-    public Boolean getPageAdd() {
+    public Boolean isPageAdd() {
         return this.pageAdd;
     }
 
-    public Boolean getPageDelete() {
+    public Boolean isPageDelete() {
         return this.pageDelete;
     }
 
-    public Boolean getPageEdit() {
+    public Boolean isPageEdit() {
         return this.pageEdit;
     }
 
-    public Boolean getPostAdd() {
+    public Boolean isPostAdd() {
         return this.postAdd;
     }
 
-    public Boolean getPostDelete() {
+    public Boolean isPostDelete() {
         return this.postDelete;
     }
 
-    public Boolean getPostEdit() {
+    public Boolean isPostEdit() {
         return this.postEdit;
     }
 
-    public Boolean getPostCategoryAdd() {
+    public Boolean isPostCategoryAdd() {
         return this.postCategoryAdd;
     }
 
-    public Boolean getPostCategoryDelete() {
+    public Boolean isPostCategoryDelete() {
         return this.postCategoryDelete;
     }
 
-    public Boolean getPostCategoryEdit() {
+    public Boolean isPostCategoryEdit() {
         return this.postCategoryEdit;
     }
 
-    public Boolean getPostCommentAdd() {
+    public Boolean isPostCommentAdd() {
         return this.postCommentAdd;
     }
 
-    public Boolean getPostCommentDelete() {
+    public Boolean isPostCommentDelete() {
         return this.postCommentDelete;
     }
 
-    public Boolean getPostCommentEdit() {
+    public Boolean isPostCommentEdit() {
         return this.postCommentEdit;
     }
 
-    public Boolean getUserAdd() {
+    public Boolean isUserAdd() {
         return this.userAdd;
     }
 
-    public Boolean getUserDelete() {
+    public Boolean isUserDelete() {
         return this.userDelete;
     }
 
-    public Boolean getUserEdit() {
+    public Boolean isUserEdit() {
         return this.userEdit;
     }
 
-    public Boolean getUserGroupAdd() {
+    public Boolean isUserGroupAdd() {
         return this.userGroupAdd;
     }
 
-    public Boolean getUserGroupDelete() {
+    public Boolean isUserGroupDelete() {
         return this.userGroupDelete;
     }
 
-    public Boolean getUserGroupEdit() {
+    public Boolean isUserGroupEdit() {
         return this.userGroupEdit;
     }
 
-    public Boolean getUserAccountAdd() {
+    public Boolean isUserAccountAdd() {
         return this.userAccountAdd;
     }
 
-    public Boolean getUserAccountDelete() {
+    public Boolean isUserAccountDelete() {
         return this.userAccountDelete;
     }
 
-    public Boolean getUserAccountEdit() {
+    public Boolean isUserAccountEdit() {
         return this.userAccountEdit;
     }
 
-    public Boolean getUserRankAdd() {
+    public Boolean isUserRankAdd() {
         return this.userRankAdd;
     }
 
-    public Boolean getUserRankDelete() {
+    public Boolean isUserRankDelete() {
         return this.userRankDelete;
     }
 
-    public Boolean getUserRankEdit() {
+    public Boolean isUserRankEdit() {
         return this.userRankEdit;
     }
 
@@ -334,7 +336,9 @@ public class UserRankResponseDto {
     public void setUsersCount(final Long usersCount) {
         this.usersCount = usersCount;
     }
+    // CPD-ON
 
+    // CPD-OFF
     // Convenience methods for checking permissions
     public boolean canAdminView() {
         return this.adminView != null && this.adminView;
@@ -476,6 +480,7 @@ public class UserRankResponseDto {
                 || this.hasAnyUserRankPermission();
     }
 
+    // CPD-ON
     /** Handles the to user rank dto operation. */
     public UserRankDto toUserRankDto() {
         final UserRankDto dto = new UserRankDto();

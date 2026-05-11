@@ -47,6 +47,7 @@ class AdminUserDialogTest {
     private Runnable onAuthFailure;
     private MockedStatic<NotificationUtil> notificationMock;
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = new UI();
@@ -61,6 +62,7 @@ class AdminUserDialogTest {
         UI.setCurrent(null);
         this.notificationMock.close();
     }
+    // CPD-ON
 
     @Test
     void saveUser_shouldPreserveEnteredPassword_onCreate() {
@@ -87,6 +89,7 @@ class AdminUserDialogTest {
         verify(this.onSave).run();
     }
 
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     @Test
     void openPasswordDialog_shouldUseMaskedPasswordFields() throws Exception {
         final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
@@ -113,6 +116,7 @@ class AdminUserDialogTest {
         return rank;
     }
 
+    // CPD-OFF
     private Button findButton(final Component root, final String text) {
         return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
@@ -137,4 +141,5 @@ class AdminUserDialogTest {
                 root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
+    // CPD-ON
 }

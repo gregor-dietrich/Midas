@@ -87,7 +87,9 @@ public class ThemeService {
                                     + "  document.documentElement.setAttribute('theme', 'dark');" + "} else {"
                                     + "  document.documentElement.removeAttribute('theme');" + "}");
                 }
-                default -> {}
+                default -> {
+                    // No default action needed
+                }
             }
         }
     }

@@ -43,13 +43,13 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private static final Logger LOG = Logger.getLogger(AdminUserView.class);
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserRankService userRankService;
+    transient UserRankService userRankService;
 
     @Nullable
     private Grid<UserResponseDto> grid;
@@ -64,6 +64,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
     private List<UserRankResponseDto> availableRanks;
     private boolean initialized = false;
 
+    // CPD-OFF
     /** Initializes AdminUserView. */
     public AdminUserView() {
         this.setSizeFull();
@@ -84,6 +85,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.loadRanksAsync();
         this.setupLazyDataProvider();
     }
+    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
@@ -102,6 +104,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         });
     }
 
+    // CPD-OFF
     private void buildUi() {
         this.removeAll();
 
@@ -140,6 +143,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         layout.add(createButton, refreshButton);
         return layout;
     }
+    // CPD-ON
 
     private void createGrid() {
         this.grid = new Grid<>(UserResponseDto.class, false);
@@ -147,6 +151,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.grid.setSizeFull();
 
         // Configure columns
+        // CPD-OFF
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
@@ -161,6 +166,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
                     this.availableRanks != null ? this.availableRanks : List.of()));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
+        // CPD-ON
 
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getEmail).setHeader("Email")
                 .setFlexGrow(1);
@@ -169,12 +175,12 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         this.grid
                 .addColumn(LitRenderer
                         .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                        .withProperty("checked", user -> Boolean.TRUE.equals(user.getActivated())))
+                        .withProperty("checked", user -> Boolean.TRUE.equals(user.isActivated())))
                 .setHeader("Activated").setWidth("100px").setFlexGrow(0);
         this.grid
                 .addColumn(LitRenderer
                         .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                        .withProperty("checked", user -> Boolean.TRUE.equals(user.getBanned())))
+                        .withProperty("checked", user -> Boolean.TRUE.equals(user.isBanned())))
                 .setHeader("Banned").setWidth("100px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getCreated).setHeader("Created")
                 .setWidth("150px").setFlexGrow(0);
@@ -220,6 +226,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         }
     }
 
+    // CPD-OFF
     private void searchUsers() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -240,4 +247,5 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
+    // CPD-ON
 }

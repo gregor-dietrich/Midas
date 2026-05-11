@@ -43,6 +43,7 @@ class MidasErrorHandlerTest {
     private MockedStatic<UI> uiMock;
     private MockedStatic<NotificationUtil> notificationMock;
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = mock(UI.class);
@@ -64,6 +65,7 @@ class MidasErrorHandlerTest {
         this.uiMock.close();
         this.notificationMock.close();
     }
+    // CPD-ON
 
     @Test
     void handle_shouldNavigateToLogin_whenAuthenticationException() {

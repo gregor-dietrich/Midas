@@ -113,6 +113,7 @@ class AsyncAuthAlignmentViewTest {
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
     }
 
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     private void invoke(final Object target, final String methodName, final Class<?>[] parameterTypes,
             final Object... arguments) throws Exception {
         final Method method = target.getClass().getDeclaredMethod(methodName, parameterTypes);

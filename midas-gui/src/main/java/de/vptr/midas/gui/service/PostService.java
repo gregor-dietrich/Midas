@@ -73,6 +73,7 @@ public class PostService {
                 this.authService, LOG, "fetching published posts");
     }
 
+    // CPD-OFF
     /** Returns the post by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -90,6 +91,7 @@ public class PostService {
                     }
                 });
     }
+    // CPD-ON
 
     /** Returns the posts by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

@@ -22,10 +22,10 @@ import jakarta.inject.Inject;
 public class HomeView extends VerticalLayout implements BeforeEnterObserver {
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    GreetService greetService;
+    transient GreetService greetService;
 
     public HomeView() {
         this.setAlignItems(Alignment.CENTER);

@@ -27,10 +27,10 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     private static final Logger LOG = Logger.getLogger(PageView.class);
 
     @Inject
-    PageService pageService;
+    transient PageService pageService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private Grid<PageResponseDto> grid;
@@ -81,6 +81,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setSizeFull();
         this.grid.setPageSize(20);
 
+        // CPD-OFF
         // Clickable title column that navigates to detail view
         this.grid.addComponentColumn(page -> {
             final var titleSpan = new Span(page.getTitle());
@@ -91,6 +92,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
             titleSpan.addClickListener(e -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(1);
+        // CPD-ON
 
         // Content preview column (first 100 chars)
         this.grid.addColumn(page -> {

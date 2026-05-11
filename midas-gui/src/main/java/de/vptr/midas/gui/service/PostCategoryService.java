@@ -58,6 +58,7 @@ public class PostCategoryService {
     /** Returns the category by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
+    // CPD-OFF
     public Optional<PostCategoryResponseDto> getCategoryById(final Long id) {
         LOG.debugf("Fetching category with ID: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -74,6 +75,7 @@ public class PostCategoryService {
             }
         });
     }
+    // CPD-ON
 
     /** Returns the categories by parent. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

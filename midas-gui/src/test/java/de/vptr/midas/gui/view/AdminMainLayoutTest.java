@@ -42,6 +42,7 @@ class AdminMainLayoutTest {
     @Mock
     BeforeEnterEvent event;
 
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     @BeforeEach
     void setUp() throws Exception {
         lenient().when(this.themeService.getCurrentTheme()).thenReturn(ThemeService.Theme.LIGHT);

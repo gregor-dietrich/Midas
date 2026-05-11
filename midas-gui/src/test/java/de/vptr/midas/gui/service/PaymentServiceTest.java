@@ -33,6 +33,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert" })
 class PaymentServiceTest {
 
     @RestClient

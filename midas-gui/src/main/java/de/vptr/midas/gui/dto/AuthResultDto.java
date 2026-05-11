@@ -1,7 +1,7 @@
 package de.vptr.midas.gui.dto;
 
 /** Data transfer object for auth result. */
-public class AuthResultDto {
+public final class AuthResultDto {
 
     private static final String BACKEND_UNAVAILABLE_MESSAGE = "Backend service unavailable. Please try again later.";
 

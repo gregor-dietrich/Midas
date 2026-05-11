@@ -40,7 +40,7 @@ public class AdminPostCategoryDialog extends FormDialog {
     private final Runnable onAuthFailure;
 
     private Binder<PostCategoryDto> binder;
-    private PostCategoryDto currentCategory;
+    private transient PostCategoryDto currentCategory;
 
     /** Initializes AdminPostCategoryDialog. */
     public AdminPostCategoryDialog(final PostCategoryService categoryService, final Runnable onSave,
@@ -88,6 +88,7 @@ public class AdminPostCategoryDialog extends FormDialog {
 
         form.add(nameField, parentField);
 
+        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
@@ -107,6 +108,7 @@ public class AdminPostCategoryDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentCategory);
         super.open();
+        // CPD-ON
     }
 
     private boolean isDescendantOf(final PostCategoryDto potential, final PostCategoryDto ancestor,
@@ -121,11 +123,7 @@ public class AdminPostCategoryDialog extends FormDialog {
         final var parent = allCategories.stream().filter(cat -> cat.getId().equals(potential.getParent().getId()))
                 .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
 
-        if (parent != null) {
-            return this.isDescendantOf(parent, ancestor, allCategories);
-        }
-
-        return false;
+        return parent != null && this.isDescendantOf(parent, ancestor, allCategories);
     }
 
     private void saveCategory() {

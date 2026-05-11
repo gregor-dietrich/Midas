@@ -34,7 +34,7 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-@SuppressWarnings("NullAway")
+@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -52,6 +52,7 @@ class AuthServiceTest {
     @InjectMocks
     AuthService authService;
 
+    // CPD-OFF
     private VaadinSession vaadinSession;
     private MockedStatic<VaadinSession> vaadinSessionMock;
 
@@ -66,6 +67,7 @@ class AuthServiceTest {
     void tearDown() {
         this.vaadinSessionMock.close();
     }
+    // CPD-ON
 
     @Test
     void authenticate_shouldReturnSuccess_whenCredentialsAreValid() {
@@ -150,6 +152,7 @@ class AuthServiceTest {
         assertThat(result.getStatus()).isEqualTo(AuthResultDto.Status.INVALID_CREDENTIALS);
     }
 
+    // CPD-OFF
     @Test
     void authenticate_shouldReturnBackendUnavailable_whenProcessingExceptionWithConnectException() {
         // Given
@@ -184,6 +187,7 @@ class AuthServiceTest {
         assertThat(result.getStatus()).isEqualTo(AuthResultDto.Status.BACKEND_UNAVAILABLE);
         assertThat(result.getMessage()).isEqualTo("Backend service unavailable. Please try again later.");
     }
+    // CPD-ON
 
     @Test
     void authenticate_shouldReturnBackendUnavailable_whenSessionUnavailableAfterValidation() {

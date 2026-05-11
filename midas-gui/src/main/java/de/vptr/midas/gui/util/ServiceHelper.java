@@ -256,11 +256,10 @@ public final class ServiceHelper {
     private static RuntimeException translateWebApplicationException(final WebApplicationException exception,
             final AuthService authService, final Logger log, final String operation,
             @Nullable final String failurePrefix) {
-        final Response response = exception.getResponse();
-        final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
-        final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);
-        log.warnf("HTTP error while %s: %s — backend message: %s", operation, statusText, backendMessage);
-        try {
+        try (Response response = exception.getResponse()) {
+            final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
+            final String backendMessage = response == null ? null : ErrorMessageUtil.extractErrorMessage(response);
+            log.warnf("HTTP error while %s: %s — backend message: %s", operation, statusText, backendMessage);
             if (response != null && response.getStatus() == 401) {
                 authService.logout();
                 return new AuthenticationException("Session expired", exception);
@@ -272,8 +271,6 @@ public final class ServiceHelper {
                 return backendError(response, exception);
             }
             return new ServiceException("Backend request failed", exception);
-        } finally {
-            closeQuietly(response, log);
         }
     }
 
@@ -281,17 +278,6 @@ public final class ServiceHelper {
         if (response != null && response.getStatus() == 401) {
             authService.logout();
             throw new AuthenticationException("Session expired");
-        }
-    }
-
-    private static void closeQuietly(final Response response, final Logger log) {
-        if (response == null) {
-            return;
-        }
-        try {
-            response.close();
-        } catch (final RuntimeException e) {
-            log.debugf(e, "Failed to close backend response");
         }
     }
 

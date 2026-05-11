@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Utility class for GUI service tests with common patterns and assertions
  */
-public class TestUtil {
+public final class TestUtil {
 
     private static final AtomicLong UNIQUE_COUNTER = new AtomicLong(System.currentTimeMillis());
 

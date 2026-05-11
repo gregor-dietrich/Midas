@@ -38,17 +38,17 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
     @Nullable
     private Tabs navigationTabs;
     @Nullable
-    private UserRankResponseDto cachedUserRank = null;
+    private transient UserRankResponseDto cachedUserRank = null;
     private boolean cachedUserRankValid = false;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    ThemeService themeService;
+    transient ThemeService themeService;
 
     @Inject
-    UserRankService userRankService;
+    transient UserRankService userRankService;
 
     @Nullable
     private HorizontalLayout topBar;
@@ -89,6 +89,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
         this.updateLogoutButtonVisibility();
     }
 
+    // CPD-OFF
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
         if (!this.initialized) {
@@ -140,6 +141,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
 
         LOG.tracef("All checks passed for %s", targetView.getSimpleName());
     }
+    // CPD-ON
 
     private void updateLogoutButtonVisibility() {
         if (this.authService.isAuthenticated()) {

@@ -35,13 +35,13 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private static final Logger LOG = Logger.getLogger(AccountView.class);
 
     @Inject
-    AccountService accountService;
+    transient AccountService accountService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Nullable
     private Grid<AccountResponseDto> grid;

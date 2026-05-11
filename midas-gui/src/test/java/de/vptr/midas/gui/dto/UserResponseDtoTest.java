@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings({ "PMD.AvoidUsingHardCodedIP", "PMD.LinguisticNaming" })
 class UserResponseDtoTest {
 
     @Test
@@ -35,8 +36,8 @@ class UserResponseDtoTest {
         assertThat(dto.getEmail()).isEqualTo("test@example.com");
         assertThat(dto.getRankId()).isEqualTo(3L);
         assertThat(dto.getRankName()).isEqualTo("Moderator");
-        assertThat(dto.getBanned()).isFalse();
-        assertThat(dto.getActivated()).isTrue();
+        assertThat(dto.isBanned()).isFalse();
+        assertThat(dto.isActivated()).isTrue();
         assertThat(dto.getLastIp()).isEqualTo("192.168.1.1");
         assertThat(dto.getCreated()).isEqualTo(created);
         assertThat(dto.getLastLogin()).isEqualTo(lastLogin);
@@ -72,8 +73,8 @@ class UserResponseDtoTest {
         assertThat(result.getEmail()).isEqualTo("admin@example.com");
         assertThat(result.getRankId()).isEqualTo(1L);
         assertThat(result.getRankName()).isEqualTo("Admin");
-        assertThat(result.getBanned()).isFalse();
-        assertThat(result.getActivated()).isTrue();
+        assertThat(result.isBanned()).isFalse();
+        assertThat(result.isActivated()).isTrue();
         assertThat(result.getLastIp()).isEqualTo("10.0.0.1");
         assertThat(result.getCreated()).isEqualTo(created);
         assertThat(result.getLastLogin()).isEqualTo(lastLogin);

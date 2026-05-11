@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.LinguisticNaming")
 class PageResponseDtoTest {
 
     @Test

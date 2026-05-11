@@ -37,7 +37,7 @@ public class PostCategoryResponseDto {
     @JsonProperty("childrenIds")
     private List<Long> childrenIds;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostCategoryResponseDto() {
         // Default constructor for Jackson
     }

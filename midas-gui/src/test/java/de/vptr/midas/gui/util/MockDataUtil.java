@@ -26,7 +26,7 @@ import de.vptr.midas.gui.dto.UserResponseDto;
  * Utility class for creating mock data objects for GUI tests
  */
 @SuppressWarnings("NullAway")
-public class MockDataUtil {
+public final class MockDataUtil {
 
     private MockDataUtil() {
         // Utility class
@@ -35,7 +35,7 @@ public class MockDataUtil {
     /**
      * Common test constants
      */
-    public static class TestConstants {
+    public static final class TestConstants {
         public static final Long TEST_ID = 1L;
         public static final String TEST_USERNAME = "testuser";
         public static final String TEST_EMAIL = "test@example.com";

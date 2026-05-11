@@ -17,7 +17,7 @@ public class ThemeToggleButton extends Button {
     /** Creates a new instance with the given parameters. */
     public ThemeToggleButton(final ThemeService themeService) {
         this.themeService = themeService;
-        this.addClickListener(_ -> this.toggleTheme());
+        this.addClickListener(e -> this.toggleTheme());
         this.updateButton();
     }
 
@@ -42,7 +42,9 @@ public class ThemeToggleButton extends Button {
                 this.setIcon(LineAwesomeIcon.DESKTOP_SOLID.create());
                 this.setTooltipText("Switch to Light Theme");
             }
-            default -> {}
+            default -> {
+                // No default action needed
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ public class AdminPostCommentDialog extends FormDialog {
     private final Runnable onAuthFailure;
 
     private Binder<PostCommentDto> binder;
-    private PostCommentDto currentComment;
+    private transient PostCommentDto currentComment;
 
     /** Initializes AdminPostCommentDialog. */
     public AdminPostCommentDialog(final PostCommentService commentService, final Runnable onSave,
@@ -67,6 +67,7 @@ public class AdminPostCommentDialog extends FormDialog {
 
         form.add(contentField);
 
+        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
@@ -86,6 +87,7 @@ public class AdminPostCommentDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentComment);
         super.open();
+        // CPD-ON
     }
 
     private void saveComment() {

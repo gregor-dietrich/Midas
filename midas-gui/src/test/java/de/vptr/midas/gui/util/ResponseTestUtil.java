@@ -5,7 +5,7 @@ import jakarta.ws.rs.core.Response;
 /**
  * Utility class for creating and handling Response objects in tests
  */
-public class ResponseTestUtil {
+public final class ResponseTestUtil {
 
     private ResponseTestUtil() {
         // Utility class

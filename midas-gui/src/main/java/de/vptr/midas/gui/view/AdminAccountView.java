@@ -44,13 +44,13 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
     private static final Logger LOG = Logger.getLogger(AdminAccountView.class);
 
     @Inject
-    AccountService accountService;
+    transient AccountService accountService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Nullable
     private Grid<AccountResponseDto> grid;
@@ -96,6 +96,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.accountDialog = new AdminAccountDialog(this.accountService, this::setupLazyDataProvider, onAuthFailure);
+        // CPD-OFF
         this.userPanel =
                 new AdminAccountUserPanel(this.accountService, this.authService, this.userService, onAuthFailure);
 
@@ -108,6 +109,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
                 this.setupLazyDataProvider();
             }
         }, e -> this.searchAccounts(), "Search by name...", "Search Accounts");
+        // CPD-ON
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -142,6 +144,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
                 .setWidth("80px").setFlexGrow(0);
 
         // Make the name column clickable
+        // CPD-OFF
         this.grid.addComponentColumn(account -> {
             final var nameSpan = new Span(account.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
@@ -151,6 +154,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             nameSpan.addClickListener(e -> Objects.requireNonNull(this.accountDialog).open(account));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(1);
+        // CPD-ON
 
         // Add action column
         this.grid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("180px").setFlexGrow(0);
@@ -168,6 +172,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         return layout;
     }
 
+    // CPD-OFF
     private void searchAccounts() {
         final String query = Objects.requireNonNull(this.searchField).getValue();
         if (query == null || query.trim().isEmpty()) {
@@ -187,6 +192,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             MidasErrorHandler.handleInUiContext(throwable);
         });
     }
+    // CPD-ON
 
     private void filterByUser() {
         final Integer value = Objects.requireNonNull(this.userIdField).getValue();

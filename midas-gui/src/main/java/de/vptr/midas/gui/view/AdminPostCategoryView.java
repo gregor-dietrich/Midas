@@ -40,10 +40,10 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
     private static final Logger LOG = Logger.getLogger(AdminPostCategoryView.class);
 
     @Inject
-    PostCategoryService categoryService;
+    transient PostCategoryService categoryService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private TreeGrid<PostCategoryResponseDto> treeGrid;
@@ -75,6 +75,7 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         this.loadCategoriesAsync();
     }
 
+    // CPD-OFF
     private void loadCategoriesAsync() {
         LOG.info("Starting async category loading");
 
@@ -96,6 +97,7 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         tg.setItems(rootCategories, this::getChildrenOfCategory);
         tg.expandRecursively(rootCategories, 2); // Expand up to 2 levels
     }
+    // CPD-ON
 
     private void updateSearchTreeGrid(final List<PostCategoryResponseDto> searchResults) {
         // For search results, we want to show all matching categories

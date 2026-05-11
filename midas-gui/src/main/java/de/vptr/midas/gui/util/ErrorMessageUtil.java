@@ -12,10 +12,14 @@ import jakarta.ws.rs.core.Response;
 /**
  * Utility class for extracting error messages from HTTP responses.
  */
-public class ErrorMessageUtil {
+public final class ErrorMessageUtil {
 
     private static final Logger LOG = Logger.getLogger(ErrorMessageUtil.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private ErrorMessageUtil() {
+        // Utility class
+    }
 
     /**
      * Extracts error message from HTTP response body. Attempts to parse structured error response, falls back to status

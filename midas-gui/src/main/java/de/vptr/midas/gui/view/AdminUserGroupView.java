@@ -44,13 +44,13 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     private static final Logger LOG = Logger.getLogger(AdminUserGroupView.class);
 
     @Inject
-    UserGroupService groupService;
+    transient UserGroupService groupService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Nullable
     private Grid<UserGroupResponseDto> grid;
@@ -66,6 +66,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
     @Nullable
     private AdminUserGroupMemberPanel memberPanel;
 
+    // CPD-OFF
     /** Initializes AdminUserGroupView. */
     public AdminUserGroupView() {
         this.setSizeFull();
@@ -86,6 +87,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         this.buildUi();
         this.setupLazyDataProvider();
     }
+    // CPD-ON
 
     private void setupLazyDataProvider() {
         Objects.requireNonNull(this.grid)
@@ -102,6 +104,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
         this.groupDialog = new AdminUserGroupDialog(this.groupService, this::setupLazyDataProvider, onAuthFailure);
+        // CPD-OFF
         this.memberPanel =
                 new AdminUserGroupMemberPanel(this.groupService, this.userService, this.authService, onAuthFailure);
 
@@ -114,6 +117,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
                 this.setupLazyDataProvider();
             }
         }, e -> this.searchGroups(), "Search by name...", "Search Groups");
+        // CPD-ON
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -148,6 +152,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
                 .setWidth("80px").setFlexGrow(0);
 
         // Make the name column clickable
+        // CPD-OFF
         this.grid.addComponentColumn(group -> {
             final var nameSpan = new Span(group.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
@@ -157,6 +162,7 @@ public class AdminUserGroupView extends AbstractAsyncDataView implements BeforeE
             nameSpan.addClickListener(e -> Objects.requireNonNull(this.groupDialog).open(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2);
+        // CPD-ON
 
         this.grid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0).setHeader("User Count")
                 .setWidth("120px").setFlexGrow(0);

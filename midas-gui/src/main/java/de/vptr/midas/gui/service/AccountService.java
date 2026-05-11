@@ -48,8 +48,7 @@ public class AccountService {
     /** Returns the all accounts. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<AccountResponseDto> getAllAccounts(final Integer page, final Integer size)
-            throws ServiceException, AuthenticationException {
+    public List<AccountResponseDto> getAllAccounts(final Integer page, final Integer size) {
         LOG.debug("Fetching all accounts");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -58,6 +57,7 @@ public class AccountService {
                 this.authService, LOG, "fetching accounts");
     }
 
+    // CPD-OFF
     /** Returns the account by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -97,6 +97,7 @@ public class AccountService {
                     }
                 });
     }
+    // CPD-ON
 
     /** Returns the accounts by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
@@ -252,10 +253,9 @@ public class AccountService {
     /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative)
-            throws ServiceException, AuthenticationException {
+    public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative) {
         LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s", accountId, userId,
-                Boolean.valueOf(isNegative));
+                (Object) isNegative);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var dto = new UserAccountMetaDto();
         dto.setIsNegative(isNegative);

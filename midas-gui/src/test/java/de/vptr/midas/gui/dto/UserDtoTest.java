@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 class UserDtoTest {
 
     @Test
@@ -20,8 +21,8 @@ class UserDtoTest {
         assertThat(dto.getEmail()).isNull();
         assertThat(dto.getRankId()).isNull();
         assertThat(dto.getRankName()).isNull();
-        assertThat(dto.getBanned()).isNull();
-        assertThat(dto.getActivated()).isNull();
+        assertThat(dto.isBanned()).isFalse();
+        assertThat(dto.isActivated()).isFalse();
         assertThat(dto.getActivationKey()).isNull();
         assertThat(dto.getLastIp()).isNull();
         assertThat(dto.getCreated()).isNull();
@@ -71,8 +72,8 @@ class UserDtoTest {
         assertThat(dto.getRankId()).isEqualTo(2L);
         assertThat(dto.getRankName()).isEqualTo("Editor");
         assertThat(dto.getEmail()).isEqualTo("bob@example.com");
-        assertThat(dto.getBanned()).isFalse();
-        assertThat(dto.getActivated()).isTrue();
+        assertThat(dto.isBanned()).isFalse();
+        assertThat(dto.isActivated()).isTrue();
         assertThat(dto.getActivationKey()).isEqualTo("abc-123");
         assertThat(dto.getLastIp()).isEqualTo("172.16.0.1");
         assertThat(dto.getCreated()).isEqualTo(created);

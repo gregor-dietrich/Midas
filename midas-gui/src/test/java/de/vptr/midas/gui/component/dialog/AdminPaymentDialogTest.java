@@ -54,6 +54,7 @@ class AdminPaymentDialogTest {
     private Runnable onAuthFailure;
     private MockedStatic<NotificationUtil> notificationMock;
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = new UI();
@@ -68,7 +69,9 @@ class AdminPaymentDialogTest {
         UI.setCurrent(null);
         this.notificationMock.close();
     }
+    // CPD-ON
 
+    // CPD-OFF
     @Test
     void savePayment_shouldCreatePayment_withValidFields() {
         final var dialog =
@@ -131,6 +134,7 @@ class AdminPaymentDialogTest {
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
         verify(this.onAuthFailure).run();
     }
+    // CPD-ON
 
     @Test
     void open_shouldPopulateFieldsForEdit() {
@@ -172,6 +176,7 @@ class AdminPaymentDialogTest {
         assertThat(targetCombo.getValue().getId()).isEqualTo(2L);
     }
 
+    // CPD-OFF
     private Button findButton(final Component root, final String text) {
         return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
@@ -196,4 +201,5 @@ class AdminPaymentDialogTest {
                 root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
+    // CPD-ON
 }

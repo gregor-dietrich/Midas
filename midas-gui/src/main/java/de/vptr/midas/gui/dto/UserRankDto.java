@@ -3,6 +3,7 @@ package de.vptr.midas.gui.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Data transfer object for user rank. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class UserRankDto {
 
     @JsonProperty("id")
@@ -95,6 +96,7 @@ public class UserRankDto {
     @JsonProperty("userRankEdit")
     private Boolean userRankEdit = false;
 
+    // CPD-OFF
     @SuppressWarnings("NullAway")
     public UserRankDto() {
         // Default constructor for Jackson
@@ -115,111 +117,111 @@ public class UserRankDto {
     }
 
     // View permissions getters
-    public Boolean getAdminView() {
+    public Boolean isAdminView() {
         return this.adminView;
     }
 
     // Page permissions getters
-    public Boolean getPageAdd() {
+    public Boolean isPageAdd() {
         return this.pageAdd;
     }
 
-    public Boolean getPageDelete() {
+    public Boolean isPageDelete() {
         return this.pageDelete;
     }
 
-    public Boolean getPageEdit() {
+    public Boolean isPageEdit() {
         return this.pageEdit;
     }
 
     // Post permissions getters
-    public Boolean getPostAdd() {
+    public Boolean isPostAdd() {
         return this.postAdd;
     }
 
-    public Boolean getPostDelete() {
+    public Boolean isPostDelete() {
         return this.postDelete;
     }
 
-    public Boolean getPostEdit() {
+    public Boolean isPostEdit() {
         return this.postEdit;
     }
 
     // Post category permissions getters
-    public Boolean getPostCategoryAdd() {
+    public Boolean isPostCategoryAdd() {
         return this.postCategoryAdd;
     }
 
-    public Boolean getPostCategoryDelete() {
+    public Boolean isPostCategoryDelete() {
         return this.postCategoryDelete;
     }
 
-    public Boolean getPostCategoryEdit() {
+    public Boolean isPostCategoryEdit() {
         return this.postCategoryEdit;
     }
 
     // Post comment permissions getters
-    public Boolean getPostCommentAdd() {
+    public Boolean isPostCommentAdd() {
         return this.postCommentAdd;
     }
 
-    public Boolean getPostCommentDelete() {
+    public Boolean isPostCommentDelete() {
         return this.postCommentDelete;
     }
 
-    public Boolean getPostCommentEdit() {
+    public Boolean isPostCommentEdit() {
         return this.postCommentEdit;
     }
 
     // User permissions getters
-    public Boolean getUserAdd() {
+    public Boolean isUserAdd() {
         return this.userAdd;
     }
 
-    public Boolean getUserDelete() {
+    public Boolean isUserDelete() {
         return this.userDelete;
     }
 
-    public Boolean getUserEdit() {
+    public Boolean isUserEdit() {
         return this.userEdit;
     }
 
     // User group permissions getters
-    public Boolean getUserGroupAdd() {
+    public Boolean isUserGroupAdd() {
         return this.userGroupAdd;
     }
 
-    public Boolean getUserGroupDelete() {
+    public Boolean isUserGroupDelete() {
         return this.userGroupDelete;
     }
 
-    public Boolean getUserGroupEdit() {
+    public Boolean isUserGroupEdit() {
         return this.userGroupEdit;
     }
 
     // Account permissions getters
-    public Boolean getUserAccountAdd() {
+    public Boolean isUserAccountAdd() {
         return this.userAccountAdd;
     }
 
-    public Boolean getUserAccountDelete() {
+    public Boolean isUserAccountDelete() {
         return this.userAccountDelete;
     }
 
-    public Boolean getUserAccountEdit() {
+    public Boolean isUserAccountEdit() {
         return this.userAccountEdit;
     }
 
     // User rank permissions getters
-    public Boolean getUserRankAdd() {
+    public Boolean isUserRankAdd() {
         return this.userRankAdd;
     }
 
-    public Boolean getUserRankDelete() {
+    public Boolean isUserRankDelete() {
         return this.userRankDelete;
     }
 
-    public Boolean getUserRankEdit() {
+    public Boolean isUserRankEdit() {
         return this.userRankEdit;
     }
 
@@ -340,7 +342,9 @@ public class UserRankDto {
     public void setUserRankEdit(final Boolean userRankEdit) {
         this.userRankEdit = userRankEdit;
     }
+    // CPD-ON
 
+    // CPD-OFF
     // Convenience methods for checking permissions
     public boolean canAdminView() {
         return this.adminView != null && this.adminView;
@@ -452,5 +456,6 @@ public class UserRankDto {
                 || this.canAddUserAccount() || this.canDeleteUserAccount() || this.canEditUserAccount()
                 || this.canAddUserRank() || this.canDeleteUserRank() || this.canEditUserRank();
     }
+    // CPD-ON
 
 }

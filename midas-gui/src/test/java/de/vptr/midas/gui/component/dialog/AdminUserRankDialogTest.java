@@ -43,6 +43,7 @@ class AdminUserRankDialogTest {
     private Runnable onAuthFailure;
     private MockedStatic<NotificationUtil> notificationMock;
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = new UI();
@@ -57,6 +58,7 @@ class AdminUserRankDialogTest {
         UI.setCurrent(null);
         this.notificationMock.close();
     }
+    // CPD-ON
 
     @Test
     void saveRank_shouldCreateNewRank_whenOpenedWithNull() {
@@ -75,9 +77,9 @@ class AdminUserRankDialogTest {
         final ArgumentCaptor<UserRankDto> captor = ArgumentCaptor.forClass(UserRankDto.class);
         verify(this.userRankService).createRank(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("Moderator");
-        assertThat(captor.getValue().getUserAdd()).isTrue();
-        assertThat(captor.getValue().getPostEdit()).isTrue();
-        assertThat(captor.getValue().getAdminView()).isTrue();
+        assertThat(captor.getValue().isUserAdd()).isTrue();
+        assertThat(captor.getValue().isPostEdit()).isTrue();
+        assertThat(captor.getValue().isAdminView()).isTrue();
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Rank created successfully"));
         verify(this.onSave).run();
     }
@@ -144,6 +146,7 @@ class AdminUserRankDialogTest {
         verify(this.onAuthFailure).run();
     }
 
+    // CPD-OFF
     private Button findButton(final Component root, final String text) {
         return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
@@ -162,4 +165,5 @@ class AdminUserRankDialogTest {
                 root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
+    // CPD-ON
 }

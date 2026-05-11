@@ -16,7 +16,6 @@ import de.vptr.midas.gui.client.PaymentClient;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
-import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
 import de.vptr.midas.gui.util.UiConstants;
@@ -39,8 +38,7 @@ public class PaymentService {
     /** Returns the all payments. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PaymentResponseDto> getAllPayments(final Integer page, final Integer size)
-            throws ServiceException, AuthenticationException {
+    public List<PaymentResponseDto> getAllPayments(final Integer page, final Integer size) {
         LOG.debug("Fetching all payments");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -49,6 +47,7 @@ public class PaymentService {
                 this.authService, LOG, "fetching payments");
     }
 
+    // CPD-OFF
     /** Returns the payment by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
@@ -68,6 +67,7 @@ public class PaymentService {
                     }
                 });
     }
+    // CPD-ON
 
     /** Returns the payments by user. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,

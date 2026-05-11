@@ -42,6 +42,7 @@ class AdminUserGroupDialogTest {
     private Runnable onAuthFailure;
     private MockedStatic<NotificationUtil> notificationMock;
 
+    // CPD-OFF
     @BeforeEach
     void setUp() {
         this.ui = new UI();
@@ -56,6 +57,7 @@ class AdminUserGroupDialogTest {
         UI.setCurrent(null);
         this.notificationMock.close();
     }
+    // CPD-ON
 
     @Test
     void saveGroup_shouldCreateGroup_withValidFields() {
@@ -92,6 +94,7 @@ class AdminUserGroupDialogTest {
         verify(this.onAuthFailure).run();
     }
 
+    // CPD-OFF
     private Button findButton(final Component root, final String text) {
         return this.findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
@@ -110,4 +113,5 @@ class AdminUserGroupDialogTest {
                 root.getChildren().flatMap(component -> this.findComponents(component, type).stream()).toList();
         return Stream.concat(directMatches.stream(), nestedMatches.stream()).toList();
     }
+    // CPD-ON
 }

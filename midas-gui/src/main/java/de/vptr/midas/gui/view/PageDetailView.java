@@ -27,14 +27,15 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
     private static final Logger LOG = Logger.getLogger(PageDetailView.class);
 
     @Inject
-    PageService pageService;
+    transient PageService pageService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private String identifier;
 
+    // CPD-OFF
     /** Initializes PageDetailView. */
     public PageDetailView() {
         this.setSizeFull();
@@ -56,6 +57,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
 
         this.buildUi();
     }
+    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
@@ -123,7 +125,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
         });
     }
 
-    private void renderPage(final @Nullable String title, final @Nullable String content) {
+    private void renderPage(@Nullable final String title, @Nullable final String content) {
         final var titleHeader = new H2(title != null ? title : "Untitled");
 
         final var contentDiv = new Div();

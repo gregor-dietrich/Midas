@@ -36,7 +36,7 @@ public class PageService {
     /** Returns the all pages. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PageResponseDto> getAllPages() throws AuthenticationException, ServiceException {
+    public List<PageResponseDto> getAllPages() {
         LOG.debug("Fetching all pages");
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.pageClient.getAllPages(PaginationParamUtil.DEFAULT_PAGE,
@@ -46,8 +46,7 @@ public class PageService {
     /** Returns the all pages paginated. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PageResponseDto> getAllPages(final Integer page, final Integer size)
-            throws AuthenticationException, ServiceException {
+    public List<PageResponseDto> getAllPages(final Integer page, final Integer size) {
         LOG.debugf("Fetching all pages page %s size %s", page, size);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -59,7 +58,7 @@ public class PageService {
     /** Returns the page by id. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public Optional<PageResponseDto> getPageById(final Long id) throws AuthenticationException, ServiceException {
+    public Optional<PageResponseDto> getPageById(final Long id) {
         LOG.infof("Getting page by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -79,7 +78,7 @@ public class PageService {
     }
 
     /** Creates a new page. */
-    public PageDto createPage(final PageDto page) throws AuthenticationException, ServiceException {
+    public PageDto createPage(final PageDto page) {
         LOG.infof("Creating page: %s", page.getTitle());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -97,7 +96,7 @@ public class PageService {
     }
 
     /** Updates the page. */
-    public PageDto updatePage(final PageDto page) throws AuthenticationException, ServiceException {
+    public PageDto updatePage(final PageDto page) {
         LOG.infof("Updating page: %s (%s)", page.getTitle(), page.getId());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -115,7 +114,7 @@ public class PageService {
     }
 
     /** Handles the delete page operation. */
-    public void deletePage(final Long id) throws AuthenticationException, ServiceException {
+    public void deletePage(final Long id) {
         LOG.infof("Deleting page: %s", id);
         ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();

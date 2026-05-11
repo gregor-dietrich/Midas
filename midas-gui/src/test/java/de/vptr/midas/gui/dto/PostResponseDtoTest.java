@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("PMD.LinguisticNaming")
 class PostResponseDtoTest {
 
     @Test
@@ -37,8 +38,8 @@ class PostResponseDtoTest {
         assertThat(dto.getUsername()).isEqualTo("author");
         assertThat(dto.getCategoryId()).isEqualTo(3L);
         assertThat(dto.getCategoryName()).isEqualTo("Tech");
-        assertThat(dto.getPublished()).isTrue();
-        assertThat(dto.getCommentable()).isFalse();
+        assertThat(dto.isPublished()).isTrue();
+        assertThat(dto.isCommentable()).isFalse();
         assertThat(dto.getCreated()).isEqualTo(created);
         assertThat(dto.getLastEdit()).isEqualTo(lastEdit);
         assertThat(dto.getCommentsCount()).isEqualTo(7L);
@@ -74,8 +75,8 @@ class PostResponseDtoTest {
         assertThat(result.getUsername()).isEqualTo("writer");
         assertThat(result.getCategoryId()).isEqualTo(2L);
         assertThat(result.getCategoryName()).isEqualTo("Tutorials");
-        assertThat(result.getPublished()).isTrue();
-        assertThat(result.getCommentable()).isTrue();
+        assertThat(result.isPublished()).isTrue();
+        assertThat(result.isCommentable()).isTrue();
         assertThat(result.getCreated()).isEqualTo(created);
         assertThat(result.getLastEdit()).isEqualTo(lastEdit);
         assertThat(result.getCommentsCount()).isEqualTo(42L);

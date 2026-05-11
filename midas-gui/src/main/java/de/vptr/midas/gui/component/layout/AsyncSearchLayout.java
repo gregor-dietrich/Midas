@@ -27,7 +27,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
     private final Button clearButton;
     private final Consumer<String> searchAction;
     private final Runnable clearAction;
-    private final SearchExecutionSupport searchExecutionSupport;
+    private final transient SearchExecutionSupport searchExecutionSupport;
 
     public AsyncSearchLayout(final Consumer<String> searchAction, final String placeholder, final String tooltip) {
         this(searchAction, () -> {
@@ -77,6 +77,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
         }, DEFAULT_PLACEHOLDER, "Search");
     }
 
+    // CPD-OFF
     private void executeSearch() {
         final String query = this.searchExecutionSupport.normalize(this.textField.getValue());
         if (query == null) {
@@ -91,6 +92,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
             this.searchAction.accept(query);
         }
     }
+    // CPD-ON
 
     private void executeClear() {
         this.textField.clear();

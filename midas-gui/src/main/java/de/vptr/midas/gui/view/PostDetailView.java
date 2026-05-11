@@ -38,17 +38,18 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm");
 
     @Inject
-    PostService postService;
+    transient PostService postService;
 
     @Inject
-    PostCommentService postCommentService;
+    transient PostCommentService postCommentService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private String identifier;
 
+    // CPD-OFF
     /** Initializes PostDetailView. */
     public PostDetailView() {
         this.setSizeFull();
@@ -60,6 +61,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     public void setParameter(final BeforeEvent event, final String parameter) {
         this.identifier = parameter;
     }
+    // CPD-ON
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {
@@ -138,6 +140,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
             metaLayout.add(new Span("Published " + post.getCreated().format(DATE_FORMATTER)));
         }
 
+        // CPD-OFF
         if (post.getLastEdit() != null && !post.getLastEdit().equals(post.getCreated())) {
             metaLayout.add(new Span("(edited " + post.getLastEdit().format(DATE_FORMATTER) + ")"));
         }
@@ -149,6 +152,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
             categoryBadge.getStyle().set("padding", "2px 8px");
             metaLayout.add(categoryBadge);
         }
+        // CPD-ON
 
         // Full content
         final var contentDiv = new Div();

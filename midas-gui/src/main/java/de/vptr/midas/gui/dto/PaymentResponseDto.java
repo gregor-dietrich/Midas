@@ -49,7 +49,7 @@ public class PaymentResponseDto {
     @JsonProperty("lastEdit")
     private LocalDateTime lastEdit;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PaymentResponseDto() {
         // Default constructor for Jackson
     }

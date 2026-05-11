@@ -55,6 +55,7 @@ class AdminPageViewTest {
         verify(this.ui).navigate(LoginView.class);
     }
 
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     private void setField(final String fieldName, final Object value) throws Exception {
         final Field field = AdminPageView.class.getDeclaredField(fieldName);
         field.setAccessible(true);

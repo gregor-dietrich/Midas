@@ -35,13 +35,13 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Inject
-    PostCategoryService categoryService;
+    transient PostCategoryService categoryService;
 
     @Inject
-    PostService postService;
+    transient PostService postService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private String identifier;
@@ -50,8 +50,9 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     @Nullable
     private H2 header;
     @Nullable
-    private PostCategoryResponseDto category;
+    private transient PostCategoryResponseDto category;
 
+    // CPD-OFF
     /** Initializes PostCategoryDetailView. */
     public PostCategoryDetailView() {
         this.setSizeFull();
@@ -63,6 +64,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     public void setParameter(final BeforeEvent event, final String parameter) {
         this.identifier = parameter;
     }
+    // CPD-ON
 
     @Override
     public void beforeEnter(final BeforeEnterEvent event) {

@@ -25,6 +25,7 @@ import de.vptr.midas.gui.util.TestUtil;
 import jakarta.inject.Inject;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD.LinguisticNaming")
 class PageServiceTest {
 
     @RestClient

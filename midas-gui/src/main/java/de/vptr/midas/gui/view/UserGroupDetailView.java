@@ -36,10 +36,10 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Inject
-    UserGroupService groupService;
+    transient UserGroupService groupService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private Grid<UserDto> membersGrid;
@@ -49,7 +49,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     @Nullable
     private Long groupId;
     @Nullable
-    private UserGroupResponseDto currentGroup;
+    private transient UserGroupResponseDto currentGroup;
 
     /** Initializes UserGroupDetailView. */
     public UserGroupDetailView() {

@@ -16,7 +16,7 @@ public class UserGroupResponseDto {
     @JsonProperty("userCount")
     private Long userCount;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserGroupResponseDto() {
         // Default constructor for Jackson
     }

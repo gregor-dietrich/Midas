@@ -37,19 +37,20 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
     @Inject
-    UserService userService;
+    transient UserService userService;
 
     @Inject
-    UserGroupService userGroupService;
+    transient UserGroupService userGroupService;
 
     @Inject
-    AuthService authService;
+    transient AuthService authService;
 
     @Nullable
     private String identifier;
     @Nullable
     private Grid<UserGroupResponseDto> groupsGrid;
 
+    // CPD-OFF
     /** Initializes UserDetailView. */
     public UserDetailView() {
         this.setSizeFull();
@@ -71,6 +72,7 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
 
         this.buildUi();
     }
+    // CPD-ON
 
     private void buildUi() {
         this.removeAll();
@@ -93,7 +95,8 @@ public class UserDetailView extends AbstractAsyncDataView implements BeforeEnter
         final var idStr = Objects.requireNonNull(this.identifier);
         LOG.infof("Loading user with identifier: %s", idStr);
 
-        final @Nullable Long userId = this.tryParseId(idStr);
+        @Nullable
+        final Long userId = this.tryParseId(idStr);
 
         if (userId != null) {
             this.loadUserById(userId);

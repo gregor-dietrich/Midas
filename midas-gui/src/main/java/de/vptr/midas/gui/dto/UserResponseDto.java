@@ -52,7 +52,7 @@ public class UserResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserResponseDto() {
         // Default constructor for Jackson
     }
@@ -77,11 +77,11 @@ public class UserResponseDto {
         return this.rankName;
     }
 
-    public Boolean getBanned() {
+    public Boolean isBanned() {
         return this.banned;
     }
 
-    public Boolean getActivated() {
+    public Boolean isActivated() {
         return this.activated;
     }
 

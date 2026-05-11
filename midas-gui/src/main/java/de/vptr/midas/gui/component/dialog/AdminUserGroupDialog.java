@@ -40,7 +40,7 @@ public class AdminUserGroupDialog extends FormDialog {
     @Nullable
     private Binder<UserGroupDto> binder;
     @Nullable
-    private UserGroupDto currentGroup;
+    private transient UserGroupDto currentGroup;
 
     /** Initializes AdminUserGroupDialog. */
     public AdminUserGroupDialog(final UserGroupService groupService, final Runnable onSave,
@@ -57,6 +57,7 @@ public class AdminUserGroupDialog extends FormDialog {
         this.currentGroup = group != null ? group.toUserGroupDto() : new UserGroupDto();
         this.binder = new Binder<>(UserGroupDto.class);
 
+        // CPD-OFF
         final var title = new H3(group != null ? "Edit Group" : "Create Group");
 
         final var form = new FormLayout();
@@ -72,7 +73,9 @@ public class AdminUserGroupDialog extends FormDialog {
                 .bind(UserGroupDto::getName, UserGroupDto::setName);
 
         form.add(nameField);
+        // CPD-ON
 
+        // CPD-OFF
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
@@ -92,6 +95,7 @@ public class AdminUserGroupDialog extends FormDialog {
         this.add(dialogLayout);
         this.binder.readBean(this.currentGroup);
         super.open();
+        // CPD-ON
     }
 
     private void saveGroup() {

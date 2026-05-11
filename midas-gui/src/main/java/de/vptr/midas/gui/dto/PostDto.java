@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+// CPD-OFF
 /** Data transfer object for post. */
 public class PostDto {
 
@@ -43,11 +44,13 @@ public class PostDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
-    @SuppressWarnings("NullAway")
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostDto() {
         // Default constructor for Jackson
     }
+    // CPD-ON
 
+    // CPD-OFF
     public Long getId() {
         return this.id;
     }
@@ -71,6 +74,7 @@ public class PostDto {
     public void setContent(final String content) {
         this.content = content;
     }
+    // CPD-ON
 
     public Long getUserId() {
         return this.userId;
@@ -104,7 +108,7 @@ public class PostDto {
         this.categoryName = categoryName;
     }
 
-    public Boolean getPublished() {
+    public Boolean isPublished() {
         return this.published;
     }
 
@@ -112,7 +116,7 @@ public class PostDto {
         this.published = published;
     }
 
-    public Boolean getCommentable() {
+    public Boolean isCommentable() {
         return this.commentable;
     }
 

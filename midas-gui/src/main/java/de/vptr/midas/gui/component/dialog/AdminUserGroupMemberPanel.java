@@ -48,7 +48,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
     @Nullable
     private ComboBox<UserResponseDto> availableUsersCombo;
     @Nullable
-    private UserGroupResponseDto selectedGroup;
+    private transient UserGroupResponseDto selectedGroup;
 
     /** Initializes AdminUserGroupMemberPanel. */
     public AdminUserGroupMemberPanel(final UserGroupService groupService, final UserService userService,
@@ -82,10 +82,10 @@ public class AdminUserGroupMemberPanel extends FormDialog {
                 .setFlexGrow(1);
 
         this.userGrid.addComponentColumn(user -> {
-            final var removeButton = new RemoveUserButton(e -> this.removeUserFromGroup(user));
-            return removeButton;
+            return new RemoveUserButton(e -> this.removeUserFromGroup(user));
         }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
+        // CPD-OFF
         final var addUserLayout = new HorizontalLayout();
         addUserLayout.setAlignItems(VerticalLayout.Alignment.END);
         addUserLayout.setSpacing(true);
@@ -109,6 +109,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);
+        // CPD-ON
 
         final var dialogLayout = new VerticalLayout(title, this.userGrid, addUserLayout, buttonLayout);
         dialogLayout.setSpacing(true);

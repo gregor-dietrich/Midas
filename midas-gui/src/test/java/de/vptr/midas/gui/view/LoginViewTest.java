@@ -67,6 +67,7 @@ class LoginViewTest {
         assertThat(loginButton.getText()).isEqualTo("Login");
     }
 
+    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     private void invoke(final LoginView view, final Throwable throwable, final PasswordField passwordField,
             final Button loginButton) throws Exception {
         final Method method = LoginView.class.getDeclaredMethod("handleAuthenticationError", Throwable.class,
