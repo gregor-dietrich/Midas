@@ -154,11 +154,12 @@ Focus on services with <70% lines coverage:
    - **Effort:** ~3-4 hours
    - **✅ COMPLETED:** 92.5% lines / 72.2% branches (added comprehensive branch coverage tests)
 
-**Subtotal:** All three services above 80% lines and 62%+ branches!  ✅ PHASE 3 COMPLETE
+**Subtotal:** All three services above 80% lines and 62%+ branches! ✅ PHASE 3 COMPLETE
 
 ### Phase 3.5: Systematic Authorization Testing for Resources (NEW)
 
 **Goal:** For each resource endpoint, add three authorization scenarios:
+
 1. Unauthorized (401 - no authentication)
 2. Authorized but wrong role/insufficient permissions (403)
 3. Authorized with correct role (200/204/404 depending on business logic)
@@ -187,6 +188,7 @@ Systematically enhanced:
    - **✅ COMPLETED:** 35 tests, all passing
 
 **Overall Impact after Phase 3.5:**
+
 - API: 85.6% lines / 64.0% branches (above 62% target ✓)
 - Total: 83.1% lines / 60.0% branches (2% short on branches)
 - Resource package: 81.0% lines / 41.0% branches (improved from earlier but still under target)

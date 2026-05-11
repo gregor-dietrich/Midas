@@ -8,6 +8,9 @@ import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createPaymentJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUniqueAccountJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUserAccountMetaJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
+import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
@@ -25,6 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.TestUtil;
+import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
@@ -46,6 +50,11 @@ class AccountResourceTest {
     }
 
     @Test
+    void testGetAllUserAccounts_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL).then().statusCode(403);
+    }
+
+    @Test
     void testGetUserAccountById_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/1");
     }
@@ -58,6 +67,11 @@ class AccountResourceTest {
     @Test
     void testGetUserAccountById_authorizedWithNonExistentAccount() {
         testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/999");
+    }
+
+    @Test
+    void testGetUserAccountById_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1").then().statusCode(403);
     }
 
     @Test
@@ -96,6 +110,23 @@ class AccountResourceTest {
     }
 
     @Test
+    void testUpdateUserAccount_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createDefaultAccountJson()).when().put(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testPatchUserAccount_unauthorized() {
+        testUnauthorizedPut(ENDPOINT_URL + "/1", createDefaultAccountJson());
+    }
+
+    @Test
+    void testPatchUserAccount_authorizedWithInsufficientRole() {
+        authenticatedGuestJsonRequest().body(createDefaultAccountJson()).when().patch(ENDPOINT_URL + "/1").then()
+                .statusCode(403);
+    }
+
+    @Test
     void testPatchUserAccount_authorizedWithoutNamePreservesExistingName() {
         final String originalName = "Patch Account " + TestUtil.generateUniqueSuffix();
         final Integer accountId =
@@ -109,6 +140,18 @@ class AccountResourceTest {
     @Test
     void testDeleteUserAccount_unauthorized() {
         testUnauthorizedDelete(ENDPOINT_URL + "/1");
+    }
+
+    @Test
+    void testDeleteUserAccount_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+    }
+
+    @Test
+    void testDeleteUserAccount_authorized() {
+        final Integer accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when()
+                .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + accountId).then().statusCode(204);
     }
 
     @Test
@@ -197,6 +240,91 @@ class AccountResourceTest {
     @Test
     void testGetAccountByName_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/name/test-account");
+    }
+
+    @Test
+    void testGetAccountByName_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/name/test").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAccountByName_authorized() {
+        testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/name/nonexistent");
+    }
+
+    @Test
+    void testSearchAccounts_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testSearchAccounts_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(403);
+    }
+
+    @Test
+    void testSearchAccounts_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testGetAssociatedUsers_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/1/users");
+    }
+
+    @Test
+    void testGetAssociatedUsers_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1/users").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAssociatedUsers_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/1/users");
+    }
+
+    @Test
+    void testGetAccountPayments_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/1/payments");
+    }
+
+    @Test
+    void testGetAccountPayments_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1/payments").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAccountPayments_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/1/payments");
+    }
+
+    @Test
+    void testGetAccountBalance_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/1/balance");
+    }
+
+    @Test
+    void testGetAccountBalance_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1/balance").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAccountBalance_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/1/balance");
+    }
+
+    @Test
+    void testGetAccountsByUser_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+    }
+
+    @Test
+    void testGetAccountsByUser_authorizedWithInsufficientRole() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/user/1").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAccountsByUser_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
     }
 
     @Test
