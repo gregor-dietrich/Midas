@@ -30,8 +30,5 @@ public class AdminPostCommentDialog extends AbstractPostCommentDialogBase {
             this.commentService.updateComment(this.currentComment);
             NotificationUtil.showSuccess("Comment updated successfully");
         }
-        if (this.onSave != null) {
-            this.onSave.run();
-        }
     }
 }

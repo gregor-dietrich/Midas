@@ -3,6 +3,7 @@ package de.vptr.midas.gui.view;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.function.ValueProvider;
@@ -129,7 +130,10 @@ public class AdminPageView extends AbstractAdminEntityView<PageResponseDto> {
         }
         if (e instanceof AuthenticationException) {
             NotificationUtil.showError("Session expired. Please log in again.");
-            this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));
+            final var currentUi = UI.getCurrent();
+            if (currentUi != null) {
+                currentUi.navigate(LoginView.class);
+            }
         }
     }
 

@@ -136,13 +136,18 @@ public abstract class AbstractAdminEntityDialogBase<T> extends FormDialog {
 
     protected TextField createAndBindRequiredNameField(final ValueProvider<T, String> getter,
             final Setter<T, String> setter) {
-        final var nameField = new TextField("Name");
+        return this.createAndBindRequiredNameField("Name", getter, setter);
+    }
+
+    protected TextField createAndBindRequiredNameField(final String label, final ValueProvider<T, String> getter,
+            final Setter<T, String> setter) {
+        final var nameField = new TextField(label);
         nameField.setRequired(true);
         nameField.setMaxLength(255);
         nameField.setInvalid(false);
 
         Objects.requireNonNull(this.binder).forField(nameField)
-                .withValidator(value -> value != null && !value.trim().isEmpty(), "Name is required")
+                .withValidator(value -> value != null && !value.trim().isEmpty(), label + " is required")
                 .bind(getter, setter);
 
         return nameField;

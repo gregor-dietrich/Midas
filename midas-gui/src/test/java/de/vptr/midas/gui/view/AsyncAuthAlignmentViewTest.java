@@ -67,7 +67,7 @@ class AsyncAuthAlignmentViewTest {
             return null;
         }).when(this.ui).navigate(LoginView.class);
 
-        this.invoke(view, "loadPageByTitle", new Class<?>[] { String.class }, "missing-page");
+        this.invoke(view, "loadByName", new Class<?>[] { String.class }, "missing-page");
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
     }

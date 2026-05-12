@@ -34,7 +34,8 @@ public class AdminAccountDialog extends AbstractAdminEntityDialogBase<AccountDto
         this.binder = new Binder<>(AccountDto.class);
 
         final var form = this.createResponsiveFormLayout();
-        final var nameField = this.createAndBindRequiredNameField(AccountDto::getName, AccountDto::setName);
+        final var nameField =
+                this.createAndBindRequiredNameField("Account Name", AccountDto::getName, AccountDto::setName);
         form.add(nameField);
 
         this.initDialogLayout(account != null ? "Edit Account" : "Create Account", form);

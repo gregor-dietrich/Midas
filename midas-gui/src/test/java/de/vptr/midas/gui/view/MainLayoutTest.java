@@ -2,52 +2,24 @@ package de.vptr.midas.gui.view;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.vaadin.flow.router.BeforeEnterEvent;
-
-import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.ThemeService;
-import de.vptr.midas.gui.service.UserRankService;
-
 @ExtendWith(MockitoExtension.class)
-class MainLayoutTest {
-
-    @Mock
-    AuthService authService;
-
-    @Mock
-    ThemeService themeService;
-
-    @Mock
-    UserRankService userRankService;
+class MainLayoutTest extends AbstractMainLayoutTestBase {
 
     @InjectMocks
     MainLayout mainLayout;
 
-    @Mock
-    BeforeEnterEvent event;
-
-    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-    @BeforeEach
-    void setUp() throws Exception {
-        lenient().when(this.themeService.getCurrentTheme()).thenReturn(ThemeService.Theme.LIGHT);
-        // Skip Vaadin component initialization which requires VaadinService
-        final Field initialized = MainLayout.class.getDeclaredField("initialized");
-        initialized.setAccessible(true);
-        initialized.setBoolean(this.mainLayout, true);
+    @Override
+    protected AbstractMainLayoutBase getLayout() {
+        return this.mainLayout;
     }
 
     @Test

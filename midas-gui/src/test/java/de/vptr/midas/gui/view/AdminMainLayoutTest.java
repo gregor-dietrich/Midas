@@ -2,54 +2,27 @@ package de.vptr.midas.gui.view;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.vaadin.flow.router.BeforeEnterEvent;
-
 import de.vptr.midas.gui.dto.UserRankResponseDto;
-import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.ThemeService;
-import de.vptr.midas.gui.service.UserRankService;
 
 @ExtendWith(MockitoExtension.class)
-class AdminMainLayoutTest {
-
-    @Mock
-    AuthService authService;
-
-    @Mock
-    ThemeService themeService;
-
-    @Mock
-    UserRankService userRankService;
+class AdminMainLayoutTest extends AbstractMainLayoutTestBase {
 
     @InjectMocks
     AdminMainLayout adminMainLayout;
 
-    @Mock
-    BeforeEnterEvent event;
-
-    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-    @BeforeEach
-    void setUp() throws Exception {
-        lenient().when(this.themeService.getCurrentTheme()).thenReturn(ThemeService.Theme.LIGHT);
-        // Skip Vaadin component initialization which requires VaadinService
-        final Field initialized = AdminMainLayout.class.getDeclaredField("initialized");
-        initialized.setAccessible(true);
-        initialized.setBoolean(this.adminMainLayout, true);
+    @Override
+    protected AbstractMainLayoutBase getLayout() {
+        return this.adminMainLayout;
     }
 
     @Test

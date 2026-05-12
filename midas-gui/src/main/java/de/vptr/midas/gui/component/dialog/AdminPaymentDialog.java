@@ -83,10 +83,10 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
             }
         });
 
-        this.binder.forField(sourceAccountField).bind(ignore -> null,
+        this.binder.forField(sourceAccountField).bind(p -> findAccountById(accounts, p.getSourceAccountId()),
                 (p, value) -> p.setSourceAccountId(value != null ? value.getId() : null));
 
-        this.binder.forField(targetAccountField).bind(ignore -> null,
+        this.binder.forField(targetAccountField).bind(p -> findAccountById(accounts, p.getTargetAccountId()),
                 (p, value) -> p.setTargetAccountId(value != null ? value.getId() : null));
 
         this.binder.forField(amountField).withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0,
