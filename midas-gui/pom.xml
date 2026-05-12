@@ -478,6 +478,7 @@
           <excludes>
             <exclude>de/vptr/midas/gui/view/**</exclude>
             <exclude>de/vptr/midas/gui/component/**</exclude>
+            <exclude>de/vptr/midas/gui/client/**</exclude>
           </excludes>
         </configuration>
       </plugin>
