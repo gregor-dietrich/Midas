@@ -1,5 +1,6 @@
 package de.vptr.midas.api.resource;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import de.vptr.midas.api.dto.PostCommentDto;
@@ -107,8 +108,11 @@ public class PostCommentResource {
     /** Returns comments within the given date range. */
     @GET
     @Path("/date-range")
-    public List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") final String startDate,
-            @QueryParam("endDate") final String endDate) {
+    public List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") final LocalDate startDate,
+            @QueryParam("endDate") final LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            return List.of();
+        }
         return this.commentService.findByDateRange(startDate, endDate);
     }
 

@@ -108,6 +108,11 @@ class PostResourceTest {
     }
 
     @Test
+    void testGetPostsByDateRange_missingParams() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range");
+    }
+
+    @Test
     void testCreatePost_unauthorized() {
         testUnauthorizedPost(ENDPOINT_URL, createDefaultPostJson());
     }

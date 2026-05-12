@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 import org.junit.jupiter.api.AfterEach;
@@ -321,6 +322,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
         @SuppressWarnings("NullAway")
         final var results = this.postCommentService.findByDateRange(null, null);
         assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 
     @Test
@@ -329,15 +331,9 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
         final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Date test", this.testPost.id);
         this.postCommentService.createComment(comment, Objects.requireNonNull(this.testUser.username));
 
-        final var results = this.postCommentService.findByDateRange("2024-01-01", "2025-12-31");
+        final var results =
+                this.postCommentService.findByDateRange(LocalDate.of(2024, 1, 1), LocalDate.of(2025, 12, 31));
         assertNotNull(results);
-    }
-
-    @Test
-    void testFindByDateRangeWithInvalidDateFormat() {
-        @SuppressWarnings("NullAway")
-        final var _ = assertThrows(ValidationException.class,
-                () -> this.postCommentService.findByDateRange("invalid-date", "2025-12-31"));
     }
 
     @Test

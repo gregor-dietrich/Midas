@@ -3,7 +3,6 @@ package de.vptr.midas.api.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -252,50 +251,37 @@ public class PostService {
     }
 
     /** Returns posts within the given date range. */
-    public List<PostResponseDto> findByDateRange(@Nullable final String startDate, @Nullable final String endDate) {
+    public List<PostResponseDto> findByDateRange(@Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            return this.getAllPosts();
+            return List.of();
         }
 
-        try {
-            final LocalDate start = LocalDate.parse(startDate);
-            final LocalDate end = LocalDate.parse(endDate);
+        final LocalDateTime startDateTime = startDate.atStartOfDay();
+        final LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-            final LocalDateTime startDateTime = start.atStartOfDay();
-            final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
-
-            final List<PostEntity> posts = PostEntity.find("""
-                    SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
-                    WHERE p.created >= ?1 AND p.created <= ?2 ORDER BY p.created DESC""", startDateTime, endDateTime)
-                    .list();
-            return this.toResponseDtos(posts);
-        } catch (final DateTimeParseException e) {
-            throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
-        }
+        final List<PostEntity> posts = PostEntity.find("""
+                SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                WHERE p.created >= ?1 AND p.created <= ?2 ORDER BY p.created DESC""", startDateTime, endDateTime)
+                .list();
+        return this.toResponseDtos(posts);
     }
 
     /** Returns published posts within the given date range. */
-    public List<PostResponseDto> findPublishedByDateRange(@Nullable final String startDate,
-            @Nullable final String endDate) {
+    public List<PostResponseDto> findPublishedByDateRange(@Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            return this.findPublishedPosts();
+            return List.of();
         }
 
-        try {
-            final LocalDate start = LocalDate.parse(startDate);
-            final LocalDate end = LocalDate.parse(endDate);
+        final LocalDateTime startDateTime = startDate.atStartOfDay();
+        final LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-            final LocalDateTime startDateTime = start.atStartOfDay();
-            final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
-
-            final List<PostEntity> posts = PostEntity.find("""
-                    SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
-                    WHERE p.created >= ?1 AND p.created <= ?2 AND p.published = true \
-                    ORDER BY p.created DESC""", startDateTime, endDateTime).list();
-            return this.toResponseDtos(posts);
-        } catch (final DateTimeParseException e) {
-            throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
-        }
+        final List<PostEntity> posts = PostEntity.find("""
+                SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                WHERE p.created >= ?1 AND p.created <= ?2 AND p.published = true \
+                ORDER BY p.created DESC""", startDateTime, endDateTime).list();
+        return this.toResponseDtos(posts);
     }
 
     private PostResponseDto toResponseDto(final PostEntity post) {

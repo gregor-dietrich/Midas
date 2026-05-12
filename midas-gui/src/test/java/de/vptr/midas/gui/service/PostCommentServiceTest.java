@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -404,8 +405,8 @@ class PostCommentServiceTest {
 
     @Test
     void getCommentsByDateRange_shouldReturnComments_whenValidDates() {
-        final String startDate = "2023-01-01";
-        final String endDate = "2023-12-31";
+        final LocalDate startDate = LocalDate.of(2023, 1, 1);
+        final LocalDate endDate = LocalDate.of(2023, 12, 31);
         final var comment =
                 MockDataUtil.createPostCommentResponseDto(1L, "Date range comment", 1L, "Test Post", 1L, "testuser");
         final var expected = Collections.singletonList(comment);
@@ -424,14 +425,14 @@ class PostCommentServiceTest {
     void getCommentsByDateRange_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(
-                () -> this.postCommentService.getCommentsByDateRange("2023-01-01", "2023-12-31"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCommentService
+                .getCommentsByDateRange(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)));
     }
 
     @Test
     void getCommentsByDateRange_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final String startDate = "2023-01-01";
-        final String endDate = "2023-12-31";
+        final LocalDate startDate = LocalDate.of(2023, 1, 1);
+        final LocalDate endDate = LocalDate.of(2023, 12, 31);
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.commentClient.getCommentsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -442,8 +443,8 @@ class PostCommentServiceTest {
 
     @Test
     void getCommentsByDateRange_shouldThrowAuthenticationException_when401Error() {
-        final String startDate = "2023-01-01";
-        final String endDate = "2023-12-31";
+        final LocalDate startDate = LocalDate.of(2023, 1, 1);
+        final LocalDate endDate = LocalDate.of(2023, 12, 31);
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.commentClient.getCommentsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());

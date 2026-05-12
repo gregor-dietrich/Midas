@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.client;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -72,6 +73,6 @@ public interface PostClient {
 
     @GET
     @Path("/date-range")
-    List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") String startDate,
-            @QueryParam("endDate") String endDate, @HeaderParam("Authorization") String authorization);
+    List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") LocalDate startDate,
+            @QueryParam("endDate") LocalDate endDate, @HeaderParam("Authorization") String authorization);
 }

@@ -3,7 +3,6 @@ package de.vptr.midas.api.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -169,26 +168,19 @@ public class PostCommentService {
     }
 
     /** Returns comments within the given date range. */
-    public List<PostCommentResponseDto> findByDateRange(final String startDate, final String endDate) {
+    public List<PostCommentResponseDto> findByDateRange(final LocalDate startDate, final LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            return this.getAllComments();
+            return List.of();
         }
 
-        try {
-            final LocalDate start = LocalDate.parse(startDate);
-            final LocalDate end = LocalDate.parse(endDate);
+        final LocalDateTime startDateTime = startDate.atStartOfDay();
+        final LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-            final LocalDateTime startDateTime = start.atStartOfDay();
-            final LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
+        final List<PostCommentEntity> comments = PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.created >= ?1 AND c.created <= ?2",
+                startDateTime, endDateTime).list();
 
-            final List<PostCommentEntity> comments = PostCommentEntity.find(
-                    "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.created >= ?1 AND c.created <= ?2",
-                    startDateTime, endDateTime).list();
-
-            return comments.stream().map(PostCommentResponseDto::new).toList();
-        } catch (final DateTimeParseException e) {
-            throw new ValidationException("Invalid date format. Expected: yyyy-MM-dd");
-        }
+        return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     private void verifyCommentOwnership(@Nullable final String currentUsername, final PostCommentEntity existingComment,

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -329,5 +330,22 @@ class PostServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> this.postService.deletePost(postId)).isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void getPostsByDateRange_shouldReturnPosts_whenValidDates() {
+        // Given
+        final LocalDate startDate = LocalDate.of(2023, 1, 1);
+        final LocalDate endDate = LocalDate.of(2023, 12, 31);
+        final var posts = Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.postClient.getPostsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER)).thenReturn(posts);
+
+        // When
+        final var result = this.postService.getPostsByDateRange(startDate, endDate);
+
+        // Then
+        assertThat(result).hasSize(2);
+        verify(this.postClient).getPostsByDateRange(startDate, endDate, TestUtil.TEST_AUTH_HEADER);
     }
 }

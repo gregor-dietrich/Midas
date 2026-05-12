@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.service;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -153,7 +154,7 @@ public class PostService {
     /** Returns the posts by date range. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PostResponseDto> getPostsByDateRange(final String startDate, final String endDate) {
+    public List<PostResponseDto> getPostsByDateRange(final LocalDate startDate, final LocalDate endDate) {
         LOG.debugf("Fetching posts by date range: %s to %s", startDate, endDate);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.postClient.getPostsByDateRange(startDate, endDate, authHeader),

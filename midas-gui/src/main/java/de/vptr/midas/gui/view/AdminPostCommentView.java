@@ -78,7 +78,7 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
 
     @Override
     protected void executeDateRangeFilter(final LocalDate startDate, final LocalDate endDate) {
-        this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate.toString(), endDate.toString()),
+        this.loadDataAsync(() -> this.commentService.getCommentsByDateRange(startDate, endDate),
                 comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
 

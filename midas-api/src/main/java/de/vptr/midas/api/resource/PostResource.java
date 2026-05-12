@@ -1,5 +1,6 @@
 package de.vptr.midas.api.resource;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import de.vptr.midas.api.dto.PostDto;
@@ -102,11 +103,15 @@ public class PostResource {
         return this.postService.searchPosts(query);
     }
 
+    /** Returns posts within the given date range. */
     @GET
     @Path("/date-range")
     // TODO: add an admin-only path that returns all posts (including drafts) within a date range.
-    public List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") final String startDate,
-            @QueryParam("endDate") final String endDate) {
+    public List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") final LocalDate startDate,
+            @QueryParam("endDate") final LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            return List.of();
+        }
         return this.postService.findPublishedByDateRange(startDate, endDate);
     }
 

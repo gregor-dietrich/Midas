@@ -147,16 +147,35 @@ public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView i
     protected abstract HorizontalLayout createButtonLayout();
 
     protected void filterByDateRange() {
-        final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();
-        final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
+        final var start = Objects.requireNonNull(this.startDatePicker);
+        final var end = Objects.requireNonNull(this.endDatePicker);
+
+        final LocalDate startDate = start.getValue();
+        final LocalDate endDate = end.getValue();
+
+        start.setInvalid(false);
+        end.setInvalid(false);
 
         if (startDate == null || endDate == null) {
+            if (startDate == null) {
+                start.setInvalid(true);
+                start.setErrorMessage("Start date is required");
+            }
+            if (endDate == null) {
+                end.setInvalid(true);
+                end.setErrorMessage("End date is required");
+            }
             NotificationUtil.showWarning("Please select both start and end dates");
             return;
         }
 
         if (startDate.isAfter(endDate)) {
-            NotificationUtil.showWarning("Start date must be before end date");
+            start.setInvalid(true);
+            end.setInvalid(true);
+            final String msg = "Start date must be before end date";
+            start.setErrorMessage(msg);
+            end.setErrorMessage(msg);
+            NotificationUtil.showWarning(msg);
             return;
         }
 

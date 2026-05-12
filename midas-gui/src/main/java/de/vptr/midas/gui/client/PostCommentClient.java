@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.client;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -57,8 +58,8 @@ public interface PostCommentClient {
 
     @GET
     @Path("/date-range")
-    List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") String startDate,
-            @QueryParam("endDate") String endDate, @HeaderParam("Authorization") String authorization);
+    List<PostCommentResponseDto> getCommentsByDateRange(@QueryParam("startDate") LocalDate startDate,
+            @QueryParam("endDate") LocalDate endDate, @HeaderParam("Authorization") String authorization);
 
     @POST
     Response createComment(PostCommentDto comment, @HeaderParam("Authorization") String authorization);

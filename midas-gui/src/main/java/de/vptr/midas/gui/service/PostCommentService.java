@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.service;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -156,7 +157,7 @@ public class PostCommentService {
     /** Returns the comments by date range. */
     @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
             abortOn = AuthenticationException.class)
-    public List<PostCommentResponseDto> getCommentsByDateRange(final String startDate, final String endDate) {
+    public List<PostCommentResponseDto> getCommentsByDateRange(final LocalDate startDate, final LocalDate endDate) {
         LOG.debugf("Fetching comments by date range: %s to %s", startDate, endDate);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.commentClient.getCommentsByDateRange(startDate, endDate, authHeader),

@@ -299,14 +299,16 @@ class PostServiceTest extends AbstractIntegrationTest {
 
     @Test
     void testFindByDateRangeWithNullStart() {
-        final var results = this.postService.findByDateRange(null, "2025-01-31");
+        final var results = this.postService.findByDateRange(null, LocalDate.of(2025, 1, 31));
         assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 
     @Test
     void testFindByDateRangeWithNullEnd() {
-        final var results = this.postService.findByDateRange("2025-01-01", null);
+        final var results = this.postService.findByDateRange(LocalDate.of(2025, 1, 1), null);
         assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 
     @Test
@@ -316,15 +318,17 @@ class PostServiceTest extends AbstractIntegrationTest {
                 this.testUserId, this.testCategoryId);
         this.postService.createPost(dto);
 
-        final var results = this.postService.findByDateRange(LocalDate.now(ZoneOffset.UTC).minusDays(1).toString(),
-                LocalDate.now(ZoneOffset.UTC).plusDays(1).toString());
+        final var results = this.postService.findByDateRange(LocalDate.now(ZoneOffset.UTC).minusDays(1),
+                LocalDate.now(ZoneOffset.UTC).plusDays(1));
         assertNotNull(results);
         assertFalse(results.isEmpty());
     }
 
     @Test
-    void testFindByDateRangeInvalidFormat() {
-        assertThrows(ValidationException.class, () -> this.postService.findByDateRange("bad-date", "2025-01-01"));
+    void testFindByDateRangeNull() {
+        final var results = this.postService.findByDateRange(null, null);
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 
     @Test

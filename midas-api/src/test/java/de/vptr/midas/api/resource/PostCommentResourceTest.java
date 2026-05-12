@@ -177,4 +177,9 @@ class PostCommentResourceTest {
     void testGetCommentsByDateRange_authorized() {
         TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?startDate=2024-01-01&endDate=2024-12-31");
     }
+
+    @Test
+    void testGetCommentsByDateRange_missingParams() {
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range");
+    }
 }

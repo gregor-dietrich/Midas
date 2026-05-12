@@ -144,7 +144,7 @@ public interface UserClient {
 
 **Goal:** Fix layout and filtering bugs in Admin views.
 
-### Sub-Task: Date Range Filtering Fix
+- [x] **Sub-Task: Date Range Filtering Fix**
 
 - **API:** Ensure `Resource` methods handle invalid date strings by returning `400 Bad Request` or empty result, never the full dataset.
 - **GUI:** Update `AdminCommentView` to validate date pickers before calling the service.

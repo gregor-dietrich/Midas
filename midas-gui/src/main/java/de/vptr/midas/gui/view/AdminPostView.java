@@ -136,7 +136,7 @@ public class AdminPostView extends AbstractAdminEntityView<PostResponseDto> {
 
     @Override
     protected void executeDateRangeFilter(final LocalDate startDate, final LocalDate endDate) {
-        this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate.toString(), endDate.toString()),
+        this.loadDataAsync(() -> this.postService.getPostsByDateRange(startDate, endDate),
                 posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
 
