@@ -43,7 +43,6 @@ class EntityCoverageTest {
         entity.username = "coverage_user_" + System.currentTimeMillis();
         entity.email = "coverage_" + System.currentTimeMillis() + "@example.com";
         entity.password = "password";
-        entity.salt = "salt";
         entity.rank = UserRankEntity.findById(1L);
         entity.persistAndFlush();
 

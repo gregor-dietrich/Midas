@@ -63,7 +63,6 @@ CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    salt VARCHAR(255) NOT NULL,
     rank_id BIGINT NOT NULL,
     email VARCHAR(255) UNIQUE DEFAULT NULL,
     banned BOOLEAN NOT NULL DEFAULT FALSE,
@@ -184,13 +183,13 @@ INSERT INTO user_ranks (id, name, admin_view, page_add, page_delete, page_edit, 
 (4, 'Moderator', TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE);
 
 -- Insert initial data for users
-INSERT INTO users (id, username, password, salt, rank_id, activated, banned, activation_key) VALUES
-(1, 'admin', '3HWqMv8tiSEbBcsUfxqBx7kY4vw+cSvG7OQXp9uzM0w=', '0l/SGC6gqKwYWjw7sm2IrwzIcAjq/QkO9xXcG/LC56c=', 1, TRUE, FALSE, NULL),
-(2, 'user', 'KD+VrVb86w2Z7Ei8UjsHbbZ/awEnReWeC8t0656EqMM=', 'e3/FXXV1XuCaSHXxtwR1K0Lc5N/Al7rTJ6Kkpx1S2Uk=', 2, TRUE, FALSE, NULL),
-(3, 'guest', '1B+WWB3fopZvGiqUzwNWgI74mE5EaeryMlOoKNXvzhQ=', 'nNmZIEEzv7peVc+UqSbd+Q0g8KbTAgAa5RbhZwgUiOk=', 3, TRUE, FALSE, NULL),
-(4, 'moderator', '4IV82pA2Q1BmNaIS+de+1yqS1UQSwSE21xU6kkSda6c=', '52Mdt2qexvXu99Gm+wB0iv8V3n5leK5XR1zGLNBeDQg=', 4, TRUE, FALSE, NULL),
-(5, 'bannedUser', 'tE04ap7GWryC2vCAzJpcFilsSGPozJsrAjRyZaXqeXM=', 'QLxT3YTXJuEFeaG71Shryr5BUkW+i4vocjmpKXT8h4k=', 3, TRUE, TRUE, NULL),
-(6, 'notActivatedUser', 'xA28JSHhTwUxoBfOS0RCTPfnMzkvzB5i724zzo25iYI=', 'BVCeBwQYMx/7sZ8tIiR9wCvQ/plNQzTwG0neblWWu3k=', 3, FALSE, FALSE, '21b8efb5-8eb0-4530-9d9a-cdbc33ba7164');
+INSERT INTO users (id, username, password, rank_id, activated, banned, activation_key) VALUES
+(1, 'admin', '$2a$10$RfPCTCppilPN9dR.aYkYr.nFWs2SiujkCXNRAiZtjClKkJqSMqJwW', 1, TRUE, FALSE, NULL),
+(2, 'user', '$2a$10$0kzodxfrJWo27njgGaCEEO8SQZryAL1Cn6X1kQ1UbLbnUdmuQ0kkC', 2, TRUE, FALSE, NULL),
+(3, 'guest', '$2a$10$wpRNBD1wYDcKraH8aAqvi.lgzDCq183EQ2/J131P5toJoCOVZvkIe', 3, TRUE, FALSE, NULL),
+(4, 'moderator', '$2a$10$hIKFIOu0kaXeUx.o..D/d.FadO1ez7J4HV.mQjtxW3kU5zO.IdhV2', 4, TRUE, FALSE, NULL),
+(5, 'bannedUser', '$2a$10$f3D8iQlSEvWRgZY49vV3se2yLlFxxIytj5c/kZfINGIBPV2YyXvti', 3, TRUE, TRUE, NULL),
+(6, 'notActivatedUser', '$2a$10$4mLZfGWvIE1/x/AHyy2lLOqaWeL9mzpQ.vnNjxfsNUue4hkbPDIbC', 3, FALSE, FALSE, '21b8efb5-8eb0-4530-9d9a-cdbc33ba7164');
 
 -- Update sequences to continue from current max values
 SELECT setval('user_ranks_id_seq', 4);

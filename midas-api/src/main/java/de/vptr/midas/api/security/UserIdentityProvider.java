@@ -69,13 +69,16 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
             if (user == null) {
                 // Run dummy hash to prevent timing-based username enumeration
-                this.passwordHashingService.verifyPasswordChars(password, "dummy", "dummySalt");
+                this.passwordHashingService.verifyPassword("dummy",
+                        "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 throw new AuthenticationFailedException("Invalid credentials");
             }
 
-            if (user.password == null || user.salt == null
-                    || !this.passwordHashingService.verifyPasswordChars(password, user.password, user.salt)) {
+            final String passwordStr = password != null ? new String(password) : "";
+
+            if (user.password == null
+                    || !this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 throw new AuthenticationFailedException("Invalid credentials");
             }

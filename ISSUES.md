@@ -4,7 +4,7 @@
 
 **Goal:** Implement comprehensive user profile management and upgrade core security primitives (Hashing, Throttling).
 
-### Sub-Task: Upgrade to Bcrypt & Remove Salt Column
+- [x] **Sub-Task: Upgrade to Bcrypt & Remove Salt Column**
 
 - **API Change:** Replace PBKDF2 with Bcrypt in `PasswordHashingService`.
 

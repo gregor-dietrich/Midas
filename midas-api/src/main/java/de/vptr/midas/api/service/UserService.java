@@ -1,7 +1,5 @@
 package de.vptr.midas.api.service;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -191,14 +189,8 @@ public class UserService {
 
     private void applyPassword(final UserEntity user, @Nullable final String password) {
         if (password != null && !password.trim().isEmpty()) {
-            final var salt = this.passwordHashingService.generateSalt();
-            try {
-                final var hashedPassword = this.passwordHashingService.hashPassword(password, salt);
-                user.salt = salt;
-                user.password = hashedPassword;
-            } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new WebApplicationException("Failed to hash password", Response.Status.INTERNAL_SERVER_ERROR);
-            }
+            final var hashedPassword = this.passwordHashingService.hashPassword(password);
+            user.password = hashedPassword;
         }
     }
 
