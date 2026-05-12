@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// CPD-OFF
 /** Data transfer object for post comment. */
 public class PostCommentDto {
 
@@ -33,7 +32,6 @@ public class PostCommentDto {
     public PostCommentDto() {
         // Default constructor for Jackson
     }
-    // CPD-ON
 
     public Long getId() {
         return this.id;

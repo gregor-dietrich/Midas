@@ -12,6 +12,7 @@ import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
@@ -100,10 +101,7 @@ class UserRankResourceTest {
 
     @Test
     void testCreateUserRank_authorizedWithSufficientRole() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserRankJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
-
-        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+        testAuthorizedPostWithCreation(ENDPOINT_URL, createDefaultUserRankJson());
     }
 
     @Test

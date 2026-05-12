@@ -189,16 +189,19 @@ class UserGroupResourceTest {
 
     @Test
     void testAddUserToGroup_authorized() {
-        final Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
-        authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(201);
+        createGroupWithUser();
     }
 
     @Test
     void testRemoveUserFromGroup_authorized() {
+        final Integer groupId = createGroupWithUser();
+        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(204);
+    }
+
+    private Integer createGroupWithUser() {
         final Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
                 .then().statusCode(201).extract().path("id");
         authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(201);
-        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(204);
+        return groupId;
     }
 }
