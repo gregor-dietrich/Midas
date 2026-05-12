@@ -17,11 +17,13 @@ This project is a modern web application consisting of a REST API backend and a 
 The project uses a `Makefile` at the root and in each module to simplify common tasks.
 
 ### Prerequisites
+
 - **JDK 25**
 - **Maven 3.9.9+**
 - **Docker** (for tests and production deployment)
 
 ### Common Commands
+
 - `make install`: Run `mvn clean install -DskipTests` for both modules.
 - `make build`: Verify environment, package applications, and build Docker images.
 - `make clean`: Clean Maven artifacts and build directories.
@@ -32,13 +34,12 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 - `make kill`: Terminate all Quarkus/Maven processes and clean up Docker containers.
 - `make password`: Generate a salt+hash for the API `init.sql`.
 
-### Local Infrastructure
-- `docker compose up -d --build`: Start the full stack (API, GUI, PostgreSQL, pgAdmin).
-
 ## Development Conventions
 
 ### Code Quality & Standards
+
 The project enforces very strict quality gates:
+
 - **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline).
 - **Linting**: Checkstyle, PMD (with CPD for duplicate detection).
 - **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks).
@@ -46,7 +47,11 @@ The project enforces very strict quality gates:
 - **Coverage**: JaCoCo enforcement (Minimum **88%** line coverage for API, **84%** for GUI).
 - **Security**: OWASP Dependency Check (fails on CVSS >= 7), License enforcement (blocks commercial/proprietary licenses).
 
+You MUST ALWAYS run ALL quality gates AND tests via `make lint test` before claiming you are done, and especially before executing a git commit.
+If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make lint test`.
+
 ### Design Patterns & Logic
+
 - **API Response**: Standardized JSON error payloads with `status`, `error`, and `message`.
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at both GUI and API levels.
 - **Security**: Basic Auth with PBKDF2-SHA256. The GUI stores backend credentials behind an opaque session ID.

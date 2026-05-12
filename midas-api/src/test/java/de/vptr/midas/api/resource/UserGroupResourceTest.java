@@ -63,7 +63,10 @@ class UserGroupResourceTest {
 
     @Test
     void testGetUsersInGroup_authorizedWithExistingGroup() {
-        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/1/users");
+        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
+
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + id + "/users");
     }
 
     @Test

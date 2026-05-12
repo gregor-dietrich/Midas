@@ -61,7 +61,9 @@ class AccountResourceTest {
 
     @Test
     void testGetUserAccountById_authorizedWithExistingAccount() {
-        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/1");
+        final Integer accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + accountId);
     }
 
     @Test
@@ -279,7 +281,9 @@ class AccountResourceTest {
 
     @Test
     void testGetAssociatedUsers_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/1/users");
+        final Integer accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("id");
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/" + accountId + "/users");
     }
 
     @Test

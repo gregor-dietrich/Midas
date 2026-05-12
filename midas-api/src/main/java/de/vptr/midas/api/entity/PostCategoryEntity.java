@@ -71,7 +71,7 @@ public class PostCategoryEntity extends PanacheEntityBase {
 
     // Helper method to get all subcategories recursively
     /** Returns by parent id. */
-    public static List<PostCategoryEntity> findByParentId(final Long parentId) {
+    public static List<PostCategoryEntity> findByParentId(@Nullable final Long parentId) {
         if (parentId == null) {
             return find("parent IS NULL").list();
         }

@@ -158,31 +158,30 @@ class PaymentResourceTest {
 
     @Test
     void testUpdatePayment_authorized() {
-        final Integer id =
-                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
-                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id = createTestPayment();
 
-        authenticatedRequest().contentType(ContentType.JSON).body(createUpdatedPaymentJson()).when()
+        authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
                 .put(ENDPOINT_URL + "/" + id).then().statusCode(200);
     }
 
     @Test
     void testPatchPayment_authorized() {
-        final Integer id =
-                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
-                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id = createTestPayment();
 
-        authenticatedRequest().contentType(ContentType.JSON).body(createDefaultPaymentJson()).when()
+        authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
                 .patch(ENDPOINT_URL + "/" + id).then().statusCode(200);
     }
 
     @Test
     void testDeletePayment_authorized() {
-        final Integer id =
-                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
-                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final Integer id = createTestPayment();
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+    }
+
+    private Integer createTestPayment() {
+        return authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
+                .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
     }
 
     @Test
