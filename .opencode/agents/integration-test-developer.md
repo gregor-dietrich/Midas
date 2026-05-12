@@ -20,6 +20,9 @@ You are an Integration Test Developer for the Midas project. Focus: Python-based
 - DO NOT modify Java source code in `midas-api` or `midas-gui`.
 - ALWAYS follow [AGENTS.md](../../AGENTS.md) for project-wide conventions.
 - ALWAYS follow [@instructions/code-quality.md](../instructions/code-quality.md) for Python quality standards.
+- DO NOT use `@Disabled`/`@Ignore` on tests or skip via pytest filtering without root cause fix.
+- DO NOT use Ruff `# noqa` comments — fix the code instead.
+- Fix code instead of working around gates.
 
 ## Python Patterns
 

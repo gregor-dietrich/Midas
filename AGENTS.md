@@ -27,12 +27,10 @@ make kill         # stop all processes/containers
 ### Java Modules (API & GUI)
 
 ```shell
-# Comprehensive Lint (Severity=error, blocks build)
-# Includes Checkstyle, SpotBugs, PMD, CPD, Error Prone, NullAway
-./mvnw verify -DskipTests
-
-./mvnw test                              # Test all (API needs Docker)
-./mvnw quarkus:dev                       # Dev mode
+./mvnw spotless:apply                    # Format first (eclipse formatter, import order, unused imports)
+./mvnw verify -DskipTests                # Comprehensive Lint (Checkstyle, SpotBugs, PMD, CPD, Error Prone, NullAway)
+./mvnw test                               # Test all (API needs Docker)
+./mvnw quarkus:dev                        # Dev mode
 ```
 
 ### Python Module (Test Suite)
@@ -91,6 +89,36 @@ Invoke via `@name`:
 ### Integration Agents
 
 - [@integration-test-developer](./.opencode/agents/integration-test-developer.md) — Python test suite & monitoring
+
+## Quality Gate Integrity — NON-NEGOTIABLE
+
+All agents MUST NOT bypass quality gates.
+
+### Auto-Fix First
+
+Java agents: RUN `./mvnw spotless:apply` BEFORE running verify/lint. Spotless auto-fixes:
+
+- Eclipse formatter formatting (line length, indentation, braces)
+- Import order (java, javax, org, com, #)
+- Unused imports
+
+### Prohibited Actions
+
+- **Code duplication**: NEVER allowed. Fix it. `CPD-OFF`/`CPD-ON` markers are PROHIBITED.
+- **Threshold tampering**: DO NOT increase `cpd.minimumTokens`, lower coverage thresholds, or disable rules in plugin configuration.
+- **Test suppression**: DO NOT use `@Disabled`/`@Ignore` on tests or skip via pytest filtering without root cause fix.
+- **Ruff `# noqa`**: Fix the code instead.
+
+### Allowed Only If Strictly Necessary
+
+- `@SuppressWarnings` is allowed ONLY if:
+  1. Suppression is as fine-grained as possible (e.g., suppress a specific check on a specific line)
+  2. Justification is clear and unavoidable, and must be documented inline
+- Prefer `checkstyle-suppressions.xml` over `@SuppressWarnings` when possible.
+
+### Guiding Principle
+
+When quality gates fail: **FIX THE CODE**. Do not work around gates. Suppressions are a last resort, not a convenience.
 
 ## Cross-Module Workflow
 

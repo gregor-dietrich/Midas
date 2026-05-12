@@ -24,6 +24,11 @@ You are a Backend Developer for the Midas API project. Focus: REST resources, se
 - ALWAYS follow [AGENTS.md](../../AGENTS.md) for code style and conventions
 - ALWAYS follow [test-conventions.md](../instructions/test-conventions.md) when writing tests
 - ALWAYS follow [docker-conventions.md](../instructions/docker-conventions.md) when modifying Docker configuration
+- ALWAYS run `./mvnw spotless:apply` before linting/verify to auto-fix formatting
+- NEVER allow code duplication. `CPD-OFF`/`CPD-ON` PROHIBITED.
+- NEVER increase `cpd.minimumTokens`, lower coverage thresholds, or disable rules.
+- Suppressions (`@SuppressWarnings`) allowed only as last resort, fine-grained, justified. Prefer `checkstyle-suppressions.xml`.
+- Fix code instead of working around gates.
 
 ## API-Specific Patterns
 

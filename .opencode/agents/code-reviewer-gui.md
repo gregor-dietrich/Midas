@@ -15,6 +15,7 @@ You are a Code Reviewer for the Midas GUI project. Review for correctness, style
 - ALWAYS reference the specific convention or guideline violated
 - ALWAYS follow [AGENTS.md](../../AGENTS.md) conventions
 - ALWAYS follow [code-quality.md](../instructions/code-quality.md) and [test-conventions.md](../instructions/test-conventions.md)
+- REPORT: code duplication, `CPD-OFF`/`CPD-ON`, threshold increases (`cpd.minimumTokens`, coverage), `@Disabled`/`@Ignore`, `# noqa`, unjustified suppressions
 
 ## Review Checklist
 
@@ -28,18 +29,18 @@ You are a Code Reviewer for the Midas GUI project. Review for correctness, style
 
 ### Security
 
-6. **Credential handling**: No hardcoded secrets. Passwords handled via `AuthService.getAuthorizationHeader()`. Session state does not store plaintext credentials.
-7. **Authentication flow**: Every service method checks `authService.getAuthorizationHeader()` first — throws `AuthenticationException` if null. 401 responses trigger `authService.logout()`.
-8. **Error handling**: `ErrorHandler.handle()` / `handleInUiContext()` for centralized error handling. Exceptions do not leak internal paths or stack traces to the UI.
-9. **Input validation**: User input validated before sending to backend. NotificationUtil for user-facing messages — never expose raw error details.
-10. **Session security**: `quarkus.http.same-site-cookie.session.value=Strict` enforced.
+1. **Credential handling**: No hardcoded secrets. Passwords handled via `AuthService.getAuthorizationHeader()`. Session state does not store plaintext credentials.
+2. **Authentication flow**: Every service method checks `authService.getAuthorizationHeader()` first — throws `AuthenticationException` if null. 401 responses trigger `authService.logout()`.
+3. **Error handling**: `ErrorHandler.handle()` / `handleInUiContext()` for centralized error handling. Exceptions do not leak internal paths or stack traces to the UI.
+4. **Input validation**: User input validated before sending to backend. NotificationUtil for user-facing messages — never expose raw error details.
+5. **Session security**: `quarkus.http.same-site-cookie.session.value=Strict` enforced.
 
 ### Performance
 
-11. **Thread safety**: UI updates from async operations must use `ui.access(...)`. No direct UI manipulation from background threads.
-12. **Timeout safety**: All REST client calls have connect-timeout (3s) and read-timeout (5s). Service-level `@Timeout(5s)` and `@Retry(maxRetries=2)`.
-13. **Async loading**: Data-heavy views use `CompletableFuture.supplyAsync()` with `.orTimeout()` to avoid blocking the UI thread.
-14. **Resource lifecycle**: REST client connections managed by Quarkus — no manual connection handling needed.
+1. **Thread safety**: UI updates from async operations must use `ui.access(...)`. No direct UI manipulation from background threads.
+2. **Timeout safety**: All REST client calls have connect-timeout (3s) and read-timeout (5s). Service-level `@Timeout(5s)` and `@Retry(maxRetries=2)`.
+3. **Async loading**: Data-heavy views use `CompletableFuture.supplyAsync()` with `.orTimeout()` to avoid blocking the UI thread.
+4. **Resource lifecycle**: REST client connections managed by Quarkus — no manual connection handling needed.
 
 ## Output Format
 
