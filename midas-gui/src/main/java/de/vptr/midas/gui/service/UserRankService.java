@@ -1,9 +1,7 @@
 package de.vptr.midas.gui.service;
 
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -15,7 +13,6 @@ import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ServiceHelper;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -43,8 +40,6 @@ public class UserRankService {
     AuthService authService;
 
     /** Returns the all ranks. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<UserRankResponseDto> getAllRanks() {
         LOG.debug("Fetching all ranks");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -53,8 +48,6 @@ public class UserRankService {
     }
 
     /** Returns the current user rank. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public UserRankResponseDto getCurrentUserRank() {
         final var emptyRank = new UserRankResponseDto();
 
@@ -118,8 +111,6 @@ public class UserRankService {
     }
 
     /** Returns the rank by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public UserRankResponseDto getRankById(final Long id) {
         LOG.infof("Getting user rank by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -169,8 +160,6 @@ public class UserRankService {
     }
 
     /** Handles the search ranks operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<UserRankResponseDto> searchRanks(final String query) {
         LOG.debugf("Searching ranks with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();

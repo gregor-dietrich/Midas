@@ -1,7 +1,10 @@
 package de.vptr.midas.gui.client;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import de.vptr.midas.gui.dto.AccountDto;
@@ -10,6 +13,8 @@ import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.util.UiConstants;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -29,6 +34,9 @@ import jakarta.ws.rs.core.Response;
 @Path("/accounts")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+        abortOn = AuthenticationException.class)
+@Timeout(2000)
 public interface AccountClient {
 
     @GET

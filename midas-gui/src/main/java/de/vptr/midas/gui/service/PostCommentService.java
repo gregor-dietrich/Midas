@@ -1,21 +1,17 @@
 package de.vptr.midas.gui.service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PostCommentClient;
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -34,8 +30,6 @@ public class PostCommentService {
     AuthService authService;
 
     /** Returns the all comments. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCommentResponseDto> getAllComments(final Integer page, final Integer size) {
         LOG.debug("Fetching all comments");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -46,8 +40,6 @@ public class PostCommentService {
     }
 
     /** Returns the comments by post. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCommentResponseDto> getCommentsByPost(final Long postId) {
         LOG.infof("Getting comments for post: %s", postId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -59,8 +51,6 @@ public class PostCommentService {
     }
 
     /** Returns the comments by user. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCommentResponseDto> getCommentsByUser(final Long userId) {
         LOG.debugf("Fetching comments for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -69,8 +59,6 @@ public class PostCommentService {
     }
 
     /** Handles the search comments operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCommentResponseDto> searchComments(final String query) {
         LOG.debugf("Searching comments with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -79,8 +67,6 @@ public class PostCommentService {
     }
 
     /** Returns the comment by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public PostCommentDto getCommentById(final Long id) {
         LOG.infof("Getting comment by id: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -155,8 +141,6 @@ public class PostCommentService {
     }
 
     /** Returns the comments by date range. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCommentResponseDto> getCommentsByDateRange(final LocalDate startDate, final LocalDate endDate) {
         LOG.debugf("Fetching comments by date range: %s to %s", startDate, endDate);
         final var authHeader = this.authService.requireAuthorizationHeader();

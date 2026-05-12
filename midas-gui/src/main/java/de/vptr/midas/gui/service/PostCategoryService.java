@@ -1,20 +1,16 @@
 package de.vptr.midas.gui.service;
 
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PostCategoryClient;
 import de.vptr.midas.gui.dto.PostCategoryDto;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -32,8 +28,6 @@ public class PostCategoryService {
     AuthService authService;
 
     /** Returns the all categories. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getAllCategories() {
         LOG.debug("Fetching all categories");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -45,8 +39,6 @@ public class PostCategoryService {
     }
 
     /** Returns the root categories. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getRootCategories() {
         LOG.debug("Fetching root categories");
         return ServiceHelper.execute(() -> {
@@ -56,8 +48,6 @@ public class PostCategoryService {
     }
 
     /** Returns the category by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public Optional<PostCategoryResponseDto> getCategoryById(final Long id) {
         LOG.debugf("Fetching category with ID: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
@@ -68,8 +58,6 @@ public class PostCategoryService {
     }
 
     /** Returns the categories by parent. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> getCategoriesByParent(final Long parentId) {
         LOG.debugf("Fetching categories for parent: %s", parentId);
         return ServiceHelper.execute(() -> {
@@ -127,8 +115,6 @@ public class PostCategoryService {
     }
 
     /** Handles the search categories operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PostCategoryResponseDto> searchCategories(final String query) {
         LOG.debugf("Searching categories with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();

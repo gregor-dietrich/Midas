@@ -1,11 +1,9 @@
 package de.vptr.midas.gui.service;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,11 +18,9 @@ import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -46,8 +42,6 @@ public class AccountService {
     AuthService authService;
 
     /** Returns the all accounts. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getAllAccounts(final Integer page, final Integer size) {
         LOG.debug("Fetching all accounts");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -58,8 +52,6 @@ public class AccountService {
     }
 
     /** Returns the account by id. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountById(final Long id) {
         LOG.debugf("Fetching account with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -68,8 +60,6 @@ public class AccountService {
     }
 
     /** Returns the account by name. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public Optional<AccountDto> getAccountByName(final String name) {
         LOG.debugf("Fetching account with name: %s", name);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -78,8 +68,6 @@ public class AccountService {
     }
 
     /** Returns the accounts by user. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getAccountsByUser(final Long userId) {
         LOG.debugf("Fetching accounts for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -89,8 +77,6 @@ public class AccountService {
 
     // User-facing method that doesn't require admin permissions
     /** Returns the my accounts. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getMyAccounts() {
         LOG.debug("Fetching accounts for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -100,8 +86,6 @@ public class AccountService {
 
     // Optimized method to get accounts with balances in a single call
     /** Returns the my accounts with balances. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> getMyAccountsWithBalances() {
         LOG.debug("Fetching accounts with balances for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -110,8 +94,6 @@ public class AccountService {
     }
 
     /** Handles the search accounts operation. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<AccountResponseDto> searchAccounts(final String query) {
         LOG.debugf("Searching accounts with query: %s", query);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -120,8 +102,6 @@ public class AccountService {
     }
 
     /** Returns the outgoing payments. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PaymentDto> getOutgoingPayments(final Long accountId) {
         LOG.debugf("Fetching outgoing payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -131,8 +111,6 @@ public class AccountService {
     }
 
     /** Returns the incoming payments. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<PaymentDto> getIncomingPayments(final Long accountId) {
         LOG.debugf("Fetching incoming payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -142,8 +120,6 @@ public class AccountService {
     }
 
     /** Returns the associated users. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public List<UserResponseDto> getAssociatedUsers(final Long accountId) {
         LOG.debugf("Fetching users associated with account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -208,8 +184,6 @@ public class AccountService {
     }
 
     /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative) {
         LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s", accountId, userId,
                 (Object) isNegative);
@@ -227,8 +201,6 @@ public class AccountService {
     }
 
     /** Returns the account balance. */
-    @Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-            abortOn = AuthenticationException.class)
     public BigDecimal getAccountBalance(final Long accountId) {
         LOG.debugf("Fetching balance for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();

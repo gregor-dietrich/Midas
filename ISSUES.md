@@ -104,7 +104,7 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
 
 **Goal:** Centralize fault tolerance in the REST client layer.
 
-### Sub-Task: Client Refactoring
+- [x] **Sub-Task: Client Refactoring**
 
 - **GUI:** Move `@Retry` and `@Timeout` from `Service` classes to `Client` interfaces.
 
