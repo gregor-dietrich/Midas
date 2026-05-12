@@ -121,7 +121,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, _ -> this.searchUsers(), "Search by username or email...", "Search Users");
+        }, ignore -> this.searchUsers(), "Search by username or email...", "Search Users");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
@@ -133,9 +133,9 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var createButton = new CreateButton(_ -> Objects.requireNonNull(this.userDialog).open(null,
+        final var createButton = new CreateButton(ignore -> Objects.requireNonNull(this.userDialog).open(null,
                 this.availableRanks != null ? this.availableRanks : List.of()));
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(ignore -> this.setupLazyDataProvider());
 
         layout.add(createButton, refreshButton);
         return layout;
@@ -157,7 +157,7 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(_ -> Objects.requireNonNull(this.userDialog).open(user,
+            usernameSpan.addClickListener(ignore -> Objects.requireNonNull(this.userDialog).open(user,
                     this.availableRanks != null ? this.availableRanks : List.of()));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
@@ -189,9 +189,9 @@ public class AdminUserView extends AbstractAsyncDataView implements BeforeEnterO
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.userDialog).open(user,
+        final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.userDialog).open(user,
                 this.availableRanks != null ? this.availableRanks : List.of()));
-        final var deleteButton = new DeleteButton(_ -> {
+        final var deleteButton = new DeleteButton(ignore -> {
             if (user != null) {
                 this.deleteUser(user);
             }

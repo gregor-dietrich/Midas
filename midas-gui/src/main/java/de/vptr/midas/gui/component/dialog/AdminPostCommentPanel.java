@@ -75,10 +75,10 @@ public class AdminPostCommentPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var saveButton = new Button("Post Comment", _ -> this.saveComment());
+        final var saveButton = new Button("Post Comment", ignore -> this.saveComment());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        final var cancelButton = new Button("Cancel", _ -> this.close());
+        final var cancelButton = new Button("Cancel", ignore -> this.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(saveButton, cancelButton);

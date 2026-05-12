@@ -107,12 +107,13 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             if (e.getValue() == null || e.getValue().trim().isEmpty()) {
                 this.setupLazyDataProvider();
             }
-        }, _ -> this.searchAccounts(), "Search by name...", "Search Accounts");
+        }, ignore -> this.searchAccounts(), "Search by name...", "Search Accounts");
 
         this.searchButton = searchLayout.getButton();
         this.searchField = searchLayout.getTextfield();
 
-        final var filterLayout = new IntegerFilterLayout(_ -> this.filterByUser(), "Enter ID...", "Filter by User");
+        final var filterLayout =
+                new IntegerFilterLayout(ignore -> this.filterByUser(), "Enter ID...", "Filter by User");
 
         this.userIdField = filterLayout.getIntegerField();
 
@@ -124,9 +125,9 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.setupLazyDataProvider());
+        final var refreshButton = new RefreshButton(ignore -> this.setupLazyDataProvider());
         final var createButton =
-                new CreateButton(_ -> Objects.requireNonNull(this.accountDialog).open(null), "Create Account");
+                new CreateButton(ignore -> Objects.requireNonNull(this.accountDialog).open(null), "Create Account");
 
         buttonLayout.add(refreshButton, createButton);
         return buttonLayout;
@@ -148,7 +149,7 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> Objects.requireNonNull(this.accountDialog).open(account));
+            nameSpan.addClickListener(ignore -> Objects.requireNonNull(this.accountDialog).open(account));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(1);
 
@@ -160,9 +161,10 @@ public class AdminAccountView extends AbstractAsyncDataView implements BeforeEnt
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(_ -> Objects.requireNonNull(this.accountDialog).open(account));
-        final var deleteButton = new DeleteButton(_ -> this.deleteAccount(account));
-        final var manageUsersButton = new ManageUsersButton(_ -> Objects.requireNonNull(this.userPanel).open(account));
+        final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.accountDialog).open(account));
+        final var deleteButton = new DeleteButton(ignore -> this.deleteAccount(account));
+        final var manageUsersButton =
+                new ManageUsersButton(ignore -> Objects.requireNonNull(this.userPanel).open(account));
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;

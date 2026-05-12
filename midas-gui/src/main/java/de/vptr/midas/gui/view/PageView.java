@@ -88,7 +88,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
             titleSpan.getStyle().set("cursor", "pointer");
             titleSpan.getStyle().set("width", "100%");
             titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
+            titleSpan.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
             return titleSpan;
         }).setHeader("Title").setFlexGrow(1);
 

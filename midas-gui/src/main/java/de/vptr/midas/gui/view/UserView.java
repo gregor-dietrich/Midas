@@ -91,7 +91,7 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
             usernameSpan.getStyle().set("cursor", "pointer");
             usernameSpan.getStyle().set("width", "100%");
             usernameSpan.getStyle().set("display", "block");
-            usernameSpan.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
+            usernameSpan.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("users/" + user.getId())));
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
 

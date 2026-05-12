@@ -254,7 +254,7 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             }
 
             // Create new logout button
-            this.logoutButton = new LogoutButton(_ -> {
+            this.logoutButton = new LogoutButton(ignore -> {
                 this.authService.logout();
                 // Clear cached user rank on logout
                 this.userRankService.clearCachedUserRank();
@@ -263,7 +263,8 @@ public class AdminMainLayout extends VerticalLayout implements RouterLayout, Bef
             });
 
             // Create new AdminView button
-            this.userViewButton = new UserViewButton(_ -> this.getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
+            this.userViewButton =
+                    new UserViewButton(ignore -> this.getUI().ifPresent(ui -> ui.navigate(HomeView.class)));
 
             // Add buttons
             final var componentCount = this.rightSide.getComponentCount();

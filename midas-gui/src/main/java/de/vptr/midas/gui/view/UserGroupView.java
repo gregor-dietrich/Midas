@@ -104,7 +104,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
+            nameSpan.addClickListener(ignore -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
@@ -125,7 +125,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             nameSpan.getStyle().set("cursor", "pointer");
             nameSpan.getStyle().set("width", "100%");
             nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(_ -> this.navigateToGroup(group));
+            nameSpan.addClickListener(ignore -> this.navigateToGroup(group));
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 

@@ -210,7 +210,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         }
 
         // Create new logout button
-        this.logoutButton = new LogoutButton(_ -> {
+        this.logoutButton = new LogoutButton(ignore -> {
             this.authService.logout();
             // Clear cached user rank on logout
             this.userRankService.clearCachedUserRank();
@@ -225,7 +225,7 @@ public class MainLayout extends VerticalLayout implements RouterLayout, BeforeEn
         }
         if (this.cachedAdminPermission) {
             this.adminViewButton =
-                    new AdminViewButton(_ -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
+                    new AdminViewButton(ignore -> this.getUI().ifPresent(ui -> ui.navigate(AdminHomeView.class)));
         }
 
         // Add buttons

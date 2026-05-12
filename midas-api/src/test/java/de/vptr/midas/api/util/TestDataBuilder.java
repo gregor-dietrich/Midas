@@ -377,12 +377,30 @@ public final class TestDataBuilder {
     }
 
     /**
+     * Creates a unique test user rank JSON.
+     */
+    public static String createUniqueUserRankJson() {
+        return createUserRankJson("Test Rank " + TestUtil.generateUniqueSuffix(), true, true, true, true, true, true,
+                true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true);
+    }
+
+    /**
      * Creates an updated user rank JSON for testing updates
      */
     public static String createUpdatedUserRankJson() {
         return createUserRankJson("Updated Test Rank", false, false, false, false, false, false, false, false, false,
                 false, false, false, false, false, false, false, false, false, false, false, false, false, false,
                 false);
+    }
+
+    /**
+     * Creates a unique updated user rank JSON for testing updates
+     */
+    public static String createUniqueUpdatedUserRankJson() {
+        return createUserRankJson("Updated Test Rank " + TestUtil.generateUniqueSuffix(), false, false, false, false,
+                false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+                false, false, false, false, false);
     }
 
     /**

@@ -71,7 +71,7 @@ class AbstractAsyncDataViewTest {
         view.testLoadWithErrorHandler(() -> 42, value -> {
             result.set(value);
             latch.countDown();
-        }, _ -> {
+        }, ignore -> {
         });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -86,7 +86,7 @@ class AbstractAsyncDataViewTest {
 
         view.testLoadWithErrorHandler(() -> {
             throw new IllegalStateException("custom error");
-        }, _ -> {
+        }, ignore -> {
         }, error -> {
             errorRef.set(error);
             latch.countDown();
@@ -105,7 +105,7 @@ class AbstractAsyncDataViewTest {
         view.testLoadWithErrorHandler(() -> "async result", value -> {
             result.set(value);
             latch.countDown();
-        }, _ -> {
+        }, ignore -> {
         });
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
@@ -125,7 +125,7 @@ class AbstractAsyncDataViewTest {
                 Thread.currentThread().interrupt();
             }
             return 42;
-        }, _ -> {
+        }, ignore -> {
         }, error -> {
             errorRef.set(error);
             latch.countDown();

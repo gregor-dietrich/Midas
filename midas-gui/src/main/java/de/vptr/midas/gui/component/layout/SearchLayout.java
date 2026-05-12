@@ -50,9 +50,9 @@ public class SearchLayout extends HorizontalLayout {
         this.textField.setMaxLength(SearchExecutionSupport.MAX_QUERY_LENGTH);
         this.textField.addValueChangeListener(listener);
 
-        this.textField.addKeyPressListener(Key.ENTER, _ -> this.executeSearch());
+        this.textField.addKeyPressListener(Key.ENTER, ignore -> this.executeSearch());
 
-        this.button = new SearchButton(_ -> this.executeSearch(), tooltipText);
+        this.button = new SearchButton(ignore -> this.executeSearch(), tooltipText);
 
         this.add(this.textField, this.button);
     }

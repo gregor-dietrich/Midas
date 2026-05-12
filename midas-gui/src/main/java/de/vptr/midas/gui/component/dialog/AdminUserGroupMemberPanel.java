@@ -81,7 +81,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.userGrid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
                 .setFlexGrow(1);
 
-        this.userGrid.addComponentColumn(user -> new RemoveUserButton(_ -> this.removeUserFromGroup(user)))
+        this.userGrid.addComponentColumn(user -> new RemoveUserButton(ignore -> this.removeUserFromGroup(user)))
                 .setHeader("Actions").setWidth("120px").setFlexGrow(0);
 
         final var addUserLayout = new HorizontalLayout();
@@ -94,7 +94,7 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         this.availableUsersCombo.setWidth("300px");
         this.availableUsersCombo.setPlaceholder("Select a user to add...");
 
-        final var addButton = new Button("Add User", _ -> this.addUserToGroup());
+        final var addButton = new Button("Add User", ignore -> this.addUserToGroup());
         addButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         addUserLayout.add(this.availableUsersCombo, addButton);
@@ -102,8 +102,8 @@ public class AdminUserGroupMemberPanel extends FormDialog {
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
 
-        final var refreshButton = new RefreshButton(_ -> this.loadGroupUsers());
-        final var closeButton = new Button("Close", _ -> this.close());
+        final var refreshButton = new RefreshButton(ignore -> this.loadGroupUsers());
+        final var closeButton = new Button("Close", ignore -> this.close());
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         buttonLayout.add(refreshButton, closeButton);

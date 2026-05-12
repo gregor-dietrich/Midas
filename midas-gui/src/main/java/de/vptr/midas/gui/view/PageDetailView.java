@@ -61,7 +61,7 @@ public class PageDetailView extends AbstractAsyncDataView implements BeforeEnter
         this.removeAll();
 
         final var backButton =
-                new Button("← Back to Pages", _ -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
+                new Button("← Back to Pages", ignore -> this.getUI().ifPresent(ui -> ui.navigate(PageView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.add(backButton);

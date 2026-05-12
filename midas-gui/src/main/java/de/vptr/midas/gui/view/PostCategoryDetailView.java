@@ -109,7 +109,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
         this.removeAll();
 
         final var backButton = new Button("← Back to Categories",
-                _ -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
+                ignore -> this.getUI().ifPresent(ui -> ui.navigate(PostCategoryView.class)));
         backButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
         this.header = new H2(Objects.requireNonNull(this.category).getName());
@@ -125,7 +125,7 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
 
         this.postGrid.addComponentColumn(post -> {
             final var titleButton = new Button(post.getTitle(),
-                    _ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+                    ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
             titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);

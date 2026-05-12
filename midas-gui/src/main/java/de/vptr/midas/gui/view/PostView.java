@@ -101,10 +101,10 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.categoryFilter.setItemLabelGenerator(PostCategoryResponseDto::getName);
         this.categoryFilter.setClearButtonVisible(true);
         this.categoryFilter.setWidth("200px");
-        this.categoryFilter.addValueChangeListener(_ -> this.loadPostsAsync());
+        this.categoryFilter.addValueChangeListener(ignore -> this.loadPostsAsync());
 
         // Date range filter
-        final var dateFilterLayout = new DateFilterLayout(_ -> this.loadPostsAsync());
+        final var dateFilterLayout = new DateFilterLayout(ignore -> this.loadPostsAsync());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -174,7 +174,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         card.add(title, metaLayout, excerpt);
 
         // Navigate to detail view on click
-        card.addClickListener(_ -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+        card.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
 
         return card;
     }
