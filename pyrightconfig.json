@@ -1,6 +1,0 @@
-{
-  "include": ["midas-test/src", "midas-test/tests", "midas-test/main.py"],
-  "pythonVersion": "3.13",
-  "typeCheckingMode": "standard",
-  "extraPaths": ["./midas-test/src"]
-}

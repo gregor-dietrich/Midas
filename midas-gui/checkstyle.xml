@@ -84,6 +84,22 @@
       <property name="message"
         value="Use *f methods (infof, debugf, etc.) with printf-style %s placeholders instead of *v MessageFormat-style methods." />
     </module>
+    <!-- Ban @SuppressWarnings("PMD") -->
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+        value="@SuppressWarnings\s*\(\s*&quot;PMD&quot;\s*\)" />
+      <property name="ignoreComments" value="false" />
+      <property name="message"
+        value="@SuppressWarnings(&quot;PMD&quot;) is banned - refactor the code to eliminate PMD warnings properly." />
+    </module>
+    <!-- Ban @SuppressWarnings("PMD.UnusedImports") -->
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+        value="@SuppressWarnings\s*\(\s*&quot;PMD\.UnusedImports&quot;\s*\)" />
+      <property name="ignoreComments" value="false" />
+      <property name="message"
+        value="@SuppressWarnings(&quot;PMD.UnusedImports&quot;) is banned - refactor the code to eliminate unused imports properly." />
+    </module>
     <!-- Ban @SuppressWarnings("PMD.DuplicatedCode") - fix duplication properly instead -->
     <module name="RegexpSinglelineJava">
       <property name="format"
