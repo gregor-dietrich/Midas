@@ -27,8 +27,9 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 - `make install`: Run `mvn clean install -DskipTests` for both modules.
 - `make build`: Verify environment, package applications, and build Docker images.
 - `make clean`: Clean Maven artifacts and build directories.
-- `make test`: Run the full test suite for both modules (requires Docker for API tests).
-- `make lint`: Run all code quality checks (Spotless, Checkstyle, SpotBugs, PMD, CPD).
+- `make format`: Run Spotless to format code for both modules.
+- `make lint`: Run quality gate plugins for both modules.
+- `make test`: Run full Maven test suite for both modules (requires Docker for API tests).
 - `make dev-api`: Start the backend API in Quarkus Dev Mode (port 8080).
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
 - `make kill`: Terminate all Quarkus/Maven processes and clean up Docker containers.

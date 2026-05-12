@@ -14,13 +14,13 @@ echo "Starting lint checks..."
 lint_module() {
     local module_dir="$1"
     local module_name="$2"
-    
+
     echo "=== Linting $module_name ==="
     cd "$PROJECT_ROOT/$module_dir"
-    
-    ${MVN_CMD} -q compile test-compile spotless:apply checkstyle:check spotbugs:check pmd:check pmd:cpd-check -Drevision="${REVISION}"
+
+    ${MVN_CMD} -q verify -DskipTests -Drevision="${REVISION}"
     echo
-    
+
     cd - > /dev/null
 }
 

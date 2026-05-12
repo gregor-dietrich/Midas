@@ -65,14 +65,17 @@ make branch       # create or reset a git branch from a source (prompts for name
 make build        # make check, mvn package, docker buildx (both modules)
 make check        # verify local environment (both modules)
 make clean        # run mvn clean, and remove build artifacts (both modules)
+make coverage     # run tests with JaCoCo and generate combined coverage report
 make dev          # start Quarkus in dev mode (specify: make dev-api or make dev-gui)
+make format       # run spotless to format code (both modules)
 make install      # make check, mvn clean install -DskipTests (both modules)
 make kill         # stop/kill Quarkus and Maven processes and remove Docker containers
+make lint         # run quality gate plugins (both modules)
 make password     # generate a salt+hash for a password (for API init.sql)
 make rebase       # interactive git rebase against a target (defaults to origin/main)
-make release      # (deprecated - will show error)
+make release      # pull from origin/main, make build, make tag, and push Docker images
 make tag          # create, sign and push a new git tag (auto-increments latest tag suggestion)
-make test         # execute the Maven test suite (both modules)
+make test         # run full Maven test suite (both modules)
 make untag        # delete a local and remote git tag (prompts for tag to delete)
 ```
 
