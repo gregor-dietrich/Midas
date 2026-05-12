@@ -1,95 +1,163 @@
 # Issues
 
-## (WIP) User Accounts (API & GUI)
+## 1. Profile Management & Security Hardening
 
-- profile info, account settings, privacy settings
-- it should allow the current user to edit their own profile information
-  - it should not allow user rank assignment
-  - it should include password change functionality
-  - add avatar/profile picture management
+**Goal:** Implement comprehensive user profile management and upgrade core security primitives (Hashing, Throttling).
 
-## ULIDs as Primary/Foreign Keys (API)
+### Sub-Task: Upgrade to Bcrypt & Remove Salt Column
 
-**Goal:** remove sequential IDs from external surfaces; use ULIDs to reduce enumeration risk.
+- **API Change:** Replace PBKDF2 with Bcrypt in `PasswordHashingService`.
 
-**Plan:**
+```java
+// midas-api/.../security/PasswordHashingService.java
+@ApplicationScoped
+public class PasswordHashingService {
+    public String hashPassword(String password) {
+        return BcryptUtil.bcryptHash(password);
+    }
+    public boolean verifyPassword(String password, String hash) {
+        return BcryptUtil.matches(password, hash);
+    }
+}
+```
 
-1. Inventory every entity/resource exposing numeric IDs in API routes, DTOs, and GUI URLs.
-2. Add immutable `publicId` ULID column per entity (unique + indexed). Keep current numeric PK/FK internal during migration.
-3. Create DB migration to add columns and indexes, backfill ULIDs for existing rows, then enforce `NOT NULL`.
-4. Update API contracts to accept/return ULIDs only (path params, request/response DTOs, service lookups by `publicId`).
-5. Update GUI routing and REST clients to use ULIDs end-to-end.
-6. Add ULID validation + tests for CRUD and authorization flows using ULID identifiers.
-7. Roll out in two steps: compatibility window (dual-read), then remove numeric-ID access from controllers/DTOs.
+- **Entity Change:** Remove `String salt` from `UserEntity`.
+- **Database:** Update `init.sql` to remove `salt` column and update default hashes (e.g., admin:admin -> `$2a$10$8K1p/v87C.YmG.D.y.X.9.M.V.W.X.Y.Z`).
 
-**Done when:**
+### Sub-Task: Password Change Endpoint
 
-- No external endpoint exposes numeric IDs.
-- All existing records have unique non-null ULIDs.
-- Clients and docs fully switched to ULIDs.
-- SpotBugs, CheckStyle and all Maven Tests passing for api and gui.
+- **API:** Implement `POST /api/v1/users/me/password`.
+- **Validation:** Add `@Size(min = 8)` and complexity checks to `PasswordChangeDto`.
+- **GUI:** Add "Change Password" dialog to `UserDetailView`.
 
-## Encrypt-at-Rest (API)
+### Sub-Task: Login Throttling (Exponential Backoff)
 
-**Goal:** encrypt PII at rest with file-backed key management.
-
-**Plan:**
-
-1. Classify sensitive fields across entities (starting with `UserEntity.email`, `UserEntity.lastIp`) and record lookup requirements (display-only vs searchable).
-   - Note: lastIp should be removed permanently anyway.
-2. Implement field encryption using AES-256-GCM with random IV per value and versioned ciphertext envelope.
-3. Add blind-index/hash companion columns for fields requiring equality search.
-4. Introduce key management via `MIDAS_ENCRYPTION_KEY_FILE`:
-   - load key from file on startup
-   - generate and persist key if missing
-   - enforce restrictive file permissions
-5. Add shared crypto service + entity converters/mappers so encryption/decryption is centralized and plaintext is never logged.
-6. Add migrations to create encrypted/blind-index columns, backfill legacy plaintext, and remove plaintext columns after cutover.
-7. Update `application.properties` with sensible local default key path and `docker-compose.yml` with env var + persistent volume mount.
-8. Add unit/integration tests for crypto behavior, startup key generation, CRUD, and searchable encrypted fields.
-
-**Done when:**
-
-- Target PII fields are stored encrypted at rest.
-- App starts with existing key or generates one when absent.
-- Compose/dev setup persists key material via mounted volume.
-- SpotBugs, CheckStyle and all Maven Tests passing for api and gui.
+- **API:** Implement `LoginAttemptService` to track failures by IP/Username.
+- **Logic:** `long delay = 1L << (attempts - 5);` (start slowing down after 5 failures).
+- **Integration:** Call `loginAttemptService.recordFailure(username, ip)` in `AuthResource`.
 
 ---
 
-## Code Review Findings — Security, Bugs, Performance, Architecture
+## 2. ULIDs as Public Keys
 
-## Cross-Module Consistency & Architecture
+**Goal:** Replace sequential IDs in all external APIs and URLs with ULIDs.
 
-### X-CONS-02: PasswordChangeDto exists but no endpoint/feature
+### Sub-Task: Infrastructure Implementation
 
-- **Issue:** `PasswordChangeDto` exists in API but no GUI client or endpoint uses it.
-- **Fix:** Implement the full password-change flow: API endpoint (`POST /api/v1/users/me/password`), GUI REST client method, GUI service method, GUI view/dialog for password change.
-- **Review instruction:** Ensure the new endpoint follows existing patterns: `@Authenticated`, `@RolesAllowed`, `@Valid` DTO, service-layer validation, response via `ResponseUtil`.
+- **API:** Add `UlidUtil` and `BaseEntity`.
 
-### New Feature: Password Change (API + GUI)
+```java
+// midas-api/.../entity/BaseEntity.java
+@MappedSuperclass
+public abstract class BaseEntity extends PanacheEntityBase {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
-**Goal:** Allow authenticated users to change their own password.
+    @Column(name = "public_id", nullable = false, unique = true, length = 26, updatable = false)
+    public String publicId;
 
-**API Plan:**
+    @PrePersist
+    public void generatePublicId() {
+        if (this.publicId == null) this.publicId = UlidCreator.getUlid().toString();
+    }
+}
+```
 
-1. Add `POST /api/v1/users/me/password` to `UserResource` (or new `MeResource`).
-2. Consume `@Valid PasswordChangeDto`.
-3. Verify `currentPassword` matches stored hash via `PasswordHashingService`.
-4. Validate `newPassword` meets complexity rules (reuse existing validation if any, or add `@Size(min = 8)`).
-5. Hash new password with new random salt via `PasswordHashingService`.
-6. Update `UserEntity.password` and `UserEntity.salt`.
-7. Return `204 No Content` on success, `401` if current password wrong, `422` if validation fails.
-8. Add tests: `UserResourceTest` and `UserServiceTest`.
+### Sub-Task: Migration & DTO Update
 
-**GUI Plan:**
-
-1. Add `changePassword` method to `UserClient` REST client.
-2. Add `changePassword` method to `UserService` with standard exception handling.
-3. Add "Change Password" button/dialog to `UserDetailView` or `AdminUserDialog`.
-4. On success, show notification and optionally force re-login.
-5. Add tests for the service method and dialog.
-
-**Review instruction:** Ensure password change does not store plaintext, uses the same PBKDF2-SHA256 params as registration, and invalidates existing sessions if the backend supports it.
+- **DB:** Migration to add `public_id`, backfill existing rows, add `UNIQUE INDEX`.
+- **DTOs:** All Response DTOs must use `publicId` (String) instead of `id` (Long).
+- **Resources:** Update `@Path("/{id}")` to `@Path("/{publicId}")` and use `find("publicId", publicId).firstResult()`.
 
 ---
+
+## 3. Encrypt-at-Rest
+
+**Goal:** Protect PII (Email) at rest using AES-256-GCM.
+
+### Sub-Task: Crypto Infrastructure
+
+- **API:** Implement `EncryptionKeyManager` (file-backed) and `EncryptionService`.
+- **Envelope Format:** `1|base64(iv)|base64(ciphertext+tag)`.
+- **Converter:**
+
+```java
+@Converter
+public class EncryptedStringConverter implements AttributeConverter<String, String> {
+    @Override
+    public String convertToDatabaseColumn(String attr) {
+        return CDI.current().select(EncryptionService.class).get().encrypt(attr);
+    }
+    // ... decrypt on convertToEntityAttribute
+}
+```
+
+### Sub-Task: User Entity Email Encryption
+
+- **Entity:** Annotate `UserEntity.email` with `@Convert(converter = EncryptedStringConverter.class)`.
+- **Blind Index:** Add `email_blind_index` for searchable lookups.
+- **Repository:** Update `UserRepository.findByEmail(email)` to use `generateBlindIndex(email)`.
+
+---
+
+## 4. Resilience & Timeouts in Clients
+
+**Goal:** Centralize fault tolerance in the REST client layer.
+
+### Sub-Task: Client Refactoring
+
+- **GUI:** Move `@Retry` and `@Timeout` from `Service` classes to `Client` interfaces.
+
+```java
+@RegisterRestClient(configKey = "user-api")
+public interface UserClient {
+    @GET
+    @Path("/{publicId}")
+    @Retry(maxRetries = 3)
+    @Timeout(2000)
+    UserResponseDto getUser(@PathParam("publicId") String publicId);
+}
+```
+
+- **Config:** Define timeouts in `application.properties`:
+  `quarkus.rest-client."user-api".connect-timeout=2000`
+
+---
+
+## 5. UI/UX Enhancements & Real-time Updates
+
+**Goal:** Modernize the GUI with glassmorphism and real-time push.
+
+### Sub-Task: GlassAccentBar Component
+
+- **GUI:** Create `GlassAccentBar.java` (Div with gradient top border).
+- **Style:** Use absolute positioning and `var(--lumo-primary-color)`.
+
+### Sub-Task: Real-time via Vaadin Push
+
+- **GUI:** Add `@Push` to `AppConfig`.
+- **Flow:** API fires CDI Event -> GUI `Broadcaster` -> `UI.access()` to update Grid/Comments.
+
+---
+
+## 6. Admin Improvements & Bug Fixes
+
+**Goal:** Fix layout and filtering bugs in Admin views.
+
+### Sub-Task: Date Range Filtering Fix
+
+- **API:** Ensure `Resource` methods handle invalid date strings by returning `400 Bad Request` or empty result, never the full dataset.
+- **GUI:** Update `AdminCommentView` to validate date pickers before calling the service.
+
+### Sub-Task: Sidebar Responsiveness
+
+- **GUI:** Fix CSS for `AdminLayout` to ensure the sidebar occupies 100% height and content scrolls independently.
+
+---
+
+## Best Practice Mandates
+
+1. **API-Side Auth:** Never trust the GUI for permissions. Always use `@RolesAllowed` on every API endpoint.
+2. **Re-verification:** The API should re-fetch user status from DB on sensitive operations (e.g., `isBanned`, `rank`).
+3. **No Plaintext:** Never log PII or passwords. Scrub DTOs before logging.
+4. **Quality Gates:** Every task is incomplete until `make lint test` passes for both `midas-api` and `midas-gui`.
