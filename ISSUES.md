@@ -128,7 +128,7 @@ public interface UserClient {
 
 **Goal:** Modernize the GUI with glassmorphism and real-time push.
 
-### Sub-Task: GlassAccentBar Component
+- [x] **Sub-Task: GlassAccentBar Component**
 
 - **GUI:** Create `GlassAccentBar.java` (Div with gradient top border).
 - **Style:** Use absolute positioning and `var(--lumo-primary-color)`.
