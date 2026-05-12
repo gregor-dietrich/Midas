@@ -4,25 +4,14 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import org.jboss.logging.Logger;
-
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.ValidationException;
 
 import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
-import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserRankService;
-import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
@@ -30,52 +19,30 @@ import jakarta.annotation.Nullable;
  * Dialog for creating and editing user ranks in the admin view. Encapsulates form fields, binder, permission
  * checkboxes, and save/cancel logic.
  */
+@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
-public class AdminUserRankDialog extends FormDialog {
-
-    private static final Logger LOG = Logger.getLogger(AdminUserRankDialog.class);
+public class AdminUserRankDialog extends AbstractAdminEntityDialogBase<UserRankDto> {
 
     private final transient UserRankService rankService;
-    private final Runnable onSave;
-    private final Runnable onAuthFailure;
-
-    @Nullable
-    private Binder<UserRankDto> binder;
-    @Nullable
-    private transient UserRankDto currentRank;
 
     /** Initializes AdminUserRankDialog. */
     public AdminUserRankDialog(final UserRankService rankService, final Runnable onSave, final Runnable onAuthFailure) {
-        super();
+        super(onSave, onAuthFailure);
         this.rankService = rankService;
-        this.onSave = onSave;
-        this.onAuthFailure = onAuthFailure;
     }
 
     /** Opens the dialog for creating or editing a rank. */
     public void open(@Nullable final UserRankResponseDto rank) {
         this.removeAll();
-        this.currentRank = rank != null ? rank.toUserRankDto() : new UserRankDto();
+        this.currentBean = rank != null ? rank.toUserRankDto() : new UserRankDto();
         this.binder = new Binder<>(UserRankDto.class);
 
-        final var title = new H3(rank != null ? "Edit Rank" : "Create Rank");
-
-        final var form = new FormLayout();
-        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
-
-        final var nameField = new TextField("Name");
-        nameField.setRequired(true);
-        nameField.setMaxLength(255);
-        nameField.setInvalid(false);
-
-        this.binder.forField(nameField)
-                .withValidator(value -> value != null && !value.trim().isEmpty(), "Name is required")
-                .bind(UserRankDto::getName, UserRankDto::setName);
+        final var form = this.createResponsiveFormLayout();
+        final var nameField = this.createAndBindRequiredNameField(UserRankDto::getName, UserRankDto::setName);
 
         form.add(nameField);
 
-        // View permissions
         final var adminViewField = new Checkbox("Admin View");
         this.bindCheckbox(adminViewField, UserRankDto::isAdminView, UserRankDto::setAdminView);
 
@@ -122,25 +89,7 @@ public class AdminUserRankDialog extends FormDialog {
         form.getStyle().set("overflow-y", "auto");
         form.setMaxHeight("400px");
 
-        final var buttonLayout = new HorizontalLayout();
-        buttonLayout.setSpacing(true);
-
-        final var saveButton = new Button("Save", ignore -> this.saveRank());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        final var cancelButton = new Button("Cancel", ignore -> this.close());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
-        buttonLayout.add(saveButton, cancelButton);
-
-        final var dialogLayout = new VerticalLayout(title, form, buttonLayout);
-        dialogLayout.setSpacing(true);
-        dialogLayout.setPadding(false);
-        dialogLayout.setSizeFull();
-
-        this.add(dialogLayout);
-        this.binder.readBean(this.currentRank);
-        super.open();
+        this.initDialogLayout(rank != null ? "Edit Rank" : "Create Rank", form);
     }
 
     private void addPermissionSection(final FormLayout form, final String sectionTitle, final String addLabel,
@@ -168,39 +117,10 @@ public class AdminUserRankDialog extends FormDialog {
         }, setter::accept);
     }
 
-    private void saveRank() {
-        try {
-            final var b = Objects.requireNonNull(this.binder);
-            final var r = Objects.requireNonNull(this.currentRank);
-
-            if (!b.validate().isOk()) {
-                NotificationUtil.showError("Please check the form for errors");
-                return;
-            }
-
-            b.writeBean(r);
-
-            if (r.getId() == null) {
-                this.rankService.createRank(r);
-                NotificationUtil.showSuccess("Rank created successfully");
-            } else {
-                this.rankService.updateRank(r);
-                NotificationUtil.showSuccess("Rank updated successfully");
-            }
-
-            this.close();
-            this.onSave.run();
-
-        } catch (final ValidationException e) {
-            NotificationUtil.showError("Please check the form for errors");
-        } catch (final AuthenticationException e) {
-            NotificationUtil.showError("Session expired. Please log in again.");
-            this.onAuthFailure.run();
-        } catch (final ServiceException e) {
-            NotificationUtil.showError(e, "Saving rank failed. Please try again.");
-        } catch (final RuntimeException e) {
-            LOG.error("Unexpected error saving rank", e);
-            NotificationUtil.showError("Unexpected error occurred");
-        }
+    @Override
+    protected void handleSave() {
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        this.executeSaveWorkflow(isNew, "Rank created successfully", "Rank updated successfully",
+                this.rankService::createRank, this.rankService::updateRank, "Rank");
     }
 }

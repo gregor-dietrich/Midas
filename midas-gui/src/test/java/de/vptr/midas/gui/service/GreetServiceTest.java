@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,14 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.exception.AuthenticationException;
-import jakarta.inject.Inject;
 
 @SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class GreetServiceTest {
 
-    @RestClient
-    @Inject
     @Mock
     AuthClient authClient;
 

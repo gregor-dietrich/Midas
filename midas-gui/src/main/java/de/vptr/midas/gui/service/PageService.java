@@ -63,18 +63,8 @@ public class PageService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.getPage(id, authHeader);
-        }, this.authService, LOG, "getting page " + id, response -> {
-            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                final var page = ServiceHelper.readEntity(response, PageResponseDto.class, "page response");
-                LOG.infof("Successfully retrieved page: %s", page.getTitle());
-                return Optional.of(page);
-            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                LOG.debugf("Page %s not found", id);
-                return Optional.empty();
-            } else {
-                throw ServiceHelper.backendError(response);
-            }
-        });
+        }, this.authService, LOG, "getting page " + id, response -> ServiceHelper.readOptionalEntity(response,
+                PageResponseDto.class, dto -> dto, "page response"));
     }
 
     /** Creates a new page. */
@@ -83,16 +73,9 @@ public class PageService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.createPage(page, authHeader);
-        }, this.authService, LOG, "creating page", "Failed to create page", response -> {
-            if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
-                final var responseDto =
-                        ServiceHelper.readEntity(response, PageResponseDto.class, "created page response");
-                final var createdPage = responseDto.toPageDto();
-                LOG.infof("Successfully created page: %s", createdPage.getTitle());
-                return createdPage;
-            }
-            throw ServiceHelper.responseFailure("Failed to create page", response);
-        });
+        }, this.authService, LOG, "creating page", "Failed to create page",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, PageResponseDto.class,
+                        PageResponseDto::toPageDto, "created page response", "Failed to create page"));
     }
 
     /** Updates the page. */
@@ -101,16 +84,9 @@ public class PageService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
             return this.pageClient.updatePage(page.getId(), page, authHeader);
-        }, this.authService, LOG, "updating page " + page.getId(), "Failed to update page", response -> {
-            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                final var responseDto =
-                        ServiceHelper.readEntity(response, PageResponseDto.class, "updated page response");
-                final var updatedPage = responseDto.toPageDto();
-                LOG.infof("Successfully updated page: %s", updatedPage.getTitle());
-                return updatedPage;
-            }
-            throw ServiceHelper.responseFailure("Failed to update page", response);
-        });
+        }, this.authService, LOG, "updating page " + page.getId(), "Failed to update page",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PageResponseDto.class,
+                        PageResponseDto::toPageDto, "updated page response", "Failed to update page"));
     }
 
     /** Handles the delete page operation. */

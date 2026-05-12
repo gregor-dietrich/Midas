@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,7 +12,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -26,8 +24,6 @@ import jakarta.ws.rs.core.Response;
 @ExtendWith(MockitoExtension.class)
 class HealthServiceTest {
 
-    @RestClient
-    @Inject
     @Mock
     BackendHealthClient backendHealthClient;
 

@@ -1,0 +1,101 @@
+package de.vptr.midas.gui.view;
+
+import java.util.List;
+import java.util.Objects;
+
+import org.jboss.logging.Logger;
+
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
+
+import de.vptr.midas.gui.dto.PostCategoryResponseDto;
+import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.service.AuthService;
+import de.vptr.midas.gui.service.PostCategoryService;
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
+/** Base view for post category hierarchies shared between normal and admin views. */
+public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView implements BeforeEnterObserver {
+
+    private static final Logger LOG = Logger.getLogger(AbstractPostCategoryBaseView.class);
+
+    @Inject
+    protected transient PostCategoryService categoryService;
+
+    @Inject
+    protected transient AuthService authService;
+
+    @Nullable
+    protected TreeGrid<PostCategoryResponseDto> treeGrid;
+    @Nullable
+    protected List<PostCategoryResponseDto> allCategories;
+
+    protected AbstractPostCategoryBaseView() {
+        this.setSizeFull();
+        this.setPadding(true);
+        this.setSpacing(true);
+    }
+
+    @Override
+    public void beforeEnter(final BeforeEnterEvent event) {
+        try {
+            if (!this.authService.isAuthenticated()) {
+                event.forwardTo(LoginView.class);
+                return;
+            }
+        } catch (final AuthenticationException e) {
+            LOG.debugf("Authentication required: %s", e.getMessage());
+            event.forwardTo(LoginView.class);
+            return;
+        }
+
+        this.buildUi();
+        this.loadCategoriesAsync();
+    }
+
+    protected abstract void buildUi();
+
+    protected void initBaseTreeGrid() {
+        this.treeGrid = new TreeGrid<>(PostCategoryResponseDto.class);
+        this.treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        this.treeGrid.setSizeFull();
+        this.treeGrid.removeAllColumns();
+    }
+
+    protected void loadCategoriesAsync() {
+        LOG.info("Starting async category loading");
+
+        this.loadDataAsync(() -> this.categoryService.getAllCategories(), categories -> {
+            LOG.infof("Successfully loaded %s categories", categories.size());
+            this.allCategories = categories;
+            this.updateTreeGrid();
+        });
+    }
+
+    protected void updateTreeGrid() {
+        if (this.allCategories == null) {
+            return;
+        }
+        final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
+
+        final var tg = Objects.requireNonNull(this.treeGrid);
+        tg.setItems(rootCategories, this::getChildrenOfCategory);
+        tg.expandRecursively(rootCategories, this.getDefaultExpansionDepth());
+    }
+
+    protected int getDefaultExpansionDepth() {
+        return 1;
+    }
+
+    protected List<PostCategoryResponseDto> getChildrenOfCategory(final PostCategoryResponseDto parent) {
+        if (this.allCategories == null) {
+            return List.of();
+        }
+        return this.allCategories.stream()
+                .filter(category -> category.getParentId() != null && category.getParentId().equals(parent.getId()))
+                .toList();
+    }
+}

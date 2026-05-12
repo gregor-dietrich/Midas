@@ -12,7 +12,6 @@ public abstract class AbstractPostCommentDto {
         // Default constructor
     }
 
-
     @JsonProperty("id")
     private Long id;
 
@@ -35,7 +34,6 @@ public abstract class AbstractPostCommentDto {
     private LocalDateTime created;
 
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
-
 
     public Long getId() {
         return this.id;

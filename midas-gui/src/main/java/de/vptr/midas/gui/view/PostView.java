@@ -27,6 +27,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
+import de.vptr.midas.gui.util.PostUiUtil;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
@@ -140,31 +141,8 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         title.getStyle().set("color", "var(--lumo-primary-text-color)");
 
         // Metadata row: author | date | category | comments
-        final var metaLayout = new HorizontalLayout();
-        metaLayout.setSpacing(true);
-        metaLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
-        metaLayout.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        final var metaLayout = PostUiUtil.createPostMetadataLayout(post, DATE_FORMATTER, false, true, "");
         metaLayout.getStyle().set("margin-top", "var(--lumo-space-xs)");
-
-        if (post.getUsername() != null) {
-            metaLayout.add(new Span("By " + post.getUsername()));
-        }
-
-        if (post.getCreated() != null) {
-            metaLayout.add(new Span(post.getCreated().format(DATE_FORMATTER)));
-        }
-
-        if (post.getCategoryName() != null) {
-            final var categoryBadge = new Span(post.getCategoryName());
-            categoryBadge.getStyle().set("background", "var(--lumo-primary-color-10pct)");
-            categoryBadge.getStyle().set("border-radius", "var(--lumo-border-radius-s)");
-            categoryBadge.getStyle().set("padding", "2px 8px");
-            metaLayout.add(categoryBadge);
-        }
-
-        if (post.getCommentsCount() != null && post.getCommentsCount() > 0) {
-            metaLayout.add(new Span(post.getCommentsCount() + " comments"));
-        }
 
         // Excerpt
         final var excerpt = new Span(this.createExcerpt(post.getContent()));

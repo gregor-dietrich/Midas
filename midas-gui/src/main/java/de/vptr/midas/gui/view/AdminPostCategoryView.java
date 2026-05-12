@@ -7,14 +7,10 @@ import java.util.stream.Collectors;
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.function.ValueProvider;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.component.button.CreateButton;
@@ -26,117 +22,37 @@ import de.vptr.midas.gui.component.layout.SearchLayout;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
-import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** AdminPostCategoryView view. */
 @Route(value = "admin/categories", layout = AdminMainLayout.class)
-public class AdminPostCategoryView extends AbstractAsyncDataView implements BeforeEnterObserver {
+public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
 
     private static final Logger LOG = Logger.getLogger(AdminPostCategoryView.class);
 
-    @Inject
-    transient PostCategoryService categoryService;
-
-    @Inject
-    transient AuthService authService;
-
-    @Nullable
-    private TreeGrid<PostCategoryResponseDto> treeGrid;
     @Nullable
     private TextField searchField;
     @Nullable
     private Button searchButton;
-    @Nullable
-    private List<PostCategoryResponseDto> allCategories;
 
     @Nullable
     private AdminPostCategoryDialog categoryDialog;
 
-    /** Initializes AdminPostCategoryView. */
-    public AdminPostCategoryView() {
-        this.setSizeFull();
-        this.setPadding(true);
-        this.setSpacing(true);
+    @Override
+    protected int getDefaultExpansionDepth() {
+        return 2;
     }
 
     @Override
-    public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
-            event.forwardTo(LoginView.class);
-            return;
-        }
-
-        this.buildUi();
-        this.loadCategoriesAsync();
-    }
-
-    private void loadCategoriesAsync() {
-        LOG.info("Starting async category loading");
-
-        this.loadDataAsync(() -> this.categoryService.getAllCategories(), categories -> {
-            LOG.infof("Successfully loaded %s categories", categories.size());
-            this.allCategories = categories;
-            this.updateTreeGrid();
-        });
-    }
-
-    private void updateTreeGrid() {
-        if (this.allCategories == null) {
-            return;
-        }
-        // Find root categories (categories without parent)
-        final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
-
-        final var tg = Objects.requireNonNull(this.treeGrid);
-        tg.setItems(rootCategories, this::getChildrenOfCategory);
-        tg.expandRecursively(rootCategories, 2); // Expand up to 2 levels
-    }
-
-    private void updateSearchTreeGrid(final List<PostCategoryResponseDto> searchResults) {
-        // For search results, we want to show all matching categories
-        // If a matching category has a parent that's not in the search results,
-        // we show it as a top-level item for better visibility
-
-        // Get all category IDs that exist in the search results
-        final var categoryIdsInResults =
-                searchResults.stream().map(PostCategoryResponseDto::getId).collect(Collectors.toSet());
-
-        // Find categories to show at the top level:
-        // 1. Root categories (no parent)
-        // 2. Categories whose parent is not in the search results (orphaned in this
-        // context)
-        final var topLevelCategories = searchResults.stream()
-                .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId())).toList();
-
-        final var tg = Objects.requireNonNull(this.treeGrid);
-        tg.setItems(topLevelCategories, category -> searchResults.stream()
-                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId())).toList());
-
-        // Expand all search results for better visibility
-        tg.expandRecursively(topLevelCategories, 10);
-    }
-
-    private List<PostCategoryResponseDto> getChildrenOfCategory(final PostCategoryResponseDto parent) {
-        if (this.allCategories == null) {
-            return List.of();
-        }
-        return this.allCategories.stream()
-                .filter(category -> category.getParentId() != null && category.getParentId().equals(parent.getId()))
-                .toList();
-    }
-
-    private void buildUi() {
+    protected void buildUi() {
         this.removeAll();
 
         final var header = new H2("Post Categories");
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
-        this.createTreeGrid();
+        this.createTreeGridColumns();
         this.categoryDialog = new AdminPostCategoryDialog(this.categoryService, this::loadCategoriesAsync,
                 () -> this.getUI().ifPresent(ui -> ui.navigate(LoginView.class)));
 
@@ -168,28 +84,23 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         return layout;
     }
 
-    private void createTreeGrid() {
-        this.treeGrid = new TreeGrid<>(PostCategoryResponseDto.class);
-        this.treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.treeGrid.setSizeFull();
-        this.treeGrid.removeAllColumns();
+    private void createTreeGridColumns() {
+        this.initBaseTreeGrid();
+        final var tg = Objects.requireNonNull(this.treeGrid);
 
-        // Configure columns
-        this.treeGrid.addHierarchyColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getName)
+        tg.addHierarchyColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getName)
                 .setHeader("Category Name").setFlexGrow(3);
 
-        this.treeGrid.addColumn(category -> category.getParentName() != null ? category.getParentName() : "N/A")
+        tg.addColumn(category -> category.getParentName() != null ? category.getParentName() : "N/A")
                 .setHeader("Parent").setFlexGrow(2);
 
-        this.treeGrid.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getChildrenCount)
+        tg.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getChildrenCount)
                 .setHeader("Children").setFlexGrow(1);
 
-        this.treeGrid.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getPostsCount)
+        tg.addColumn((ValueProvider<PostCategoryResponseDto, ?>) PostCategoryResponseDto::getPostsCount)
                 .setHeader("Posts").setFlexGrow(1);
 
-        // Add action column
-        this.treeGrid.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px")
-                .setFlexGrow(0);
+        tg.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
     }
 
     private HorizontalLayout createActionButtons(final PostCategoryResponseDto category) {
@@ -208,7 +119,6 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
         if (this.allCategories == null) {
             return;
         }
-        // Check if category has children
         final boolean hasChildren = this.allCategories.stream()
                 .anyMatch(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId()));
 
@@ -253,5 +163,19 @@ public class AdminPostCategoryView extends AbstractAsyncDataView implements Befo
             sb.setEnabled(true);
             MidasErrorHandler.handleInUiContext(throwable);
         });
+    }
+
+    private void updateSearchTreeGrid(final List<PostCategoryResponseDto> searchResults) {
+        final var categoryIdsInResults =
+                searchResults.stream().map(PostCategoryResponseDto::getId).collect(Collectors.toSet());
+
+        final var topLevelCategories = searchResults.stream()
+                .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId())).toList();
+
+        final var tg = Objects.requireNonNull(this.treeGrid);
+        tg.setItems(topLevelCategories, category -> searchResults.stream()
+                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId())).toList());
+
+        tg.expandRecursively(topLevelCategories, 10);
     }
 }

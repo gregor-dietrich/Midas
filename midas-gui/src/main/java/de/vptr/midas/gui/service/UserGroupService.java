@@ -53,16 +53,8 @@ public class UserGroupService {
         LOG.debugf("Fetching group with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(id, authHeader), this.authService, LOG,
-                "fetching group " + id, response -> {
-                    if (response.getStatus() == 200) {
-                        return Optional
-                                .of(ServiceHelper.readEntity(response, UserGroupResponseDto.class, "group response"));
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                "fetching group " + id, response -> ServiceHelper.readOptionalEntity(response,
+                        UserGroupResponseDto.class, dto -> dto, "group response"));
     }
 
     /** Returns the users in group. */
@@ -90,14 +82,9 @@ public class UserGroupService {
         LOG.debugf("Creating new group: %s", group.getName());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.createGroup(group, authHeader),
-                this.authService, LOG, "creating group", "Failed to create group", response -> {
-                    if (response.getStatus() == 201) {
-                        final UserGroupResponseDto responseDto = ServiceHelper.readEntity(response,
-                                UserGroupResponseDto.class, "created group response");
-                        return responseDto.toUserGroupDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to create group", response);
-                });
+                this.authService, LOG, "creating group", "Failed to create group",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, UserGroupResponseDto.class,
+                        UserGroupResponseDto::toUserGroupDto, "created group response", "Failed to create group"));
     }
 
     /** Updates the group. */
@@ -105,14 +92,9 @@ public class UserGroupService {
         LOG.debugf("Updating group: %s", group.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.groupClient.updateGroup(group.getId(), group, authHeader),
-                this.authService, LOG, "updating group " + group.getId(), "Failed to update group", response -> {
-                    if (response.getStatus() == 200) {
-                        final UserGroupResponseDto responseDto = ServiceHelper.readEntity(response,
-                                UserGroupResponseDto.class, "updated group response");
-                        return responseDto.toUserGroupDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update group", response);
-                });
+                this.authService, LOG, "updating group " + group.getId(), "Failed to update group",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserGroupResponseDto.class,
+                        UserGroupResponseDto::toUserGroupDto, "updated group response", "Failed to update group"));
     }
 
     /** Handles the delete group operation. */

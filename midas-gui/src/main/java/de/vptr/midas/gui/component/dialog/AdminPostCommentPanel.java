@@ -1,130 +1,64 @@
 package de.vptr.midas.gui.component.dialog;
 
-import org.jboss.logging.Logger;
-
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.ValidationException;
 
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
-import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-/**
- * Dialog for adding comments to posts in the admin view. Encapsulates the comment form, binder, and save logic.
- */
+/** Dialog for adding comments to posts in the admin view. */
 @SuppressWarnings("NullAway")
-@SuppressFBWarnings(value = { "EI_EXPOSE_REP2", "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" },
+@SuppressFBWarnings(value = "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
         justification = "Fields initialized lazily in open(), not constructor")
-public class AdminPostCommentPanel extends FormDialog {
+public class AdminPostCommentPanel extends AbstractPostCommentDialogBase {
 
-    private static final Logger LOG = Logger.getLogger(AdminPostCommentPanel.class);
-
-    private final transient PostCommentService postCommentService;
-    private final Runnable onAuthFailure;
-
-    private Binder<PostCommentDto> binder;
-    private transient PostCommentDto currentComment;
     private transient PostResponseDto selectedPost;
 
-    /** Initializes AdminPostCommentPanel. */
+    /** Creates a new AdminPostCommentPanel. */
     public AdminPostCommentPanel(final PostCommentService postCommentService, final Runnable onAuthFailure) {
-        super();
-        this.postCommentService = postCommentService;
-        this.onAuthFailure = onAuthFailure;
+        super(postCommentService, null, onAuthFailure);
     }
 
-    /** Opens the dialog. */
+    /** Opens the dialog for the selected post. */
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",
             justification = "Post reference intentionally stored for use in save operation")
     public void open(final PostResponseDto post) {
         this.selectedPost = post;
-        this.removeAll();
         this.currentComment = new PostCommentDto();
-        this.binder = new Binder<>(PostCommentDto.class);
+        this.initLayout("Add Comment to: " + post.getTitle(), "Post Comment", "Write your comment here...");
+    }
 
-        final var title = new H3("Add Comment to: " + post.getTitle());
+    @Override
+    protected String getContentLabel() {
+        return "Comment";
+    }
 
-        final var form = new FormLayout();
-        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
-
-        final var contentField = new TextArea("Comment");
-        contentField.setRequired(true);
-        contentField.setWidthFull();
-        contentField.setHeight("200px");
-        contentField.setMaxLength(5000);
-        contentField.setPlaceholder("Write your comment here...");
-        contentField.setInvalid(false);
-
+    @Override
+    protected void configureBinding(final TextArea contentField) {
         this.binder.forField(contentField)
                 .withValidator(value -> value != null && !value.trim().isEmpty(), "Comment is required")
                 .bind(PostCommentDto::getContent, PostCommentDto::setContent);
-
-        form.add(contentField);
-
-        final var buttonLayout = new HorizontalLayout();
-        buttonLayout.setSpacing(true);
-
-        final var saveButton = new Button("Post Comment", ignore -> this.saveComment());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        final var cancelButton = new Button("Cancel", ignore -> this.close());
-        cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-
-        buttonLayout.add(saveButton, cancelButton);
-
-        final var dialogLayout = new VerticalLayout(title, form, buttonLayout);
-        dialogLayout.setSpacing(true);
-        dialogLayout.setPadding(false);
-        dialogLayout.setSizeFull();
-
-        this.add(dialogLayout);
-        this.binder.readBean(this.currentComment);
-        super.open();
     }
 
-    private void saveComment() {
-        try {
-            if (!this.binder.validate().isOk()) {
-                NotificationUtil.showError("Please check the form for errors");
-                return;
-            }
+    @Override
+    protected void performSave() {
+        this.currentComment.setPostId(this.selectedPost.getId());
+        this.currentComment.setPostTitle(this.selectedPost.getTitle());
 
-            this.binder.writeBean(this.currentComment);
+        this.commentService.createComment(this.currentComment);
+        NotificationUtil.showSuccess("Comment added successfully");
+    }
 
-            this.currentComment.setPostId(this.selectedPost.getId());
-            this.currentComment.setPostTitle(this.selectedPost.getTitle());
-
-            this.postCommentService.createComment(this.currentComment);
-            NotificationUtil.showSuccess("Comment added successfully");
-
-            this.close();
-
-        } catch (final ValidationException e) {
-            NotificationUtil.showError("Please check the form for errors");
-        } catch (final AuthenticationException e) {
-            NotificationUtil.showError("Session expired. Please log in again.");
-            this.onAuthFailure.run();
-        } catch (final ServiceException e) {
-            final String errorMessage = e.getMessage();
-            if (errorMessage != null && errorMessage.contains("Bad Request")) {
-                NotificationUtil.showError("Post is not commentable");
-            } else {
-                NotificationUtil.showError(e, "Saving comment failed. Please try again.");
-            }
-        } catch (final RuntimeException e) {
-            LOG.error("Unexpected error saving comment", e);
-            NotificationUtil.showError("Unexpected error occurred");
+    @Override
+    protected void handleServiceException(final ServiceException e, final String entityName) {
+        final String errorMessage = e.getMessage();
+        if (errorMessage != null && errorMessage.contains("Bad Request")) {
+            NotificationUtil.showError("Post is not commentable");
+        } else {
+            super.handleServiceException(e, entityName);
         }
     }
 }

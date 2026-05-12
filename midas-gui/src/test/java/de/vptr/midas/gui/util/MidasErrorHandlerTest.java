@@ -7,7 +7,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,53 +16,20 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.server.Command;
 import com.vaadin.flow.server.ErrorEvent;
 import com.vaadin.flow.server.ErrorHandler;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.view.AbstractUiTestBase;
 import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
 import jakarta.ws.rs.ProcessingException;
 
-@ExtendWith(MockitoExtension.class)
-class MidasErrorHandlerTest {
-
-    private UI ui;
-    private MockedStatic<UI> uiMock;
-    private MockedStatic<NotificationUtil> notificationMock;
-
-    @BeforeEach
-    void setUp() {
-        this.ui = mock(UI.class);
-        // ui.access() runs the command immediately for testing
-        lenient().doAnswer(invocation -> {
-            final Command command = invocation.getArgument(0);
-            command.execute();
-            return null;
-        }).when(this.ui).access(any(Command.class));
-
-        this.uiMock = mockStatic(UI.class);
-        this.uiMock.when(UI::getCurrent).thenReturn(this.ui);
-
-        this.notificationMock = mockStatic(NotificationUtil.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.uiMock.close();
-        this.notificationMock.close();
-    }
+class MidasErrorHandlerTest extends AbstractUiTestBase {
 
     @Test
     void handle_shouldNavigateToLogin_whenAuthenticationException() {

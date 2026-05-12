@@ -211,7 +211,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             this.filterPayments(query.trim());
         }, "Search by comment or recipient...", "Search Payments");
 
-        final var dateFilterLayout = new DateFilterLayout(ignore -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -224,12 +224,12 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var sendButton = new CreateButton(ignore -> this.openPaymentDialog(null, false), "Send Payment");
-        final var receiveButton = new CreateButton(ignore -> this.openPaymentDialog(null, true), "Receive Payment");
+        final var sendButton = new CreateButton(e -> this.openPaymentDialog(null, false), "Send Payment");
+        final var receiveButton = new CreateButton(e -> this.openPaymentDialog(null, true), "Receive Payment");
         receiveButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         final var refreshButton =
-                new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), ignore -> this.loadPaymentsAndBalance());
+                new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), e -> this.loadPaymentsAndBalance());
         refreshButton.setTooltipText("Refresh Data");
 
         layout.add(sendButton, receiveButton, refreshButton);
@@ -271,7 +271,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         this.grid.addComponentColumn(payment -> {
             final var editButton = new Button(LineAwesomeIcon.EDIT.create(),
-                    ignore -> this.openPaymentDialog(payment.toPaymentDto(), false));
+                    e -> this.openPaymentDialog(payment.toPaymentDto(), false));
             editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return editButton;
         }).setHeader("Actions").setWidth("100px").setFlexGrow(0);
@@ -370,9 +370,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         form.add(sourceAccountField, targetAccountField, amountField, dateField, commentField);
 
         final var buttonLayout = new HorizontalLayout();
-        final var saveButton = new Button("Save", ignore -> this.savePayment());
+        final var saveButton = new Button("Save", e -> this.savePayment());
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        final var cancelButton = new Button("Cancel", ignore -> pd.close());
+        final var cancelButton = new Button("Cancel", e -> pd.close());
         cancelButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         buttonLayout.add(saveButton, cancelButton);
 
@@ -451,6 +451,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     /** Handles account data loading errors. */
+    @SuppressWarnings("PatternMatchingInstanceof")
     void handleAccountDataLoadError(final CompletionException e, final UI ui) {
         final var cause = MidasErrorHandler.unwrapAsyncThrowable(e);
         if (cause instanceof AuthenticationException) {

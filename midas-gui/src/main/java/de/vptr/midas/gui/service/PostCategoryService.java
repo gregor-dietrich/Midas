@@ -63,16 +63,8 @@ public class PostCategoryService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
             return this.categoryClient.getCategory(id, authHeader);
-        }, this.authService, LOG, "fetching category " + id, response -> {
-            if (response.getStatus() == 200) {
-                return Optional
-                        .of(ServiceHelper.readEntity(response, PostCategoryResponseDto.class, "category response"));
-            } else if (response.getStatus() == 404) {
-                return Optional.empty();
-            } else {
-                throw ServiceHelper.backendError(response);
-            }
-        });
+        }, this.authService, LOG, "fetching category " + id, response -> ServiceHelper.readOptionalEntity(response,
+                PostCategoryResponseDto.class, dto -> dto, "category response"));
     }
 
     /** Returns the categories by parent. */
@@ -97,14 +89,9 @@ public class PostCategoryService {
             }
 
             return this.categoryClient.createCategory(category, authHeader);
-        }, this.authService, LOG, "creating category", "Failed to create category", response -> {
-            if (response.getStatus() == 201) {
-                final PostCategoryResponseDto responseDto =
-                        ServiceHelper.readEntity(response, PostCategoryResponseDto.class, "created category response");
-                return this.fromApiResponse(responseDto);
-            }
-            throw ServiceHelper.responseFailure("Failed to create category", response);
-        });
+        }, this.authService, LOG, "creating category", "Failed to create category",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, PostCategoryResponseDto.class,
+                        this::fromApiResponse, "created category response", "Failed to create category"));
     }
 
     /** Updates the category. */
@@ -118,14 +105,9 @@ public class PostCategoryService {
             }
 
             return this.categoryClient.updateCategory(category.getId(), category, authHeader);
-        }, this.authService, LOG, "updating category " + category.getId(), "Failed to update category", response -> {
-            if (response.getStatus() == 200) {
-                final PostCategoryResponseDto responseDto =
-                        ServiceHelper.readEntity(response, PostCategoryResponseDto.class, "updated category response");
-                return this.fromApiResponse(responseDto);
-            }
-            throw ServiceHelper.responseFailure("Failed to update category", response);
-        });
+        }, this.authService, LOG, "updating category " + category.getId(), "Failed to update category",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostCategoryResponseDto.class,
+                        this::fromApiResponse, "updated category response", "Failed to update category"));
     }
 
     /** Handles the delete category operation. */

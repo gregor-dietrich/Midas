@@ -1,7 +1,5 @@
 package de.vptr.midas.gui.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDateTime;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**

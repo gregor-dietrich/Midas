@@ -2,7 +2,6 @@ package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -10,36 +9,24 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.UserRankClient;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
-@ExtendWith(MockitoExtension.class)
 @SuppressWarnings("PMD.LinguisticNaming")
-class UserRankServiceTest {
+class UserRankServiceTest extends AbstractSessionServiceTestBase {
 
-    @RestClient
-    @Inject
     @Mock
     UserRankClient userRankClient;
 
@@ -51,21 +38,6 @@ class UserRankServiceTest {
 
     @InjectMocks
     UserRankService userRankService;
-
-    private VaadinSession vaadinSession;
-    private MockedStatic<VaadinSession> vaadinSessionMock;
-
-    @BeforeEach
-    void setUp() {
-        this.vaadinSession = Mockito.mock(VaadinSession.class);
-        this.vaadinSessionMock = mockStatic(VaadinSession.class);
-        this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(this.vaadinSession);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.vaadinSessionMock.close();
-    }
 
     @Test
     void getAllRanks_shouldReturnRankList_whenAuthenticationProvided() {

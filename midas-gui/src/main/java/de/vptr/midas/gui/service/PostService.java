@@ -80,15 +80,8 @@ public class PostService {
         LOG.debugf("Fetching post with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.getPost(id, authHeader), this.authService, LOG,
-                "fetching post " + id, response -> {
-                    if (response.getStatus() == 200) {
-                        return Optional.of(ServiceHelper.readEntity(response, PostResponseDto.class, "post response"));
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                "fetching post " + id, response -> ServiceHelper.readOptionalEntity(response, PostResponseDto.class,
+                        dto -> dto, "post response"));
     }
 
     /** Returns the posts by user. */
@@ -116,12 +109,9 @@ public class PostService {
         LOG.debugf("Creating new post: %s", post.getTitle());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.createPost(post, authHeader), this.authService,
-                LOG, "creating post", "Failed to create post", response -> {
-                    if (response.getStatus() == 201) {
-                        return ServiceHelper.readEntity(response, PostDto.class, "created post response");
-                    }
-                    throw ServiceHelper.responseFailure("Failed to create post", response);
-                });
+                LOG, "creating post", "Failed to create post",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, PostDto.class, dto -> dto,
+                        "created post response", "Failed to create post"));
     }
 
     /** Updates the post. */
@@ -129,12 +119,9 @@ public class PostService {
         LOG.debugf("Updating post: %s", post.getId());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(post.getId(), post, authHeader),
-                this.authService, LOG, "updating post " + post.getId(), "Failed to update post", response -> {
-                    if (response.getStatus() == 200) {
-                        return ServiceHelper.readEntity(response, PostDto.class, "updated post response");
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update post", response);
-                });
+                this.authService, LOG, "updating post " + post.getId(), "Failed to update post",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostDto.class, dto -> dto,
+                        "updated post response", "Failed to update post"));
     }
 
     /** Handles the delete post operation. */

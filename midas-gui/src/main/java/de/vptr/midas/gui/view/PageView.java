@@ -7,7 +7,6 @@ import org.jboss.logging.Logger;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
@@ -82,15 +81,10 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.grid.setPageSize(20);
 
         // Clickable title column that navigates to detail view
-        this.grid.addComponentColumn(page -> {
-            final var titleSpan = new Span(page.getTitle());
-            titleSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
-            titleSpan.getStyle().set("cursor", "pointer");
-            titleSpan.getStyle().set("width", "100%");
-            titleSpan.getStyle().set("display", "block");
-            titleSpan.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId())));
-            return titleSpan;
-        }).setHeader("Title").setFlexGrow(1);
+        this.grid
+                .addComponentColumn(page -> this.createClickableSpan(page.getTitle(),
+                        ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId()))))
+                .setHeader("Title").setFlexGrow(1);
 
         // Content preview column (first 100 chars)
         this.grid.addColumn(page -> {

@@ -11,14 +11,10 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
-import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
@@ -28,8 +24,7 @@ import jakarta.inject.Inject;
 
 /** Detail view for a single post category. */
 @Route(value = "categories", layout = MainLayout.class)
-public class PostCategoryDetailView extends AbstractAsyncDataView
-        implements BeforeEnterObserver, HasUrlParameter<String> {
+public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
 
     private static final Logger LOG = Logger.getLogger(PostCategoryDetailView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -40,11 +35,6 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
     @Inject
     transient PostService postService;
 
-    @Inject
-    transient AuthService authService;
-
-    @Nullable
-    private String identifier;
     @Nullable
     private Grid<PostResponseDto> postGrid;
     @Nullable
@@ -54,23 +44,11 @@ public class PostCategoryDetailView extends AbstractAsyncDataView
 
     /** Initializes PostCategoryDetailView. */
     public PostCategoryDetailView() {
-        this.setSizeFull();
-        this.setPadding(true);
-        this.setSpacing(true);
+        super();
     }
 
     @Override
-    public void setParameter(final BeforeEvent event, final String parameter) {
-        this.identifier = parameter;
-    }
-
-    @Override
-    public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
-            event.forwardTo(LoginView.class);
-            return;
-        }
-
+    protected void onBeforeEnterAuthenticated(final BeforeEnterEvent event) {
         if (this.identifier != null) {
             this.resolveCategoryAsync(this.identifier);
         }

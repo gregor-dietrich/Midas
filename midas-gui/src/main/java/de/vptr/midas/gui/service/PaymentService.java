@@ -54,17 +54,8 @@ public class PaymentService {
         LOG.debugf("Fetching payment with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.getPayment(id, authHeader), this.authService,
-                LOG, "fetching payment " + id, response -> {
-                    if (response.getStatus() == 200) {
-                        final PaymentResponseDto responseDto =
-                                ServiceHelper.readEntity(response, PaymentResponseDto.class, "payment response");
-                        return Optional.of(responseDto.toPaymentDto());
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                LOG, "fetching payment " + id, response -> ServiceHelper.readOptionalEntity(response,
+                        PaymentResponseDto.class, PaymentResponseDto::toPaymentDto, "payment response"));
     }
 
     /** Returns the payments by user. */
@@ -145,14 +136,9 @@ public class PaymentService {
         LOG.debugf("Creating new payment: %s", payment);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.createPayment(payment, authHeader),
-                this.authService, LOG, "creating payment", "Failed to create payment", response -> {
-                    if (response.getStatus() == 201) {
-                        final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,
-                                PaymentResponseDto.class, "created payment response");
-                        return responseDto.toPaymentDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to create payment", response);
-                });
+                this.authService, LOG, "creating payment", "Failed to create payment",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, PaymentResponseDto.class,
+                        PaymentResponseDto::toPaymentDto, "created payment response", "Failed to create payment"));
     }
 
     /** Updates the payment. */
@@ -161,14 +147,9 @@ public class PaymentService {
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var paymentId = Objects.requireNonNull(payment.getId(), "Payment ID must not be null for update");
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.updatePayment(paymentId, payment, authHeader),
-                this.authService, LOG, "updating payment " + payment.getId(), "Failed to update payment", response -> {
-                    if (response.getStatus() == 200) {
-                        final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,
-                                PaymentResponseDto.class, "updated payment response");
-                        return responseDto.toPaymentDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update payment", response);
-                });
+                this.authService, LOG, "updating payment " + payment.getId(), "Failed to update payment",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PaymentResponseDto.class,
+                        PaymentResponseDto::toPaymentDto, "updated payment response", "Failed to update payment"));
     }
 
     /** Handles the delete payment operation. */

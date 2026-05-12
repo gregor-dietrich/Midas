@@ -15,24 +15,20 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.BeforeEvent;
-import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
-import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
+import de.vptr.midas.gui.util.PostUiUtil;
 import jakarta.inject.Inject;
 
 /** PostDetailView view. */
 @Route(value = "posts", layout = MainLayout.class)
-public class PostDetailView extends AbstractAsyncDataView implements HasUrlParameter<String>, BeforeEnterObserver {
+public class PostDetailView extends AbstractAuthenticatedParameterView {
 
     private static final Logger LOG = Logger.getLogger(PostDetailView.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm");
@@ -43,31 +39,13 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
     @Inject
     transient PostCommentService postCommentService;
 
-    @Inject
-    transient AuthService authService;
-
-    @Nullable
-    private String identifier;
-
     /** Initializes PostDetailView. */
     public PostDetailView() {
-        this.setSizeFull();
-        this.setPadding(true);
-        this.setSpacing(true);
+        super();
     }
 
     @Override
-    public void setParameter(final BeforeEvent event, final String parameter) {
-        this.identifier = parameter;
-    }
-
-    @Override
-    public void beforeEnter(final BeforeEnterEvent event) {
-        if (!this.authService.isAuthenticated()) {
-            event.forwardTo(LoginView.class);
-            return;
-        }
-
+    protected void onBeforeEnterAuthenticated(final BeforeEnterEvent event) {
         if (this.identifier == null || this.identifier.trim().isEmpty()) {
             NotificationUtil.showError("Invalid post identifier");
             event.forwardTo(PostView.class);
@@ -125,30 +103,7 @@ public class PostDetailView extends AbstractAsyncDataView implements HasUrlParam
         title.getStyle().set("margin-bottom", "0");
 
         // Metadata
-        final var metaLayout = new HorizontalLayout();
-        metaLayout.setSpacing(true);
-        metaLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
-        metaLayout.getStyle().set("color", "var(--lumo-secondary-text-color)");
-
-        if (post.getUsername() != null) {
-            metaLayout.add(new Span("By " + post.getUsername()));
-        }
-
-        if (post.getCreated() != null) {
-            metaLayout.add(new Span("Published " + post.getCreated().format(DATE_FORMATTER)));
-        }
-
-        if (post.getLastEdit() != null && !post.getLastEdit().equals(post.getCreated())) {
-            metaLayout.add(new Span("(edited " + post.getLastEdit().format(DATE_FORMATTER) + ")"));
-        }
-
-        if (post.getCategoryName() != null) {
-            final var categoryBadge = new Span(post.getCategoryName());
-            categoryBadge.getStyle().set("background", "var(--lumo-primary-color-10pct)");
-            categoryBadge.getStyle().set("border-radius", "var(--lumo-border-radius-s)");
-            categoryBadge.getStyle().set("padding", "2px 8px");
-            metaLayout.add(categoryBadge);
-        }
+        final var metaLayout = PostUiUtil.createPostMetadataLayout(post, DATE_FORMATTER, true, false, "Published ");
 
         // Full content
         final var contentDiv = new Div();

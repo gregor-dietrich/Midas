@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.util;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -122,8 +123,8 @@ public final class ServiceHelper {
      *            handler that inspects and parses the response
      * @return the value produced by {@code responseHandler}
      */
-    public static <T> T executeWithResponse(final Supplier<Response> action, final AuthService authService,
-            final Logger log, final String operation, final Function<Response, T> responseHandler) {
+    public static <R> R executeWithResponse(final Supplier<Response> action, final AuthService authService,
+            final Logger log, final String operation, final Function<Response, R> responseHandler) {
         return executeWithResponse(action, authService, log, operation, null, responseHandler);
     }
 
@@ -145,9 +146,9 @@ public final class ServiceHelper {
      *            handler that inspects and parses the response
      * @return the value produced by {@code responseHandler}
      */
-    public static <T> T executeWithResponse(final Supplier<Response> action, final AuthService authService,
+    public static <R> R executeWithResponse(final Supplier<Response> action, final AuthService authService,
             final Logger log, final String operation, @Nullable final String failurePrefix,
-            final Function<Response, T> responseHandler) {
+            final Function<Response, R> responseHandler) {
         return execute(() -> {
             try (Response response = action.get()) {
                 handleUnauthorizedResponse(response, authService);
@@ -167,7 +168,7 @@ public final class ServiceHelper {
      *            short payload description for diagnostics
      * @return parsed entity
      */
-    public static <T> T readEntity(final Response response, final Class<T> entityType,
+    public static <E> E readEntity(final Response response, final Class<E> entityType,
             final String payloadDescription) {
         try {
             return response.readEntity(entityType);
@@ -187,7 +188,7 @@ public final class ServiceHelper {
      *            short payload description for diagnostics
      * @return parsed entity
      */
-    public static <T> T readEntity(final Response response, final GenericType<T> entityType,
+    public static <E> E readEntity(final Response response, final GenericType<E> entityType,
             final String payloadDescription) {
         try {
             return response.readEntity(entityType);
@@ -251,6 +252,97 @@ public final class ServiceHelper {
             return new ServiceException(message);
         }
         return new ServiceException(message, cause);
+    }
+
+    /**
+     * Reads an optional entity from a response, returning empty if status is 404, or parsing if 200. Throws
+     * ServiceException if status is anything else.
+     *
+     * @param response
+     *            response containing the entity
+     * @param entityType
+     *            target entity type
+     * @param payloadDescription
+     *            short payload description
+     * @return optional parsed entity
+     */
+    public static <O> Optional<O> readOptionalEntity(final Response response, final Class<O> entityType,
+            final String payloadDescription) {
+        return readOptionalEntity(response, entityType, Function.identity(), payloadDescription);
+    }
+
+    /**
+     * Reads an optional entity from a response, returning empty if status is 404, or parsing if 200. Throws
+     * ServiceException if status is anything else.
+     *
+     * @param response
+     *            response containing the entity
+     * @param entityType
+     *            target entity type
+     * @param mapper
+     *            function to map parsed entity to DTO
+     * @param payloadDescription
+     *            short payload description
+     * @return optional mapped DTO
+     */
+    public static <R, T> Optional<T> readOptionalEntity(final Response response, final Class<R> entityType,
+            final Function<R, T> mapper, final String payloadDescription) {
+        if (response.getStatus() == 200) {
+            final R responseDto = readEntity(response, entityType, payloadDescription);
+            return Optional.of(mapper.apply(responseDto));
+        } else if (response.getStatus() == 404) {
+            return Optional.empty();
+        } else {
+            throw backendError(response);
+        }
+    }
+
+    /**
+     * Reads an entity from a response if it matches the expected status code, translating errors otherwise.
+     *
+     * @param response
+     *            response containing the entity
+     * @param expectedStatus
+     *            expected HTTP status code (e.g. 200 or 201)
+     * @param entityType
+     *            target entity type
+     * @param payloadDescription
+     *            short payload description
+     * @param failurePrefix
+     *            message prefix on unexpected status
+     * @return parsed entity
+     */
+    public static <S> S readExpectedStatusEntity(final Response response, final int expectedStatus,
+            final Class<S> entityType, final String payloadDescription, final String failurePrefix) {
+        return readExpectedStatusEntity(response, expectedStatus, entityType, Function.identity(), payloadDescription,
+                failurePrefix);
+    }
+
+    /**
+     * Reads an entity from a response if it matches the expected status code, translating errors otherwise.
+     *
+     * @param response
+     *            response containing the entity
+     * @param expectedStatus
+     *            expected HTTP status code (e.g. 200 or 201)
+     * @param entityType
+     *            target entity type
+     * @param mapper
+     *            function to map parsed entity to DTO
+     * @param payloadDescription
+     *            short payload description
+     * @param failurePrefix
+     *            message prefix on unexpected status
+     * @return mapped DTO
+     */
+    public static <R, T> T readExpectedStatusEntity(final Response response, final int expectedStatus,
+            final Class<R> entityType, final Function<R, T> mapper, final String payloadDescription,
+            final String failurePrefix) {
+        if (response.getStatus() == expectedStatus) {
+            final R responseDto = readEntity(response, entityType, payloadDescription);
+            return mapper.apply(responseDto);
+        }
+        throw responseFailure(failurePrefix, response);
     }
 
     private static RuntimeException translateWebApplicationException(final WebApplicationException exception,

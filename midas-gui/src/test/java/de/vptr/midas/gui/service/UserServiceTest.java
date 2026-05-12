@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,15 +28,12 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert" })
 class UserServiceTest {
 
-    @RestClient
-    @Inject
     @Mock
     UserClient userClient;
 

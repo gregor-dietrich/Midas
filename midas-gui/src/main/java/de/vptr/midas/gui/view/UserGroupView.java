@@ -82,8 +82,8 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         this.searchLayout =
                 new AsyncSearchLayout(this::searchGroups, this::loadGroupsAsync, "Search by name...", "Search Groups");
 
-        this.createMyGroupsGrid();
-        this.createOtherGroupsGrid();
+        this.myGroupsGrid = this.createConfiguredGrid("400px");
+        this.otherGroupsGrid = this.createConfiguredGrid(null);
 
         final var myGroupsHeader = new H3("My Groups");
         final var otherGroupsHeader = new H3("Other Groups");
@@ -92,13 +92,17 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
                 Objects.requireNonNull(this.otherGroupsGrid));
     }
 
-    private void createMyGroupsGrid() {
-        this.myGroupsGrid = new Grid<>(UserGroupResponseDto.class, false);
-        this.myGroupsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.myGroupsGrid.setWidthFull();
-        this.myGroupsGrid.setHeight("400px");
+    private Grid<UserGroupResponseDto> createConfiguredGrid(@Nullable final String height) {
+        final var grid = new Grid<>(UserGroupResponseDto.class, false);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.setWidthFull();
+        if (height != null) {
+            grid.setHeight(height);
+        } else {
+            grid.setSizeFull();
+        }
 
-        this.myGroupsGrid.addComponentColumn(group -> {
+        grid.addComponentColumn(group -> {
             final var nameSpan = new Span(group.getName());
             nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             nameSpan.getStyle().set("cursor", "pointer");
@@ -108,31 +112,11 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             return nameSpan;
         }).setHeader("Name").setFlexGrow(2).setSortable(true);
 
-        this.myGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
-                .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);
+        grid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0).setHeader("Members")
+                .setWidth("120px").setFlexGrow(0).setSortable(true);
 
-        this.myGroupsGrid.setPageSize(20);
-    }
-
-    private void createOtherGroupsGrid() {
-        this.otherGroupsGrid = new Grid<>(UserGroupResponseDto.class, false);
-        this.otherGroupsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.otherGroupsGrid.setSizeFull();
-
-        this.otherGroupsGrid.addComponentColumn(group -> {
-            final var nameSpan = new Span(group.getName());
-            nameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
-            nameSpan.getStyle().set("cursor", "pointer");
-            nameSpan.getStyle().set("width", "100%");
-            nameSpan.getStyle().set("display", "block");
-            nameSpan.addClickListener(ignore -> this.navigateToGroup(group));
-            return nameSpan;
-        }).setHeader("Name").setFlexGrow(2).setSortable(true);
-
-        this.otherGroupsGrid.addColumn(group -> group.getUserCount() != null ? group.getUserCount() : 0)
-                .setHeader("Members").setWidth("120px").setFlexGrow(0).setSortable(true);
-
-        this.otherGroupsGrid.setPageSize(20);
+        grid.setPageSize(20);
+        return grid;
     }
 
     private void navigateToGroup(final UserGroupResponseDto group) {

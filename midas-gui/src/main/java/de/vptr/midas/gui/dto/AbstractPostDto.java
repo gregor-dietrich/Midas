@@ -5,22 +5,12 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Data transfer object for post. */
-public abstract class AbstractPostDto {
+public abstract class AbstractPostDto extends AbstractTitleContentDto {
 
     @SuppressWarnings("NullAway")
-    public AbstractPostDto() {
-        // Default constructor
+    protected AbstractPostDto() {
+        super();
     }
-
-
-    @JsonProperty("id")
-    private Long id;
-
-    @JsonProperty("title")
-    private String title;
-
-    @JsonProperty("content")
-    private String content;
 
     @JsonProperty("userId")
     private Long userId;
@@ -48,33 +38,6 @@ public abstract class AbstractPostDto {
 
     @JsonProperty("commentsCount")
     private Long commentsCount;
-
-    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
-
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId(final Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setTitle(final String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return this.content;
-    }
-
-    public void setContent(final String content) {
-        this.content = content;
-    }
 
     public Long getUserId() {
         return this.userId;
@@ -147,5 +110,4 @@ public abstract class AbstractPostDto {
     public void setCommentsCount(final Long commentsCount) {
         this.commentsCount = commentsCount;
     }
-
 }

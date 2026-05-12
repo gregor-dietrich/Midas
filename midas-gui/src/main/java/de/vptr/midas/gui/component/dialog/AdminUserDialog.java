@@ -300,7 +300,8 @@ public class AdminUserDialog extends FormDialog {
         }
         boolean hasLetter = false;
         boolean hasDigit = false;
-        for (final char c : password.toCharArray()) {
+        for (int i = 0; i < password.length(); i++) {
+            final char c = password.charAt(i);
             if (Character.isLetter(c)) {
                 hasLetter = true;
             } else if (Character.isDigit(c)) {

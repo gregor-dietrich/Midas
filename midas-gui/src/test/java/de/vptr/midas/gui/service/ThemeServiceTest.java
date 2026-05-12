@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,19 +31,10 @@ class ThemeServiceTest {
     @InjectMocks
     ThemeService themeService;
 
-    @Mock
     private VaadinSession vaadinSession;
-
-    @Mock
     private UI ui;
-
-    @Mock
     private Element element;
-
-    @Mock
     private ThemeList themeList;
-
-    @Mock
     private Page page;
 
     private MockedStatic<VaadinSession> vaadinSessionMock;

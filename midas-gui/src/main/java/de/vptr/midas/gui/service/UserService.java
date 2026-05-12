@@ -4,6 +4,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -18,9 +19,11 @@ import de.vptr.midas.gui.util.ServiceHelper;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 
 /** Service for user operations. */
 @ApplicationScoped
+@SuppressWarnings("PMD")
 public class UserService {
 
     private static final Logger LOG = Logger.getLogger(UserService.class);
@@ -51,16 +54,8 @@ public class UserService {
         LOG.debug("Fetching current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getCurrentUser(authHeader), this.authService,
-                LOG, "fetching current user", response -> {
-                    if (response.getStatus() == 200) {
-                        return Optional
-                                .of(ServiceHelper.readEntity(response, UserResponseDto.class, "current user response"));
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                LOG, "fetching current user",
+                response -> ServiceHelper.readOptionalEntity(response, UserResponseDto.class, "current user response"));
     }
 
     /** Returns the user by id. */
@@ -70,15 +65,8 @@ public class UserService {
         LOG.debugf("Fetching user with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getUser(id, authHeader), this.authService, LOG,
-                "fetching user " + id, response -> {
-                    if (response.getStatus() == 200) {
-                        return Optional.of(ServiceHelper.readEntity(response, UserResponseDto.class, "user response"));
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                "fetching user " + id,
+                response -> ServiceHelper.readOptionalEntity(response, UserResponseDto.class, "user response"));
     }
 
     /** Returns the user by username. */
@@ -88,15 +76,8 @@ public class UserService {
         LOG.debugf("Fetching user with username: %s", username);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getUserByUsername(username, authHeader),
-                this.authService, LOG, "fetching user by username " + username, response -> {
-                    if (response.getStatus() == 200) {
-                        return Optional.of(ServiceHelper.readEntity(response, UserResponseDto.class, "user response"));
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                this.authService, LOG, "fetching user by username " + username,
+                response -> ServiceHelper.readOptionalEntity(response, UserResponseDto.class, "user response"));
     }
 
     /** Creates a new user. */
@@ -104,11 +85,12 @@ public class UserService {
         LOG.debugf("Creating new user: %s", user.getUsername());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.createUser(user, authHeader), this.authService,
-                LOG, "creating user", "Failed to create user", response -> {
-                    if (response.getStatus() == 201) {
-                        return ServiceHelper.readEntity(response, UserResponseDto.class, "created user response");
+                LOG, "creating user", "Failed to create user", new Function<Response, UserResponseDto>() {
+                    @Override
+                    public UserResponseDto apply(final Response response) {
+                        return ServiceHelper.readExpectedStatusEntity(response, 201, UserResponseDto.class,
+                                "created user response", "Failed to create user");
                     }
-                    throw ServiceHelper.responseFailure("Failed to create user", response);
                 });
     }
 
@@ -118,12 +100,9 @@ public class UserService {
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for update");
         return ServiceHelper.executeWithResponse(() -> this.userClient.updateUser(userId, user, authHeader),
-                this.authService, LOG, "updating user " + user.getId(), "Failed to update user", response -> {
-                    if (response.getStatus() == 200) {
-                        return ServiceHelper.readEntity(response, UserResponseDto.class, "updated user response");
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update user", response);
-                });
+                this.authService, LOG, "updating user " + user.getId(), "Failed to update user",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserResponseDto.class,
+                        "updated user response", "Failed to update user"));
     }
 
     /** Updates the user password. */
@@ -133,13 +112,8 @@ public class UserService {
         final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for password update");
         return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(userId, user, authHeader),
                 this.authService, LOG, "updating user password " + user.getId(), "Failed to update user password",
-                response -> {
-                    if (response.getStatus() == 200) {
-                        return ServiceHelper.readEntity(response, UserResponseDto.class,
-                                "updated user password response");
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update user password", response);
-                });
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserResponseDto.class,
+                        "updated user password response", "Failed to update user password"));
     }
 
     /** Handles the delete user operation. */

@@ -3,7 +3,6 @@ package de.vptr.midas.gui.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,29 +13,24 @@ import java.util.Base64;
 
 import org.assertj.core.api.Assertions;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
-@ExtendWith(MockitoExtension.class)
-class AuthServiceTest {
+class AuthServiceTest extends AbstractSessionServiceTestBase {
 
     @RestClient
     @Inject
@@ -51,21 +45,6 @@ class AuthServiceTest {
 
     @InjectMocks
     AuthService authService;
-
-    private VaadinSession vaadinSession;
-    private MockedStatic<VaadinSession> vaadinSessionMock;
-
-    @BeforeEach
-    void setUp() {
-        this.vaadinSession = Mockito.mock(VaadinSession.class);
-        this.vaadinSessionMock = mockStatic(VaadinSession.class);
-        this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(this.vaadinSession);
-    }
-
-    @AfterEach
-    void tearDown() {
-        this.vaadinSessionMock.close();
-    }
 
     @Test
     void authenticate_shouldReturnSuccess_whenCredentialsAreValid() {

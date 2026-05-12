@@ -25,6 +25,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.service.UserGroupService;
 
+@SuppressWarnings("UnnecessaryAssignment")
 class AsyncAuthAlignmentViewTest {
 
     private UI ui;

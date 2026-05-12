@@ -11,7 +11,6 @@ public abstract class AbstractUserRankDto {
         // Default constructor
     }
 
-
     @JsonProperty("id")
     private Long id;
 
@@ -101,10 +100,6 @@ public abstract class AbstractUserRankDto {
 
     @JsonProperty("userRankEdit")
     private Boolean userRankEdit = false;
-
-
-
-
 
     // Getter methods
     public Long getId() {

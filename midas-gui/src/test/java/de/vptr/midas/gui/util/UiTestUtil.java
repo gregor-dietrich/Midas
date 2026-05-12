@@ -7,22 +7,26 @@ import java.util.stream.Stream;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 
+/** Utility class for finding UI components in tests. */
 public final class UiTestUtil {
 
     private UiTestUtil() {
         // Utility class
     }
 
+    /** Finds a button by its text. */
     public static Button findButton(final Component root, final String text) {
         return findComponent(root, Button.class, button -> text.equals(button.getText()));
     }
 
+    /** Finds a component by its type and predicate. */
     public static <T extends Component> T findComponent(final Component root, final Class<T> type,
             final Predicate<T> predicate) {
         return findComponents(root, type).stream().filter(predicate).findFirst()
                 .orElseThrow(() -> new AssertionError("Component not found: " + type.getSimpleName()));
     }
 
+    /** Finds all components of a specific type. */
     @SuppressWarnings("unchecked")
     public static <T extends Component> List<T> findComponents(final Component root, final Class<T> type) {
         final List<T> directMatches =

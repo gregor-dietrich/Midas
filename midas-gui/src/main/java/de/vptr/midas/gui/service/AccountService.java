@@ -64,17 +64,7 @@ public class AccountService {
         LOG.debugf("Fetching account with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccount(id, authHeader), this.authService,
-                LOG, "fetching account " + id, response -> {
-                    if (response.getStatus() == 200) {
-                        final AccountResponseDto responseDto =
-                                ServiceHelper.readEntity(response, AccountResponseDto.class, "account response");
-                        return Optional.of(responseDto.toAccountDto());
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                LOG, "fetching account " + id, AccountService::mapAccountOptionalResponse);
     }
 
     /** Returns the account by name. */
@@ -84,17 +74,7 @@ public class AccountService {
         LOG.debugf("Fetching account with name: %s", name);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountByName(name, authHeader),
-                this.authService, LOG, "fetching account by name " + name, response -> {
-                    if (response.getStatus() == 200) {
-                        final AccountResponseDto responseDto =
-                                ServiceHelper.readEntity(response, AccountResponseDto.class, "account response");
-                        return Optional.of(responseDto.toAccountDto());
-                    } else if (response.getStatus() == 404) {
-                        return Optional.empty();
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                this.authService, LOG, "fetching account by name " + name, AccountService::mapAccountOptionalResponse);
     }
 
     /** Returns the accounts by user. */
@@ -146,14 +126,8 @@ public class AccountService {
         LOG.debugf("Fetching outgoing payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getOutgoingPayments(accountId, authHeader),
-                this.authService, LOG, "fetching outgoing payments for account " + accountId, response -> {
-                    if (response.getStatus() == 200) {
-                        return ServiceHelper.readEntity(response, new GenericType<List<PaymentDto>>() {
-                        }, "outgoing payments response");
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                this.authService, LOG, "fetching outgoing payments for account " + accountId,
+                response -> mapPaymentsListResponse(response, "outgoing payments response"));
     }
 
     /** Returns the incoming payments. */
@@ -163,14 +137,8 @@ public class AccountService {
         LOG.debugf("Fetching incoming payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getIncomingPayments(accountId, authHeader),
-                this.authService, LOG, "fetching incoming payments for account " + accountId, response -> {
-                    if (response.getStatus() == 200) {
-                        return ServiceHelper.readEntity(response, new GenericType<List<PaymentDto>>() {
-                        }, "incoming payments response");
-                    } else {
-                        throw ServiceHelper.backendError(response);
-                    }
-                });
+                this.authService, LOG, "fetching incoming payments for account " + accountId,
+                response -> mapPaymentsListResponse(response, "incoming payments response"));
     }
 
     /** Returns the associated users. */
@@ -188,30 +156,21 @@ public class AccountService {
         LOG.debugf("Creating new account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.createAccount(account, authHeader),
-                this.authService, LOG, "creating account", "Failed to create account", response -> {
-                    if (response.getStatus() == 201) {
-                        final AccountResponseDto responseDto = ServiceHelper.readEntity(response,
-                                AccountResponseDto.class, "created account response");
-                        return responseDto.toAccountDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to create account", response);
-                });
+                this.authService, LOG, "creating account", "Failed to create account",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, AccountResponseDto.class,
+                        AccountResponseDto::toAccountDto, "created account response", "Failed to create account"));
     }
 
     /** Updates the account. */
     public AccountDto updateAccount(final AccountDto account) {
         LOG.debugf("Updating account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(
-                () -> this.accountClient.updateAccount(account.getId(), account, authHeader), this.authService, LOG,
-                "updating account " + account.getId(), "Failed to update account", response -> {
-                    if (response.getStatus() == 200) {
-                        final AccountResponseDto responseDto = ServiceHelper.readEntity(response,
-                                AccountResponseDto.class, "updated account response");
-                        return responseDto.toAccountDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update account", response);
-                });
+        return ServiceHelper
+                .executeWithResponse(() -> this.accountClient.updateAccount(account.getId(), account, authHeader),
+                        this.authService, LOG, "updating account " + account.getId(), "Failed to update account",
+                        response -> ServiceHelper.readExpectedStatusEntity(response, 200, AccountResponseDto.class,
+                                AccountResponseDto::toAccountDto, "updated account response",
+                                "Failed to update account"));
     }
 
     /** Handles the delete account operation. */
@@ -367,13 +326,22 @@ public class AccountService {
         return ServiceHelper.executeWithResponse(
                 () -> this.accountClient.updateMyAccountPayment(accountId, paymentId, payment, authHeader),
                 this.authService, LOG, "updating payment " + paymentId + " for my account " + accountId,
-                "Failed to update payment", response -> {
-                    if (response.getStatus() == 200) {
-                        final PaymentResponseDto responseDto = ServiceHelper.readEntity(response,
-                                PaymentResponseDto.class, "updated payment response");
-                        return responseDto.toPaymentDto();
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update payment", response);
-                });
+                "Failed to update payment",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PaymentResponseDto.class,
+                        PaymentResponseDto::toPaymentDto, "updated payment response", "Failed to update payment"));
+    }
+
+    private static Optional<AccountDto> mapAccountOptionalResponse(final Response response) {
+        return ServiceHelper.readOptionalEntity(response, AccountResponseDto.class, AccountResponseDto::toAccountDto,
+                "account response");
+    }
+
+    private static List<PaymentDto> mapPaymentsListResponse(final Response response, final String entityName) {
+        if (response.getStatus() == 200) {
+            return ServiceHelper.readEntity(response, new GenericType<List<PaymentDto>>() {
+            }, entityName);
+        } else {
+            throw ServiceHelper.backendError(response);
+        }
     }
 }

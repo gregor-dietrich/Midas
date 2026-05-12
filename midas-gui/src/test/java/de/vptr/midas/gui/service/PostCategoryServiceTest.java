@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,14 +23,11 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 @ExtendWith(MockitoExtension.class)
 class PostCategoryServiceTest {
 
-    @RestClient
-    @Inject
     @Mock
     PostCategoryClient categoryClient;
 

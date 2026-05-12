@@ -3,6 +3,7 @@ package de.vptr.midas.gui.view;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import de.vptr.midas.gui.util.MidasErrorHandler;
@@ -42,5 +43,16 @@ public abstract class AbstractAsyncDataView extends VerticalLayout {
     protected <T> void loadDataAsync(final Supplier<T> dataLoader, final Consumer<T> onSuccess,
             final Consumer<Throwable> onError, final int timeoutSeconds) {
         UiAsyncExecutor.execute(dataLoader, onSuccess, onError, timeoutSeconds);
+    }
+
+    /** Creates a styled clickable span for grid cells. */
+    protected Span createClickableSpan(final String text, final Consumer<Span> clickHandler) {
+        final var span = new Span(text != null ? text : "");
+        span.getStyle().set("color", "var(--lumo-primary-text-color)");
+        span.getStyle().set("cursor", "pointer");
+        span.getStyle().set("width", "100%");
+        span.getStyle().set("display", "block");
+        span.addClickListener(ignore -> clickHandler.accept(span));
+        return span;
     }
 }
