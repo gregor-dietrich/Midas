@@ -8,33 +8,24 @@ REVISION=${REVISION:-1.0.0-SNAPSHOT}
 
 set -e
 
-echo "Starting installation..."
+# Run environment check first
+"$DIR/check.sh" "$MODULE"
 
-# Function to install a specific module
-install_module() {
-    local module_dir="$1"
-    local module_name="$2"
-    
-    echo "=== Installing $module_name ==="
-    cd "$PROJECT_ROOT/$module_dir"
-    
-    ${MVN_CMD} -q clean install -DskipTests -Drevision=${REVISION}
-    echo
-    
-    cd - > /dev/null
-}
+echo "Starting install..."
 
 case $MODULE in
     "api")
-        install_module "midas-api" "Midas API"
+        PL_ARG="-pl midas-api"
         ;;
     "gui")
-        install_module "midas-gui" "Midas GUI"
+        PL_ARG="-pl midas-gui"
         ;;
     "both"|*)
-        install_module "midas-api" "Midas API"
-        install_module "midas-gui" "Midas GUI"
+        PL_ARG=""
         ;;
 esac
 
-echo "Installation completed."
+cd "$PROJECT_ROOT"
+${MVN_CMD} -q clean install ${PL_ARG} -DskipTests -Drevision="${REVISION}"
+
+echo "Install completed."

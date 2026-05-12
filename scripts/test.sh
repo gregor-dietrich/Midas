@@ -10,31 +10,26 @@ set -e
 
 echo "Starting tests..."
 
-# Function to test a specific module
-test_module() {
-    local module_dir="$1"
-    local module_name="$2"
-
-    echo "=== Testing $module_name ==="
-    cd "$PROJECT_ROOT/$module_dir"
-
-    ${MVN_CMD} -q verify -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}"
-    echo
-}
-
+# Map module names to Maven project list
 case $MODULE in
     "api")
-        test_module "midas-api" "Midas API"
+        PL_ARG="-pl midas-api"
+        DISPLAY_NAME="Midas API"
         ;;
     "gui")
-        test_module "midas-gui" "Midas GUI"
+        PL_ARG="-pl midas-gui"
+        DISPLAY_NAME="Midas GUI"
         ;;
     "both"|*)
-        test_module "midas-api" "Midas API"
-        test_module "midas-gui" "Midas GUI"
+        PL_ARG=""
+        DISPLAY_NAME="All Modules"
         ;;
 esac
 
-echo "Tests completed."
+echo "=== Testing $DISPLAY_NAME ==="
+cd "$PROJECT_ROOT"
 
-cd "$PROJECT_ROOT" > /dev/null
+# Run Maven from the root using the reactor
+${MVN_CMD} -q verify ${PL_ARG} -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}"
+
+echo "Tests completed."

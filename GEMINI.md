@@ -4,13 +4,10 @@ This project is a modern web application consisting of a REST API backend and a 
 
 ## Project Overview
 
-- **Architecture**: Multi-module architecture with a separate backend and frontend.
+- **Architecture**:
   - **`midas-api`**: Backend REST API service.
   - **`midas-gui`**: Frontend web application using Vaadin Flow.
-- **Backend Tech**: Quarkus, Hibernate ORM with Panache (Active Record), Jakarta REST, Jackson, Hibernate Validator, Bucket4j for rate limiting.
-- **Frontend Tech**: Quarkus, Vaadin 25, MicroProfile REST Client.
-- **Database**: PostgreSQL (managed via Dev Services in development).
-- **Build System**: Maven with a root `Makefile` orchestrating the workflow.
+- **Build System**: Maven (multi-module) with a root `Makefile` orchestrating the workflow. All shared configurations and quality gates are centralized in the root `pom.xml`.
 
 ## Building and Running
 

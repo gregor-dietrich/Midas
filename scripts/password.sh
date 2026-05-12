@@ -12,7 +12,7 @@ echo "Starting password hash generation..."
 case $MODULE in
     "api")
         echo "=== Generating password hash for Midas API ==="
-        cd "$PROJECT_ROOT/midas-api"
+        cd "$PROJECT_ROOT"
 
         # Usage: ./password.sh [password]
         # If a password is provided as the first argument, use it non-interactively.
@@ -31,17 +31,15 @@ case $MODULE in
 
             if [ "$PASS1" != "$PASS2" ]; then
                 echo "Passwords do not match. Aborting." >&2
-                cd - > /dev/null
                 exit 1
             fi
 
             PASSWORD="$PASS1"
         fi
 
-        # Pass the password as the second token after "generate" (the Java CLI expects args[1])
-        ${MVN_CMD} -q -Dexec.mainClass="de.vptr.midas.util.PasswordUtil" -Dexec.args="generate ${PASSWORD}" exec:java
+        # Run from root using exec:java targeting the api module
+        ${MVN_CMD} -q -pl midas-api -Dexec.mainClass="de.vptr.midas.api.util.PasswordUtil" -Dexec.args="generate ${PASSWORD}" exec:java
 
-        cd - > /dev/null
         ;;
     *)
         echo "Usage: $0 api [password]"

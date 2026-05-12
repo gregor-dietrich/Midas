@@ -10,31 +10,26 @@ set -e
 
 echo "Starting lint checks..."
 
-# Function to lint a specific module
-lint_module() {
-    local module_dir="$1"
-    local module_name="$2"
-
-    echo "=== Linting $module_name ==="
-    cd "$PROJECT_ROOT/$module_dir"
-
-    ${MVN_CMD} -q verify -DskipTests -Drevision="${REVISION}"
-    echo
-
-    cd - > /dev/null
-}
-
+# Map module names to Maven project list
 case $MODULE in
     "api")
-        lint_module "midas-api" "Midas API"
+        PL_ARG="-pl midas-api"
+        DISPLAY_NAME="Midas API"
         ;;
     "gui")
-        lint_module "midas-gui" "Midas GUI"
+        PL_ARG="-pl midas-gui"
+        DISPLAY_NAME="Midas GUI"
         ;;
     "both"|*)
-        lint_module "midas-api" "Midas API"
-        lint_module "midas-gui" "Midas GUI"
+        PL_ARG=""
+        DISPLAY_NAME="All Modules"
         ;;
 esac
+
+echo "=== Linting $DISPLAY_NAME ==="
+cd "$PROJECT_ROOT"
+
+# Run Maven from the root using the reactor
+${MVN_CMD} -q verify ${PL_ARG} -DskipTests -Drevision="${REVISION}"
 
 echo "Lint checks completed."

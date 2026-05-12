@@ -25,34 +25,30 @@ echo "Starting coverage report generation..."
 REPORT=".coverage.md"
 maven_status=0
 
-# Function to run tests with coverage for a module
-run_tests() {
-    local module_dir="$1"
-    local module_name="$2"
-
-    echo "=== Running tests with JaCoCo for $module_name ==="
-    cd "$PROJECT_ROOT/$module_dir"
-
-    ${MVN_CMD} -q verify -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}" -Dmaven.test.failure.ignore=true || maven_status=$?
-}
-
+# Map module names to Maven project list and CSV targets
 case $MODULE in
     "api")
-        run_tests "midas-api" "Midas API"
+        PL_ARG="-pl midas-api"
+        DISPLAY_NAME="Midas API"
         CSV_FILES="midas-api/target/site/jacoco/jacoco.csv"
         ;;
     "gui")
-        run_tests "midas-gui" "Midas GUI"
+        PL_ARG="-pl midas-gui"
+        DISPLAY_NAME="Midas GUI"
         CSV_FILES="midas-gui/target/site/jacoco/jacoco.csv"
         ;;
     "both"|*)
-        run_tests "midas-api" "Midas API"
-        run_tests "midas-gui" "Midas GUI"
+        PL_ARG=""
+        DISPLAY_NAME="All Modules"
         CSV_FILES="midas-api/target/site/jacoco/jacoco.csv midas-gui/target/site/jacoco/jacoco.csv"
         ;;
 esac
 
+echo "=== Running tests with JaCoCo for $DISPLAY_NAME ==="
 cd "$PROJECT_ROOT"
+
+# Run Maven from the root using the reactor
+${MVN_CMD} -q verify ${PL_ARG} -Dquarkus.log.console.enabled=false -Dquarkus.log.file.enabled=false -Drevision="${REVISION}" -Dmaven.test.failure.ignore=true || maven_status=$?
 
 echo "Generating combined coverage report..."
 

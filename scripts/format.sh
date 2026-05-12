@@ -8,33 +8,28 @@ REVISION=${REVISION:-1.0.0-SNAPSHOT}
 
 set -e
 
-echo "Formatting Java sources.."
+echo "Formatting Java sources..."
 
-# Function to lint a specific module
-format_module() {
-    local module_dir="$1"
-    local module_name="$2"
-
-    echo "=== Formatting $module_name ==="
-    cd "$PROJECT_ROOT/$module_dir"
-
-    ${MVN_CMD} -q spotless:apply -Drevision="${REVISION}"
-    echo
-
-    cd - > /dev/null
-}
-
+# Map module names to Maven project list
 case $MODULE in
     "api")
-        format_module "midas-api" "Midas API"
+        PL_ARG="-pl midas-api"
+        DISPLAY_NAME="Midas API"
         ;;
     "gui")
-        format_module "midas-gui" "Midas GUI"
+        PL_ARG="-pl midas-gui"
+        DISPLAY_NAME="Midas GUI"
         ;;
     "both"|*)
-        format_module "midas-api" "Midas API"
-        format_module "midas-gui" "Midas GUI"
+        PL_ARG=""
+        DISPLAY_NAME="All Modules"
         ;;
 esac
+
+echo "=== Formatting $DISPLAY_NAME ==="
+cd "$PROJECT_ROOT"
+
+# Run Maven from the root using the reactor
+${MVN_CMD} -q spotless:apply ${PL_ARG} -Drevision="${REVISION}"
 
 echo "Java source formatting completed."
