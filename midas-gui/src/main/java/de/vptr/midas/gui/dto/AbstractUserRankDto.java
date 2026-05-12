@@ -6,9 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public abstract class AbstractUserRankDto {
 
-    @SuppressWarnings("NullAway")
+    // JUSTIFICATION: Constructor is required by NullAway to initialize fields; cannot be omitted.
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public AbstractUserRankDto() {
-        // Default constructor
+        // Default constructor for Jackson deserialization and NullAway compliance
     }
 
     @JsonProperty("id")

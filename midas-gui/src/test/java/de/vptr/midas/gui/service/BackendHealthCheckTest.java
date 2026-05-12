@@ -3,6 +3,8 @@ package de.vptr.midas.gui.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,10 +46,7 @@ class BackendHealthCheckTest {
 
         final var result = this.backendHealthCheck.call();
 
-        assertThat(result.getName()).isEqualTo("midas-api-backend");
-        assertThat(result.getStatus()).isEqualTo(HealthCheckResponse.Status.DOWN);
-        assertThat(result.getData()).isPresent();
-        assertThat(result.getData().get()).containsEntry("status", 503L);
+        assertHealthCheckDown(result, Map.of("status", 503L));
     }
 
     @Test
@@ -56,9 +55,14 @@ class BackendHealthCheckTest {
 
         final var result = this.backendHealthCheck.call();
 
+        assertHealthCheckDown(result, Map.of("error", "Connection refused"));
+    }
+
+    private static void assertHealthCheckDown(final HealthCheckResponse result,
+            final Map<String, Object> expectedData) {
         assertThat(result.getName()).isEqualTo("midas-api-backend");
         assertThat(result.getStatus()).isEqualTo(HealthCheckResponse.Status.DOWN);
         assertThat(result.getData()).isPresent();
-        assertThat(result.getData().get()).containsEntry("error", "Connection refused");
+        expectedData.forEach((key, value) -> assertThat(result.getData().get()).containsEntry(key, value));
     }
 }

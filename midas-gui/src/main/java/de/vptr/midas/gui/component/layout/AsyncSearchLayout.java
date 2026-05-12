@@ -78,18 +78,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
     }
 
     private void executeSearch() {
-        final String query = this.searchExecutionSupport.normalize(this.textField.getValue());
-        if (query == null) {
-            return;
-        }
-
-        if (!query.equals(this.textField.getValue())) {
-            this.textField.setValue(query);
-        }
-
-        if (this.searchExecutionSupport.shouldExecute(query)) {
-            this.searchAction.accept(query);
-        }
+        this.searchExecutionSupport.execute(this.textField.getValue(), this.textField::setValue, this.searchAction);
     }
 
     private void executeClear() {

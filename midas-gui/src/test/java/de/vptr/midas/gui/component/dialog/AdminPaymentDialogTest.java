@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,17 +44,23 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
     @Mock
     UserService userService;
 
+    AdminPaymentDialog dialog;
+    AccountResponseDto sourceAccount;
+    AccountResponseDto targetAccount;
+
+    @BeforeEach
+    void setUpDialog() {
+        this.dialog = new AdminPaymentDialog(this.paymentService, this.userService, this.onSave, this.onAuthFailure);
+        this.sourceAccount = MockDataUtil.createAccountResponseDto(1L, "Source Account");
+        this.targetAccount = MockDataUtil.createAccountResponseDto(2L, "Target Account");
+    }
+
     @Test
     void savePayment_shouldCreatePayment_withValidFields() {
-        final var dialog =
-                new AdminPaymentDialog(this.paymentService, this.userService, this.onSave, this.onAuthFailure);
-        final var sourceAccount = MockDataUtil.createAccountResponseDto(1L, "Source Account");
-        final var targetAccount = MockDataUtil.createAccountResponseDto(2L, "Target Account");
-
         when(this.paymentService.createPayment(any(PaymentDto.class))).thenReturn(new PaymentDto());
 
-        final var currentUser =
-                this.setupAndSubmitPayment(dialog, sourceAccount, targetAccount, "250.00", "Test payment");
+        final var currentUser = this.setupAndSubmitPayment(this.dialog, this.sourceAccount, this.targetAccount,
+                "250.00", "Test payment");
 
         final ArgumentCaptor<PaymentDto> captor = ArgumentCaptor.forClass(PaymentDto.class);
         verify(this.paymentService).createPayment(captor.capture());
@@ -68,15 +75,10 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
 
     @Test
     void savePayment_shouldCallOnAuthFailure_onAuthException() {
-        final var dialog =
-                new AdminPaymentDialog(this.paymentService, this.userService, this.onSave, this.onAuthFailure);
-        final var sourceAccount = MockDataUtil.createAccountResponseDto(1L, "Source Account");
-        final var targetAccount = MockDataUtil.createAccountResponseDto(2L, "Target Account");
-
         when(this.paymentService.createPayment(any(PaymentDto.class)))
                 .thenThrow(new AuthenticationException("Session expired"));
 
-        this.setupAndSubmitPayment(dialog, sourceAccount, targetAccount, "100.00", "Auth test");
+        this.setupAndSubmitPayment(this.dialog, this.sourceAccount, this.targetAccount, "100.00", "Auth test");
 
         this.notificationMock.verify(() -> NotificationUtil.showError("Session expired. Please log in again."));
         verify(this.onAuthFailure).run();

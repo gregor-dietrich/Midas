@@ -8,16 +8,16 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Response DTO for user rank operations. Contains computed fields and safe data for client responses.
  */
 @RegisterForReflection
-@SuppressWarnings("PMD.ExcessivePublicCount")
 public class UserRankResponseDto extends AbstractUserRankDto {
 
     // Computed fields
     @JsonProperty("usersCount")
     private Long usersCount;
 
+    // JUSTIFICATION: Constructor is required by NullAway to initialize fields; cannot be omitted.
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserRankResponseDto() {
-        // Default constructor for Jackson
+        // Default constructor for Jackson deserialization and NullAway compliance
     }
 
     public Long getUsersCount() {

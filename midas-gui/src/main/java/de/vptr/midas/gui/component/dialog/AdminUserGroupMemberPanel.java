@@ -97,18 +97,12 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
 
     @Override
     protected void addUser() {
+        final var maybeUser = this.acquireSelectedUser("User is already a member of this group");
+        if (maybeUser.isEmpty()) {
+            return;
+        }
+        final var selectedUser = maybeUser.get();
         final var combo = Objects.requireNonNull(this.availableUsersCombo);
-        final var selectedUser = combo.getValue();
-        if (selectedUser == null) {
-            NotificationUtil.showWarning("Please select a user to add");
-            return;
-        }
-
-        if (this.isUserAssociated(selectedUser.getId())) {
-            NotificationUtil.showWarning("User is already a member of this group");
-            combo.clear();
-            return;
-        }
 
         this.executeWithHandling(() -> {
             if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedEntity).getId(),

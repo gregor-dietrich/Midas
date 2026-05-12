@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.component.layout;
 
+import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 
 import jakarta.annotation.Nullable;
@@ -56,5 +57,32 @@ final class SearchExecutionSupport {
         this.lastSubmittedQuery = query;
         this.lastSubmittedAtMillis = now;
         return true;
+    }
+
+    /**
+     * Normalizes the raw input, optionally updates the field via {@code fieldUpdater} if the value was trimmed, and
+     * invokes {@code action} if execution is not throttled.
+     *
+     * @param rawValue
+     *            the current raw value from the text field
+     * @param fieldUpdater
+     *            called with the normalized value when the field text needs to be corrected
+     * @param action
+     *            called with the normalized query when execution should proceed
+     * @return {@code true} if the action was invoked
+     */
+    boolean execute(final String rawValue, final Consumer<String> fieldUpdater, final Consumer<String> action) {
+        final String query = this.normalize(rawValue);
+        if (query == null) {
+            return false;
+        }
+        if (!query.equals(rawValue)) {
+            fieldUpdater.accept(query);
+        }
+        if (this.shouldExecute(query)) {
+            action.accept(query);
+            return true;
+        }
+        return false;
     }
 }

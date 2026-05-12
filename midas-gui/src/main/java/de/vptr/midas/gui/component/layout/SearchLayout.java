@@ -83,19 +83,8 @@ public class SearchLayout extends HorizontalLayout {
         if (this.searchAction == null) {
             return;
         }
-
-        final String query = this.searchExecutionSupport.normalize(this.textField.getValue());
-        if (query == null) {
-            return;
-        }
-
-        if (!query.equals(this.textField.getValue())) {
-            this.textField.setValue(query);
-        }
-
-        if (this.searchExecutionSupport.shouldExecute(query)) {
-            this.searchAction.onComponentEvent(new ClickEvent<>(this.button));
-        }
+        this.searchExecutionSupport.execute(this.textField.getValue(), this.textField::setValue,
+                ignore -> this.searchAction.onComponentEvent(new ClickEvent<>(this.button)));
     }
 
     @SuppressFBWarnings(value = "EI_EXPOSE_REP",

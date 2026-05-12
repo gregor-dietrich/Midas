@@ -42,11 +42,6 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
     @Nullable
     private transient PostCategoryResponseDto category;
 
-    /** Initializes PostCategoryDetailView. */
-    public PostCategoryDetailView() {
-        super();
-    }
-
     @Override
     protected void onBeforeEnterAuthenticated(final BeforeEnterEvent event) {
         if (this.identifier != null) {

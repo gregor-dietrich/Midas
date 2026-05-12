@@ -7,9 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /** Data transfer object for post comment. */
 public abstract class AbstractPostCommentDto {
 
-    @SuppressWarnings("NullAway")
+    // JUSTIFICATION: Constructor is required by NullAway to initialize fields; cannot be omitted.
+    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public AbstractPostCommentDto() {
-        // Default constructor
+        // Default constructor for Jackson deserialization and NullAway compliance
     }
 
     @JsonProperty("id")
@@ -32,8 +33,6 @@ public abstract class AbstractPostCommentDto {
 
     @JsonProperty("created")
     private LocalDateTime created;
-
-    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
 
     public Long getId() {
         return this.id;

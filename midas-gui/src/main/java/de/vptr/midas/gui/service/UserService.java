@@ -4,7 +4,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -19,11 +18,9 @@ import de.vptr.midas.gui.util.ServiceHelper;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 /** Service for user operations. */
 @ApplicationScoped
-@SuppressWarnings("PMD")
 public class UserService {
 
     private static final Logger LOG = Logger.getLogger(UserService.class);
@@ -85,13 +82,9 @@ public class UserService {
         LOG.debugf("Creating new user: %s", user.getUsername());
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.createUser(user, authHeader), this.authService,
-                LOG, "creating user", "Failed to create user", new Function<Response, UserResponseDto>() {
-                    @Override
-                    public UserResponseDto apply(final Response response) {
-                        return ServiceHelper.readExpectedStatusEntity(response, 201, UserResponseDto.class,
-                                "created user response", "Failed to create user");
-                    }
-                });
+                LOG, "creating user", "Failed to create user",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 201, UserResponseDto.class,
+                        "created user response", "Failed to create user"));
     }
 
     /** Updates the user. */

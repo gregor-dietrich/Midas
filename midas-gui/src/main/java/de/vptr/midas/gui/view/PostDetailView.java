@@ -39,11 +39,6 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
     @Inject
     transient PostCommentService postCommentService;
 
-    /** Initializes PostDetailView. */
-    public PostDetailView() {
-        super();
-    }
-
     @Override
     protected void onBeforeEnterAuthenticated(final BeforeEnterEvent event) {
         if (this.identifier == null || this.identifier.trim().isEmpty()) {

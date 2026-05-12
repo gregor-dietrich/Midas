@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.component.dialog;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.jboss.logging.Logger;
 
@@ -98,17 +99,34 @@ public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
 
     protected abstract void addUser();
 
-    protected Long getUserId(final U item) {
-        // Overridden by implementations to extract ID uniformly for association check if needed
-        return 0L;
-    }
+    protected abstract Long getUserId(U item);
 
     protected boolean isUserAssociated(final Long userId) {
-        if (this.userGrid == null) {
-            return false;
-        }
-        return this.userGrid.getDataProvider().fetch(new Query<>())
+        return this.userGrid != null && this.userGrid.getDataProvider().fetch(new Query<>())
                 .anyMatch(item -> Objects.equals(this.getUserId(item), userId));
+    }
+
+    /**
+     * Validates the current combo selection: warns and returns empty if nothing is selected or if the user is already
+     * associated. Subclasses call this at the start of {@link #addUser()}.
+     *
+     * @param alreadyAssociatedMessage
+     *            warning shown when the selected user is already present
+     * @return the selected user, or empty when the caller should abort
+     */
+    protected Optional<UserResponseDto> acquireSelectedUser(final String alreadyAssociatedMessage) {
+        final var combo = Objects.requireNonNull(this.availableUsersCombo);
+        final var selectedUser = combo.getValue();
+        if (selectedUser == null) {
+            NotificationUtil.showWarning("Please select a user to add");
+            return Optional.empty();
+        }
+        if (this.isUserAssociated(selectedUser.getId())) {
+            NotificationUtil.showWarning(alreadyAssociatedMessage);
+            combo.clear();
+            return Optional.empty();
+        }
+        return Optional.of(selectedUser);
     }
 
     protected void executeWithHandling(final Runnable action, final String errorMessage) {

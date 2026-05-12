@@ -1,7 +1,6 @@
 package de.vptr.midas.gui.dto;
 
 /** Data transfer object for user rank. */
-@SuppressWarnings("PMD.ExcessivePublicCount")
 public class UserRankDto extends AbstractUserRankDto {
 
     @SuppressWarnings("NullAway")

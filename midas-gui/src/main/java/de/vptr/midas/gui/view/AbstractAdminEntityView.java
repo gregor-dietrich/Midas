@@ -93,9 +93,10 @@ public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView i
 
     protected abstract void configureGrid(Grid<T> grid);
 
-    protected void initAdditionalComponents() {
-        // Override if needed
-    }
+    /**
+     * Override to add extra UI components after the grid; called once per {@link #buildUi()}. Default is a no-op.
+     */
+    protected abstract void initAdditionalComponents();
 
     protected HorizontalLayout createSearchLayout() {
         final var searchLayout = new SearchLayout(e -> {
@@ -162,9 +163,11 @@ public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView i
         this.executeDateRangeFilter(startDate, endDate);
     }
 
-    protected void executeDateRangeFilter(final LocalDate startDate, final LocalDate endDate) {
-        // Override if hasDateAndUserFilters is true
-    }
+    /**
+     * Called when the user triggers a date-range filter. Only invoked when {@link #hasDateAndUserFilters()} returns
+     * {@code true}. Default is a no-op; override in subclasses that enable date filtering.
+     */
+    protected abstract void executeDateRangeFilter(LocalDate startDate, LocalDate endDate);
 
     protected void filterByUser() {
         final Integer userId = Objects.requireNonNull(this.userIdField).getValue();
@@ -176,9 +179,11 @@ public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView i
         this.executeUserFilter(userId);
     }
 
-    protected void executeUserFilter(final Integer userId) {
-        // Override if hasDateAndUserFilters is true
-    }
+    /**
+     * Called when the user triggers a user-ID filter. Only invoked when {@link #hasDateAndUserFilters()} returns
+     * {@code true}. Default is a no-op; override in subclasses that enable user filtering.
+     */
+    protected abstract void executeUserFilter(Integer userId);
 
     protected void handleDeletion(final Runnable deleteAction) {
         try {

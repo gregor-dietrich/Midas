@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.view;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -137,5 +138,10 @@ public class AdminUserGroupView extends AbstractAdminEntityView<UserGroupRespons
 
         layout.add(editButton, deleteButton, manageUsersButton);
         return layout;
+    }
+
+    @Override
+    protected void executeDateRangeFilter(final LocalDate startDate, final LocalDate endDate) {
+        // Not used: this view uses only user-ID filtering
     }
 }

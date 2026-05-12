@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.view;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -159,5 +160,15 @@ public class AdminUserView extends AbstractAdminEntityView<UserResponseDto> {
 
         layout.add(editButton, deleteButton);
         return layout;
+    }
+
+    @Override
+    protected void executeDateRangeFilter(final LocalDate startDate, final LocalDate endDate) {
+        // Not used: hasDateAndUserFilters() returns false
+    }
+
+    @Override
+    protected void executeUserFilter(final Integer userId) {
+        // Not used: hasDateAndUserFilters() returns false
     }
 }

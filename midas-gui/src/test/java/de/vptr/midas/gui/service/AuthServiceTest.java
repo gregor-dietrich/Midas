@@ -131,35 +131,18 @@ class AuthServiceTest extends AbstractSessionServiceTestBase {
 
     @Test
     void authenticate_shouldReturnBackendUnavailable_whenProcessingExceptionWithConnectException() {
-        // Given
-        final String username = "testuser";
-        final String password = "testpass";
-
-        final ProcessingException exception =
-                new ProcessingException("Connection failed", new ConnectException("Connection refused"));
-        doThrow(exception).when(this.authClient).validateCredentials(anyString());
-
-        // When
-        final AuthResultDto result = this.authService.authenticate(username, password);
-
-        // Then
-        assertThat(result.getStatus()).isEqualTo(AuthResultDto.Status.BACKEND_UNAVAILABLE);
-        assertThat(result.getMessage()).isEqualTo("Backend service unavailable. Please try again later.");
+        this.assertBackendUnavailable(
+                new ProcessingException("Connection failed", new ConnectException("Connection refused")));
     }
 
     @Test
     void authenticate_shouldReturnBackendUnavailable_whenProcessingException() {
-        // Given
-        final String username = "testuser";
-        final String password = "testpass";
+        this.assertBackendUnavailable(new ProcessingException("Network error"));
+    }
 
-        final ProcessingException exception = new ProcessingException("Network error");
+    private void assertBackendUnavailable(final ProcessingException exception) {
         doThrow(exception).when(this.authClient).validateCredentials(anyString());
-
-        // When
-        final AuthResultDto result = this.authService.authenticate(username, password);
-
-        // Then
+        final AuthResultDto result = this.authService.authenticate("testuser", "testpass");
         assertThat(result.getStatus()).isEqualTo(AuthResultDto.Status.BACKEND_UNAVAILABLE);
         assertThat(result.getMessage()).isEqualTo("Backend service unavailable. Please try again later.");
     }
