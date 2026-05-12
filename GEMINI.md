@@ -1,4 +1,4 @@
-# Midas Project (midas2)
+# Midas Project
 
 This project is a modern web application consisting of a REST API backend and a Vaadin frontend, built using **Quarkus 3** and **Java 25**.
 
@@ -45,8 +45,8 @@ The project enforces very strict quality gates:
 - **Coverage**: JaCoCo enforcement (Minimum **88%** line coverage for API, **84%** for GUI).
 - **Security**: OWASP Dependency Check (fails on CVSS >= 7), License enforcement (blocks commercial/proprietary licenses).
 
-You MUST ALWAYS run ALL quality gates AND tests via `make lint test` before claiming you are done, and especially before executing a git commit.
-If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make lint test`.
+You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
+If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make test`.
 
 ### Design Patterns & Logic
 
