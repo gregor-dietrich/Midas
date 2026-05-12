@@ -149,7 +149,7 @@ public interface UserClient {
 - **API:** Ensure `Resource` methods handle invalid date strings by returning `400 Bad Request` or empty result, never the full dataset.
 - **GUI:** Update `AdminCommentView` to validate date pickers before calling the service.
 
-### Sub-Task: Sidebar Responsiveness
+- [x] **Sub-Task: Sidebar Responsiveness**
 
 - **GUI:** Fix CSS for `AdminLayout` to ensure the sidebar occupies 100% height and content scrolls independently.
 

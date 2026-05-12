@@ -104,7 +104,10 @@ public class AdminMainLayout extends AbstractMainLayoutBase {
         this.mainLayout.setFlexGrow(0, this.sidebar);
         this.mainLayout.setFlexGrow(1, this.contentArea);
 
+        this.contentArea.getStyle().set("overflow", "auto");
+
         this.add(this.mainLayout);
+        this.setFlexGrow(1, this.mainLayout);
     }
 
     @Override
