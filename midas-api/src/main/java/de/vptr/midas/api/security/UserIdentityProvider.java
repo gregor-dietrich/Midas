@@ -41,6 +41,12 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
     @Inject
     AuthFailureRateLimitService authFailureRateLimitService;
 
+    @Inject
+    LoginAttemptService loginAttemptService;
+
+    @Inject
+    jakarta.enterprise.inject.Instance<io.vertx.core.http.HttpServerRequest> httpServerRequestInstance;
+
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
         return UsernamePasswordAuthenticationRequest.class;
@@ -60,9 +66,26 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
     @Transactional
     SecurityIdentity authenticateUser(final String username, @Nullable final char[] password, final String clientKey) {
+        String ip = "unknown";
+        try {
+            if (this.httpServerRequestInstance.isResolvable()) {
+                ip = this.httpServerRequestInstance.get().remoteAddress().host();
+            }
+        } catch (final Exception e) {
+            LOG.debug("Could not determine client IP, using 'unknown'");
+        }
         try {
             if (this.authFailureRateLimitService.isBlocked(clientKey)) {
                 throw new AuthenticationFailedException("Too many invalid authentication attempts");
+            }
+
+            final long delay = this.loginAttemptService.getDelay(username, ip);
+            if (delay > 0) {
+                try {
+                    Thread.sleep(Math.min(delay * 1000, 30000)); // Sleep with cap
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
             final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
@@ -72,6 +95,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
                 this.passwordHashingService.verifyPassword("dummy",
                         "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
                 this.authFailureRateLimitService.recordFailure(clientKey);
+                this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("Invalid credentials");
             }
 
@@ -80,18 +104,23 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             if (user.password == null
                     || !this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
+                this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("Invalid credentials");
             }
 
             if (user.banned) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
+                this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("User is banned");
             }
 
             if (!user.activated) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
+                this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("User is not activated");
             }
+
+            this.loginAttemptService.recordSuccess(username, ip);
 
             // Update lastLogin - ignore optimistic lock exceptions as they're not critical
             // for authentication

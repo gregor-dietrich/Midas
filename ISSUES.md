@@ -30,7 +30,7 @@ public class PasswordHashingService {
 - **Validation:** Add `@Size(min = 8)` and complexity checks to `PasswordChangeDto`.
 - **GUI:** Add "Change Password" dialog to `UserDetailView`.
 
-### Sub-Task: Login Throttling (Exponential Backoff)
+- [x] **Sub-Task: Login Throttling (Exponential Backoff)**
 
 - **API:** Implement `LoginAttemptService` to track failures by IP/Username.
 - **Logic:** `long delay = 1L << (attempts - 5);` (start slowing down after 5 failures).
