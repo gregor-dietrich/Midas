@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
@@ -185,6 +186,32 @@ public class UserService {
 
         existingUser.persistAndFlush();
         return this.userResponseAssembler.toResponseDto(existingUser);
+    }
+
+    /** Changes the password for the given username. */
+    @Transactional
+    public void changePassword(final String username, final PasswordChangeDto passwordChangeDto) {
+        final UserEntity user = UserEntity.find("username", username).firstResult();
+        if (user == null) {
+            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
+        }
+
+        // Re-verification: Check if user is banned or inactive
+        if (user.banned) {
+            throw new WebApplicationException("User is banned", Response.Status.FORBIDDEN);
+        }
+        if (!user.activated) {
+            throw new WebApplicationException("User is not activated", Response.Status.FORBIDDEN);
+        }
+
+        // Verify current password
+        if (!this.passwordHashingService.verifyPassword(passwordChangeDto.currentPassword, user.password)) {
+            throw new WebApplicationException("Invalid current password", Response.Status.UNAUTHORIZED);
+        }
+
+        // Apply new password
+        this.applyPassword(user, passwordChangeDto.newPassword);
+        user.persistAndFlush();
     }
 
     private void applyPassword(final UserEntity user, @Nullable final String password) {

@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.UserClient;
+import de.vptr.midas.gui.dto.PasswordChangeDto;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.util.PaginationParamUtil;
@@ -111,5 +112,13 @@ public class UserService {
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.userClient.searchUsers(query, authHeader), this.authService, LOG,
                 "searching users");
+    }
+
+    /** Changes the password for the current user. */
+    public void changePassword(final PasswordChangeDto passwordChangeDto) {
+        LOG.debug("Changing password for current user");
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        ServiceHelper.execute(() -> this.userClient.changePassword(passwordChangeDto, authHeader), this.authService, LOG,
+                "changing password");
     }
 }

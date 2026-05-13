@@ -6,6 +6,8 @@ import java.util.Objects;
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
@@ -14,8 +16,10 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.component.dialog.ChangePasswordDialog;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
+import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import jakarta.annotation.Nullable;
@@ -33,6 +37,9 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
 
     @Inject
     transient UserGroupService userGroupService;
+
+    @Inject
+    transient AuthService authService;
 
     @Nullable
     private Grid<UserGroupResponseDto> groupsGrid;
@@ -85,10 +92,23 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
         final var groupsHeader = new H3("Groups");
         this.createGroupsGrid();
 
-        this.add(titleHeader, memberSince, activityHeader, statsLayout, groupsHeader,
-                Objects.requireNonNull(this.groupsGrid));
+        this.add(titleHeader, memberSince);
+
+        if (this.isCurrentUser(user)) {
+            final var changePasswordButton =
+                    new Button("Change Password", ignore -> new ChangePasswordDialog(this.userService).open());
+            changePasswordButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            this.add(changePasswordButton);
+        }
+
+        this.add(activityHeader, statsLayout, groupsHeader, Objects.requireNonNull(this.groupsGrid));
 
         this.loadGroupsAsync(Objects.requireNonNull(user.getId()));
+    }
+
+    private boolean isCurrentUser(final UserResponseDto user) {
+        final var currentUsername = this.authService.getUsername();
+        return currentUsername != null && currentUsername.equals(user.getUsername());
     }
 
     private void createGroupsGrid() {

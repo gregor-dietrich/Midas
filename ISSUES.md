@@ -24,7 +24,7 @@ public class PasswordHashingService {
 - **Entity Change:** Remove `String salt` from `UserEntity`.
 - **Database:** Update `init.sql` to remove `salt` column and update default hashes (e.g., admin:admin -> `$2a$10$8K1p/v87C.YmG.D.y.X.9.M.V.W.X.Y.Z`).
 
-### Sub-Task: Password Change Endpoint
+- [x] **Sub-Task: Password Change Endpoint**
 
 - **API:** Implement `POST /api/v1/users/me/password`.
 - **Validation:** Add `@Size(min = 8)` and complexity checks to `PasswordChangeDto`.

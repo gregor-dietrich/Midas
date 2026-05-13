@@ -2,6 +2,7 @@ package de.vptr.midas.api.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -15,7 +16,9 @@ public class PasswordChangeDto {
     public String currentPassword;
 
     @NotBlank(message = "New password is required")
-    @Size(min = 6, max = 100, message = "New password must be between 6 and 100 characters")
+    @Size(min = 8, max = 100, message = "New password must be at least 8 characters long")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$",
+            message = "Password must contain at least one digit, one lowercase, one uppercase letter and one special character (@#$%^&+=!)")
     @Nullable
     public String newPassword;
 

@@ -7,6 +7,7 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
+import de.vptr.midas.gui.dto.PasswordChangeDto;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
@@ -42,6 +43,10 @@ public interface UserClient {
     @GET
     @Path("/me")
     Response getCurrentUser(@HeaderParam("Authorization") String authorization);
+
+    @POST
+    @Path("/me/password")
+    Response changePassword(PasswordChangeDto passwordChange, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/{id}")

@@ -15,8 +15,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ServiceTestUtil;
 import io.quarkus.test.TestTransaction;
@@ -30,6 +32,9 @@ import jakarta.ws.rs.WebApplicationException;
 class UserServiceTest {
     @Inject
     UserService userService;
+
+    @Inject
+    PasswordHashingService passwordHashingService;
 
     @Test
     void testServiceNotNull() {
@@ -123,15 +128,32 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
-    void testFindByUsername() {
-        // First create a user
-        final var newUser = createUniqueUserDto("findByUsernameUser", "findbyusername");
+    void testChangePassword() {
+        final var newUser = createUniqueUserDto("changePasswordUser", "changepassword");
+        final var password = "OldPassword123!";
+        newUser.password = password;
+        newUser.activated = true;
         this.userService.createUser(newUser);
 
-        final var foundUser = this.userService.findByUsername(newUser.username);
+        final var changeDto = new PasswordChangeDto(password, "NewPassword123!");
+        this.userService.changePassword(newUser.username, changeDto);
 
-        assertTrue(foundUser.isPresent());
-        assertEquals(newUser.username, foundUser.get().username);
+        // Verification: try to authenticate with new password (manually)
+        final UserEntity user = UserEntity.find("username", newUser.username).firstResult();
+        assertTrue(this.passwordHashingService.verifyPassword("NewPassword123!", user.password));
+    }
+
+    @Test
+    @TestTransaction
+    void testChangePasswordInvalidCurrent() {
+        final var newUser = createUniqueUserDto("changePasswordUserInvalid", "changepasswordinvalid");
+        final var password = "OldPassword123!";
+        newUser.password = password;
+        newUser.activated = true;
+        this.userService.createUser(newUser);
+
+        final var changeDto = new PasswordChangeDto("wrongpassword", "NewPassword123!");
+        assertThrows(WebApplicationException.class, () -> this.userService.changePassword(newUser.username, changeDto));
     }
 
     @Test

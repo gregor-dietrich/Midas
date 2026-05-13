@@ -2,6 +2,7 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.service.UserService;
@@ -68,6 +69,21 @@ public class UserResource {
     public Response getCurrentUser() {
         final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         return ResponseUtil.okOrNotFound(this.userService.findByUsername(username));
+    }
+
+    /**
+     * Change password for the currently logged-in user.
+     * 
+     * @param passwordChangeDto
+     *            the password change data
+     * @return ok
+     */
+    @POST
+    @Path("/me/password")
+    public Response changePassword(@Valid final PasswordChangeDto passwordChangeDto) {
+        final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
+        this.userService.changePassword(username, passwordChangeDto);
+        return ResponseUtil.ok();
     }
 
     /**
