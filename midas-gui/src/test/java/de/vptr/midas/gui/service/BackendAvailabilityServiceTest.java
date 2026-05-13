@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -27,7 +26,6 @@ import jakarta.ws.rs.core.Response;
 class BackendAvailabilityServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     BackendHealthClient backendHealthClient;
 

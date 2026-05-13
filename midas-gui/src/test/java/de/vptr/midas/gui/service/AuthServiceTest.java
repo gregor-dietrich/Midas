@@ -11,8 +11,8 @@ import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.assertj.core.api.Assertions;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,7 +24,6 @@ import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -33,7 +32,6 @@ import jakarta.ws.rs.core.Response;
 class AuthServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock
-    @Inject
     @RestClient
     AuthClient authClient;
 
@@ -333,7 +331,7 @@ class AuthServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getUsername_shouldReturnNull_whenStoredUsernameTypeIsUnexpected() {
         // Given
-        when(this.vaadinSession.getAttribute("authenticated.username")).thenReturn(Boolean.TRUE);
+        when(this.vaadinSession.getAttribute("authenticated.username")).thenReturn(true);
 
         // When
         final String result = this.authService.getUsername();

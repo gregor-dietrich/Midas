@@ -23,14 +23,12 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @SuppressWarnings("PMD.LinguisticNaming")
 class UserRankServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock
-    @Inject
     @RestClient
     UserRankClient userRankClient;
 

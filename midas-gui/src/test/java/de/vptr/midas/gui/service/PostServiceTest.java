@@ -23,7 +23,6 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 
@@ -32,7 +31,6 @@ import jakarta.ws.rs.WebApplicationException;
 class PostServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     PostClient postClient;
 

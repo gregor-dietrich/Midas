@@ -24,14 +24,12 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 @ExtendWith(MockitoExtension.class)
 class PostCategoryServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     PostCategoryClient categoryClient;
 

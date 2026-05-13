@@ -26,7 +26,6 @@ import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -36,7 +35,6 @@ import jakarta.ws.rs.core.Response;
 class UserGroupServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     UserGroupClient groupClient;
 

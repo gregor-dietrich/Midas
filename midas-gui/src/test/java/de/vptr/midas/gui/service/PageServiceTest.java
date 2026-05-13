@@ -22,14 +22,12 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("PMD.LinguisticNaming")
 class PageServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     PageClient pageClient;
 

@@ -29,7 +29,6 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +36,6 @@ import jakarta.ws.rs.WebApplicationException;
 class PaymentServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     PaymentClient paymentClient;
 

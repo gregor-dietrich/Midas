@@ -29,7 +29,6 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.enterprise.event.Event;
 
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming", "microprofile-restclient" })
@@ -37,7 +36,6 @@ import jakarta.enterprise.event.Event;
 class PostCommentServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     PostCommentClient commentClient;
 

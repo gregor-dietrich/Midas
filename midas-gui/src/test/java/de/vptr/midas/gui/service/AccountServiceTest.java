@@ -28,7 +28,6 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -37,7 +36,6 @@ import jakarta.ws.rs.core.Response;
 class AccountServiceTest {
 
     @Mock
-    @Inject
     @RestClient
     AccountClient accountClient;
 
