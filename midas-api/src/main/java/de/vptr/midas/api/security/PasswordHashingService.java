@@ -13,7 +13,8 @@ public class PasswordHashingService {
     /**
      * Hashes a password using Bcrypt.
      *
-     * @param password the plain text password
+     * @param password
+     *            the plain text password
      * @return the hashed password
      */
     public String hashPassword(@Nullable final String password) {
@@ -26,8 +27,10 @@ public class PasswordHashingService {
     /**
      * Verifies a password against a stored Bcrypt hash.
      *
-     * @param password the plain text password to verify
-     * @param hash the stored password hash
+     * @param password
+     *            the plain text password to verify
+     * @param hash
+     *            the stored password hash
      * @return true if the password matches, false otherwise
      */
     public boolean verifyPassword(@Nullable final String password, @Nullable final String hash) {

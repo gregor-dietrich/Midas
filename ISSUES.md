@@ -133,7 +133,7 @@ public interface UserClient {
 - **GUI:** Create `GlassAccentBar.java` (Div with gradient top border).
 - **Style:** Use absolute positioning and `var(--lumo-primary-color)`.
 
-### Sub-Task: Real-time via Vaadin Push
+- [x] **Sub-Task: Real-time via Vaadin Push**
 
 - **GUI:** Add `@Push` to `AppConfig`.
 - **Flow:** API fires CDI Event -> GUI `Broadcaster` -> `UI.access()` to update Grid/Comments.

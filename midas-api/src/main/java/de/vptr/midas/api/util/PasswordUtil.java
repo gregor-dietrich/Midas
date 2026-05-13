@@ -3,11 +3,10 @@ package de.vptr.midas.api.util;
 import io.quarkus.elytron.security.common.BcryptUtil;
 
 /**
- * Standalone CLI utility for generating password hashes during initialization.
- * Invoked by {@code scripts/password.sh} to generate credentials for {@code sql/init.sql}.
+ * Standalone CLI utility for generating password hashes during initialization. Invoked by {@code scripts/password.sh}
+ * to generate credentials for {@code sql/init.sql}.
  *
- * Usage: generate &lt;password&gt;
- * Outputs: hash suitable for insertion into init.sql.
+ * Usage: generate &lt;password&gt; Outputs: hash suitable for insertion into init.sql.
  */
 public final class PasswordUtil {
 
@@ -17,7 +16,8 @@ public final class PasswordUtil {
     /**
      * CLI entrypoint for password hash generation.
      *
-     * @param args CLI arguments; expected: {@code generate <password>}
+     * @param args
+     *            CLI arguments; expected: {@code generate <password>}
      */
     public static void main(final String[] args) {
         if (args.length < 2 || !"generate".equals(args[0])) {

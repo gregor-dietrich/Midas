@@ -6,6 +6,8 @@ import java.util.Objects;
 
 import org.jboss.logging.Logger;
 
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
@@ -16,14 +18,17 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
 
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
+import de.vptr.midas.gui.service.Broadcaster;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.PostUiUtil;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** PostDetailView view. */
@@ -38,6 +43,44 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
 
     @Inject
     transient PostCommentService postCommentService;
+
+    @Inject
+    transient Broadcaster broadcaster;
+
+    @Nullable
+    private Registration broadcasterRegistration;
+
+    @Nullable
+    private Long currentPostId;
+
+    private final VerticalLayout commentsContainer = new VerticalLayout();
+
+    @Override
+    protected void onAttach(final AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        this.getUI().ifPresent(ui -> {
+            this.broadcasterRegistration = this.broadcaster.register(message -> {
+                final var _ = ui.access(() -> {
+                    if (message.startsWith("comment-created:") && this.currentPostId != null) {
+                        final String postIdStr = message.substring("comment-created:".length());
+                        if (postIdStr.equals(this.currentPostId.toString())) {
+                            LOG.info("Received real-time update for comments, refreshing...");
+                            this.loadCommentsAsync(this.currentPostId);
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    @Override
+    protected void onDetach(final DetachEvent detachEvent) {
+        if (this.broadcasterRegistration != null) {
+            this.broadcasterRegistration.remove();
+            this.broadcasterRegistration = null;
+        }
+        super.onDetach(detachEvent);
+    }
 
     @Override
     protected void onBeforeEnterAuthenticated(final BeforeEnterEvent event) {
@@ -78,8 +121,12 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
             if (post == null) {
                 this.showNotFound();
             } else {
+                this.currentPostId = post.getId();
                 this.buildPostContent(post);
-                this.loadCommentsAsync(Objects.requireNonNull(post.getId())); // ensure uses loadDataAsync
+                final var postId = post.getId();
+                if (postId != null) {
+                    this.loadCommentsAsync(postId); // ensure uses loadDataAsync
+                }
             }
         }, throwable -> {
             LOG.errorf(throwable, "Error loading post: %s", throwable.getMessage());
@@ -111,7 +158,11 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
         contentDiv.getStyle().set("margin-top", "var(--lumo-space-m)");
         contentDiv.setText(post.getContent() != null ? post.getContent() : "");
 
-        this.add(backButton, title, metaLayout, contentDiv);
+        this.commentsContainer.setPadding(false);
+        this.commentsContainer.setSpacing(true);
+        this.commentsContainer.getStyle().set("margin-top", "var(--lumo-space-l)");
+
+        this.add(backButton, title, metaLayout, contentDiv, this.commentsContainer);
     }
 
     private void loadCommentsAsync(final Long postId) {
@@ -127,25 +178,20 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
     }
 
     private void buildCommentsSection(final List<PostCommentResponseDto> comments) {
-        final var commentsSection = new VerticalLayout();
-        commentsSection.setPadding(false);
-        commentsSection.setSpacing(true);
-        commentsSection.getStyle().set("margin-top", "var(--lumo-space-l)");
+        this.commentsContainer.removeAll();
 
         final var commentsHeader = new H3("Comments (" + comments.size() + ")");
-        commentsSection.add(commentsHeader);
+        this.commentsContainer.add(commentsHeader);
 
         if (comments.isEmpty()) {
             final var noComments = new Span("No comments yet.");
             noComments.getStyle().set("color", "var(--lumo-secondary-text-color)");
-            commentsSection.add(noComments);
+            this.commentsContainer.add(noComments);
         } else {
             for (final var comment : comments) {
-                commentsSection.add(this.createCommentCard(comment));
+                this.commentsContainer.add(this.createCommentCard(comment));
             }
         }
-
-        this.add(commentsSection);
     }
 
     private VerticalLayout createCommentCard(final PostCommentResponseDto comment) {

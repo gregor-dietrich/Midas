@@ -1,17 +1,16 @@
 package de.vptr.midas.gui.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
-import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 
 import de.vptr.midas.gui.dto.UserResponseDto;
@@ -42,41 +41,32 @@ class UserDetailViewTest extends AbstractUiTestBase {
 
     @Test
     void renderEntity_shouldShowChangePasswordButton_whenCurrentUser() {
-        final var user = new UserResponseDto();
-        user.setId(1L);
-        user.setUsername("testuser");
-
-        when(this.authService.getUsername()).thenReturn("testuser");
-        when(this.userGroupService.getGroupsByUser(1L)).thenReturn(Collections.emptyList());
-
-        this.view.renderEntity(user);
-
-        final var buttons = this.view.getChildren()
-                .filter(c -> c instanceof Button)
-                .map(c -> (Button) c)
-                .filter(b -> "Change Password".equals(b.getText()))
-                .toList();
-
+        final var user = this.createTestUser();
+        final var buttons = this.getChangePasswordButtons(user, "testuser");
         assertThat(buttons).hasSize(1);
     }
 
     @Test
     void renderEntity_shouldNotShowChangePasswordButton_whenOtherUser() {
+        final var user = this.createTestUser();
+        final var buttons = this.getChangePasswordButtons(user, "otheruser");
+        assertThat(buttons).isEmpty();
+    }
+
+    private UserResponseDto createTestUser() {
         final var user = new UserResponseDto();
         user.setId(1L);
         user.setUsername("testuser");
+        return user;
+    }
 
-        when(this.authService.getUsername()).thenReturn("otheruser");
-        when(this.userGroupService.getGroupsByUser(1L)).thenReturn(Collections.emptyList());
+    private List<Button> getChangePasswordButtons(final UserResponseDto user, final String currentUsername) {
+        when(this.authService.getUsername()).thenReturn(currentUsername);
+        lenient().when(this.userGroupService.getGroupsByUser(1L)).thenReturn(Collections.emptyList());
 
         this.view.renderEntity(user);
 
-        final var buttons = this.view.getChildren()
-                .filter(c -> c instanceof Button)
-                .map(c -> (Button) c)
-                .filter(b -> "Change Password".equals(b.getText()))
-                .toList();
-
-        assertThat(buttons).isEmpty();
+        return this.view.getChildren().filter(Button.class::isInstance).map(c -> (Button) c)
+                .filter(b -> "Change Password".equals(b.getText())).toList();
     }
 }

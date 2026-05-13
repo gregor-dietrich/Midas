@@ -28,8 +28,9 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
+import jakarta.enterprise.event.Event;
 
-@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
+@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming", "microprofile-restclient" })
 @ExtendWith(MockitoExtension.class)
 class PostCommentServiceTest {
 
@@ -38,6 +39,9 @@ class PostCommentServiceTest {
 
     @Mock
     AuthService authService;
+
+    @Mock
+    Event<String> commentEvent;
 
     @InjectMocks
     PostCommentService postCommentService;

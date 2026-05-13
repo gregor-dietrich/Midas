@@ -16,8 +16,10 @@ public class LoginAttemptService {
     /**
      * Records a failed login attempt for the given username and IP.
      *
-     * @param username the username
-     * @param ip the IP address
+     * @param username
+     *            the username
+     * @param ip
+     *            the IP address
      */
     public void recordFailure(final String username, final String ip) {
         final String key = this.buildKey(username, ip);
@@ -27,8 +29,10 @@ public class LoginAttemptService {
     /**
      * Resets login attempts for the given username and IP.
      *
-     * @param username the username
-     * @param ip the IP address
+     * @param username
+     *            the username
+     * @param ip
+     *            the IP address
      */
     public void recordSuccess(final String username, final String ip) {
         this.attemptsCache.remove(this.buildKey(username, ip));
@@ -37,8 +41,10 @@ public class LoginAttemptService {
     /**
      * Returns the delay in seconds for the next login attempt.
      *
-     * @param username the username
-     * @param ip the IP address
+     * @param username
+     *            the username
+     * @param ip
+     *            the IP address
      * @return the delay in seconds
      */
     public long getDelay(final String username, final String ip) {

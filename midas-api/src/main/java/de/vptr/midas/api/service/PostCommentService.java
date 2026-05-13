@@ -14,6 +14,7 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
@@ -29,6 +30,9 @@ public class PostCommentService {
 
     @Inject
     AdminAccessService adminAccessService;
+
+    @Inject
+    Event<String> commentEvent;
 
     /** Returns all comments with default pagination. */
     public List<PostCommentResponseDto> getAllComments() {
@@ -53,7 +57,7 @@ public class PostCommentService {
 
     /** Returns all comments for the given post with default pagination. */
     public List<PostCommentResponseDto> findByPostId(final Long postId) {
-        return findByPostId(postId, 0, 20);
+        return this.findByPostId(postId, 0, 20);
     }
 
     /** Returns all comments for the given post with pagination. */
@@ -66,7 +70,7 @@ public class PostCommentService {
 
     /** Returns all comments by the given user with default pagination. */
     public List<PostCommentResponseDto> findByUserId(final Long userId) {
-        return findByUserId(userId, 0, 20);
+        return this.findByUserId(userId, 0, 20);
     }
 
     /** Returns all comments by the given user with pagination. */
@@ -107,6 +111,7 @@ public class PostCommentService {
                 .orElseThrow(() -> new WebApplicationException("User with username '" + currentUsername + "' not found",
                         Response.Status.NOT_FOUND));
         comment.persistAndFlush();
+        this.commentEvent.fire("comment-created:" + comment.post.id);
         return new PostCommentResponseDto(comment);
     }
 

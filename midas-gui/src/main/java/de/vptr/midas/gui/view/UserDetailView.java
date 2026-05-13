@@ -19,7 +19,6 @@ import com.vaadin.flow.router.Route;
 import de.vptr.midas.gui.component.dialog.ChangePasswordDialog;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
-import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import jakarta.annotation.Nullable;
@@ -37,9 +36,6 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
 
     @Inject
     transient UserGroupService userGroupService;
-
-    @Inject
-    transient AuthService authService;
 
     @Nullable
     private Grid<UserGroupResponseDto> groupsGrid;

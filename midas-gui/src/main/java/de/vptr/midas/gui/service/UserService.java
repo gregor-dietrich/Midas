@@ -118,7 +118,7 @@ public class UserService {
     public void changePassword(final PasswordChangeDto passwordChangeDto) {
         LOG.debug("Changing password for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        ServiceHelper.execute(() -> this.userClient.changePassword(passwordChangeDto, authHeader), this.authService, LOG,
-                "changing password");
+        ServiceHelper.execute(() -> this.userClient.changePassword(passwordChangeDto, authHeader), this.authService,
+                LOG, "changing password");
     }
 }

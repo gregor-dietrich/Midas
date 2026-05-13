@@ -16,8 +16,10 @@ import io.quarkus.security.identity.request.UsernamePasswordAuthenticationReques
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
@@ -45,7 +47,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
     LoginAttemptService loginAttemptService;
 
     @Inject
-    jakarta.enterprise.inject.Instance<io.vertx.core.http.HttpServerRequest> httpServerRequestInstance;
+    Instance<HttpServerRequest> httpServerRequestInstance;
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
@@ -71,7 +73,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             if (this.httpServerRequestInstance.isResolvable()) {
                 ip = this.httpServerRequestInstance.get().remoteAddress().host();
             }
-        } catch (final Exception e) {
+        } catch (final RuntimeException e) {
             LOG.debug("Could not determine client IP, using 'unknown'");
         }
         try {
@@ -101,8 +103,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
             final String passwordStr = password != null ? new String(password) : "";
 
-            if (user.password == null
-                    || !this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
+            if (user.password == null || !this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("Invalid credentials");

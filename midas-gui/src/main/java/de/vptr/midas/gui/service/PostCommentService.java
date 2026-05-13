@@ -13,6 +13,7 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
@@ -28,6 +29,9 @@ public class PostCommentService {
 
     @Inject
     AuthService authService;
+
+    @Inject
+    Event<String> commentEvent;
 
     /** Returns the all comments. */
     public List<PostCommentResponseDto> getAllComments(final Integer page, final Integer size) {
@@ -98,6 +102,7 @@ public class PostCommentService {
                                 "created comment response");
                         final var createdComment = responseDto.toPostCommentDto();
                         LOG.infof("Successfully created comment: %s", createdComment.getId());
+                        this.commentEvent.fire("comment-created:" + createdComment.getPostId());
                         return createdComment;
                     }
                     throw ServiceHelper.responseFailure("Failed to create comment", response);

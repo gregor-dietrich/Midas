@@ -18,7 +18,8 @@ public class PasswordChangeDto {
     @NotBlank(message = "New password is required")
     @Size(min = 8, max = 100, message = "New password must be at least 8 characters long")
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$",
-            message = "Password must contain at least one digit, one lowercase, one uppercase letter and one special character (@#$%^&+=!)")
+            message = "Password must contain at" + " least one digit, one lowercase, one uppercase letter and one "
+                    + "special character (@#$%^&+=!)")
     @Nullable
     public String newPassword;
 

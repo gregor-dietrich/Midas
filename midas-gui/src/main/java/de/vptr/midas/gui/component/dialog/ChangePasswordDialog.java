@@ -12,13 +12,14 @@ import com.vaadin.flow.data.validator.StringLengthValidator;
 import de.vptr.midas.gui.dto.PasswordChangeDto;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Dialog for changing the current user's password.
  */
 public class ChangePasswordDialog extends FormDialog {
 
-    private final UserService userService;
+    private final transient UserService userService;
     private final Binder<PasswordChangeDto> binder = new Binder<>(PasswordChangeDto.class);
 
     private final PasswordField currentPasswordField = new PasswordField("Current Password");
@@ -28,8 +29,10 @@ public class ChangePasswordDialog extends FormDialog {
     /**
      * Creates a new ChangePasswordDialog.
      *
-     * @param userService the user service
+     * @param userService
+     *            the user service
      */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Services are singleton beans")
     public ChangePasswordDialog(final UserService userService) {
         super("400px");
         this.userService = userService;
@@ -45,12 +48,10 @@ public class ChangePasswordDialog extends FormDialog {
         this.newPasswordField.setRequired(true);
         this.confirmPasswordField.setRequired(true);
 
-        this.binder.forField(this.currentPasswordField)
-                .asRequired("Current password is required")
+        this.binder.forField(this.currentPasswordField).asRequired("Current password is required")
                 .bind(PasswordChangeDto::getCurrentPassword, PasswordChangeDto::setCurrentPassword);
 
-        this.binder.forField(this.newPasswordField)
-                .asRequired("New password is required")
+        this.binder.forField(this.newPasswordField).asRequired("New password is required")
                 .withValidator(new StringLengthValidator("Password must be at least 8 characters long", 8, 100))
                 .withValidator(value -> value.matches(".*[0-9].*"), "Must contain at least one digit")
                 .withValidator(value -> value.matches(".*[a-z].*"), "Must contain at least one lowercase letter")
@@ -59,15 +60,14 @@ public class ChangePasswordDialog extends FormDialog {
                         "Must contain at least one special character (@#$%^&+=!)")
                 .bind(PasswordChangeDto::getNewPassword, PasswordChangeDto::setNewPassword);
 
-        this.binder.forField(this.confirmPasswordField)
-                .asRequired("Please confirm your new password")
+        this.binder.forField(this.confirmPasswordField).asRequired("Please confirm your new password")
                 .withValidator((value, context) -> {
                     if (value.equals(this.newPasswordField.getValue())) {
                         return ValidationResult.ok();
                     }
                     return ValidationResult.error("Passwords do not match");
-                })
-                .bind(ignore -> "", (ignore, value) -> { });
+                }).bind(ignore -> "", (ignore, value) -> {
+                });
     }
 
     private FormLayout createFormLayout() {
