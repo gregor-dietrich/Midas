@@ -9,7 +9,7 @@ import jakarta.annotation.Nullable;
 public class UserRankResponseDto extends BaseUserRankDto {
 
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String name;
 
@@ -29,7 +29,7 @@ public class UserRankResponseDto extends BaseUserRankDto {
      */
     public UserRankResponseDto(@Nullable final UserRankEntity entity, final long usersCount) {
         if (entity != null) {
-            this.id = entity.id;
+            this.publicId = entity.publicId;
             this.name = entity.name;
 
             this.adminView = entity.adminView;

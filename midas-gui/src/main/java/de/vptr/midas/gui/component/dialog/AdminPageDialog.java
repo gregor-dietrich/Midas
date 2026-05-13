@@ -52,7 +52,7 @@ public class AdminPageDialog extends AbstractAdminEntityDialogBase<PageDto> {
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Page created successfully", "Page updated successfully",
                 this.pageService::createPage, this.pageService::updatePage, "Page");
     }

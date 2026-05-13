@@ -43,7 +43,7 @@ class PageServiceTest {
         final var createdPage = this.pageService.createPage(pageDto);
 
         assertNotNull(createdPage);
-        assertNotNull(createdPage.id);
+        assertNotNull(createdPage.publicId);
         assertEquals(pageDto.title, createdPage.title);
         assertEquals(pageDto.content, createdPage.content);
     }
@@ -102,18 +102,18 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
-        final var foundPage = this.pageService.findById(pageId);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
+        final var foundPage = this.pageService.findById(pagePublicId);
 
         assertTrue(foundPage.isPresent());
-        assertEquals(pageId, foundPage.get().id);
+        assertEquals(pagePublicId, foundPage.get().publicId);
         assertEquals(createdPage.title, foundPage.get().title);
         assertEquals(createdPage.content, foundPage.get().content);
     }
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundPage = this.pageService.findById(999999L);
+        final var foundPage = this.pageService.findById("999999");
         assertTrue(foundPage.isEmpty());
     }
 
@@ -123,12 +123,12 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
         final var updateDto = ServiceTestDataBuilder.createPageDto("Updated Title", "Updated Content");
-        final var updatedPage = this.pageService.updatePage(pageId, updateDto);
+        final var updatedPage = this.pageService.updatePage(pagePublicId, updateDto);
 
         assertNotNull(updatedPage);
-        assertEquals(pageId, updatedPage.id);
+        assertEquals(pagePublicId, updatedPage.publicId);
         assertEquals("Updated Title", updatedPage.title);
         assertEquals("Updated Content", updatedPage.content);
     }
@@ -139,13 +139,13 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
         final var updateDto = new PageDto();
         updateDto.title = "";
         updateDto.content = "Updated Content";
 
         assertThrows(ValidationException.class, () -> {
-            this.pageService.updatePage(pageId, updateDto);
+            this.pageService.updatePage(pagePublicId, updateDto);
         });
     }
 
@@ -155,13 +155,13 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
         final var updateDto = new PageDto();
         updateDto.title = "Updated Title";
         updateDto.content = "";
 
         assertThrows(ValidationException.class, () -> {
-            this.pageService.updatePage(pageId, updateDto);
+            this.pageService.updatePage(pagePublicId, updateDto);
         });
     }
 
@@ -171,7 +171,7 @@ class PageServiceTest {
         final var updateDto = ServiceTestDataBuilder.createPageDto("Updated Title", "Updated Content");
 
         assertThrows(WebApplicationException.class, () -> {
-            this.pageService.updatePage(999999L, updateDto);
+            this.pageService.updatePage("999999", updateDto);
         });
     }
 
@@ -181,14 +181,14 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
         final var patchDto = new PageDto();
         patchDto.title = "Patched Title";
 
-        final var patchedPage = this.pageService.patchPage(pageId, patchDto);
+        final var patchedPage = this.pageService.patchPage(pagePublicId, patchDto);
 
         assertNotNull(patchedPage);
-        assertEquals(pageId, patchedPage.id);
+        assertEquals(pagePublicId, patchedPage.publicId);
         assertEquals("Patched Title", patchedPage.title);
         assertEquals(createdPage.content, patchedPage.content);
     }
@@ -199,14 +199,14 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
         final var patchDto = new PageDto();
         patchDto.content = "Patched Content";
 
-        final var patchedPage = this.pageService.patchPage(pageId, patchDto);
+        final var patchedPage = this.pageService.patchPage(pagePublicId, patchDto);
 
         assertNotNull(patchedPage);
-        assertEquals(pageId, patchedPage.id);
+        assertEquals(pagePublicId, patchedPage.publicId);
         assertEquals(createdPage.title, patchedPage.title);
         assertEquals("Patched Content", patchedPage.content);
     }
@@ -218,7 +218,7 @@ class PageServiceTest {
         patchDto.title = "Patched Title";
 
         assertThrows(WebApplicationException.class, () -> {
-            this.pageService.patchPage(999999L, patchDto);
+            this.pageService.patchPage("999999", patchDto);
         });
     }
 
@@ -228,18 +228,18 @@ class PageServiceTest {
         final var pageDto = ServiceTestDataBuilder.createUniquePageDto();
         final var createdPage = this.pageService.createPage(pageDto);
 
-        final Long pageId = Objects.requireNonNull(createdPage.id);
-        final boolean deleted = this.pageService.deletePage(pageId);
+        final String pagePublicId = Objects.requireNonNull(createdPage.publicId);
+        final boolean deleted = this.pageService.deletePage(pagePublicId);
 
         assertTrue(deleted);
 
-        final var deletedPage = this.pageService.findById(pageId);
+        final var deletedPage = this.pageService.findById(pagePublicId);
         assertTrue(deletedPage.isEmpty());
     }
 
     @Test
     void testDeleteNonExistentPage() {
-        final boolean deleted = this.pageService.deletePage(999999L);
+        final boolean deleted = this.pageService.deletePage("999999");
         assertFalse(deleted);
     }
 }

@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
+import de.vptr.midas.api.entity.AccountEntity;
 import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import io.quarkus.test.TestTransaction;
@@ -37,7 +38,7 @@ class AccountAccessServiceTest {
     @Test
     void testGetAssociatedUsersForNonExistentAccount() {
         try {
-            this.accountAccessService.getAssociatedUsers(999999L);
+            this.accountAccessService.getAssociatedUsers("non-existent-account");
         } catch (final WebApplicationException e) {
             assertNotNull(e);
         }
@@ -45,13 +46,15 @@ class AccountAccessServiceTest {
 
     @Test
     void testIsUserAssociatedWithAccountNonExistent() {
-        final boolean result = this.accountAccessService.isUserAssociatedWithAccount(999999L, 999999L);
+        final boolean result =
+                this.accountAccessService.isUserAssociatedWithAccount("non-existent-user", "non-existent-account");
         assert !result;
     }
 
     @Test
     void testHasUserAccessToAccountNonExistentUser() {
-        final boolean result = this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz", 999999L);
+        final boolean result =
+                this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz", "non-existent-account");
         assert !result;
     }
 
@@ -65,12 +68,13 @@ class AccountAccessServiceTest {
         dto.name = createUniqueTestName("Meta Account");
         final var created = this.accountService.createAccount(dto);
 
-        final Long userId = Objects.requireNonNull(user.id, "user.id");
-        final Long accountId = Objects.requireNonNull(created.id, "created.id");
-        this.accountAccessService.associateUserWithAccount(userId, accountId);
-        this.accountAccessService.updateUserAccountMeta(userId, accountId, true);
+        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
+        final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
+        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
+        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, true);
 
-        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(userId, accountId);
+        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(Objects.requireNonNull(user.id),
+                this.getAccountIdByPublicId(accountPublicId));
         assertNotNull(meta);
         assertTrue(meta.isNegative);
     }
@@ -78,7 +82,7 @@ class AccountAccessServiceTest {
     @Test
     void updateUserAccountMeta_throwsNotFoundForMissingAssociation() {
         final WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> this.accountAccessService.updateUserAccountMeta(999999L, 999999L, true));
+                () -> this.accountAccessService.updateUserAccountMeta("user-999", "account-999", true));
         assertEquals(404, ex.getResponse().getStatus());
     }
 
@@ -92,23 +96,29 @@ class AccountAccessServiceTest {
         dto.name = createUniqueTestName("Flags Account");
         final var created = this.accountService.createAccount(dto);
 
-        final Long userId2 = Objects.requireNonNull(user.id, "user.id");
-        final Long accountId2 = Objects.requireNonNull(created.id, "created.id");
-        this.accountAccessService.associateUserWithAccount(userId2, accountId2);
-        this.accountAccessService.updateUserAccountMeta(userId2, accountId2, true);
+        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
+        final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
+        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
+        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, true);
 
-        final Map<Long, Boolean> flags =
-                this.accountAccessService.getIsNegativeFlagsForUser(userId2, List.of(accountId2));
+        final Map<String, Boolean> flags = this.accountAccessService
+                .getIsNegativeFlagsForUser(Objects.requireNonNull(user.id), List.of(accountPublicId));
 
         assertNotNull(flags);
         assertEquals(1, flags.size());
-        assertTrue(Boolean.TRUE.equals(flags.get(accountId2)));
+        assertTrue(Boolean.TRUE.equals(flags.get(accountPublicId)));
     }
 
     @Test
     void getIsNegativeFlagsForUser_returnsEmptyMapForEmptyAccountList() {
-        final Map<Long, Boolean> flags = this.accountAccessService.getIsNegativeFlagsForUser(1L, List.of());
+        final Map<String, Boolean> flags = this.accountAccessService.getIsNegativeFlagsForUser(1L, List.of());
         assertNotNull(flags);
         assertTrue(flags.isEmpty());
     }
+
+    private Long getAccountIdByPublicId(final String publicId) {
+        final var account = AccountEntity.find("publicId", publicId).<AccountEntity>firstResult();
+        return Objects.requireNonNull(Objects.requireNonNull(account, "Account not found").id);
+    }
+
 }

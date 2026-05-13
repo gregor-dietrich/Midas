@@ -52,19 +52,20 @@ public class PostCategoryResource {
         return this.categoryService.findRootCategories();
     }
 
-    /** Returns the category with the given id. */
+    /** Returns the category with the given publicId. */
     @GET
-    @Path("/{id}")
+    @Path("/{publicId}")
     @Authenticated
-    public Response getCategory(@PathParam("id") final Long id) {
-        return this.categoryService.findById(id).map(ResponseUtil::ok).orElse(ResponseUtil.notFound());
+    public Response getCategory(@PathParam("publicId") final String publicId) {
+        return this.categoryService.findById(publicId).map(ResponseUtil::ok).orElse(ResponseUtil.notFound());
     }
 
     @GET
-    @Path("/parent/{parentId}")
+    @Path("/parent/{parentPublicId}")
     @Authenticated
-    public List<PostCategoryResponseDto> getCategoriesByParent(@PathParam("parentId") final Long parentId) {
-        return this.categoryService.findByParentId(parentId);
+    public List<PostCategoryResponseDto>
+            getCategoriesByParent(@PathParam("parentPublicId") final String parentPublicId) {
+        return this.categoryService.findByParentPublicId(parentPublicId);
     }
 
     /** Creates a new post category. */
@@ -75,30 +76,31 @@ public class PostCategoryResource {
         return ResponseUtil.created(responseDto);
     }
 
-    /** Updates the category with the given id. */
+    /** Updates the category with the given publicId. */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-category:edit" })
-    public Response updateCategory(@PathParam("id") final Long id, @Valid final PostCategoryDto categoryDto) {
-        final var responseDto = this.categoryService.updateCategory(id, categoryDto);
+    public Response updateCategory(@PathParam("publicId") final String publicId,
+            @Valid final PostCategoryDto categoryDto) {
+        final var responseDto = this.categoryService.updateCategory(publicId, categoryDto);
         return ResponseUtil.ok(responseDto);
     }
 
-    /** Partially updates the category with the given id. */
+    /** Partially updates the category with the given publicId. */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-category:edit" })
-    public Response patchCategory(@PathParam("id") final Long id, final PostCategoryDto categoryDto) {
-        final var responseDto = this.categoryService.patchCategory(id, categoryDto);
+    public Response patchCategory(@PathParam("publicId") final String publicId, final PostCategoryDto categoryDto) {
+        final var responseDto = this.categoryService.patchCategory(publicId, categoryDto);
         return ResponseUtil.ok(responseDto);
     }
 
-    /** Deletes the category with the given id. */
+    /** Deletes the category with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-category:delete" })
-    public Response deleteCategory(@PathParam("id") final Long id) {
-        final var deleted = this.categoryService.deleteCategory(id);
+    public Response deleteCategory(@PathParam("publicId") final String publicId) {
+        final var deleted = this.categoryService.deleteCategory(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }

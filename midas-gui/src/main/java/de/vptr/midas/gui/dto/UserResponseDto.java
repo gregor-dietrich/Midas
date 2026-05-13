@@ -13,8 +13,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class UserResponseDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("username")
     private String username;
@@ -22,8 +22,8 @@ public class UserResponseDto {
     @JsonProperty("email")
     private String email;
 
-    @JsonProperty("rankId")
-    private Long rankId;
+    @JsonProperty("rankPublicId")
+    private String rankPublicId;
 
     @JsonProperty("rankName")
     private String rankName;
@@ -57,8 +57,8 @@ public class UserResponseDto {
         // Default constructor for Jackson
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     public String getUsername() {
@@ -69,8 +69,8 @@ public class UserResponseDto {
         return this.email;
     }
 
-    public Long getRankId() {
-        return this.rankId;
+    public String getRankPublicId() {
+        return this.rankPublicId;
     }
 
     public String getRankName() {
@@ -105,8 +105,8 @@ public class UserResponseDto {
         return this.commentsCount;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setUsername(final String username) {
@@ -117,8 +117,8 @@ public class UserResponseDto {
         this.email = email;
     }
 
-    public void setRankId(final Long rankId) {
-        this.rankId = rankId;
+    public void setRankPublicId(final String rankPublicId) {
+        this.rankPublicId = rankPublicId;
     }
 
     public void setRankName(final String rankName) {
@@ -169,10 +169,10 @@ public class UserResponseDto {
     /** Handles the to user dto operation. */
     public UserDto toUserDto() {
         final UserDto dto = new UserDto();
-        dto.setId(this.id);
+        dto.setPublicId(this.publicId);
         dto.setUsername(this.username);
         dto.setEmail(this.email);
-        dto.setRankId(this.rankId);
+        dto.setRankPublicId(this.rankPublicId);
         dto.setRankName(this.rankName);
         dto.setBanned(this.banned);
         dto.setActivated(this.activated);

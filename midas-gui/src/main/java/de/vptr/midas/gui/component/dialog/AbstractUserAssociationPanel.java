@@ -99,11 +99,11 @@ public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
 
     protected abstract void addUser();
 
-    protected abstract Long getUserId(U item);
+    protected abstract String getUserPublicId(U item);
 
-    protected boolean isUserAssociated(final Long userId) {
+    protected boolean isUserAssociated(final String userPublicId) {
         return this.userGrid != null && this.userGrid.getDataProvider().fetch(new Query<>())
-                .anyMatch(item -> Objects.equals(this.getUserId(item), userId));
+                .anyMatch(item -> Objects.equals(this.getUserPublicId(item), userPublicId));
     }
 
     /**
@@ -121,7 +121,7 @@ public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
             NotificationUtil.showWarning("Please select a user to add");
             return Optional.empty();
         }
-        if (this.isUserAssociated(selectedUser.getId())) {
+        if (this.isUserAssociated(selectedUser.getPublicId())) {
             NotificationUtil.showWarning(alreadyAssociatedMessage);
             combo.clear();
             return Optional.empty();

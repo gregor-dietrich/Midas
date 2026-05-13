@@ -13,20 +13,20 @@ public abstract class AbstractPostCommentDto {
         // Default constructor for Jackson deserialization and NullAway compliance
     }
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("content")
     private String content;
 
-    @JsonProperty("postId")
-    private Long postId;
+    @JsonProperty("postPublicId")
+    private String postPublicId;
 
     @JsonProperty("postTitle")
     private String postTitle;
 
-    @JsonProperty("userId")
-    private Long userId;
+    @JsonProperty("userPublicId")
+    private String userPublicId;
 
     @JsonProperty("username")
     private String username;
@@ -34,12 +34,12 @@ public abstract class AbstractPostCommentDto {
     @JsonProperty("created")
     private LocalDateTime created;
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public String getContent() {
@@ -50,12 +50,12 @@ public abstract class AbstractPostCommentDto {
         this.content = content;
     }
 
-    public Long getPostId() {
-        return this.postId;
+    public String getPostPublicId() {
+        return this.postPublicId;
     }
 
-    public void setPostId(final Long postId) {
-        this.postId = postId;
+    public void setPostPublicId(final String postPublicId) {
+        this.postPublicId = postPublicId;
     }
 
     public String getPostTitle() {
@@ -66,12 +66,12 @@ public abstract class AbstractPostCommentDto {
         this.postTitle = postTitle;
     }
 
-    public Long getUserId() {
-        return this.userId;
+    public String getUserPublicId() {
+        return this.userPublicId;
     }
 
-    public void setUserId(final Long userId) {
-        this.userId = userId;
+    public void setUserPublicId(final String userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
     public String getUsername() {

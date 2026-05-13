@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,7 +27,6 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -36,8 +34,6 @@ import jakarta.ws.rs.core.Response;
 @SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert", "PMD.TooManyMethods" })
 class AccountServiceTest {
 
-    @RestClient
-    @Inject
     @Mock
     AccountClient accountClient;
 
@@ -91,8 +87,8 @@ class AccountServiceTest {
 
     @Test
     void getAccountById_shouldReturnAccount_whenAccountExists() {
-        final var accountId = 1L;
-        final var expectedAccount = MockDataUtil.createAccountResponseDto(accountId, "Test Account");
+        final var accountId = "1";
+        final var expectedAccount = MockDataUtil.createAccountResponseDto(1L, "Test Account");
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedAccount);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -101,13 +97,13 @@ class AccountServiceTest {
         final var result = this.accountService.getAccountById(accountId);
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(accountId);
+        assertThat(result.get().getPublicId()).isEqualTo(accountId);
         assertThat(result.get().getName()).isEqualTo("Test Account");
     }
 
     @Test
     void getAccountById_shouldReturnEmpty_whenAccountNotFound() {
-        final var accountId = 999L;
+        final var accountId = "999";
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         ServiceTestUtil.testReturnEmptyOn404(
@@ -142,7 +138,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountsByUser_shouldReturnUserAccounts_whenUserExists() {
-        final var userId = 1L;
+        final var userId = "1";
         final var account1 = MockDataUtil.createAccountResponseDto(1L, "Account 1");
         final var account2 = MockDataUtil.createAccountResponseDto(2L, "Account 2");
         final var expectedAccounts = Arrays.asList(account1, account2);
@@ -161,7 +157,7 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountsByUser(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountsByUser("1"));
     }
 
     @Test
@@ -191,7 +187,7 @@ class AccountServiceTest {
     void createAccount_shouldReturnCreatedAccount_whenValidAccount() {
         final var newAccount = MockDataUtil.createAccountDto();
         newAccount.setName("New Account");
-        final var createdAccountResponse = TestDataBuilder.createAccountResponse(1L, "New Account");
+        final var createdAccountResponse = TestDataBuilder.createAccountResponse("1", "New Account");
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdAccountResponse);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -199,7 +195,7 @@ class AccountServiceTest {
 
         final var result = this.accountService.createAccount(newAccount);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("New Account");
         verify(this.accountClient).createAccount(newAccount, TestUtil.TEST_AUTH_HEADER);
     }
@@ -234,22 +230,23 @@ class AccountServiceTest {
     @Test
     void updateAccount_shouldReturnUpdatedAccount_whenValidAccount() {
         final var accountToUpdate = MockDataUtil.createAccountDto(1L, "Updated Account");
-        final var updatedAccountResponse = TestDataBuilder.createAccountResponse(1L, "Updated Account");
+        final var updatedAccountResponse = TestDataBuilder.createAccountResponse("1", "Updated Account");
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedAccountResponse);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.updateAccount(1L, accountToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.accountClient.updateAccount("1", accountToUpdate, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
 
         final var result = this.accountService.updateAccount(accountToUpdate);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("Updated Account");
-        verify(this.accountClient).updateAccount(1L, accountToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.accountClient).updateAccount("1", accountToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
     void deleteAccount_shouldReturnTrue_whenDeletionSuccessful() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -263,7 +260,7 @@ class AccountServiceTest {
 
     @Test
     void deleteAccount_shouldReturnFalse_whenDeletionFails() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -279,7 +276,7 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountById("1"));
     }
 
     @Test
@@ -302,7 +299,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountById_shouldThrowServiceException_whenWebApplicationExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final WebApplicationException webException = ExceptionTestUtil.createWebApplicationException(500);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -395,7 +392,7 @@ class AccountServiceTest {
 
     @Test
     void getOutgoingPayments_shouldReturnPaymentList_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = TestDataBuilder.createUniquePayment();
         final var mockResponse = ResponseTestUtil.createOkResponse(Collections.singletonList(payment));
 
@@ -412,12 +409,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getOutgoingPayments(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getOutgoingPayments("1"));
     }
 
     @Test
     void getOutgoingPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getOutgoingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -427,7 +424,7 @@ class AccountServiceTest {
 
     @Test
     void getOutgoingPayments_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getOutgoingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -438,7 +435,7 @@ class AccountServiceTest {
 
     @Test
     void getIncomingPayments_shouldReturnPaymentList_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = TestDataBuilder.createUniquePayment();
         final var mockResponse = ResponseTestUtil.createOkResponse(Collections.singletonList(payment));
 
@@ -455,12 +452,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getIncomingPayments(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getIncomingPayments("1"));
     }
 
     @Test
     void getIncomingPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getIncomingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -470,7 +467,7 @@ class AccountServiceTest {
 
     @Test
     void getIncomingPayments_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getIncomingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -481,8 +478,8 @@ class AccountServiceTest {
 
     @Test
     void getAssociatedUsers_shouldReturnUserList_whenAccountExists() {
-        final var accountId = 1L;
-        final var user = MockDataUtil.createUserResponseDto(1L, "testuser", "test@example.com");
+        final var accountId = "1";
+        final var user = MockDataUtil.createUserResponseDto("1", "testuser", "test@example.com");
         final var expected = Collections.singletonList(user);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -499,12 +496,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAssociatedUsers(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAssociatedUsers("1"));
     }
 
     @Test
     void getAssociatedUsers_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getAssociatedUsers(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -514,7 +511,7 @@ class AccountServiceTest {
 
     @Test
     void getAssociatedUsers_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getAssociatedUsers(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -525,8 +522,8 @@ class AccountServiceTest {
 
     @Test
     void associateUserWithAccount_shouldReturnTrue_whenAssociationSuccessful() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         final var mockResponse = ResponseTestUtil.createMockResponse(201);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -540,8 +537,8 @@ class AccountServiceTest {
 
     @Test
     void associateUserWithAccount_shouldReturnFalse_whenNon204Response() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -559,13 +556,13 @@ class AccountServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.associateUserWithAccount(1L, 2L));
+                .assertThrowsAuthenticationRequired(() -> this.accountService.associateUserWithAccount("1", "2"));
     }
 
     @Test
     void associateUserWithAccount_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.associateUserWithAccount(accountId, userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -576,8 +573,8 @@ class AccountServiceTest {
 
     @Test
     void associateUserWithAccount_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.associateUserWithAccount(accountId, userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -588,8 +585,8 @@ class AccountServiceTest {
 
     @Test
     void associateUserWithAccount_shouldThrowServiceException_when409Conflict() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.associateUserWithAccount(accountId, userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createWebApplicationException(409));
@@ -601,8 +598,8 @@ class AccountServiceTest {
 
     @Test
     void removeUserFromAccount_shouldReturnTrue_whenRemovalSuccessful() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -616,8 +613,8 @@ class AccountServiceTest {
 
     @Test
     void removeUserFromAccount_shouldReturnFalse_whenNon204Response() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -634,13 +631,13 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.removeUserFromAccount(1L, 2L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.removeUserFromAccount("1", "2"));
     }
 
     @Test
     void removeUserFromAccount_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.removeUserFromAccount(accountId, userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -651,8 +648,8 @@ class AccountServiceTest {
 
     @Test
     void removeUserFromAccount_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.removeUserFromAccount(accountId, userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -663,7 +660,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountBalance_shouldReturnBalance_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"balance\": 123.45}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -676,7 +673,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountBalance_shouldThrowServiceException_whenPayloadIsMalformed() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"balance\": \"invalid\"}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -688,7 +685,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountBalance_shouldCloseResponseAfterParsingPayload() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var response = Mockito.mock(Response.class);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -707,12 +704,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountBalance(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getAccountBalance("1"));
     }
 
     @Test
     void getAccountBalance_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -722,7 +719,7 @@ class AccountServiceTest {
 
     @Test
     void getAccountBalance_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -733,7 +730,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountBalance_shouldReturnBalance_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"balance\": 456.78}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -746,7 +743,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountBalance_shouldThrowServiceException_whenPayloadHasNoBalance() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"otherField\": 1}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -761,12 +758,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountBalance(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountBalance("1"));
     }
 
     @Test
     void getMyAccountBalance_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -776,7 +773,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountBalance_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -787,7 +784,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountPayments_shouldReturnPayments_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = MockDataUtil.createPaymentResponseDto();
         final var expected = Collections.singletonList(payment);
 
@@ -804,12 +801,12 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountPayments(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountPayments("1"));
     }
 
     @Test
     void getMyAccountPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -820,7 +817,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountPayments_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -831,7 +828,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountOutgoingPayments_shouldReturnPayments_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = MockDataUtil.createPaymentResponseDto();
         final var expected = Collections.singletonList(payment);
 
@@ -850,12 +847,12 @@ class AccountServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountOutgoingPayments(1L));
+                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountOutgoingPayments("1"));
     }
 
     @Test
     void getMyAccountOutgoingPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountOutgoingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -866,7 +863,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountOutgoingPayments_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountOutgoingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -877,7 +874,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountIncomingPayments_shouldReturnPayments_whenAccountExists() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = MockDataUtil.createPaymentResponseDto();
         final var expected = Collections.singletonList(payment);
 
@@ -896,12 +893,12 @@ class AccountServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountIncomingPayments(1L));
+                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountIncomingPayments("1"));
     }
 
     @Test
     void getMyAccountIncomingPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountIncomingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -912,7 +909,7 @@ class AccountServiceTest {
 
     @Test
     void getMyAccountIncomingPayments_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.getMyAccountIncomingPayments(accountId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -923,10 +920,10 @@ class AccountServiceTest {
 
     @Test
     void createMyAccountPayment_shouldReturnPayment_whenValid() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = TestDataBuilder.createUniquePayment();
         final var createdPayment = MockDataUtil.createPaymentResponseDto();
-        createdPayment.setId(1L);
+        createdPayment.setPublicId("1");
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdPayment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -935,7 +932,7 @@ class AccountServiceTest {
 
         final var result = this.accountService.createMyAccountPayment(accountId, payment);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
     }
 
     @Test
@@ -945,12 +942,12 @@ class AccountServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.createMyAccountPayment(1L, payment));
+                .assertThrowsAuthenticationRequired(() -> this.accountService.createMyAccountPayment("1", payment));
     }
 
     @Test
     void createMyAccountPayment_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = TestDataBuilder.createUniquePayment();
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.createMyAccountPayment(accountId, payment, TestUtil.TEST_AUTH_HEADER))
@@ -962,7 +959,7 @@ class AccountServiceTest {
 
     @Test
     void createMyAccountPayment_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
+        final var accountId = "1";
         final var payment = TestDataBuilder.createUniquePayment();
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.createMyAccountPayment(accountId, payment, TestUtil.TEST_AUTH_HEADER))
@@ -974,12 +971,12 @@ class AccountServiceTest {
 
     @Test
     void updateMyAccountPayment_shouldReturnPayment_whenValid() {
-        final var accountId = 1L;
-        final var paymentId = 2L;
+        final var accountId = "1";
+        final var paymentId = "2";
         final var payment = TestDataBuilder.createUniquePayment();
-        payment.setId(paymentId);
+        payment.setPublicId(paymentId);
         final var updatedPayment = MockDataUtil.createPaymentResponseDto();
-        updatedPayment.setId(paymentId);
+        updatedPayment.setPublicId(paymentId);
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedPayment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -988,7 +985,7 @@ class AccountServiceTest {
 
         final var result = this.accountService.updateMyAccountPayment(accountId, paymentId, payment);
 
-        assertThat(result.getId()).isEqualTo(paymentId);
+        assertThat(result.getPublicId()).isEqualTo(paymentId);
     }
 
     @Test
@@ -997,14 +994,14 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.updateMyAccountPayment(1L, 2L, payment));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                () -> this.accountService.updateMyAccountPayment("1", "2", payment));
     }
 
     @Test
     void updateMyAccountPayment_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
-        final var paymentId = 2L;
+        final var accountId = "1";
+        final var paymentId = "2";
         final var payment = TestDataBuilder.createUniquePayment();
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.updateMyAccountPayment(accountId, paymentId, payment, TestUtil.TEST_AUTH_HEADER))
@@ -1016,8 +1013,8 @@ class AccountServiceTest {
 
     @Test
     void updateMyAccountPayment_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
-        final var paymentId = 2L;
+        final var accountId = "1";
+        final var paymentId = "2";
         final var payment = TestDataBuilder.createUniquePayment();
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.updateMyAccountPayment(accountId, paymentId, payment, TestUtil.TEST_AUTH_HEADER))
@@ -1029,8 +1026,8 @@ class AccountServiceTest {
 
     @Test
     void updateUserAccountMeta_shouldSucceed_whenValid() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -1049,13 +1046,13 @@ class AccountServiceTest {
                 .thenThrow(new AuthenticationException("Authentication required"));
 
         ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.updateUserAccountMeta(1L, 2L, true));
+                .assertThrowsAuthenticationRequired(() -> this.accountService.updateUserAccountMeta("1", "2", true));
     }
 
     @Test
     void updateUserAccountMeta_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.updateUserAccountMeta(eq(accountId), eq(userId), Mockito.any(UserAccountMetaDto.class),
                 eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.createProcessingException());
@@ -1066,8 +1063,8 @@ class AccountServiceTest {
 
     @Test
     void updateUserAccountMeta_shouldThrowAuthenticationException_when401Error() {
-        final var accountId = 1L;
-        final var userId = 2L;
+        final var accountId = "1";
+        final var userId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.accountClient.updateUserAccountMeta(eq(accountId), eq(userId), Mockito.any(UserAccountMetaDto.class),
                 eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.create401Exception());

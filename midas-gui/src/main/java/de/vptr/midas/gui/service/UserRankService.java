@@ -76,13 +76,13 @@ public class UserRankService {
         }
 
         final var user = currentUser.get();
-        if (user.getRankId() == null) {
+        if (user.getRankPublicId() == null) {
             LOG.warn("User has no rank assigned for permission check");
             return emptyRank;
         }
 
         try {
-            final var userRank = this.getRankById(user.getRankId());
+            final var userRank = this.getRankById(user.getRankPublicId());
 
             // Cache the result in session
             if (session != null) {
@@ -111,7 +111,7 @@ public class UserRankService {
     }
 
     /** Returns the rank by id. */
-    public UserRankResponseDto getRankById(final Long id) {
+    public UserRankResponseDto getRankById(final String id) {
         LOG.infof("Getting user rank by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -145,18 +145,20 @@ public class UserRankService {
 
     /** Updates the rank. */
     public UserRankDto updateRank(final UserRankDto rank) {
-        LOG.infof("Updating user rank: %s (%s)", rank.getName(), rank.getId());
+        LOG.infof("Updating user rank: %s (%s)", rank.getName(), rank.getPublicId());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.updateRank(rank.getId(), rank, authHeader);
-        }, this.authService, LOG, "updating user rank " + rank.getId(), "Failed to update user rank", response -> {
-            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                final var updatedRank = ServiceHelper.readEntity(response, UserRankDto.class, "updated user rank");
-                LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
-                return updatedRank;
-            }
-            throw ServiceHelper.responseFailure("Failed to update user rank", response);
-        });
+            return this.userRankClient.updateRank(rank.getPublicId(), rank, authHeader);
+        }, this.authService, LOG, "updating user rank " + rank.getPublicId(), "Failed to update user rank",
+                response -> {
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                        final var updatedRank =
+                                ServiceHelper.readEntity(response, UserRankDto.class, "updated user rank");
+                        LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
+                        return updatedRank;
+                    }
+                    throw ServiceHelper.responseFailure("Failed to update user rank", response);
+                });
     }
 
     /** Handles the search ranks operation. */
@@ -168,7 +170,7 @@ public class UserRankService {
     }
 
     /** Handles the delete rank operation. */
-    public void deleteRank(final Long id) {
+    public void deleteRank(final String id) {
         LOG.infof("Deleting user rank: %s", id);
         ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();

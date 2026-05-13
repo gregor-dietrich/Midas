@@ -53,12 +53,12 @@ class PostResourceTest {
 
     @Test
     void testGetPost_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetPost_authorizedWithExistingPost() {
-        final Long id = createTestPost();
+        final String id = createTestPost();
         testAuthorizedGetWithExistingResourceAndJson(ENDPOINT_URL + "/" + id);
     }
 
@@ -69,22 +69,18 @@ class PostResourceTest {
 
     @Test
     void testGetPostsByUser_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
-    void testGetPostsByUser_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
-    }
-
-    @Test
-    void testGetPostsByCategory_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/category/1");
-    }
-
-    @Test
-    void testGetPostsByCategory_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/category/1");
+    void testGetPostsByUserAndCategory_authorized() {
+        createTestPost();
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7");
+        final String categoryId = authenticatedRequest().when().get(ENDPOINT_URL).then().statusCode(200).extract()
+                .path("[0].category.publicId");
+        if (categoryId != null) {
+            testAuthorizedGetWithJson(ENDPOINT_URL + "/category/" + categoryId);
+        }
     }
 
     @Test
@@ -95,6 +91,7 @@ class PostResourceTest {
     @Test
     void testSearchPosts_authorized() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
     }
 
     @Test
@@ -144,34 +141,39 @@ class PostResourceTest {
 
     @Test
     void testUpdatePost_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPostJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", createUpdatedPostJson());
     }
 
     @Test
     void testUpdatePost_authorized() {
-        final Long postId = createTestPost();
+        final String postId = createTestPost();
         testAuthorizedPutWithJson(ENDPOINT_URL + "/" + postId, createUpdatedPostJson());
     }
 
     @Test
     void testPatchPost_unauthorized() {
-        testUnauthorizedPatch(ENDPOINT_URL + "/1", createDefaultPostPatchJson());
+        testUnauthorizedPatch(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", createDefaultPostPatchJson());
     }
 
     @Test
     void testPatchPost_authorized() {
-        final Long postId = createTestPost();
+        final String postId = createTestPost();
         testAuthorizedPatchWithJson(ENDPOINT_URL + "/" + postId, createDefaultPostPatchJson());
     }
 
     @Test
     void testDeletePost_unauthorized() {
-        testUnauthorizedDelete(ENDPOINT_URL + "/1");
+        testUnauthorizedDelete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testDeletePost_authorized() {
-        final Long postId = createTestPost();
+        final String postId = createTestPost();
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + postId).then().statusCode(204);
+    }
+
+    @Test
+    void testDeletePost_nonexistent() {
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }
 }

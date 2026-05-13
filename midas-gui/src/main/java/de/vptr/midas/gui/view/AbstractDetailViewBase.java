@@ -54,7 +54,7 @@ public abstract class AbstractDetailViewBase<T> extends AbstractAuthenticatedPar
         final var idStr = Objects.requireNonNull(this.identifier);
         this.log.infof("Loading %s with identifier: %s", this.getEntitySingleName().toLowerCase(Locale.ROOT), idStr);
 
-        final Long entityId = this.tryParseId(idStr);
+        final String entityId = this.tryParseId(idStr);
 
         if (entityId != null) {
             this.loadById(entityId);
@@ -64,15 +64,14 @@ public abstract class AbstractDetailViewBase<T> extends AbstractAuthenticatedPar
     }
 
     @Nullable
-    protected Long tryParseId(final String value) {
-        try {
-            return Long.valueOf(value);
-        } catch (final NumberFormatException e) {
-            return null;
+    protected String tryParseId(final String value) {
+        if (value != null && value.length() == 26 && value.matches("^[0-9A-Z]{26}$")) {
+            return value;
         }
+        return null;
     }
 
-    protected abstract void loadById(Long id);
+    protected abstract void loadById(String id);
 
     protected abstract void loadByName(String name);
 

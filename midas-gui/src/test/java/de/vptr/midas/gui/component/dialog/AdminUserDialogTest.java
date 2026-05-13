@@ -39,9 +39,9 @@ class AdminUserDialogTest extends AbstractDialogTest {
     @Test
     void saveUser_shouldPreserveEnteredPassword_onCreate() {
         final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
-        final var rank = this.createRank(1L, "Administrator");
+        final var rank = this.createRank("1", "Administrator");
         when(this.userService.createUser(any(UserDto.class)))
-                .thenReturn(MockDataUtil.createUserResponseDto(1L, "newuser", "new@example.com"));
+                .thenReturn(MockDataUtil.createUserResponseDto("1", "newuser", "new@example.com"));
 
         dialog.open(null, List.of(rank));
 
@@ -63,9 +63,9 @@ class AdminUserDialogTest extends AbstractDialogTest {
     @Test
     void openPasswordDialog_shouldUseMaskedPasswordFields() throws Exception {
         final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
-        final var rank = this.createRank(1L, "Administrator");
+        final var rank = this.createRank("1", "Administrator");
         final UserResponseDto existingUser =
-                MockDataUtil.createUserResponseDto(1L, "existinguser", "existing@example.com");
+                MockDataUtil.createUserResponseDto("1", "existinguser", "existing@example.com");
 
         dialog.open(existingUser, List.of(rank));
         findButton(dialog, "Change Password").click();
@@ -79,9 +79,9 @@ class AdminUserDialogTest extends AbstractDialogTest {
                 "Confirm Password");
     }
 
-    private UserRankResponseDto createRank(final Long id, final String name) {
+    private UserRankResponseDto createRank(final String id, final String name) {
         final var rank = new UserRankResponseDto();
-        rank.setId(id);
+        rank.setPublicId(id);
         rank.setName(name);
         return rank;
     }

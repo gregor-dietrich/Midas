@@ -64,11 +64,11 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
 
         final ArgumentCaptor<PaymentDto> captor = ArgumentCaptor.forClass(PaymentDto.class);
         verify(this.paymentService).createPayment(captor.capture());
-        assertThat(captor.getValue().getSourceAccountId()).isEqualTo(1L);
-        assertThat(captor.getValue().getTargetAccountId()).isEqualTo(2L);
+        assertThat(captor.getValue().getSourceAccountPublicId()).isEqualTo("1");
+        assertThat(captor.getValue().getTargetAccountPublicId()).isEqualTo("2");
         assertThat(captor.getValue().getAmount()).isEqualByComparingTo(new BigDecimal("250.00"));
         assertThat(captor.getValue().getComment()).isEqualTo("Test payment");
-        assertThat(captor.getValue().getUserId()).isEqualTo(currentUser.getId());
+        assertThat(captor.getValue().getUserPublicId()).isEqualTo(currentUser.getPublicId());
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Payment created successfully"));
         verify(this.onSave).run();
     }
@@ -114,10 +114,10 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
         final var accounts = List.of(sourceAccount, targetAccount);
 
         final var existingPayment = new PaymentDto();
-        existingPayment.setId(5L);
-        existingPayment.setUserId(1L);
-        existingPayment.setSourceAccountId(1L);
-        existingPayment.setTargetAccountId(2L);
+        existingPayment.setPublicId("5");
+        existingPayment.setUserPublicId("1");
+        existingPayment.setSourceAccountPublicId("1");
+        existingPayment.setTargetAccountPublicId("2");
         existingPayment.setAmount(new BigDecimal("500.00"));
         existingPayment.setDate(LocalDate.of(2024, 6, 15));
         existingPayment.setComment("Existing payment");
@@ -136,11 +136,11 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
 
         final var sourceCombo = this.findAccountComboBox(dialog, "Source Account");
         assertThat(sourceCombo.getValue()).isNotNull();
-        assertThat(sourceCombo.getValue().getId()).isEqualTo(1L);
+        assertThat(sourceCombo.getValue().getPublicId()).isEqualTo("1");
 
         final var targetCombo = this.findAccountComboBox(dialog, "Target Account");
         assertThat(targetCombo.getValue()).isNotNull();
-        assertThat(targetCombo.getValue().getId()).isEqualTo(2L);
+        assertThat(targetCombo.getValue().getPublicId()).isEqualTo("2");
     }
 
     @SuppressWarnings("unchecked")

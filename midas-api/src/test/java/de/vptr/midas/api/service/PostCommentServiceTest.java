@@ -55,11 +55,12 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
             this.testCategory = setupTestCategory();
             this.testUser = setupTestUser(this.userService);
 
-            final var testPostDto = ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id);
+            final var testPostDto =
+                    ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId);
             testPostDto.published = true;
             testPostDto.commentable = true;
             final var createdPost = this.postService.createPost(testPostDto);
-            this.testPost = PostEntity.findById(createdPost.id);
+            this.testPost = PostEntity.find("publicId", createdPost.publicId).firstResult();
         });
     }
 
@@ -88,31 +89,32 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testCreateComment() {
         final var newComment =
-                ServiceTestDataBuilder.createUniquePostCommentDto("Test Comment Content", this.testPost.id);
+                ServiceTestDataBuilder.createUniquePostCommentDto("Test Comment Content", this.testPost.publicId);
 
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(createdComment);
-        assertNotNull(createdComment.id);
+        assertNotNull(createdComment.publicId);
         assertEquals("Test Comment Content", createdComment.content);
-        assertEquals(this.testUser.id, createdComment.userId);
-        assertEquals(this.testPost.id, createdComment.postId);
+        assertEquals(this.testUser.publicId, createdComment.userPublicId);
+        assertEquals(this.testPost.publicId, createdComment.postPublicId);
         assertNotNull(createdComment.created);
     }
 
     @Test
     @TestTransaction
     void testUpdateComment() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
         final var updateDto = new PostCommentDto();
         updateDto.content = "Updated Comment Content";
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
-        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(commentId, updateDto,
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
+        final PostCommentResponseDto updatedComment = this.postCommentService.updateComment(commentPublicId, updateDto,
                 Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(updatedComment);
@@ -122,7 +124,8 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testUpdateCommentShouldDenyNonOwnerWithoutAdminAccess() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Original Comment", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
         final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
@@ -130,32 +133,33 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
         final var updateDto = new PostCommentDto();
         updateDto.content = "Blocked update";
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
         final String intruderUsername = Objects.requireNonNull(intruder.username);
         final var exception = assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.updateComment(commentId, updateDto, intruderUsername));
+                () -> this.postCommentService.updateComment(commentPublicId, updateDto, intruderUsername));
         assertEquals(403, exception.getResponse().getStatus());
     }
 
     @Test
     @TestTransaction
     void testDeleteComment() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Comment to delete", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Comment to delete", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
 
-        final var deleted = this.postCommentService.deleteComment(commentId, this.testUser.username);
+        final var deleted = this.postCommentService.deleteComment(commentPublicId, this.testUser.username);
 
         assertTrue(deleted);
-        final var deletedComment = this.postCommentService.findById(commentId);
+        final var deletedComment = this.postCommentService.findById(commentPublicId);
         assertTrue(deletedComment.isEmpty());
     }
 
     @Test
     void testDeleteNonExistentComment() {
-        final var deleted = this.postCommentService.deleteComment(999999L, null);
+        final var deleted = this.postCommentService.deleteComment("999999", null);
         assertFalse(deleted);
     }
 
@@ -163,12 +167,12 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindById() {
         final var newComment =
-                ServiceTestDataBuilder.createUniquePostCommentDto("Find By ID Comment", this.testPost.id);
+                ServiceTestDataBuilder.createUniquePostCommentDto("Find By ID Comment", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
-        final var foundComment = this.postCommentService.findById(commentId);
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
+        final var foundComment = this.postCommentService.findById(commentPublicId);
 
         assertTrue(foundComment.isPresent());
         assertEquals("Find By ID Comment", foundComment.get().content);
@@ -176,7 +180,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundComment = this.postCommentService.findById(999999L);
+        final var foundComment = this.postCommentService.findById("999999");
         assertTrue(foundComment.isEmpty());
     }
 
@@ -184,20 +188,20 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByPostId() {
         final String username = Objects.requireNonNull(this.testUser.username);
-        final Long postId = Objects.requireNonNull(this.testPost.id);
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("First comment", postId);
+        final String postPublicId = Objects.requireNonNull(this.testPost.publicId);
+        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("First comment", postPublicId);
         this.postCommentService.createComment(comment1, username);
 
-        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto("Second comment", postId);
+        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto("Second comment", postPublicId);
         this.postCommentService.createComment(comment2, username);
 
-        final var postComments = this.postCommentService.findByPostId(postId);
+        final var postComments = this.postCommentService.findByPostPublicId(postPublicId);
 
         assertNotNull(postComments);
         assertTrue(postComments.size() >= 2);
 
         for (final var comment : postComments) {
-            assertEquals(postId, comment.postId);
+            assertEquals(postPublicId, comment.postPublicId);
         }
     }
 
@@ -205,26 +209,29 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByUserId() {
         final String username2 = Objects.requireNonNull(this.testUser.username);
-        final Long userId = Objects.requireNonNull(this.testUser.id);
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("User comment 1", this.testPost.id);
+        final String userPublicId = Objects.requireNonNull(this.testUser.publicId);
+        final var comment1 =
+                ServiceTestDataBuilder.createUniquePostCommentDto("User comment 1", this.testPost.publicId);
         this.postCommentService.createComment(comment1, username2);
 
-        final var comment2 = ServiceTestDataBuilder.createUniquePostCommentDto("User comment 2", this.testPost.id);
+        final var comment2 =
+                ServiceTestDataBuilder.createUniquePostCommentDto("User comment 2", this.testPost.publicId);
         this.postCommentService.createComment(comment2, username2);
 
-        final var userComments = this.postCommentService.findByUserId(userId);
+        final var userComments = this.postCommentService.findByUserPublicId(userPublicId);
         assertNotNull(userComments);
         assertTrue(userComments.size() >= 2);
 
         for (final var comment : userComments) {
-            assertEquals(userId, comment.userId);
+            assertEquals(userPublicId, comment.userPublicId);
         }
     }
 
     @Test
     @TestTransaction
     void testFindRecentComments() {
-        final var comment1 = ServiceTestDataBuilder.createUniquePostCommentDto("Recent comment", this.testPost.id);
+        final var comment1 =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Recent comment", this.testPost.publicId);
         this.postCommentService.createComment(comment1, Objects.requireNonNull(this.testUser.username));
 
         final var recentComments = this.postCommentService.findRecentComments(10);
@@ -236,15 +243,16 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testPatchComment() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Original patch", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Original patch", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
         final var patchDto = new PostCommentDto();
         patchDto.content = "Patched content";
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
-        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentId, patchDto,
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
+        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentPublicId, patchDto,
                 Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(patchedComment);
@@ -254,14 +262,15 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testPatchCommentWithoutContent() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("Keep original", this.testPost.id);
+        final var newComment =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Keep original", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
         final var emptyPatchDto = new PostCommentDto();
-        final Long commentId = Objects.requireNonNull(createdComment.id);
-        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentId, emptyPatchDto,
-                Objects.requireNonNull(this.testUser.username));
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
+        final PostCommentResponseDto patchedComment = this.postCommentService.patchComment(commentPublicId,
+                emptyPatchDto, Objects.requireNonNull(this.testUser.username));
 
         assertEquals("Keep original", patchedComment.content);
     }
@@ -269,24 +278,24 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testDeleteCommentShouldDenyNonOwnerWithoutAdminAccess() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.id);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
         final var intruder = this.userService.createUser(ServiceTestDataBuilder.createUniqueUserDto());
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String commentPublicId = Objects.requireNonNull(createdComment.publicId);
         final String intruderUsername = Objects.requireNonNull(intruder.username);
         assertThrows(WebApplicationException.class,
-                () -> this.postCommentService.deleteComment(commentId, intruderUsername));
+                () -> this.postCommentService.deleteComment(commentPublicId, intruderUsername));
     }
 
     @Test
     @TestTransaction
     void testCreateCommentOnUnpublishedPost() {
-        final var unpublishedPost = this.postService
-                .createPost(ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+        final var unpublishedPost = this.postService.createPost(
+                ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId));
 
-        final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.id);
+        final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.publicId);
         assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
                 Objects.requireNonNull(this.testUser.username)));
     }
@@ -294,11 +303,12 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateCommentOnNonCommentablePost() {
-        final var nonCommentablePost = this.postService
-                .createPost(ServiceTestDataBuilder.createUniquePostDto(this.testUser.id, this.testCategory.id));
+        final var nonCommentablePost = this.postService.createPost(
+                ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId));
         nonCommentablePost.commentable = false;
 
-        final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", nonCommentablePost.id);
+        final var commentDto =
+                ServiceTestDataBuilder.createUniquePostCommentDto("Comment", nonCommentablePost.publicId);
         assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
                 Objects.requireNonNull(this.testUser.username)));
     }
@@ -328,7 +338,7 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testFindByDateRangeWithValidDates() {
-        final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Date test", this.testPost.id);
+        final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Date test", this.testPost.publicId);
         this.postCommentService.createComment(comment, Objects.requireNonNull(this.testUser.username));
 
         final var results =
@@ -339,11 +349,11 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testDeleteCommentWithNullUsername() {
-        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.id);
+        final var newComment = ServiceTestDataBuilder.createUniquePostCommentDto("To delete", this.testPost.publicId);
         final PostCommentResponseDto createdComment =
                 this.postCommentService.createComment(newComment, Objects.requireNonNull(this.testUser.username));
 
-        final Long commentId = Objects.requireNonNull(createdComment.id);
+        final String commentId = Objects.requireNonNull(createdComment.publicId);
         @SuppressWarnings("NullAway")
         final var _ =
                 assertThrows(ValidationException.class, () -> this.postCommentService.deleteComment(commentId, null));
@@ -353,14 +363,15 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByPostIdWithPagination() {
         final String username = Objects.requireNonNull(this.testUser.username);
-        final Long postId = Objects.requireNonNull(this.testPost.id);
+        final String postPublicId = Objects.requireNonNull(this.testPost.publicId);
         for (int i = 0; i < 5; i++) {
-            final var comment = ServiceTestDataBuilder.createUniquePostCommentDto("Paginated comment " + i, postId);
+            final var comment =
+                    ServiceTestDataBuilder.createUniquePostCommentDto("Paginated comment " + i, postPublicId);
             this.postCommentService.createComment(comment, username);
         }
 
-        final var page0 = this.postCommentService.findByPostId(postId, 0, 2);
-        final var page1 = this.postCommentService.findByPostId(postId, 1, 2);
+        final var page0 = this.postCommentService.findByPostPublicId(postPublicId, 0, 2);
+        final var page1 = this.postCommentService.findByPostPublicId(postPublicId, 1, 2);
 
         assertTrue(page0.size() > 0);
         assertTrue(page1.size() > 0);
@@ -370,15 +381,15 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @TestTransaction
     void testFindByUserIdWithPagination() {
         final String username = Objects.requireNonNull(this.testUser.username);
-        final Long userId = Objects.requireNonNull(this.testUser.id);
+        final String userPublicId = Objects.requireNonNull(this.testUser.publicId);
         for (int i = 0; i < 5; i++) {
             final var comment =
-                    ServiceTestDataBuilder.createUniquePostCommentDto("User paginated " + i, this.testPost.id);
+                    ServiceTestDataBuilder.createUniquePostCommentDto("User paginated " + i, this.testPost.publicId);
             this.postCommentService.createComment(comment, username);
         }
 
-        final var page0 = this.postCommentService.findByUserId(userId, 0, 2);
-        final var page1 = this.postCommentService.findByUserId(userId, 1, 2);
+        final var page0 = this.postCommentService.findByUserPublicId(userPublicId, 0, 2);
+        final var page1 = this.postCommentService.findByUserPublicId(userPublicId, 1, 2);
 
         assertTrue(page0.size() > 0);
         assertTrue(page1.size() > 0);

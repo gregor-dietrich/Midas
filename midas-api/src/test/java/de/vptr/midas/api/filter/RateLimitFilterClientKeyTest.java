@@ -52,7 +52,7 @@ class RateLimitFilterClientKeyTest {
         when(request.remoteAddress()).thenReturn(remoteAddress);
         when(remoteAddress.hostAddress()).thenReturn("203.0.113.70");
 
-        filter.routingContextInstance = routingContextInstance;
+        filter.setRoutingContextInstanceForTest(routingContextInstance);
 
         assertEquals("203.0.113.70", filter.resolveClientKey(requestContext));
     }
@@ -73,7 +73,7 @@ class RateLimitFilterClientKeyTest {
         when(request.remoteAddress()).thenReturn(null);
         when(request.connection()).thenReturn(connection);
 
-        filter.routingContextInstance = routingContextInstance;
+        filter.setRoutingContextInstanceForTest(routingContextInstance);
 
         assertEquals("connection:" + Integer.toHexString(System.identityHashCode(connection)),
                 filter.resolveClientKey(requestContext));
@@ -88,7 +88,7 @@ class RateLimitFilterClientKeyTest {
         when(requestContext.getHeaderString(anyString())).thenReturn(null);
         when(routingContextInstance.isResolvable()).thenReturn(false);
 
-        filter.routingContextInstance = routingContextInstance;
+        filter.setRoutingContextInstanceForTest(routingContextInstance);
 
         final String clientKey = filter.resolveClientKey(requestContext);
 

@@ -144,12 +144,12 @@
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.91</minimum>
+                      <minimum>0.92</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.74</minimum>
+                      <minimum>0.76</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -160,6 +160,7 @@
         <configuration>
           <excludes>
             <exclude>de/vptr/midas/api/util/PasswordUtil*</exclude>
+            <exclude>de/vptr/midas/api/dto/**</exclude>
           </excludes>
         </configuration>
       </plugin>

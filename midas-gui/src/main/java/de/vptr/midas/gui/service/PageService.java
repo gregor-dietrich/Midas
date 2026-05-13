@@ -48,7 +48,7 @@ public class PageService {
     }
 
     /** Returns the page by id. */
-    public Optional<PageResponseDto> getPageById(final Long id) {
+    public Optional<PageResponseDto> getPageById(final String id) {
         LOG.infof("Getting page by id: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -70,17 +70,17 @@ public class PageService {
 
     /** Updates the page. */
     public PageDto updatePage(final PageDto page) {
-        LOG.infof("Updating page: %s (%s)", page.getTitle(), page.getId());
+        LOG.infof("Updating page: %s (%s)", page.getTitle(), page.getPublicId());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.pageClient.updatePage(page.getId(), page, authHeader);
-        }, this.authService, LOG, "updating page " + page.getId(), "Failed to update page",
+            return this.pageClient.updatePage(page.getPublicId(), page, authHeader);
+        }, this.authService, LOG, "updating page " + page.getPublicId(), "Failed to update page",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PageResponseDto.class,
                         PageResponseDto::toPageDto, "updated page response", "Failed to update page"));
     }
 
     /** Handles the delete page operation. */
-    public void deletePage(final Long id) {
+    public void deletePage(final String id) {
         LOG.infof("Deleting page: %s", id);
         ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();

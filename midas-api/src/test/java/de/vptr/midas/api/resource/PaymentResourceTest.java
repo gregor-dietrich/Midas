@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 
 @QuarkusTest
 class PaymentResourceTest {
@@ -38,14 +39,13 @@ class PaymentResourceTest {
 
     @Test
     void testGetPaymentById_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetPaymentById_authorizedWithExistingPayment() {
-        final Integer id =
-                authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
-                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+        final String id = authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts())
+                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
 
         authenticatedRequest().when().get(ENDPOINT_URL + "/" + id).then().statusCode(200).contentType(ContentType.JSON);
     }
@@ -57,12 +57,17 @@ class PaymentResourceTest {
 
     @Test
     void testGetPaymentsByUser_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetPaymentsByUser_authorizedWithValidUser() {
-        authenticatedRequest().when().get(ENDPOINT_URL + "/user/1").then().statusCode(200)
+        final String paymentJson = createPaymentJsonWithTestAccounts();
+        final String userId = new JsonPath(paymentJson).getString("userPublicId");
+        authenticatedRequest().contentType(ContentType.JSON).body(paymentJson).when().post(ENDPOINT_URL).then()
+                .statusCode(201);
+
+        authenticatedRequest().when().get(ENDPOINT_URL + "/user/" + userId).then().statusCode(200)
                 .contentType(ContentType.JSON);
     }
 
@@ -108,32 +113,40 @@ class PaymentResourceTest {
 
     @Test
     void testUpdatePayment_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPaymentJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", createUpdatedPaymentJson());
     }
 
     @Test
     void testDeletePayment_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1", "DELETE");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", "DELETE");
     }
 
     @Test
     void testGetPaymentsBySourceAccount_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/source/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/source/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetPaymentsBySourceAccount_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/source/1");
+        final String paymentJson = createPaymentJsonWithTestAccounts();
+        final String sourceId = new JsonPath(paymentJson).getString("sourceAccountPublicId");
+        authenticatedRequest().contentType(ContentType.JSON).body(paymentJson).when().post(ENDPOINT_URL).then()
+                .statusCode(201);
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/source/" + sourceId);
     }
 
     @Test
     void testGetPaymentsByTargetAccount_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/target/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/target/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetPaymentsByTargetAccount_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/target/1");
+        final String paymentJson = createPaymentJsonWithTestAccounts();
+        final String targetId = new JsonPath(paymentJson).getString("targetAccountPublicId");
+        authenticatedRequest().contentType(ContentType.JSON).body(paymentJson).when().post(ENDPOINT_URL).then()
+                .statusCode(201);
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/target/" + targetId);
     }
 
     @Test
@@ -148,17 +161,21 @@ class PaymentResourceTest {
 
     @Test
     void testGetTotalAmountByUser_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/user/1/total");
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7/total");
     }
 
     @Test
     void testGetTotalAmountByUser_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1/total");
+        final String paymentJson = createPaymentJsonWithTestAccounts();
+        final String userId = new JsonPath(paymentJson).getString("userPublicId");
+        authenticatedRequest().contentType(ContentType.JSON).body(paymentJson).when().post(ENDPOINT_URL).then()
+                .statusCode(201);
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/" + userId + "/total");
     }
 
     @Test
     void testUpdatePayment_authorized() {
-        final Integer id = createTestPayment();
+        final String id = createTestPayment();
 
         authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
                 .put(ENDPOINT_URL + "/" + id).then().statusCode(200);
@@ -166,7 +183,7 @@ class PaymentResourceTest {
 
     @Test
     void testPatchPayment_authorized() {
-        final Integer id = createTestPayment();
+        final String id = createTestPayment();
 
         authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
                 .patch(ENDPOINT_URL + "/" + id).then().statusCode(200);
@@ -174,14 +191,14 @@ class PaymentResourceTest {
 
     @Test
     void testDeletePayment_authorized() {
-        final Integer id = createTestPayment();
+        final String id = createTestPayment();
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }
 
-    private Integer createTestPayment() {
+    private String createTestPayment() {
         return authenticatedRequest().contentType(ContentType.JSON).body(createPaymentJsonWithTestAccounts()).when()
-                .post(ENDPOINT_URL).then().statusCode(201).extract().path("id");
+                .post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
     }
 
     @Test
@@ -192,5 +209,11 @@ class PaymentResourceTest {
     @Test
     void testSearchPayments_authorized() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+    }
+
+    @Test
+    void testDeletePayment_nonexistent() {
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }
 }

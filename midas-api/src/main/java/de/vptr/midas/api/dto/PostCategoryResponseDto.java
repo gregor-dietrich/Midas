@@ -12,18 +12,18 @@ import jakarta.annotation.Nullable;
 public class PostCategoryResponseDto {
 
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String name;
     @Nullable
-    public Long parentId;
+    public String parentPublicId;
     @Nullable
     public String parentName;
     public boolean isRootCategory;
     public int childrenCount;
     public int postsCount;
     @Nullable
-    public List<Long> childrenIds;
+    public List<String> childrenPublicIds;
     @Nullable
     public LocalDateTime created;
     @Nullable
@@ -37,18 +37,18 @@ public class PostCategoryResponseDto {
      * Creates a new instance with pre-computed counts (avoids lazy-loading collections).
      */
     public PostCategoryResponseDto(final PostCategoryEntity entity, final int childrenCount,
-            @Nullable final List<Long> childrenIds, final int postsCount) {
-        this.id = entity.id;
+            @Nullable final List<String> childrenPublicIds, final int postsCount) {
+        this.publicId = entity.publicId;
         this.name = entity.name;
         this.isRootCategory = entity.isRootCategory();
 
         if (entity.parent != null) {
-            this.parentId = entity.parent.id;
+            this.parentPublicId = entity.parent.publicId;
             this.parentName = entity.parent.name;
         }
 
         this.childrenCount = childrenCount;
-        this.childrenIds = childrenIds != null ? childrenIds : List.of();
+        this.childrenPublicIds = childrenPublicIds != null ? childrenPublicIds : List.of();
         this.postsCount = postsCount;
         this.created = entity.created;
         this.lastEdit = entity.lastEdit;

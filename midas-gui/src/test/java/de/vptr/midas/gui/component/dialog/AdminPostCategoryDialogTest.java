@@ -35,7 +35,8 @@ class AdminPostCategoryDialogTest extends AbstractDialogTest {
     @Test
     void saveCategory_shouldCreateCategory_withNameAndParent() {
         final var dialog = new AdminPostCategoryDialog(this.categoryService, this.onSave, this.onAuthFailure);
-        final var parentCategory = MockDataUtil.createPostCategoryResponseDto(10L, "Parent Category", null, 0, 5, true);
+        final var parentCategory =
+                MockDataUtil.createPostCategoryResponseDto("10", "Parent Category", null, 0, 5, true);
         final var allCategories = List.of(parentCategory);
         when(this.categoryService.createCategory(any(PostCategoryDto.class)))
                 .thenReturn(MockDataUtil.createPostCategoryDto());
@@ -51,7 +52,7 @@ class AdminPostCategoryDialogTest extends AbstractDialogTest {
         verify(this.categoryService).createCategory(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("New Category");
         assertThat(captor.getValue().getParent()).isNotNull();
-        assertThat(captor.getValue().getParent().getId()).isEqualTo(10L);
+        assertThat(captor.getValue().getParent().getPublicId()).isEqualTo("10");
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Category created successfully"));
         verify(this.onSave).run();
     }

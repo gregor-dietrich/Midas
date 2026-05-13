@@ -32,9 +32,9 @@ public class AccountService {
         return this.accountResponseAssembler.toAccountResponseDtos(accounts);
     }
 
-    /** Returns the account with the given id. */
-    public Optional<AccountResponseDto> findById(final Long id) {
-        return AccountEntity.findByIdOptional(id)
+    /** Returns the account with the given publicId. */
+    public Optional<AccountResponseDto> findById(final String publicId) {
+        return AccountEntity.find("publicId", publicId).firstResultOptional()
                 .map(entity -> this.accountResponseAssembler.toAccountResponseDto((AccountEntity) entity));
     }
 
@@ -53,10 +53,10 @@ public class AccountService {
         return this.accountResponseAssembler.toAccountResponseDto(account);
     }
 
-    /** Updates the account with the given id. */
+    /** Updates the account with the given publicId. */
     @Transactional
-    public AccountResponseDto updateAccount(final Long id, final AccountDto accountDto) {
-        final AccountEntity existingAccount = this.requireExistingAccount(id);
+    public AccountResponseDto updateAccount(final String publicId, final AccountDto accountDto) {
+        final AccountEntity existingAccount = this.requireExistingAccount(publicId);
 
         // Complete replacement (PUT semantics)
         existingAccount.name = accountDto.name;
@@ -65,10 +65,10 @@ public class AccountService {
         return this.accountResponseAssembler.toAccountResponseDto(existingAccount);
     }
 
-    /** Partially updates the account with the given id. */
+    /** Partially updates the account with the given publicId. */
     @Transactional
-    public AccountResponseDto patchAccount(final Long id, final AccountDto accountDto) {
-        final AccountEntity existingAccount = this.requireExistingAccount(id);
+    public AccountResponseDto patchAccount(final String publicId, final AccountDto accountDto) {
+        final AccountEntity existingAccount = this.requireExistingAccount(publicId);
 
         // Partial update (PATCH semantics) - only update provided fields
         if (accountDto.name != null) {
@@ -77,24 +77,25 @@ public class AccountService {
 
         existingAccount.persistAndFlush();
         AccountEntity.getEntityManager().detach(existingAccount);
-        return this.accountResponseAssembler.toAccountResponseDto(AccountEntity.findById(existingAccount.id));
+        return this.accountResponseAssembler
+                .toAccountResponseDto(AccountEntity.find("publicId", existingAccount.publicId).firstResult());
     }
 
-    /** Deletes the account with the given id. */
+    /** Deletes the account with the given publicId. */
     @Transactional
-    public boolean deleteAccount(final Long id) {
-        final var account = AccountEntity.findById(id);
+    public boolean deleteAccount(final String publicId) {
+        final AccountEntity account = AccountEntity.find("publicId", publicId).firstResult();
         if (account == null) {
             return false;
         }
 
         // Check if account has any payments
-        final long paymentCount = PaymentEntity.count("sourceAccount.id = ?1 OR targetAccount.id = ?1", id);
+        final long paymentCount = PaymentEntity.count("sourceAccount.id = ?1 OR targetAccount.id = ?1", account.id);
         if (paymentCount > 0) {
             throw new WebApplicationException("Cannot delete account with existing payments", Response.Status.CONFLICT);
         }
 
-        return AccountEntity.deleteById(id);
+        return AccountEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all accounts matching the given query. */
@@ -114,8 +115,8 @@ public class AccountService {
         return this.accountResponseAssembler.toAccountResponseDtos(accounts);
     }
 
-    private AccountEntity requireExistingAccount(final Long id) {
-        final AccountEntity existingAccount = AccountEntity.findById(id);
+    private AccountEntity requireExistingAccount(final String publicId) {
+        final AccountEntity existingAccount = AccountEntity.find("publicId", publicId).firstResult();
         if (existingAccount == null) {
             throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
         }

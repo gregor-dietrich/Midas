@@ -46,7 +46,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         rank1.setName("Admin");
         final var rank2 = MockDataUtil.createUserRankResponseDto();
         rank2.setName("User");
-        rank2.setId(2L);
+        rank2.setPublicId("2");
         final var expectedRanks = Arrays.asList(rank1, rank2);
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedRanks);
@@ -119,7 +119,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         final var result = this.userRankService.getCurrentUserRank();
 
         // Then
-        assertThat(result.getId()).isNull();
+        assertThat(result.getPublicId()).isNull();
         verify(this.vaadinSession).setAttribute("current.user.rank", null);
         verify(this.vaadinSession).setAttribute("current.user.rank.timestamp", null);
     }
@@ -127,10 +127,10 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getRankById_shouldReturnRank_whenRankExists() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         final var expectedRank = MockDataUtil.createUserRankResponseDto();
         expectedRank.setName("Test Rank");
-        expectedRank.setId(rankId);
+        expectedRank.setPublicId(rankId);
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedRank);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -140,7 +140,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         final var result = this.userRankService.getRankById(rankId);
 
         // Then
-        assertThat(result.getId()).isEqualTo(rankId);
+        assertThat(result.getPublicId()).isEqualTo(rankId);
         assertThat(result.getName()).isEqualTo("Test Rank");
         assertThat(result.isUserAdd()).isTrue();
         assertThat(result.isPostEdit()).isTrue();
@@ -149,7 +149,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getRankById_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
@@ -160,7 +160,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getRankById_shouldThrowServiceException_whenRankNotFound() {
         // Given
-        final var rankId = 999L;
+        final var rankId = "999";
         final var mockResponse = ResponseTestUtil.createNotFoundResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -177,7 +177,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         final var newRank = MockDataUtil.createUserRankDto();
         newRank.setName("New Rank");
         final var createdRank = MockDataUtil.createUserRankDto();
-        createdRank.setId(1L);
+        createdRank.setPublicId("1");
         createdRank.setName("New Rank");
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdRank);
 
@@ -188,7 +188,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         final var result = this.userRankService.createRank(newRank);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("New Rank");
         assertThat(result.isUserAdd()).isTrue();
         verify(this.userRankClient).createRank(newRank, TestUtil.TEST_AUTH_HEADER);
@@ -223,20 +223,20 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         // Given
         final var rankToUpdate = MockDataUtil.createUserRankDto();
         rankToUpdate.setName("Updated Rank");
-        rankToUpdate.setId(1L);
+        rankToUpdate.setPublicId("1");
         final var mockResponse = ResponseTestUtil.createOkResponse(rankToUpdate);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.updateRank(1L, rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.userRankClient.updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
         final var result = this.userRankService.updateRank(rankToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("Updated Rank");
         assertThat(result.isUserEdit()).isTrue();
-        verify(this.userRankClient).updateRank(1L, rankToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.userRankClient).updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
@@ -244,11 +244,11 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         // Given
         final var rankToUpdate = MockDataUtil.createUserRankDto();
         rankToUpdate.setName("Updated Rank");
-        rankToUpdate.setId(1L);
+        rankToUpdate.setPublicId("1");
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.updateRank(1L, rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.userRankClient.updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When & Then
         assertThatThrownBy(() -> this.userRankService.updateRank(rankToUpdate)).isInstanceOf(ServiceException.class);
@@ -257,7 +257,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void deleteRank_shouldSucceed_whenDeletionSuccessful() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -273,7 +273,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void deleteRank_shouldThrowServiceException_whenDeletionFails() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -286,7 +286,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void deleteRank_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
@@ -297,7 +297,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getRankById_shouldThrowAuthenticationException_when401ErrorOnFetch() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         final WebApplicationException webException = ExceptionTestUtil.create401Exception();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -334,7 +334,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getRankById_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
         // Given
-        final var rankId = 1L;
+        final var rankId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userRankClient.getRank(rankId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(new RuntimeException("Unexpected error"));

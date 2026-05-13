@@ -34,7 +34,7 @@ public final class TestDataBuilder {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var user =
                 new UserDto(TestUtil.createUniqueTestUsername("testuser"), TestUtil.createUniqueTestEmail("test"));
-        user.setId(Long.valueOf(suffix));
+        user.setPublicId(suffix);
         user.setActivated(false);
         user.setBanned(false);
         user.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
@@ -47,7 +47,7 @@ public final class TestDataBuilder {
      */
     public static UserDto createUser(final String username, final String email) {
         final var user = new UserDto(username, email);
-        user.setId(Long.valueOf(TestUtil.generateUniqueTestSuffix()));
+        user.setPublicId(TestUtil.generateUniqueTestSuffix());
         return user;
     }
 
@@ -57,19 +57,19 @@ public final class TestDataBuilder {
     public static AccountDto createUniqueAccount() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var account = new AccountDto(TestUtil.createUniqueTestName("Test Account"));
-        account.setId(Long.valueOf(suffix));
+        account.setPublicId(suffix);
         return account;
     }
 
     /**
      * Create an AccountResponseDto for testing
      */
-    public static AccountResponseDto createAccountResponse(final Long id, final String name) {
+    public static AccountResponseDto createAccountResponse(final String publicId, final String name) {
         final var response = new AccountResponseDto();
-        response.setId(id);
+        response.setPublicId(publicId);
         response.setName(name);
         response.setUserCount(0);
-        response.setAssociatedUserIds(List.of());
+        response.setAssociatedUserPublicIds(List.of());
         return response;
     }
 
@@ -78,7 +78,7 @@ public final class TestDataBuilder {
      */
     public static UserGroupDto createUniqueUserGroup() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
-        return new UserGroupDto(Long.valueOf(suffix), TestUtil.createUniqueTestName("Test Group"));
+        return new UserGroupDto(suffix, TestUtil.createUniqueTestName("Test Group"));
     }
 
     /**
@@ -87,7 +87,7 @@ public final class TestDataBuilder {
     public static UserRankDto createUniqueUserRank() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var rank = new UserRankDto(TestUtil.createUniqueTestName("Test Rank"));
-        rank.setId(Long.valueOf(suffix));
+        rank.setPublicId(suffix);
         rank.setUserAdd(true);
         rank.setUserEdit(true);
         rank.setUserDelete(false);
@@ -103,7 +103,7 @@ public final class TestDataBuilder {
     public static PostDto createUniquePost() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var post = new PostDto();
-        post.setId(Long.valueOf(suffix));
+        post.setPublicId(suffix);
         post.setTitle(TestUtil.createUniqueTestName("Test Post"));
         post.setContent(TestUtil.createUniqueTestName("Test content"));
         post.setPublished(false);
@@ -111,7 +111,7 @@ public final class TestDataBuilder {
         post.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         post.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         final var user = createUniqueUser();
-        post.setUserId(user.getId());
+        post.setUserPublicId(user.getPublicId());
         post.setUsername(user.getUsername());
         return post;
     }
@@ -124,11 +124,11 @@ public final class TestDataBuilder {
         final var user = createUniqueUser();
         final var post = createUniquePost();
         final var comment = new PostCommentDto();
-        comment.setId(Long.valueOf(suffix));
+        comment.setPublicId(suffix);
         comment.setContent(TestUtil.createUniqueTestName("Test comment"));
-        comment.setPostId(post.getId());
+        comment.setPostPublicId(post.getPublicId());
         comment.setPostTitle(post.getTitle());
-        comment.setUserId(user.getId());
+        comment.setUserPublicId(user.getPublicId());
         comment.setUsername(user.getUsername());
         comment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return comment;
@@ -140,8 +140,8 @@ public final class TestDataBuilder {
     public static PaymentDto createUniquePayment() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var user = createUniqueUser();
-        final var fromAccountId = Long.valueOf(suffix + "1");
-        final var toAccountId = Long.valueOf(suffix + "2");
+        final var fromAccountId = suffix + "1";
+        final var toAccountId = suffix + "2";
         final var amount = new BigDecimal("100.00");
         final var date = LocalDate.now(ZoneId.systemDefault());
         final var comment = TestUtil.createUniqueTestName("Test payment");
@@ -149,8 +149,8 @@ public final class TestDataBuilder {
         final var updated = LocalDateTime.now(ZoneId.systemDefault());
 
         final var payment =
-                new PaymentDto(user.getId(), fromAccountId, toAccountId, amount, date, comment, created, updated);
-        payment.setId(Long.valueOf(suffix));
+                new PaymentDto(user.getPublicId(), fromAccountId, toAccountId, amount, date, comment, created, updated);
+        payment.setPublicId(suffix);
         return payment;
     }
 
@@ -160,7 +160,7 @@ public final class TestDataBuilder {
     public static PageDto createUniquePage() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var page = new PageDto();
-        page.setId(Long.valueOf(suffix));
+        page.setPublicId(suffix);
         page.setTitle(TestUtil.createUniqueTestName("Test Page"));
         page.setContent(TestUtil.createUniqueTestName("Test page content"));
         return page;
@@ -172,7 +172,7 @@ public final class TestDataBuilder {
     public static PostCategoryDto createUniquePostCategory() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
         final var category = new PostCategoryDto();
-        category.setId(Long.valueOf(suffix));
+        category.setPublicId(suffix);
         category.setName(TestUtil.createUniqueTestName("Test Category"));
         return category;
     }

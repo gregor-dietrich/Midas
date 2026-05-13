@@ -10,17 +10,17 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for payment response data. */
 public class PaymentResponseDto {
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
-    public Long targetAccountId;
+    public String targetAccountPublicId;
     @Nullable
     public String targetAccountName;
     @Nullable
-    public Long sourceAccountId;
+    public String sourceAccountPublicId;
     @Nullable
     public String sourceAccountName;
     @Nullable
-    public Long userId;
+    public String userPublicId;
     @Nullable
     public String username;
     @Nullable
@@ -39,12 +39,12 @@ public class PaymentResponseDto {
 
     /** Creates a new instance. */
     public PaymentResponseDto(final PaymentEntity entity) {
-        this.id = entity.id;
-        this.targetAccountId = entity.targetAccount != null ? entity.targetAccount.id : null;
+        this.publicId = entity.publicId;
+        this.targetAccountPublicId = entity.targetAccount != null ? entity.targetAccount.publicId : null;
         this.targetAccountName = entity.targetAccount != null ? entity.targetAccount.name : null;
-        this.sourceAccountId = entity.sourceAccount != null ? entity.sourceAccount.id : null;
+        this.sourceAccountPublicId = entity.sourceAccount != null ? entity.sourceAccount.publicId : null;
         this.sourceAccountName = entity.sourceAccount != null ? entity.sourceAccount.name : null;
-        this.userId = entity.user != null ? entity.user.id : null;
+        this.userPublicId = entity.user != null ? entity.user.publicId : null;
         this.username = entity.user != null ? entity.user.username : null;
         this.comment = entity.comment;
         this.date = entity.date;

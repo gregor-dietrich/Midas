@@ -1,7 +1,8 @@
 package de.vptr.midas.gui.service;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -17,7 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class Broadcaster implements Serializable {
 
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
-    private static final LinkedList<Consumer<String>> LISTENERS = new LinkedList<>();
+    private static final List<Consumer<String>> LISTENERS = new ArrayList<>();
 
     /**
      * Registers a listener.

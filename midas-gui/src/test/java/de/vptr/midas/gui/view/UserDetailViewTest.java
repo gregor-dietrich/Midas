@@ -18,6 +18,7 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 
+@SuppressWarnings("UnnecessaryAssignment")
 class UserDetailViewTest extends AbstractUiTestBase {
 
     private UserDetailView view;
@@ -55,14 +56,14 @@ class UserDetailViewTest extends AbstractUiTestBase {
 
     private UserResponseDto createTestUser() {
         final var user = new UserResponseDto();
-        user.setId(1L);
+        user.setPublicId("1");
         user.setUsername("testuser");
         return user;
     }
 
     private List<Button> getChangePasswordButtons(final UserResponseDto user, final String currentUsername) {
         when(this.authService.getUsername()).thenReturn(currentUsername);
-        lenient().when(this.userGroupService.getGroupsByUser(1L)).thenReturn(Collections.emptyList());
+        lenient().when(this.userGroupService.getGroupsByUser("1")).thenReturn(Collections.emptyList());
 
         this.view.renderEntity(user);
 

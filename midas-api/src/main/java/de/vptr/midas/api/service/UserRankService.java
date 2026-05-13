@@ -26,9 +26,10 @@ public class UserRankService {
         return this.toRankResponseDtos(ranks);
     }
 
-    /** Returns the rank with the given id. */
-    public Optional<UserRankResponseDto> findById(final Long id) {
-        return UserRankEntity.findByIdOptional(id).map(entity -> this.toRankResponseDto((UserRankEntity) entity));
+    /** Returns the rank with the given publicId. */
+    public Optional<UserRankResponseDto> findById(final String publicId) {
+        return UserRankEntity.find("publicId", publicId).firstResultOptional()
+                .map(entity -> this.toRankResponseDto((UserRankEntity) entity));
     }
 
     /** Returns the rank with the given name. */
@@ -62,8 +63,8 @@ public class UserRankService {
 
     /** Processes the request and returns the result. */
     @Transactional
-    public UserRankResponseDto updateRank(final Long id, final UserRankDto rankDto) {
-        final UserRankEntity existingRank = UserRankEntity.findById(id);
+    public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto) {
+        final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
         if (existingRank == null) {
             throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
         }
@@ -78,8 +79,8 @@ public class UserRankService {
 
     /** Processes the request and returns the result. */
     @Transactional
-    public UserRankResponseDto patchRank(final Long id, final UserRankDto rankDto) {
-        final UserRankEntity existingRank = UserRankEntity.findById(id);
+    public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto) {
+        final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
         if (existingRank == null) {
             throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
         }
@@ -199,10 +200,10 @@ public class UserRankService {
         }
     }
 
-    /** Deletes the rank with the given id. */
+    /** Deletes the rank with the given publicId. */
     @Transactional
-    public boolean deleteRank(final Long id) {
-        return UserRankEntity.deleteById(id);
+    public boolean deleteRank(final String publicId) {
+        return UserRankEntity.delete("publicId", publicId) > 0;
     }
 
     private UserRankResponseDto toRankResponseDto(final UserRankEntity rank) {

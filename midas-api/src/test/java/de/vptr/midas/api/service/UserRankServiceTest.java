@@ -61,7 +61,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         final var createdRank = this.userRankService.createRank(newRank);
 
         assertNotNull(createdRank);
-        assertNotNull(createdRank.id);
+        assertNotNull(createdRank.publicId);
         assertEquals(newRank.name, createdRank.name);
         assertTrue(Boolean.TRUE.equals(createdRank.userAdd));
         assertTrue(Boolean.TRUE.equals(createdRank.userEdit));
@@ -108,7 +108,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 false // postDelete
         );
 
-        final var updatedRank = this.userRankService.updateRank(Objects.requireNonNull(createdRank.id), updateDto);
+        final var updatedRank =
+                this.userRankService.updateRank(Objects.requireNonNull(createdRank.publicId), updateDto);
 
         assertNotNull(updatedRank);
         assertEquals("Updated Rank Name", updatedRank.name);
@@ -128,7 +129,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 ServiceTestDataBuilder.createUserRankDto("Delete Test Rank", false, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
-        final Long rankId = Objects.requireNonNull(createdRank.id);
+        final String rankId = Objects.requireNonNull(createdRank.publicId);
 
         final var deleted = this.userRankService.deleteRank(rankId);
 
@@ -139,7 +140,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
     @Test
     void testDeleteNonExistentRank() {
-        final var deleted = this.userRankService.deleteRank(999999L);
+        final var deleted = this.userRankService.deleteRank("999999");
         assertFalse(deleted);
     }
 
@@ -151,7 +152,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
                 ServiceTestDataBuilder.createUserRankDto("Find By ID Rank", true, false, false, false, false, false);
         final var createdRank = this.userRankService.createRank(newRank);
 
-        final var foundRank = this.userRankService.findById(Objects.requireNonNull(createdRank.id));
+        final var foundRank = this.userRankService.findById(Objects.requireNonNull(createdRank.publicId));
 
         assertTrue(foundRank.isPresent());
         assertEquals("Find By ID Rank", foundRank.get().name);
@@ -160,7 +161,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundRank = this.userRankService.findById(999999L);
+        final var foundRank = this.userRankService.findById("999999");
         assertTrue(foundRank.isEmpty());
     }
 
@@ -193,10 +194,10 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         final var nullResults = this.userRankService.searchRanks(null);
         final var blankResults = this.userRankService.searchRanks("   ");
 
-        assertEquals(expected.stream().map(rank -> rank.id).toList(),
-                nullResults.stream().map(rank -> rank.id).toList());
-        assertEquals(expected.stream().map(rank -> rank.id).toList(),
-                blankResults.stream().map(rank -> rank.id).toList());
+        assertEquals(expected.stream().map(rank -> rank.publicId).toList(),
+                nullResults.stream().map(rank -> rank.publicId).toList());
+        assertEquals(expected.stream().map(rank -> rank.publicId).toList(),
+                blankResults.stream().map(rank -> rank.publicId).toList());
     }
 
     @Test

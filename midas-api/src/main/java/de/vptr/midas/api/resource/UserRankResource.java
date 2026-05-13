@@ -10,7 +10,6 @@ import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -44,10 +43,10 @@ public class UserRankResource {
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
-    public Response getRank(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.rankService.findById(id));
+    public Response getRank(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.rankService.findById(publicId));
     }
 
     @GET
@@ -76,27 +75,27 @@ public class UserRankResource {
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
-    public Response updateRank(@PathParam("id") @Min(1) final Long id, @Valid final UserRankDto rankDto) {
-        final UserRankResponseDto updated = this.rankService.updateRank(id, rankDto);
+    public Response updateRank(@PathParam("publicId") final String publicId, @Valid final UserRankDto rankDto) {
+        final UserRankResponseDto updated = this.rankService.updateRank(publicId, rankDto);
         return ResponseUtil.ok(updated);
     }
 
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
-    public Response patchRank(@PathParam("id") @Min(1) final Long id, final UserRankDto rankDto) {
-        final UserRankResponseDto updated = this.rankService.patchRank(id, rankDto);
+    public Response patchRank(@PathParam("publicId") final String publicId, final UserRankDto rankDto) {
+        final UserRankResponseDto updated = this.rankService.patchRank(publicId, rankDto);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the rank with the given id. */
+    /** Deletes the rank with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-rank:delete" })
-    public Response deleteRank(@PathParam("id") @Min(1) final Long id) {
-        final boolean deleted = this.rankService.deleteRank(id);
+    public Response deleteRank(@PathParam("publicId") final String publicId) {
+        final boolean deleted = this.rankService.deleteRank(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }

@@ -46,6 +46,11 @@ public class RateLimitFilter implements ContainerRequestFilter {
     @Inject
     Instance<RoutingContext> routingContextInstance;
 
+    @SuppressWarnings("UnnecessaryAssignment")
+    void setRoutingContextInstanceForTest(final Instance<RoutingContext> routingContextInstance) {
+        this.routingContextInstance = routingContextInstance;
+    }
+
     @ConfigProperty(name = "midas.rate-limit.read.permits", defaultValue = "100")
     long readPermits;
 

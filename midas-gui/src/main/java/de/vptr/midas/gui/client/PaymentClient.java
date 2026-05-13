@@ -41,22 +41,22 @@ public interface PaymentClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getPayment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getPayment(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}")
-    List<PaymentResponseDto> getPaymentsByUser(@PathParam("userId") Long userId,
+    @Path("/user/{userPublicId}")
+    List<PaymentResponseDto> getPaymentsByUser(@PathParam("userPublicId") String userPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/source/{sourceId}")
-    List<PaymentResponseDto> getPaymentsBySourceAccount(@PathParam("sourceId") Long sourceId,
+    @Path("/source/{sourcePublicId}")
+    List<PaymentResponseDto> getPaymentsBySourceAccount(@PathParam("sourcePublicId") String sourcePublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/target/{targetId}")
-    List<PaymentResponseDto> getPaymentsByTargetAccount(@PathParam("targetId") Long targetId,
+    @Path("/target/{targetPublicId}")
+    List<PaymentResponseDto> getPaymentsByTargetAccount(@PathParam("targetPublicId") String targetPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
@@ -70,25 +70,26 @@ public interface PaymentClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}/total")
-    Response getTotalAmountByUser(@PathParam("userId") Long userId, @HeaderParam("Authorization") String authorization);
+    @Path("/user/{userPublicId}/total")
+    Response getTotalAmountByUser(@PathParam("userPublicId") String userPublicId,
+            @HeaderParam("Authorization") String authorization);
 
     @POST
     Response createPayment(PaymentDto payment, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updatePayment(@PathParam("id") Long id, PaymentDto payment,
+    @Path("/{publicId}")
+    Response updatePayment(@PathParam("publicId") String publicId, PaymentDto payment,
             @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchPayment(@PathParam("id") Long id, PaymentDto payment,
+    @Path("/{publicId}")
+    Response patchPayment(@PathParam("publicId") String publicId, PaymentDto payment,
             @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deletePayment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deletePayment(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")

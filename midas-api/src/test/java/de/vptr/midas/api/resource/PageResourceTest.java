@@ -31,9 +31,9 @@ class PageResourceTest {
 
     @Test
     void testGetPageById_authorizedWithExistingPage() {
-        final Integer pageId = TestUtil.authenticatedRequest().contentType("application/json")
+        final String pageId = TestUtil.authenticatedRequest().contentType("application/json")
                 .body(TestDataBuilder.createDefaultPageJson()).when().post(ENDPOINT_URL).then().statusCode(201)
-                .extract().path("id");
+                .extract().path("publicId");
         TestUtil.authenticatedRequest().when().get(ENDPOINT_URL + "/" + pageId).then().statusCode(200);
     }
 
@@ -50,6 +50,8 @@ class PageResourceTest {
     @Test
     void testSearchPages_authorized() {
         TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        TestUtil.authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then()
+                .statusCode(200);
     }
 
     @Test
@@ -98,9 +100,9 @@ class PageResourceTest {
 
     @Test
     void testUpdatePage_authorized() {
-        final Integer pageId = TestUtil.authenticatedRequest().contentType("application/json")
+        final String pageId = TestUtil.authenticatedRequest().contentType("application/json")
                 .body(TestDataBuilder.createDefaultPageJson()).when().post(ENDPOINT_URL).then().statusCode(201)
-                .extract().path("id");
+                .extract().path("publicId");
 
         final String updatedJson = TestDataBuilder.createUpdatedPageJson();
         TestUtil.authenticatedRequest().contentType("application/json").body(updatedJson).when()
@@ -109,9 +111,9 @@ class PageResourceTest {
 
     @Test
     void testPatchPage_authorized() {
-        final Integer pageId = TestUtil.authenticatedRequest().contentType("application/json")
+        final String pageId = TestUtil.authenticatedRequest().contentType("application/json")
                 .body(TestDataBuilder.createDefaultPageJson()).when().post(ENDPOINT_URL).then().statusCode(201)
-                .extract().path("id");
+                .extract().path("publicId");
 
         final String pageJson = TestDataBuilder.createDefaultPageJson();
         TestUtil.authenticatedRequest().contentType("application/json").body(pageJson).when()
@@ -120,10 +122,15 @@ class PageResourceTest {
 
     @Test
     void testDeletePage_authorized() {
-        final Integer pageId = TestUtil.authenticatedRequest().contentType("application/json")
+        final String pageId = TestUtil.authenticatedRequest().contentType("application/json")
                 .body(TestDataBuilder.createDefaultPageJson()).when().post(ENDPOINT_URL).then().statusCode(201)
-                .extract().path("id");
+                .extract().path("publicId");
 
         TestUtil.authenticatedRequest().when().delete(ENDPOINT_URL + "/" + pageId).then().statusCode(204);
+    }
+
+    @Test
+    void testDeletePage_nonexistent() {
+        TestUtil.authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }
 }

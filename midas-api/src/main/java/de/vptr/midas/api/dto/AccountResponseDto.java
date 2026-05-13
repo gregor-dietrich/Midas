@@ -13,13 +13,13 @@ import jakarta.annotation.Nullable;
 public class AccountResponseDto {
 
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String name;
     @Nullable
     public Long userCount;
     @Nullable
-    public List<Long> associatedUserIds;
+    public List<String> associatedUserPublicIds;
     @Nullable
     public BigDecimal balance;
     public boolean isNegative;
@@ -35,11 +35,11 @@ public class AccountResponseDto {
      * Creates a new instance with pre-computed user data (avoids lazy-loading collections).
      */
     public AccountResponseDto(final AccountEntity entity, final int userCount,
-            @Nullable final List<Long> associatedUserIds) {
-        this.id = entity.id;
+            @Nullable final List<String> associatedUserPublicIds) {
+        this.publicId = entity.publicId;
         this.name = entity.name;
         this.userCount = (long) userCount;
-        this.associatedUserIds = associatedUserIds != null ? associatedUserIds : List.of();
+        this.associatedUserPublicIds = associatedUserPublicIds != null ? associatedUserPublicIds : List.of();
         this.balance = null;
         this.created = entity.created;
         this.lastEdit = entity.lastEdit;
@@ -47,8 +47,8 @@ public class AccountResponseDto {
 
     /** Creates a new instance with pre-computed user data and balance. */
     public AccountResponseDto(final AccountEntity entity, final int userCount,
-            @Nullable final List<Long> associatedUserIds, @Nullable final BigDecimal balance) {
-        this(entity, userCount, associatedUserIds);
+            @Nullable final List<String> associatedUserPublicIds, @Nullable final BigDecimal balance) {
+        this(entity, userCount, associatedUserPublicIds);
         this.balance = balance;
     }
 }

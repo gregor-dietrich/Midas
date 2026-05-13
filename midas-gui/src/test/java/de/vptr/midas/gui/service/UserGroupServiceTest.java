@@ -95,9 +95,9 @@ class UserGroupServiceTest {
     @Test
     void getGroupById_shouldReturnGroup_whenGroupExists() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final var expectedGroup = new UserGroupResponseDto();
-        expectedGroup.setId(groupId);
+        expectedGroup.setPublicId(groupId);
         expectedGroup.setName("Test Group");
         expectedGroup.setUserCount(5L);
         final Response mockResponse = ResponseTestUtil.createOkResponse(expectedGroup);
@@ -110,14 +110,14 @@ class UserGroupServiceTest {
 
         // Then
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(groupId);
+        assertThat(result.get().getPublicId()).isEqualTo(groupId);
         assertThat(result.get().getName()).isEqualTo("Test Group");
     }
 
     @Test
     void getGroupById_shouldReturnEmpty_whenGroupNotFound() {
         // Given
-        final var groupId = 999L;
+        final var groupId = "999";
         final Response mockResponse = ResponseTestUtil.createNotFoundResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -133,12 +133,12 @@ class UserGroupServiceTest {
     @Test
     void getUsersInGroup_shouldReturnUserList_whenGroupExists() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final var user1 = MockDataUtil.createUserDto();
-        user1.setId(1L);
+        user1.setPublicId("1");
         user1.setUsername("user1");
         final var user2 = MockDataUtil.createUserDto();
-        user2.setId(2L);
+        user2.setPublicId("2");
         user2.setUsername("user2");
         final var expectedUsers = Arrays.asList(user1, user2);
 
@@ -159,7 +159,7 @@ class UserGroupServiceTest {
         // Given
         final var newGroup = MockDataUtil.createUserGroupDto();
         final var createdGroup = new UserGroupResponseDto();
-        createdGroup.setId(1L);
+        createdGroup.setPublicId("1");
         createdGroup.setName(MockDataUtil.TestConstants.GROUP_NAME);
         createdGroup.setUserCount(1L);
         final Response mockResponse = ResponseTestUtil.createCreatedResponse(createdGroup);
@@ -171,7 +171,7 @@ class UserGroupServiceTest {
         final var result = this.userGroupService.createGroup(newGroup);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo(MockDataUtil.TestConstants.GROUP_NAME);
         verify(this.groupClient).createGroup(newGroup, TEST_AUTH_HEADER);
     }
@@ -193,30 +193,30 @@ class UserGroupServiceTest {
     void updateGroup_shouldReturnUpdatedGroup_whenValidGroup() {
         // Given
         final var groupToUpdate = MockDataUtil.createUserGroupDto();
-        groupToUpdate.setId(1L);
+        groupToUpdate.setPublicId("1");
         groupToUpdate.setName("Updated Group");
         final var updatedGroup = new UserGroupResponseDto();
-        updatedGroup.setId(1L);
+        updatedGroup.setPublicId("1");
         updatedGroup.setName("Updated Group");
         updatedGroup.setUserCount(2L);
         final Response mockResponse = ResponseTestUtil.createOkResponse(updatedGroup);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.groupClient.updateGroup(1L, groupToUpdate, TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.groupClient.updateGroup("1", groupToUpdate, TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
         final var result = this.userGroupService.updateGroup(groupToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("Updated Group");
-        verify(this.groupClient).updateGroup(1L, groupToUpdate, TEST_AUTH_HEADER);
+        verify(this.groupClient).updateGroup("1", groupToUpdate, TEST_AUTH_HEADER);
     }
 
     @Test
     void deleteGroup_shouldReturnTrue_whenDeletionSuccessful() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final Response mockResponse = ResponseTestUtil.createNoContentResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -233,7 +233,7 @@ class UserGroupServiceTest {
     @Test
     void deleteGroup_shouldReturnFalse_whenDeletionFails() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final Response mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -249,8 +249,8 @@ class UserGroupServiceTest {
     @Test
     void addUserToGroup_shouldReturnTrue_whenSuccessful() {
         // Given
-        final var groupId = 1L;
-        final var userId = 1L;
+        final var groupId = "1";
+        final var userId = "1";
         final Response mockResponse = ResponseTestUtil.createCreatedResponse(null);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -267,8 +267,8 @@ class UserGroupServiceTest {
     @Test
     void removeUserFromGroup_shouldReturnTrue_whenSuccessful() {
         // Given
-        final var groupId = 1L;
-        final var userId = 1L;
+        final var groupId = "1";
+        final var userId = "1";
         final Response mockResponse = ResponseTestUtil.createNoContentResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -287,7 +287,7 @@ class UserGroupServiceTest {
         // When & Then
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getGroupById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userGroupService.getGroupById("1"));
     }
 
     @Test
@@ -315,7 +315,7 @@ class UserGroupServiceTest {
     @Test
     void getGroupById_shouldThrowServiceException_whenWebApplicationExceptionOccurs() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final Response mockResponse = ResponseTestUtil.createInternalServerErrorResponse();
         final WebApplicationException webException = new WebApplicationException(mockResponse);
 
@@ -330,7 +330,7 @@ class UserGroupServiceTest {
     @Test
     void getUsersInGroup_shouldReturnEmptyList_whenGroupHasNoUsers() {
         // Given
-        final var groupId = 1L;
+        final var groupId = "1";
         final List<UserDto> emptyList = Collections.emptyList();
 
         ServiceTestUtil.setupAuthHeader(this.authService);

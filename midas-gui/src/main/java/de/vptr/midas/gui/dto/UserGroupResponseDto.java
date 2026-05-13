@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class UserGroupResponseDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("name")
     private String name;
@@ -21,8 +21,8 @@ public class UserGroupResponseDto {
         // Default constructor for Jackson
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     public String getName() {
@@ -33,8 +33,8 @@ public class UserGroupResponseDto {
         return this.userCount;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setName(final String name) {
@@ -48,7 +48,7 @@ public class UserGroupResponseDto {
     /** Handles the to user group dto operation. */
     public UserGroupDto toUserGroupDto() {
         final UserGroupDto dto = new UserGroupDto();
-        dto.setId(this.id);
+        dto.setPublicId(this.publicId);
         dto.setName(this.name);
         return dto;
     }

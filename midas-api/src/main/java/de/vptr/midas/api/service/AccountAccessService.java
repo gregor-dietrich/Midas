@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
@@ -32,18 +33,18 @@ public class AccountAccessService {
     AccountResponseAssembler accountResponseAssembler;
 
     /** Returns all users associated with the given account. */
-    public List<UserResponseDto> getAssociatedUsers(final Long accountId) {
-        final AccountEntity account = AccountEntity.findById(accountId);
+    public List<UserResponseDto> getAssociatedUsers(final String accountPublicId) {
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
         if (account == null) {
             throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
         }
         final List<UserEntity> users = UserEntity.find("""
                 SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN \
-                (SELECT m.user.id FROM UserAccountMetaEntity m WHERE m.account.id = ?1)""", accountId).list();
+                (SELECT m.user.id FROM UserAccountMetaEntity m WHERE m.account.id = ?1)""", account.id).list();
         if (users.isEmpty()) {
             return List.of();
         }
-        final List<Long> userIds = users.stream().map(u -> u.id).toList();
+        final List<Long> userIds = users.stream().map(u -> Objects.requireNonNull(u.id)).toList();
 
         final List<Object[]> postResults = PostEntity.getEntityManager()
                 .createQuery("SELECT p.user.id, COUNT(p) FROM PostEntity p WHERE p.user.id IN :ids GROUP BY p.user.id",
@@ -56,7 +57,8 @@ public class AccountAccessService {
                 Object[].class).setParameter("ids", userIds).getResultList();
         final Map<Long, Long> commentCounts = QueryAggregationUtil.toLongCountMap(commentResults);
 
-        final List<UserAccountMetaEntity> metas = UserAccountMetaEntity.findByAccountId(accountId);
+        final List<UserAccountMetaEntity> metas =
+                UserAccountMetaEntity.findByAccountId(Objects.requireNonNull(account.id));
         final Map<Long, Boolean> isNegativeByUser = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
             final UserEntity u = m.user;
@@ -74,29 +76,29 @@ public class AccountAccessService {
     }
 
     /** Returns all accounts for the given user. */
-    public List<AccountResponseDto> getAccountsForUser(final Long userId) {
-        return PerformanceMonitor.time("getAccountsForUser(" + userId + ")", () -> {
-            final UserEntity user = UserEntity.findById(userId);
+    public List<AccountResponseDto> getAccountsForUser(final String userPublicId) {
+        return PerformanceMonitor.time("getAccountsForUser(" + userPublicId + ")", () -> {
+            final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
             if (user == null) {
                 throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
             }
 
             final List<AccountEntity> accounts = AccountEntity.find("""
                     SELECT a FROM AccountEntity a WHERE a.id IN \
-                    (SELECT m.account.id FROM UserAccountMetaEntity m WHERE m.user.id = ?1)""", userId).list();
+                    (SELECT m.account.id FROM UserAccountMetaEntity m WHERE m.user.id = ?1)""", user.id).list();
             return this.accountResponseAssembler.toAccountResponseDtos(accounts);
         });
     }
 
     /** Returns all payments for the given account. */
-    public List<PaymentResponseDto> getAccountPayments(final Long accountId) {
-        return PerformanceMonitor.time("getAccountPayments(" + accountId + ")", () -> {
+    public List<PaymentResponseDto> getAccountPayments(final String accountPublicId) {
+        return PerformanceMonitor.time("getAccountPayments(" + accountPublicId + ")", () -> {
             @SuppressWarnings("unchecked")
             final List<PaymentEntity> payments = PaymentEntity.getEntityManager().createQuery("""
                     SELECT p FROM PaymentEntity p \
                     LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user \
-                    WHERE p.sourceAccount.id = :accountId OR p.targetAccount.id = :accountId \
-                    ORDER BY p.date DESC""").setParameter("accountId", accountId).getResultList();
+                    WHERE p.sourceAccount.publicId = :publicId OR p.targetAccount.publicId = :publicId \
+                    ORDER BY p.date DESC""").setParameter("publicId", accountPublicId).getResultList();
 
             return payments.stream().map(PaymentResponseDto::new).toList();
         });
@@ -105,70 +107,70 @@ public class AccountAccessService {
     private static final int MAX_PAYMENTS = 1_000;
 
     /** Returns all outgoing payments for the given account. */
-    public List<PaymentResponseDto> getOutgoingPayments(final Long accountId) {
+    public List<PaymentResponseDto> getOutgoingPayments(final String accountPublicId) {
         return PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
-                accountId).page(0, MAX_PAYMENTS).list().stream()
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.publicId = ?1",
+                accountPublicId).page(0, MAX_PAYMENTS).list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all incoming payments for the given account. */
-    public List<PaymentResponseDto> getIncomingPayments(final Long accountId) {
+    public List<PaymentResponseDto> getIncomingPayments(final String accountPublicId) {
         return PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
-                accountId).page(0, MAX_PAYMENTS).list().stream()
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.publicId = ?1",
+                accountPublicId).page(0, MAX_PAYMENTS).list().stream()
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns the current balance for the given account. */
     @Transactional(Transactional.TxType.SUPPORTS)
-    public BigDecimal getAccountBalance(final Long accountId) {
-        return PerformanceMonitor.time("getAccountBalance(" + accountId + ")",
+    public BigDecimal getAccountBalance(final String accountPublicId) {
+        return PerformanceMonitor.time("getAccountBalance(" + accountPublicId + ")",
                 () -> PaymentEntity.getEntityManager().createQuery("""
                         SELECT \
-                        COALESCE(SUM(CASE WHEN p.targetAccount.id = :accountId THEN p.amount ELSE 0 END), 0) - \
-                        COALESCE(SUM(CASE WHEN p.sourceAccount.id = :accountId THEN p.amount ELSE 0 END), 0) \
+                        COALESCE(SUM(CASE WHEN p.targetAccount.publicId = :publicId THEN p.amount ELSE 0 END), 0) - \
+                        COALESCE(SUM(CASE WHEN p.sourceAccount.publicId = :publicId THEN p.amount ELSE 0 END), 0) \
                         FROM PaymentEntity p \
-                        WHERE p.targetAccount.id = :accountId OR p.sourceAccount.id = :accountId""", BigDecimal.class)
-                        .setParameter("accountId", accountId).getSingleResult());
+                        WHERE p.targetAccount.publicId = :publicId OR p.sourceAccount.publicId = :publicId""",
+                        BigDecimal.class).setParameter("publicId", accountPublicId).getSingleResult());
     }
 
-    /** Returns balances for the given list of account ids. */
+    /** Returns balances for the given list of account publicIds. */
     @Transactional(Transactional.TxType.SUPPORTS)
-    public Map<Long, BigDecimal> getAccountBalances(final List<Long> accountIds) {
-        return PerformanceMonitor.time("getAccountBalances(" + accountIds.size() + " accounts)", () -> {
-            if (accountIds == null || accountIds.isEmpty()) {
+    public Map<String, BigDecimal> getAccountBalances(final List<String> accountPublicIds) {
+        return PerformanceMonitor.time("getAccountBalances(" + accountPublicIds.size() + " accounts)", () -> {
+            if (accountPublicIds == null || accountPublicIds.isEmpty()) {
                 return Map.of();
             }
 
-            final Map<Long, BigDecimal> balances = new HashMap<>();
-            accountIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
+            final Map<String, BigDecimal> balances = new HashMap<>();
+            accountPublicIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
 
             // Compute incoming payments (target) aggregated by account
             final List<Object[]> incomingResults = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT p.targetAccount.id, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    WHERE p.targetAccount.id IN :accountIds GROUP BY p.targetAccount.id""", Object[].class)
-                    .setParameter("accountIds", accountIds).getResultList();
+                    SELECT p.targetAccount.publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    WHERE p.targetAccount.publicId IN :publicIds GROUP BY p.targetAccount.publicId""", Object[].class)
+                    .setParameter("publicIds", accountPublicIds).getResultList();
 
             for (final Object[] row : incomingResults) {
-                final Long accountId = (Long) row[0];
+                final String publicId = (String) row[0];
                 final BigDecimal amount = (BigDecimal) row[1];
-                if (accountId != null) {
-                    balances.put(accountId, balances.getOrDefault(accountId, BigDecimal.ZERO).add(amount));
+                if (publicId != null) {
+                    balances.put(publicId, balances.getOrDefault(publicId, BigDecimal.ZERO).add(amount));
                 }
             }
 
             // Compute outgoing payments (source) aggregated by account
             final List<Object[]> outgoingResults = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT p.sourceAccount.id, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    WHERE p.sourceAccount.id IN :accountIds GROUP BY p.sourceAccount.id""", Object[].class)
-                    .setParameter("accountIds", accountIds).getResultList();
+                    SELECT p.sourceAccount.publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    WHERE p.sourceAccount.publicId IN :publicIds GROUP BY p.sourceAccount.publicId""", Object[].class)
+                    .setParameter("publicIds", accountPublicIds).getResultList();
 
             for (final Object[] row : outgoingResults) {
-                final Long accountId = (Long) row[0];
+                final String publicId = (String) row[0];
                 final BigDecimal amount = (BigDecimal) row[1];
-                if (accountId != null) {
-                    balances.put(accountId, balances.getOrDefault(accountId, BigDecimal.ZERO).subtract(amount));
+                if (publicId != null) {
+                    balances.put(publicId, balances.getOrDefault(publicId, BigDecimal.ZERO).subtract(amount));
                 }
             }
 
@@ -178,19 +180,20 @@ public class AccountAccessService {
 
     /** Associates a user with an account. */
     @Transactional
-    public UserAccountMetaEntity associateUserWithAccount(final Long userId, final Long accountId) {
-        if (UserAccountMetaEntity.existsByUserAndAccount(userId, accountId)) {
-            throw new WebApplicationException("User is already associated with this account", Response.Status.CONFLICT);
-        }
-
-        final UserEntity user = UserEntity.findById(userId);
-        final AccountEntity account = AccountEntity.findById(accountId);
+    public UserAccountMetaEntity associateUserWithAccount(final String userPublicId, final String accountPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
 
         if (user == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
         if (account == null) {
             throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
+        }
+
+        if (UserAccountMetaEntity.existsByUserAndAccount(Objects.requireNonNull(user.id),
+                Objects.requireNonNull(account.id))) {
+            throw new WebApplicationException("User is already associated with this account", Response.Status.CONFLICT);
         }
 
         final var meta = new UserAccountMetaEntity();
@@ -202,13 +205,23 @@ public class AccountAccessService {
 
     /** Removes a user from an account. */
     @Transactional
-    public boolean removeUserFromAccount(final Long userId, final Long accountId) {
-        return UserAccountMetaEntity.delete("user.id = ?1 AND account.id = ?2", userId, accountId) > 0;
+    public boolean removeUserFromAccount(final String userPublicId, final String accountPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
+        if (user == null || account == null) {
+            return false;
+        }
+        return UserAccountMetaEntity.delete("user.id = ?1 AND account.id = ?2", user.id, account.id) > 0;
     }
 
     /** Returns true if the user is associated with the given account. */
-    public boolean isUserAssociatedWithAccount(final Long userId, final Long accountId) {
-        return UserAccountMetaEntity.existsByUserAndAccount(userId, accountId);
+    public boolean isUserAssociatedWithAccount(final String userPublicId, final String accountPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
+        if (user == null || account == null || user.id == null || account.id == null) {
+            return false;
+        }
+        return UserAccountMetaEntity.existsByUserAndAccount(user.id, account.id);
     }
 
     /** Returns all accounts for the current user identified by username. */
@@ -217,10 +230,9 @@ public class AccountAccessService {
         if (user == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
-        final List<AccountEntity> entities = AccountEntity
-                .find("SELECT a FROM AccountEntity a JOIN a.userAccountMetas uam WHERE uam.user.id = ?1 ORDER BY a.id",
-                        user.id)
-                .page(page, size).list();
+        final List<AccountEntity> entities = AccountEntity.find(
+                "SELECT a FROM AccountEntity a JOIN a.userAccountMetas uam WHERE uam.user.id = ?1 ORDER BY a.publicId",
+                user.id).page(page, size).list();
         return this.accountResponseAssembler.toAccountResponseDtos(entities);
     }
 
@@ -234,35 +246,44 @@ public class AccountAccessService {
     }
 
     /** Returns true if the user has access to the given account. */
-    public boolean hasUserAccessToAccount(final String username, final Long accountId) {
+    public boolean hasUserAccessToAccount(final String username, final String accountPublicId) {
         final UserEntity user = UserEntity.find("username", username).firstResult();
         if (user == null) {
             return false;
         }
-        return user.id != null && this.isUserAssociatedWithAccount(user.id, accountId);
+        return user.id != null
+                && this.isUserAssociatedWithAccount(Objects.requireNonNull(user.publicId), accountPublicId);
     }
 
     /** Returns the balance of the account for the current user. */
-    public BigDecimal getMyAccountBalance(final String username, final Long accountId) {
-        if (!this.hasUserAccessToAccount(username, accountId)) {
+    public BigDecimal getMyAccountBalance(final String username, final String accountPublicId) {
+        if (!this.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException("Access denied", Response.Status.FORBIDDEN);
         }
-        return this.getAccountBalance(accountId);
+        return this.getAccountBalance(accountPublicId);
     }
 
     /**
      * Updates the isNegative flag for the user-account association.
      *
-     * @param userId
+     * @param userPublicId
      *            the user whose association to update
-     * @param accountId
+     * @param accountPublicId
      *            the account in the association
      * @param isNegative
      *            the new flag value
      */
     @Transactional
-    public void updateUserAccountMeta(final Long userId, final Long accountId, final boolean isNegative) {
-        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(userId, accountId);
+    public void updateUserAccountMeta(final String userPublicId, final String accountPublicId,
+            final boolean isNegative) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
+        if (user == null || account == null) {
+            throw new WebApplicationException("User or Account not found", Response.Status.NOT_FOUND);
+        }
+
+        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(Objects.requireNonNull(user.id),
+                Objects.requireNonNull(account.id));
         if (meta == null) {
             throw new WebApplicationException("User-account association not found", Response.Status.NOT_FOUND);
         }
@@ -271,25 +292,26 @@ public class AccountAccessService {
     }
 
     /**
-     * Returns a map of accountId to isNegative flag for the given user and account list.
+     * Returns a map of accountPublicId to isNegative flag for the given user and account list.
      *
-     * @param userId
-     *            the user whose flags to look up
-     * @param accountIds
-     *            the accounts to query
-     * @return map of accountId to isNegative
+     * @param userInternalId
+     *            the internal ID of the user whose flags to look up
+     * @param accountPublicIds
+     *            the account public IDs to query
+     * @return map of accountPublicId to isNegative
      */
-    public Map<Long, Boolean> getIsNegativeFlagsForUser(final Long userId, final List<Long> accountIds) {
-        if (accountIds == null || accountIds.isEmpty()) {
+    public Map<String, Boolean> getIsNegativeFlagsForUser(final Long userInternalId,
+            final List<String> accountPublicIds) {
+        if (accountPublicIds == null || accountPublicIds.isEmpty()) {
             return Map.of();
         }
-        final List<UserAccountMetaEntity> metas =
-                UserAccountMetaEntity.find("user.id = ?1 AND account.id IN ?2", userId, accountIds).list();
-        final Map<Long, Boolean> result = new HashMap<>();
+        final List<UserAccountMetaEntity> metas = UserAccountMetaEntity
+                .find("user.id = ?1 AND account.publicId IN ?2", userInternalId, accountPublicIds).list();
+        final Map<String, Boolean> result = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
             final AccountEntity a = m.account;
-            if (a != null && a.id != null) {
-                result.put(a.id, m.isNegative);
+            if (a != null && a.publicId != null) {
+                result.put(a.publicId, m.isNegative);
             }
         }
         return result;

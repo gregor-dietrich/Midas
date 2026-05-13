@@ -2,7 +2,6 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -11,16 +10,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.vptr.midas.api.security.EncryptedStringConverter;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -32,12 +27,7 @@ import jakarta.validation.constraints.NotBlank;
 /** JPA entity representing a user. */
 @Entity
 @Table(name = "users", indexes = { @Index(name = "idx_user_rank_id", columnList = "rank_id") })
-public class UserEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class UserEntity extends BaseEntity {
 
     @NotBlank
     @Column(unique = true)
@@ -103,14 +93,4 @@ public class UserEntity extends PanacheEntityBase {
     @JsonIgnore
     @Nullable
     public List<PostCommentEntity> comments;
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof UserEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
-    }
 }

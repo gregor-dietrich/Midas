@@ -9,7 +9,7 @@ public class PageDto extends AbstractTitleContentDto {
     }
 
     /** Creates a new instance with the given parameters. */
-    public PageDto(final Long id, final String title, final String content) {
-        super(id, title, content);
+    public PageDto(final String publicId, final String title, final String content) {
+        super(publicId, title, content);
     }
 }

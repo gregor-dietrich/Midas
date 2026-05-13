@@ -12,8 +12,8 @@ public abstract class AbstractUserRankDto {
         // Default constructor for Jackson deserialization and NullAway compliance
     }
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("name")
     private String name;
@@ -103,8 +103,8 @@ public abstract class AbstractUserRankDto {
     private Boolean userRankEdit = false;
 
     // Getter methods
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     public String getName() {
@@ -221,8 +221,8 @@ public abstract class AbstractUserRankDto {
     }
 
     // Setter methods
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setName(final String name) {

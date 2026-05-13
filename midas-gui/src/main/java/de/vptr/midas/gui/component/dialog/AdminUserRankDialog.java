@@ -119,7 +119,7 @@ public class AdminUserRankDialog extends AbstractAdminEntityDialogBase<UserRankD
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Rank created successfully", "Rank updated successfully",
                 this.rankService::createRank, this.rankService::updateRank, "Rank");
     }

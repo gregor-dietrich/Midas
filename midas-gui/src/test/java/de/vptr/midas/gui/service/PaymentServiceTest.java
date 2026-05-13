@@ -45,9 +45,9 @@ class PaymentServiceTest {
 
     @Test
     void getAllPayments_shouldReturnPaymentList_whenAuthenticated() {
-        final var payment1 = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account 1", 2L,
+        final var payment1 = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account 1", "2",
                 "Target Account 1", new BigDecimal("100.00"), "Payment 1");
-        final var payment2 = MockDataUtil.createPaymentResponseDto(2L, "testuser", 2L, "Source Account 2", 1L,
+        final var payment2 = MockDataUtil.createPaymentResponseDto("2", "testuser", "2", "Source Account 2", "1",
                 "Target Account 2", new BigDecimal("50.00"), "Payment 2");
         final var expectedPayments = Arrays.asList(payment1, payment2);
 
@@ -89,9 +89,9 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentById_shouldReturnPayment_whenPaymentExists() {
-        final var paymentId = 1L;
+        final var paymentId = "1";
         final var expectedPayment = MockDataUtil.createPaymentResponseDto();
-        expectedPayment.setId(paymentId);
+        expectedPayment.setPublicId(paymentId);
         expectedPayment.setComment("Test Payment");
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedPayment);
 
@@ -101,13 +101,13 @@ class PaymentServiceTest {
         final var result = this.paymentService.getPaymentById(paymentId);
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(paymentId);
+        assertThat(result.get().getPublicId()).isEqualTo(paymentId);
         assertThat(result.get().getComment()).isEqualTo("Test Payment");
     }
 
     @Test
     void getPaymentById_shouldReturnEmpty_whenPaymentNotFound() {
-        final var paymentId = 999L;
+        final var paymentId = "999";
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         ServiceTestUtil.testReturnEmptyOn404(
@@ -118,8 +118,8 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentsByUser_shouldReturnUserPayments_whenUserExists() {
-        final var userId = 1L;
-        final var payment = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account", 2L,
+        final var userId = "1";
+        final var payment = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account", "2",
                 "Target Account", new BigDecimal("100.00"), "Some Payment");
         final var expectedPayments = Collections.singletonList(payment);
 
@@ -137,7 +137,7 @@ class PaymentServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsByUser(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsByUser("1"));
     }
 
     @Test
@@ -151,7 +151,7 @@ class PaymentServiceTest {
     @Test
     void getRecentPayments_shouldReturnRecentPayments_whenLimitProvided() {
         final int limit = 5;
-        final var recentPayment = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account", 2L,
+        final var recentPayment = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account", "2",
                 "Target Account", new BigDecimal("100.00"), "Recent Payment");
         final var expectedPayments = Collections.singletonList(recentPayment);
 
@@ -169,7 +169,7 @@ class PaymentServiceTest {
     void getPaymentsByDateRange_shouldReturnPaymentsInRange_whenValidDates() {
         final LocalDate startDate = LocalDate.of(2023, 1, 1);
         final LocalDate endDate = LocalDate.of(2023, 12, 31);
-        final var payment = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account", 2L,
+        final var payment = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account", "2",
                 "Target Account", new BigDecimal("100.00"), "Date Range Payment");
         payment.setDate(LocalDate.of(2023, 6, 15));
         final var expectedPayments = Collections.singletonList(payment);
@@ -197,10 +197,10 @@ class PaymentServiceTest {
     @Test
     void createPayment_shouldReturnCreatedPayment_whenValidPayment() {
         final var user = TestDataBuilder.createUser("testuser", "test@example.com");
-        final var newPayment = new PaymentDto(user.getId(), 1L, 2L, new BigDecimal("100.00"),
+        final var newPayment = new PaymentDto(user.getPublicId(), "1", "2", new BigDecimal("100.00"),
                 LocalDate.now(ZoneId.systemDefault()), "New Payment", null, null);
         final var createdPayment = MockDataUtil.createPaymentResponseDto();
-        createdPayment.setId(1L);
+        createdPayment.setPublicId("1");
         createdPayment.setComment("New Payment");
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdPayment);
 
@@ -209,7 +209,7 @@ class PaymentServiceTest {
 
         final var result = this.paymentService.createPayment(newPayment);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getComment()).isEqualTo("New Payment");
         verify(this.paymentClient).createPayment(newPayment, TestUtil.TEST_AUTH_HEADER);
     }
@@ -227,21 +227,22 @@ class PaymentServiceTest {
     @Test
     void updatePayment_shouldReturnUpdatedPayment_whenValidPayment() {
         final var paymentToUpdate = TestDataBuilder.createUniquePayment();
-        paymentToUpdate.setId(1L);
+        paymentToUpdate.setPublicId("1");
         paymentToUpdate.setComment("Updated Payment");
         final var updatedPayment = MockDataUtil.createPaymentResponseDto();
-        updatedPayment.setId(1L);
+        updatedPayment.setPublicId("1");
         updatedPayment.setComment("Updated Payment");
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedPayment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.paymentClient.updatePayment(1L, paymentToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.paymentClient.updatePayment("1", paymentToUpdate, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
 
         final var result = this.paymentService.updatePayment(paymentToUpdate);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getComment()).isEqualTo("Updated Payment");
-        verify(this.paymentClient).updatePayment(1L, paymentToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.paymentClient).updatePayment("1", paymentToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
@@ -269,7 +270,7 @@ class PaymentServiceTest {
 
     @Test
     void deletePayment_shouldReturnTrue_whenDeletionSuccessful() {
-        final var paymentId = 1L;
+        final var paymentId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -283,7 +284,7 @@ class PaymentServiceTest {
 
     @Test
     void deletePayment_shouldReturnFalse_whenDeletionFails() {
-        final var paymentId = 1L;
+        final var paymentId = "1";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -299,7 +300,7 @@ class PaymentServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentById("1"));
     }
 
     @Test
@@ -322,7 +323,7 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentById_shouldThrowServiceException_whenWebApplicationExceptionOccurs() {
-        final var paymentId = 1L;
+        final var paymentId = "1";
         final WebApplicationException webException = ExceptionTestUtil.createWebApplicationException(500);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -334,7 +335,7 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentsByUser_shouldReturnEmptyList_whenUserHasNoPayments() {
-        final var userId = 1L;
+        final var userId = "1";
         final var emptyList = Collections.<PaymentResponseDto>emptyList();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -347,8 +348,8 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentsBySourceAccount_shouldReturnPayments_whenSourceAccountExists() {
-        final var sourceId = 1L;
-        final var payment = MockDataUtil.createPaymentResponseDto(1L, "testuser", sourceId, "Source Account", 2L,
+        final var sourceId = "1";
+        final var payment = MockDataUtil.createPaymentResponseDto("1", "testuser", sourceId, "Source Account", "2",
                 "Target Account", new BigDecimal("100.00"), "Source Payment");
         final var expected = Collections.singletonList(payment);
 
@@ -366,12 +367,12 @@ class PaymentServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsBySourceAccount(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsBySourceAccount("1"));
     }
 
     @Test
     void getPaymentsBySourceAccount_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var sourceId = 1L;
+        final var sourceId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.paymentClient.getPaymentsBySourceAccount(sourceId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -382,7 +383,7 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentsBySourceAccount_shouldThrowAuthenticationException_when401Error() {
-        final var sourceId = 1L;
+        final var sourceId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.paymentClient.getPaymentsBySourceAccount(sourceId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -393,15 +394,16 @@ class PaymentServiceTest {
 
     @Test
     void getPaymentsByTargetAccount_shouldReturnPayments_whenTargetAccountExists() {
-        final var targetId = 2L;
-        final var payment = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account", targetId,
-                "Target Account", new BigDecimal("100.00"), "Target Payment");
+        final var targetPublicId = "2";
+        final var payment = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account",
+                targetPublicId, "Target Account", new BigDecimal("100.00"), "Target Payment");
         final var expected = Collections.singletonList(payment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.paymentClient.getPaymentsByTargetAccount(targetId, TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
+        when(this.paymentClient.getPaymentsByTargetAccount(targetPublicId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(expected);
 
-        final var result = this.paymentService.getPaymentsByTargetAccount(targetId);
+        final var result = this.paymentService.getPaymentsByTargetAccount(targetPublicId);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getComment()).isEqualTo("Target Payment");
@@ -412,35 +414,35 @@ class PaymentServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsByTargetAccount(2L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsByTargetAccount("2"));
     }
 
     @Test
     void getPaymentsByTargetAccount_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var targetId = 2L;
+        final var targetPublicId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.paymentClient.getPaymentsByTargetAccount(targetId, TestUtil.TEST_AUTH_HEADER))
+        when(this.paymentClient.getPaymentsByTargetAccount(targetPublicId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
-        ExceptionTestUtil
-                .assertThrowsBackendConnectionFailed(() -> this.paymentService.getPaymentsByTargetAccount(targetId));
+        ExceptionTestUtil.assertThrowsBackendConnectionFailed(
+                () -> this.paymentService.getPaymentsByTargetAccount(targetPublicId));
     }
 
     @Test
     void getPaymentsByTargetAccount_shouldThrowAuthenticationException_when401Error() {
-        final var targetId = 2L;
+        final var targetPublicId = "2";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.paymentClient.getPaymentsByTargetAccount(targetId, TestUtil.TEST_AUTH_HEADER))
+        when(this.paymentClient.getPaymentsByTargetAccount(targetPublicId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
 
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.paymentService.getPaymentsByTargetAccount(targetId),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(
+                () -> this.paymentService.getPaymentsByTargetAccount(targetPublicId), this.authService);
     }
 
     @Test
     void searchPayments_shouldReturnMatchingPayments_whenQueryProvided() {
         final String query = "test";
-        final var payment = MockDataUtil.createPaymentResponseDto(1L, "testuser", 1L, "Source Account", 2L,
+        final var payment = MockDataUtil.createPaymentResponseDto("1", "testuser", "1", "Source Account", "2",
                 "Target Account", new BigDecimal("100.00"), "Search Payment");
         final var expected = Collections.singletonList(payment);
 

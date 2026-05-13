@@ -54,8 +54,8 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
     @Override
     protected void configureGridColumns(final Grid<UserResponseDto> grid) {
-        grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getId).setHeader("ID").setWidth("80px")
-                .setFlexGrow(0);
+        grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getPublicId).setHeader("ID")
+                .setWidth("80px").setFlexGrow(0);
         grid.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getUsername).setHeader("Username")
                 .setFlexGrow(1);
         grid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
@@ -74,15 +74,15 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
     }
 
     @Override
-    protected Long getUserId(final UserResponseDto item) {
-        return item.getId();
+    protected String getUserPublicId(final UserResponseDto item) {
+        return item.getPublicId();
     }
 
     @Override
     protected void loadAssociatedUsers() {
         this.executeWithHandling(() -> {
             final var users =
-                    this.accountService.getAssociatedUsers(Objects.requireNonNull(this.selectedEntity).getId());
+                    this.accountService.getAssociatedUsers(Objects.requireNonNull(this.selectedEntity).getPublicId());
             Objects.requireNonNull(this.userGrid).setItems(users);
         }, "Loading account users failed. Please try again.");
     }
@@ -98,13 +98,14 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
             final var filter = query.getFilter().orElse("").trim();
             final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>())
                     .collect(Collectors.toList());
-            final var currentUserIds = currentUsers.stream().map(UserResponseDto::getId).collect(Collectors.toSet());
+            final var currentUserIds =
+                    currentUsers.stream().map(UserResponseDto::getPublicId).collect(Collectors.toSet());
 
             final var users = filter.isEmpty()
                     ? this.userService.getAllUsers(query.getOffset() / query.getLimit(), query.getLimit())
                     : this.userService.searchUsers(filter);
 
-            return users.stream().filter(user -> !currentUserIds.contains(user.getId())).skip(query.getOffset())
+            return users.stream().filter(user -> !currentUserIds.contains(user.getPublicId())).skip(query.getOffset())
                     .limit(query.getLimit());
         } catch (final RuntimeException e) {
             LOG.error("Error loading available users", e);
@@ -122,8 +123,8 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
         final var combo = Objects.requireNonNull(this.availableUsersCombo);
 
         this.executeWithHandling(() -> {
-            if (this.accountService.associateUserWithAccount(Objects.requireNonNull(this.selectedEntity).getId(),
-                    selectedUser.getId())) {
+            if (this.accountService.associateUserWithAccount(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    selectedUser.getPublicId())) {
                 NotificationUtil.showSuccess("User added to account successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();
@@ -136,16 +137,16 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
     private void updateUserNegativeFlag(final UserResponseDto user, final boolean isNegative) {
         this.executeWithHandling(() -> {
-            this.accountService.updateUserAccountMeta(Objects.requireNonNull(this.selectedEntity).getId(), user.getId(),
-                    isNegative);
+            this.accountService.updateUserAccountMeta(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    user.getPublicId(), isNegative);
             NotificationUtil.showSuccess("Updated negative flag for " + user.getUsername());
         }, "Failed to update negative flag. Please try again.");
     }
 
     private void removeUserFromAccount(final UserResponseDto user) {
         this.executeWithHandling(() -> {
-            if (this.accountService.removeUserFromAccount(Objects.requireNonNull(this.selectedEntity).getId(),
-                    user.getId())) {
+            if (this.accountService.removeUserFromAccount(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    user.getPublicId())) {
                 NotificationUtil.showSuccess("User removed from account successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();

@@ -16,11 +16,11 @@ public class PostCommentResponseDto extends AbstractPostCommentDto {
     /** Handles the to post comment dto operation. */
     public PostCommentDto toPostCommentDto() {
         final PostCommentDto dto = new PostCommentDto();
-        dto.setId(this.getId());
+        dto.setPublicId(this.getPublicId());
         dto.setContent(this.getContent());
-        dto.setPostId(this.getPostId());
+        dto.setPostPublicId(this.getPostPublicId());
         dto.setPostTitle(this.getPostTitle());
-        dto.setUserId(this.getUserId());
+        dto.setUserPublicId(this.getUserPublicId());
         dto.setUsername(this.getUsername());
         dto.setCreated(this.getCreated());
         return dto;

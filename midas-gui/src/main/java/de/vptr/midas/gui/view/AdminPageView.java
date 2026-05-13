@@ -96,7 +96,7 @@ public class AdminPageView extends AbstractAdminEntityView<PageResponseDto> {
 
     @Override
     protected void configureGrid(final Grid<PageResponseDto> g) {
-        g.addColumn((ValueProvider<PageResponseDto, ?>) PageResponseDto::getId).setHeader("ID").setWidth("80px")
+        g.addColumn((ValueProvider<PageResponseDto, ?>) PageResponseDto::getPublicId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
         g.addComponentColumn(
@@ -112,7 +112,7 @@ public class AdminPageView extends AbstractAdminEntityView<PageResponseDto> {
 
         final var editButton = new EditButton(ignore -> this.openPageDialog(page.toPageDto()));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.pageService.deletePage(Objects.requireNonNull(page.getId()));
+            this.pageService.deletePage(Objects.requireNonNull(page.getPublicId()));
         }));
 
         layout.add(editButton, deleteButton);

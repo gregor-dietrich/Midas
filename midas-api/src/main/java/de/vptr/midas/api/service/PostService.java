@@ -54,12 +54,11 @@ public class PostService {
         return this.toResponseDtos(posts);
     }
 
-    /** Returns the post with the given id. */
-    public Optional<PostResponseDto> findById(final Long id) {
-        return PostEntity
-                .find("SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.id = ?1",
-                        id)
-                .<PostEntity>firstResultOptional().map(this::toResponseDto);
+    /** Returns the post with the given publicId. */
+    public Optional<PostResponseDto> findById(final String publicId) {
+        return PostEntity.find(
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.publicId = ?1",
+                publicId).<PostEntity>firstResultOptional().map(this::toResponseDto);
     }
 
     /** Returns all published posts with default pagination. */
@@ -76,41 +75,43 @@ public class PostService {
     }
 
     /** Returns all posts by the given user with default pagination. */
-    public List<PostResponseDto> findByUserId(final Long userId) {
-        return findByUserId(userId, 0, 20);
+    public List<PostResponseDto> findByUserPublicId(final String userPublicId) {
+        return findByUserPublicId(userPublicId, 0, 20);
     }
 
     /** Returns all posts by the given user with pagination. */
-    public List<PostResponseDto> findByUserId(final Long userId, final int page, final int size) {
+    public List<PostResponseDto> findByUserPublicId(final String userPublicId, final int page, final int size) {
         final List<PostEntity> posts = PostEntity.find(
-                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.id = ?1 ORDER BY p.created DESC",
-                userId).page(page, size).list();
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.user.publicId = ?1 ORDER BY p.created DESC",
+                userPublicId).page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
     /** Returns published posts by the given user. */
-    public List<PostResponseDto> findPublishedByUserId(final Long userId) {
-        return findPublishedByUserId(userId, 0, 20);
+    public List<PostResponseDto> findPublishedByUserPublicId(final String userPublicId) {
+        return findPublishedByUserPublicId(userPublicId, 0, 20);
     }
 
     /** Returns published posts by the given user with pagination. */
-    public List<PostResponseDto> findPublishedByUserId(final Long userId, final int page, final int size) {
+    public List<PostResponseDto> findPublishedByUserPublicId(final String userPublicId, final int page,
+            final int size) {
         final List<PostEntity> posts = PostEntity.find("""
                 SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
-                WHERE p.user.id = ?1 AND p.published = true ORDER BY p.created DESC""", userId).page(page, size).list();
+                WHERE p.user.publicId = ?1 AND p.published = true ORDER BY p.created DESC""", userPublicId)
+                .page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
     /** Returns all posts in the given category with default pagination. */
-    public List<PostResponseDto> findByCategoryId(final Long categoryId) {
-        return findByCategoryId(categoryId, 0, 20);
+    public List<PostResponseDto> findByCategoryPublicId(final String categoryPublicId) {
+        return findByCategoryPublicId(categoryPublicId, 0, 20);
     }
 
     /** Returns all posts in the given category with pagination. */
-    public List<PostResponseDto> findByCategoryId(final Long categoryId, final int page, final int size) {
+    public List<PostResponseDto> findByCategoryPublicId(final String categoryPublicId, final int page, final int size) {
         final List<PostEntity> posts = PostEntity.find(
-                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.category.id = ?1 ORDER BY p.created DESC",
-                categoryId).page(page, size).list();
+                "SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.category.publicId = ?1 ORDER BY p.created DESC",
+                categoryPublicId).page(page, size).list();
         return this.toResponseDtos(posts);
     }
 
@@ -132,17 +133,18 @@ public class PostService {
         post.commentable = postDto.commentable != null ? postDto.commentable : false;
 
         // Set user - required for creation
-        final UserEntity user = UserEntity.findById(postDto.userId);
+        final UserEntity user = UserEntity.find("publicId", postDto.userPublicId).firstResult();
         if (user == null) {
-            throw new ValidationException("User with ID " + postDto.userId + " not found");
+            throw new ValidationException("User with Public ID " + postDto.userPublicId + " not found");
         }
         post.user = user;
 
         // Set category if provided
-        if (postDto.categoryId != null) {
-            final PostCategoryEntity category = PostCategoryEntity.findById(postDto.categoryId);
+        if (postDto.categoryPublicId != null) {
+            final PostCategoryEntity category =
+                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
             if (category == null) {
-                throw new ValidationException("Category with ID " + postDto.categoryId + " not found");
+                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
             }
             post.category = category;
         }
@@ -150,10 +152,11 @@ public class PostService {
         return post;
     }
 
-    /** Updates the post with the given id. */
+    /** Updates the post with the given publicId. */
     @Transactional
-    public PostResponseDto updatePost(final Long id, final PostDto postDto, @Nullable final String currentUsername) {
-        final PostEntity existingPost = PostEntity.findById(id);
+    public PostResponseDto updatePost(final String publicId, final PostDto postDto,
+            @Nullable final String currentUsername) {
+        final PostEntity existingPost = PostEntity.find("publicId", publicId).firstResult();
         if (existingPost == null) {
             throw new WebApplicationException("Post not found", Response.Status.NOT_FOUND);
         }
@@ -166,13 +169,14 @@ public class PostService {
         existingPost.published = postDto.published != null ? postDto.published : false;
         existingPost.commentable = postDto.commentable != null ? postDto.commentable : false;
 
-        // userId changes are not allowed — preserve existing user
+        // userPublicId changes are not allowed — preserve existing user
 
         // Set category if provided
-        if (postDto.categoryId != null) {
-            final PostCategoryEntity category = PostCategoryEntity.findById(postDto.categoryId);
+        if (postDto.categoryPublicId != null) {
+            final PostCategoryEntity category =
+                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
             if (category == null) {
-                throw new ValidationException("Category with ID " + postDto.categoryId + " not found");
+                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
             }
             existingPost.category = category;
         } else {
@@ -183,10 +187,11 @@ public class PostService {
         return this.toResponseDto(existingPost);
     }
 
-    /** Partially updates the post with the given id. */
+    /** Partially updates the post with the given publicId. */
     @Transactional
-    public PostResponseDto patchPost(final Long id, final PostDto postDto, @Nullable final String currentUsername) {
-        final PostEntity existingPost = PostEntity.findById(id);
+    public PostResponseDto patchPost(final String publicId, final PostDto postDto,
+            @Nullable final String currentUsername) {
+        final PostEntity existingPost = PostEntity.find("publicId", publicId).firstResult();
         if (existingPost == null) {
             throw new WebApplicationException("Post not found", Response.Status.NOT_FOUND);
         }
@@ -207,13 +212,14 @@ public class PostService {
             existingPost.commentable = postDto.commentable;
         }
 
-        // userId changes are not allowed — preserve existing user
+        // userPublicId changes are not allowed — preserve existing user
 
         // Set category if provided
-        if (postDto.categoryId != null) {
-            final PostCategoryEntity category = PostCategoryEntity.findById(postDto.categoryId);
+        if (postDto.categoryPublicId != null) {
+            final PostCategoryEntity category =
+                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
             if (category == null) {
-                throw new ValidationException("Category with ID " + postDto.categoryId + " not found");
+                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
             }
             existingPost.category = category;
         }
@@ -222,17 +228,17 @@ public class PostService {
         return this.toResponseDto(existingPost);
     }
 
-    /** Deletes the post with the given id. */
+    /** Deletes the post with the given publicId. */
     @Transactional
-    public boolean deletePost(final Long id, @Nullable final String currentUsername) {
-        final PostEntity existingPost = PostEntity.findById(id);
+    public boolean deletePost(final String publicId, @Nullable final String currentUsername) {
+        final PostEntity existingPost = PostEntity.find("publicId", publicId).firstResult();
         if (existingPost == null) {
             return false;
         }
 
         this.verifyPostOwnership(currentUsername, existingPost);
 
-        return PostEntity.deleteById(id);
+        return PostEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all posts matching the given query. */

@@ -24,7 +24,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -72,12 +71,12 @@ public class AccountResource {
         return this.accountService.getAllAccounts(safePage, safeSize);
     }
 
-    /** Returns the account with the given ID. */
+    /** Returns the account with the given publicId. */
     @GET
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public Response getAccount(@PathParam("id") @Min(1) final Long id) {
-        final var account = this.accountService.findById(id);
+    public Response getAccount(@PathParam("publicId") final String publicId) {
+        final var account = this.accountService.findById(publicId);
         if (account.isPresent()) {
             return ResponseUtil.ok(account.get());
         }
@@ -98,84 +97,84 @@ public class AccountResource {
 
     /** Returns all users associated with the given account. */
     @GET
-    @Path("/{id}/users")
+    @Path("/{publicId}/users")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<UserResponseDto> getAssociatedUsers(@PathParam("id") @Min(1) final Long accountId) {
-        return this.accountAccessService.getAssociatedUsers(accountId);
+    public List<UserResponseDto> getAssociatedUsers(@PathParam("publicId") final String publicId) {
+        return this.accountAccessService.getAssociatedUsers(publicId);
     }
 
     /** Returns all payments for the given account. */
     @GET
-    @Path("/{id}/payments")
+    @Path("/{publicId}/payments")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getAccountPayments(@PathParam("id") @Min(1) final Long accountId) {
-        return this.accountAccessService.getAccountPayments(accountId);
+    public List<PaymentResponseDto> getAccountPayments(@PathParam("publicId") final String publicId) {
+        return this.accountAccessService.getAccountPayments(publicId);
     }
 
     /** Returns all outgoing payments for the given account. */
     @GET
-    @Path("/{id}/payments/outgoing")
+    @Path("/{publicId}/payments/outgoing")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getOutgoingPayments(@PathParam("id") @Min(1) final Long accountId) {
-        return this.accountAccessService.getOutgoingPayments(accountId);
+    public List<PaymentResponseDto> getOutgoingPayments(@PathParam("publicId") final String publicId) {
+        return this.accountAccessService.getOutgoingPayments(publicId);
     }
 
     /** Returns all incoming payments for the given account. */
     @GET
-    @Path("/{id}/payments/incoming")
+    @Path("/{publicId}/payments/incoming")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getIncomingPayments(@PathParam("id") @Min(1) final Long accountId) {
-        return this.accountAccessService.getIncomingPayments(accountId);
+    public List<PaymentResponseDto> getIncomingPayments(@PathParam("publicId") final String publicId) {
+        return this.accountAccessService.getIncomingPayments(publicId);
     }
 
     /** Returns the balance for the given account. */
     @GET
-    @Path("/{id}/balance")
+    @Path("/{publicId}/balance")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public Response getAccountBalance(@PathParam("id") @Min(1) final Long accountId) {
-        final BigDecimal balance = this.accountAccessService.getAccountBalance(accountId);
+    public Response getAccountBalance(@PathParam("publicId") final String publicId) {
+        final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId);
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
     /** Returns the balance for the account the current user has access to. */
     @GET
-    @Path("/my/{id}/balance")
-    public Response getMyAccountBalance(@PathParam("id") @Min(1) final Long accountId) {
-        this.requireAccountAccess(accountId, "Access denied");
-        final BigDecimal balance = this.accountAccessService.getAccountBalance(accountId);
+    @Path("/my/{publicId}/balance")
+    public Response getMyAccountBalance(@PathParam("publicId") final String publicId) {
+        this.requireAccountAccess(publicId, "Access denied");
+        final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId);
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
     /** Returns all payments for the current user's account. */
     @GET
-    @Path("/my/{accountId}/payments")
-    public List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountId") @Min(1) final Long accountId) {
-        this.requireAccountAccess(accountId, "Access denied");
-        return this.accountAccessService.getAccountPayments(accountId);
+    @Path("/my/{publicId}/payments")
+    public List<PaymentResponseDto> getMyAccountPayments(@PathParam("publicId") final String publicId) {
+        this.requireAccountAccess(publicId, "Access denied");
+        return this.accountAccessService.getAccountPayments(publicId);
     }
 
     /** Returns all outgoing payments for the current user's account. */
     @GET
-    @Path("/my/{accountId}/payments/outgoing")
-    public List<PaymentResponseDto> getMyAccountOutgoingPayments(@PathParam("accountId") @Min(1) final Long accountId) {
-        this.requireAccountAccess(accountId, "Access denied");
-        return this.accountAccessService.getOutgoingPayments(accountId);
+    @Path("/my/{publicId}/payments/outgoing")
+    public List<PaymentResponseDto> getMyAccountOutgoingPayments(@PathParam("publicId") final String publicId) {
+        this.requireAccountAccess(publicId, "Access denied");
+        return this.accountAccessService.getOutgoingPayments(publicId);
     }
 
     /** Returns all incoming payments for the current user's account. */
     @GET
-    @Path("/my/{accountId}/payments/incoming")
-    public List<PaymentResponseDto> getMyAccountIncomingPayments(@PathParam("accountId") @Min(1) final Long accountId) {
-        this.requireAccountAccess(accountId, "Access denied");
-        return this.accountAccessService.getIncomingPayments(accountId);
+    @Path("/my/{publicId}/payments/incoming")
+    public List<PaymentResponseDto> getMyAccountIncomingPayments(@PathParam("publicId") final String publicId) {
+        this.requireAccountAccess(publicId, "Access denied");
+        return this.accountAccessService.getIncomingPayments(publicId);
     }
 
     /** Returns all accounts for the given user. */
     @GET
-    @Path("/user/{userId}")
+    @Path("/user/{userPublicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<AccountResponseDto> getAccountsByUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.accountAccessService.getAccountsForUser(userId);
+    public List<AccountResponseDto> getAccountsByUser(@PathParam("userPublicId") final String userPublicId) {
+        return this.accountAccessService.getAccountsForUser(userPublicId);
     }
 
     /** Returns all accounts for the current user. */
@@ -201,22 +200,22 @@ public class AccountResource {
             return accounts;
         }
 
-        final List<Long> accountIds = accounts.stream().map(account -> account.id).toList();
+        final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
 
-        final Map<Long, BigDecimal> balances = this.accountAccessService.getAccountBalances(accountIds);
+        final Map<String, BigDecimal> balances = this.accountAccessService.getAccountBalances(accountPublicIds);
 
         // Set balance in each account DTO
         accounts.forEach(account -> {
-            account.balance = balances.getOrDefault(account.id, BigDecimal.ZERO);
+            account.balance = balances.getOrDefault(account.publicId, BigDecimal.ZERO);
         });
 
         // Set isNegative flag per account for the current user
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
         if (currentUser != null && currentUser.id != null) {
-            final Map<Long, Boolean> isNegativeFlags =
-                    this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountIds);
+            final Map<String, Boolean> isNegativeFlags =
+                    this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountPublicIds);
             accounts.forEach(account -> {
-                account.isNegative = isNegativeFlags.getOrDefault(account.id, false);
+                account.isNegative = isNegativeFlags.getOrDefault(account.publicId, false);
             });
         }
 
@@ -225,20 +224,21 @@ public class AccountResource {
 
     /** Checks whether the given user is associated with the given account. */
     @GET
-    @Path("/user/{userId}/account/{accountId}/check")
+    @Path("/user/{userPublicId}/account/{accountPublicId}/check")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public Response checkUserAccountAssociation(@PathParam("userId") @Min(1) final Long userId,
-            @PathParam("accountId") @Min(1) final Long accountId) {
-        final boolean isAssociated = this.accountAccessService.isUserAssociatedWithAccount(userId, accountId);
+    public Response checkUserAccountAssociation(@PathParam("userPublicId") final String userPublicId,
+            @PathParam("accountPublicId") final String accountPublicId) {
+        final boolean isAssociated =
+                this.accountAccessService.isUserAssociatedWithAccount(userPublicId, accountPublicId);
         return ResponseUtil.ok(new AccountAssociationResponseDto(isAssociated));
     }
 
     /** Checks whether the current user has access to the given account. */
     @GET
-    @Path("/my/{accountId}/check")
-    public Response checkMyAccountAccess(@PathParam("accountId") @Min(1) final Long accountId) {
+    @Path("/my/{publicId}/check")
+    public Response checkMyAccountAccess(@PathParam("publicId") final String publicId) {
         final String username = this.requireCurrentUsername();
-        final boolean hasAccess = this.accountAccessService.hasUserAccessToAccount(username, accountId);
+        final boolean hasAccess = this.accountAccessService.hasUserAccessToAccount(username, publicId);
         return ResponseUtil.ok(new AccountAccessResponseDto(hasAccess));
     }
 
@@ -252,28 +252,28 @@ public class AccountResource {
 
     /** Processes the request and returns the result. */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response updateAccount(@PathParam("id") @Min(1) final Long id, @Valid final AccountDto accountDto) {
-        final var updated = this.accountService.updateAccount(id, accountDto);
+    public Response updateAccount(@PathParam("publicId") final String publicId, @Valid final AccountDto accountDto) {
+        final var updated = this.accountService.updateAccount(publicId, accountDto);
         return ResponseUtil.ok(updated);
     }
 
     /** Processes the request and returns the result. */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response patchAccount(@PathParam("id") @Min(1) final Long id, final AccountDto accountDto) {
-        final var updated = this.accountService.patchAccount(id, accountDto);
+    public Response patchAccount(@PathParam("publicId") final String publicId, final AccountDto accountDto) {
+        final var updated = this.accountService.patchAccount(publicId, accountDto);
         return ResponseUtil.ok(updated);
     }
 
     /** Processes the request and returns the result. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:delete" })
-    public Response deleteAccount(@PathParam("id") @Min(1) final Long id) {
-        final boolean deleted = this.accountService.deleteAccount(id);
+    public Response deleteAccount(@PathParam("publicId") final String publicId) {
+        final boolean deleted = this.accountService.deleteAccount(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }
@@ -282,21 +282,21 @@ public class AccountResource {
 
     /** Associates a user with an account. */
     @POST
-    @Path("/{accountId}/users/{userId}")
+    @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response associateUserWithAccount(@PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("userId") @Min(1) final Long userId) {
-        this.accountAccessService.associateUserWithAccount(userId, accountId);
+    public Response associateUserWithAccount(@PathParam("accountPublicId") final String accountPublicId,
+            @PathParam("userPublicId") final String userPublicId) {
+        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
         return ResponseUtil.created(null);
     }
 
     /** Processes the request and returns the result. */
     @DELETE
-    @Path("/{accountId}/users/{userId}")
+    @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response removeUserFromAccount(@PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("userId") @Min(1) final Long userId) {
-        final boolean removed = this.accountAccessService.removeUserFromAccount(userId, accountId);
+    public Response removeUserFromAccount(@PathParam("accountPublicId") final String accountPublicId,
+            @PathParam("userPublicId") final String userPublicId) {
+        final boolean removed = this.accountAccessService.removeUserFromAccount(userPublicId, accountPublicId);
         if (removed) {
             return ResponseUtil.noContent();
         }
@@ -306,20 +306,20 @@ public class AccountResource {
     /**
      * Updates the user-account meta (e.g. isNegative flag) for the association.
      *
-     * @param accountId
+     * @param accountPublicId
      *            the account in the association
-     * @param userId
+     * @param userPublicId
      *            the user in the association
      * @param metaDto
      *            the meta properties to update
      * @return 204 No Content on success
      */
     @PATCH
-    @Path("/{accountId}/users/{userId}")
+    @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response updateUserAccountMeta(@PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("userId") @Min(1) final Long userId, final UserAccountMetaDto metaDto) {
-        this.accountAccessService.updateUserAccountMeta(userId, accountId, metaDto.isNegative);
+    public Response updateUserAccountMeta(@PathParam("accountPublicId") final String accountPublicId,
+            @PathParam("userPublicId") final String userPublicId, final UserAccountMetaDto metaDto) {
+        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, metaDto.isNegative);
         return ResponseUtil.noContent();
     }
 
@@ -334,22 +334,23 @@ public class AccountResource {
 
     /** Processes the request and returns the result. */
     @POST
-    @Path("/my/{accountId}/payments")
-    public Response createMyAccountPayment(@PathParam("accountId") @Min(1) final Long accountId,
+    @Path("/my/{accountPublicId}/payments")
+    public Response createMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
             @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
-        final PaymentResponseDto created = this.paymentService.createPaymentForUser(paymentDto, username, accountId);
+        final PaymentResponseDto created =
+                this.paymentService.createPaymentForUser(paymentDto, username, accountPublicId);
         return ResponseUtil.created(created);
     }
 
     /** Processes the request and returns the result. */
     @PUT
-    @Path("/my/{accountId}/payments/{paymentId}")
-    public Response updateMyAccountPayment(@PathParam("accountId") @Min(1) final Long accountId,
-            @PathParam("paymentId") @Min(1) final Long paymentId, @Valid final PaymentDto paymentDto) {
+    @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    public Response updateMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
+            @PathParam("paymentPublicId") final String paymentPublicId, @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
         final PaymentResponseDto updated =
-                this.paymentService.updatePaymentForUser(paymentId, paymentDto, username, accountId);
+                this.paymentService.updatePaymentForUser(paymentPublicId, paymentDto, username, accountPublicId);
         return ResponseUtil.ok(updated);
     }
 
@@ -357,9 +358,9 @@ public class AccountResource {
         return SecurityContextUtil.requireCurrentUsername(this.securityContext);
     }
 
-    private void requireAccountAccess(final Long accountId, final String deniedMessage) {
+    private void requireAccountAccess(final String accountPublicId, final String deniedMessage) {
         final String username = this.requireCurrentUsername();
-        if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+        if (!this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException(deniedMessage, Response.Status.FORBIDDEN);
         }
     }

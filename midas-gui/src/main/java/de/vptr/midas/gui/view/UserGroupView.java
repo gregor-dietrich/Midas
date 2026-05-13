@@ -52,7 +52,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     private AsyncSearchLayout searchLayout;
 
     @Nullable
-    private Long currentUserId;
+    private String currentUserId;
 
     /** Initializes UserGroupView. */
     public UserGroupView() {
@@ -120,7 +120,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void navigateToGroup(final UserGroupResponseDto group) {
-        this.getUI().ifPresent(ui -> ui.navigate("groups/" + group.getId()));
+        this.getUI().ifPresent(ui -> ui.navigate("groups/" + group.getPublicId()));
     }
 
     private void loadGroupsAsync() {
@@ -133,7 +133,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
 
             List<UserGroupResponseDto> myGroups = Collections.emptyList();
             if (currentUser != null) {
-                myGroups = this.groupService.getGroupsByUser(Objects.requireNonNull(currentUser.getId()));
+                myGroups = this.groupService.getGroupsByUser(Objects.requireNonNull(currentUser.getPublicId()));
             }
 
             return new GroupLoadResult(allGroups, myGroups, currentUser);
@@ -142,7 +142,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
                     result.myGroups.size());
 
             if (result.currentUser != null) {
-                this.currentUserId = result.currentUser.getId();
+                this.currentUserId = result.currentUser.getPublicId();
             }
 
             this.updateGrids(result.allGroups, result.myGroups);
@@ -150,9 +150,10 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     }
 
     private void updateGrids(final List<UserGroupResponseDto> allGroups, final List<UserGroupResponseDto> myGroups) {
-        final Set<Long> myGroupIds = myGroups.stream().map(UserGroupResponseDto::getId).collect(Collectors.toSet());
+        final Set<String> myGroupIds =
+                myGroups.stream().map(UserGroupResponseDto::getPublicId).collect(Collectors.toSet());
 
-        final var otherGroups = allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
+        final var otherGroups = allGroups.stream().filter(group -> !myGroupIds.contains(group.getPublicId())).toList();
 
         Objects.requireNonNull(this.myGroupsGrid).setItems(myGroups);
         Objects.requireNonNull(this.otherGroupsGrid).setItems(otherGroups);
@@ -163,7 +164,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         sl.setSearching(true);
         LOG.infof("Starting async group search with query: %s", query);
 
-        final Long capturedUserId = this.currentUserId;
+        final String capturedUserId = this.currentUserId;
 
         this.loadDataAsync(() -> {
             LOG.info("Making REST call to search groups");
@@ -179,14 +180,14 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
             sl.setSearching(false);
             LOG.infof("Successfully found %s groups matching query", result.allGroups.size());
 
-            final Set<Long> myGroupIds =
-                    result.myGroups.stream().map(UserGroupResponseDto::getId).collect(Collectors.toSet());
+            final Set<String> myGroupIds =
+                    result.myGroups.stream().map(UserGroupResponseDto::getPublicId).collect(Collectors.toSet());
 
             final var myResults =
-                    result.allGroups.stream().filter(group -> myGroupIds.contains(group.getId())).toList();
+                    result.allGroups.stream().filter(group -> myGroupIds.contains(group.getPublicId())).toList();
 
             final var otherResults =
-                    result.allGroups.stream().filter(group -> !myGroupIds.contains(group.getId())).toList();
+                    result.allGroups.stream().filter(group -> !myGroupIds.contains(group.getPublicId())).toList();
 
             Objects.requireNonNull(this.myGroupsGrid).setItems(myResults);
             Objects.requireNonNull(this.otherGroupsGrid).setItems(otherResults);

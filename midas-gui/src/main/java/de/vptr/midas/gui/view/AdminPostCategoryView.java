@@ -119,8 +119,8 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
         if (this.allCategories == null) {
             return;
         }
-        final boolean hasChildren = this.allCategories.stream()
-                .anyMatch(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId()));
+        final boolean hasChildren = this.allCategories.stream().anyMatch(
+                cat -> cat.getParentPublicId() != null && cat.getParentPublicId().equals(category.getPublicId()));
 
         if (hasChildren) {
             NotificationUtil
@@ -129,7 +129,7 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
         }
 
         try {
-            if (this.categoryService.deleteCategory(category.getId())) {
+            if (this.categoryService.deleteCategory(category.getPublicId())) {
                 NotificationUtil.showSuccess("Category deleted successfully");
                 this.loadCategoriesAsync();
             } else {
@@ -167,14 +167,16 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
 
     private void updateSearchTreeGrid(final List<PostCategoryResponseDto> searchResults) {
         final var categoryIdsInResults =
-                searchResults.stream().map(PostCategoryResponseDto::getId).collect(Collectors.toSet());
+                searchResults.stream().map(PostCategoryResponseDto::getPublicId).collect(Collectors.toSet());
 
-        final var topLevelCategories = searchResults.stream()
-                .filter(cat -> cat.getParentId() == null || !categoryIdsInResults.contains(cat.getParentId())).toList();
+        final var topLevelCategories = searchResults.stream().filter(
+                cat -> cat.getParentPublicId() == null || !categoryIdsInResults.contains(cat.getParentPublicId()))
+                .toList();
 
         final var tg = Objects.requireNonNull(this.treeGrid);
-        tg.setItems(topLevelCategories, category -> searchResults.stream()
-                .filter(cat -> cat.getParentId() != null && cat.getParentId().equals(category.getId())).toList());
+        tg.setItems(topLevelCategories, category -> searchResults.stream().filter(
+                cat -> cat.getParentPublicId() != null && cat.getParentPublicId().equals(category.getPublicId()))
+                .toList());
 
         tg.expandRecursively(topLevelCategories, 10);
     }

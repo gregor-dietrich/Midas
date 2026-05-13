@@ -79,7 +79,7 @@ public class AdminAccountView extends AbstractAdminEntityView<AccountResponseDto
 
     @Override
     protected void executeUserFilter(final Integer userId) {
-        this.loadDataAsync(() -> this.accountService.getAccountsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.accountService.getAccountsByUser(userId.toString()),
                 accounts -> Objects.requireNonNull(this.grid).setItems(accounts));
     }
 
@@ -118,8 +118,8 @@ public class AdminAccountView extends AbstractAdminEntityView<AccountResponseDto
 
     @Override
     protected void configureGrid(final Grid<AccountResponseDto> g) {
-        g.addColumn((ValueProvider<AccountResponseDto, ?>) AccountResponseDto::getId).setHeader("ID").setWidth("80px")
-                .setFlexGrow(0);
+        g.addColumn((ValueProvider<AccountResponseDto, ?>) AccountResponseDto::getPublicId).setHeader("ID")
+                .setWidth("80px").setFlexGrow(0);
 
         g.addComponentColumn(account -> this.createClickableSpan(account.getName(),
                 ignore -> Objects.requireNonNull(this.accountDialog).open(account))).setHeader("Name").setFlexGrow(1);
@@ -133,7 +133,7 @@ public class AdminAccountView extends AbstractAdminEntityView<AccountResponseDto
 
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.accountDialog).open(account));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.accountService.deleteAccount(Objects.requireNonNull(account.getId()));
+            this.accountService.deleteAccount(Objects.requireNonNull(account.getPublicId()));
         }));
         final var manageUsersButton =
                 new ManageUsersButton(ignore -> Objects.requireNonNull(this.userPanel).open(account));

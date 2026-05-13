@@ -8,7 +8,7 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for user group response data. */
 public class UserGroupResponseDto {
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String name;
     @Nullable
@@ -25,7 +25,7 @@ public class UserGroupResponseDto {
      * Creates a new instance with pre-computed user count (avoids lazy-loading collections).
      */
     public UserGroupResponseDto(final UserGroupEntity entity, final long userCount) {
-        this.id = entity.id;
+        this.publicId = entity.publicId;
         this.name = entity.name;
         this.userCount = userCount;
         this.created = entity.created;

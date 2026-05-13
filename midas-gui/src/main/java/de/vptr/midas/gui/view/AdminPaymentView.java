@@ -136,7 +136,7 @@ public class AdminPaymentView extends AbstractAdminEntityView<PaymentResponseDto
 
     @Override
     protected void executeUserFilter(final Integer userId) {
-        this.loadDataAsync(() -> this.paymentService.getPaymentsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.paymentService.getPaymentsByUser(userId.toString()),
                 payments -> Objects.requireNonNull(this.grid).setItems(payments));
     }
 
@@ -154,8 +154,8 @@ public class AdminPaymentView extends AbstractAdminEntityView<PaymentResponseDto
 
     @Override
     protected void configureGrid(final Grid<PaymentResponseDto> g) {
-        g.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getId).setHeader("ID").setWidth("80px")
-                .setFlexGrow(0);
+        g.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getPublicId).setHeader("ID")
+                .setWidth("80px").setFlexGrow(0);
         g.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getUsername).setHeader("User")
                 .setWidth("100px").setFlexGrow(0);
         g.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getSourceAccountName).setHeader("Sender")
@@ -181,7 +181,7 @@ public class AdminPaymentView extends AbstractAdminEntityView<PaymentResponseDto
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.paymentDialog)
                 .open(payment.toPaymentDto(), this.availableAccounts != null ? this.availableAccounts : List.of()));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            if (!this.paymentService.deletePayment(Objects.requireNonNull(payment.getId()))) {
+            if (!this.paymentService.deletePayment(Objects.requireNonNull(payment.getPublicId()))) {
                 NotificationUtil.showError("Failed to delete payment");
             }
         }));

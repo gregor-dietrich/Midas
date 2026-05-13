@@ -44,29 +44,31 @@ public interface AccountClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getAccount(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getAccount(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/name/{name}")
     Response getAccountByName(@PathParam("name") String name, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}")
-    List<AccountResponseDto> getAccountsByUser(@PathParam("userId") Long userId,
+    @Path("/user/{userPublicId}")
+    List<AccountResponseDto> getAccountsByUser(@PathParam("userPublicId") String userPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}/payments/outgoing")
-    Response getOutgoingPayments(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}/payments/outgoing")
+    Response getOutgoingPayments(@PathParam("publicId") String publicId,
+            @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}/payments/incoming")
-    Response getIncomingPayments(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}/payments/incoming")
+    Response getIncomingPayments(@PathParam("publicId") String publicId,
+            @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}/users")
-    List<UserResponseDto> getAssociatedUsers(@PathParam("id") Long id,
+    @Path("/{publicId}/users")
+    List<UserResponseDto> getAssociatedUsers(@PathParam("publicId") String publicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
@@ -78,32 +80,34 @@ public interface AccountClient {
     Response createAccount(AccountDto account, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateAccount(@PathParam("id") Long id, AccountDto account,
+    @Path("/{publicId}")
+    Response updateAccount(@PathParam("publicId") String publicId, AccountDto account,
             @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteAccount(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteAccount(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @POST
-    @Path("/{accountId}/users/{userId}")
-    Response associateUserWithAccount(@PathParam("accountId") Long accountId, @PathParam("userId") Long userId,
-            @HeaderParam("Authorization") String authorization);
+    @Path("/{accountPublicId}/users/{userPublicId}")
+    Response associateUserWithAccount(@PathParam("accountPublicId") String accountPublicId,
+            @PathParam("userPublicId") String userPublicId, @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{accountId}/users/{userId}")
-    Response removeUserFromAccount(@PathParam("accountId") Long accountId, @PathParam("userId") Long userId,
-            @HeaderParam("Authorization") String authorization);
+    @Path("/{accountPublicId}/users/{userPublicId}")
+    Response removeUserFromAccount(@PathParam("accountPublicId") String accountPublicId,
+            @PathParam("userPublicId") String userPublicId, @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{accountId}/users/{userId}")
-    Response updateUserAccountMeta(@PathParam("accountId") Long accountId, @PathParam("userId") Long userId,
-            UserAccountMetaDto metaDto, @HeaderParam("Authorization") String authorization);
+    @Path("/{accountPublicId}/users/{userPublicId}")
+    Response updateUserAccountMeta(@PathParam("accountPublicId") String accountPublicId,
+            @PathParam("userPublicId") String userPublicId, UserAccountMetaDto metaDto,
+            @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}/balance")
-    Response getAccountBalance(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}/balance")
+    Response getAccountBalance(@PathParam("publicId") String publicId,
+            @HeaderParam("Authorization") String authorization);
 
     // User-facing endpoints (only require authentication, no special roles)
     @GET
@@ -115,36 +119,38 @@ public interface AccountClient {
     List<AccountResponseDto> getMyAccountsWithBalances(@HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/my/{id}/balance")
-    Response getMyAccountBalance(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
-
-    @GET
-    @Path("/my/{accountId}/payments")
-    List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountId") Long accountId,
+    @Path("/my/{publicId}/balance")
+    Response getMyAccountBalance(@PathParam("publicId") String publicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/my/{accountId}/payments/outgoing")
-    List<PaymentResponseDto> getMyAccountOutgoingPayments(@PathParam("accountId") Long accountId,
+    @Path("/my/{accountPublicId}/payments")
+    List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountPublicId") String accountPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/my/{accountId}/payments/incoming")
-    List<PaymentResponseDto> getMyAccountIncomingPayments(@PathParam("accountId") Long accountId,
+    @Path("/my/{accountPublicId}/payments/outgoing")
+    List<PaymentResponseDto> getMyAccountOutgoingPayments(@PathParam("accountPublicId") String accountPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/my/{accountId}/check")
-    Response checkMyAccountAccess(@PathParam("accountId") Long accountId,
+    @Path("/my/{accountPublicId}/payments/incoming")
+    List<PaymentResponseDto> getMyAccountIncomingPayments(@PathParam("accountPublicId") String accountPublicId,
+            @HeaderParam("Authorization") String authorization);
+
+    @GET
+    @Path("/my/{accountPublicId}/check")
+    Response checkMyAccountAccess(@PathParam("accountPublicId") String accountPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @POST
-    @Path("/my/{accountId}/payments")
-    Response createMyAccountPayment(@PathParam("accountId") Long accountId, PaymentDto payment,
+    @Path("/my/{accountPublicId}/payments")
+    Response createMyAccountPayment(@PathParam("accountPublicId") String accountPublicId, PaymentDto payment,
             @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/my/{accountId}/payments/{paymentId}")
-    Response updateMyAccountPayment(@PathParam("accountId") Long accountId, @PathParam("paymentId") Long paymentId,
-            PaymentDto payment, @HeaderParam("Authorization") String authorization);
+    @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    Response updateMyAccountPayment(@PathParam("accountPublicId") String accountPublicId,
+            @PathParam("paymentPublicId") String paymentPublicId, PaymentDto payment,
+            @HeaderParam("Authorization") String authorization);
 }

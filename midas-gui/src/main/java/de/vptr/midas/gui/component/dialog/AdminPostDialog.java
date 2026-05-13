@@ -53,7 +53,7 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
             try {
                 final var currentUser = this.userService.getCurrentUser();
                 if (currentUser.isPresent()) {
-                    this.currentBean.setUserId(currentUser.get().getId());
+                    this.currentBean.setUserPublicId(currentUser.get().getPublicId());
                     this.currentBean.setUsername(currentUser.get().getUsername());
                 } else {
                     LOG.warn("Current user not found when creating new post");
@@ -104,17 +104,17 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
                 PostDto::setCommentable);
 
         this.binder.bind(categoryField, p -> {
-            if (p.getCategoryId() != null && availableCategories != null) {
-                return availableCategories.stream().filter(cat -> cat.getId().equals(p.getCategoryId())).findFirst()
-                        .orElse(null);
+            if (p.getCategoryPublicId() != null && availableCategories != null) {
+                return availableCategories.stream().filter(cat -> cat.getPublicId().equals(p.getCategoryPublicId()))
+                        .findFirst().orElse(null);
             }
             return null;
         }, (p, value) -> {
             if (value != null) {
-                p.setCategoryId(value.getId());
+                p.setCategoryPublicId(value.getPublicId());
                 p.setCategoryName(value.getName());
             } else {
-                p.setCategoryId(null);
+                p.setCategoryPublicId(null);
                 p.setCategoryName(null);
             }
         });
@@ -133,7 +133,7 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Post created successfully", "Post updated successfully",
                 this.postService::createPost, this.postService::updatePost, "Post");
     }

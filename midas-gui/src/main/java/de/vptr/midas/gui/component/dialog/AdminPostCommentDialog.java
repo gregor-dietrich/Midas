@@ -17,13 +17,13 @@ public class AdminPostCommentDialog extends AbstractPostCommentDialogBase {
     /** Opens the dialog for editing or creating a comment. */
     public void open(final PostCommentDto comment) {
         this.currentComment = comment != null ? comment : new PostCommentDto();
-        final var titleText = comment != null && comment.getId() != null ? "Edit Comment" : "Create Comment";
+        final var titleText = comment != null && comment.getPublicId() != null ? "Edit Comment" : "Create Comment";
         this.initLayout(titleText, "Save", null);
     }
 
     @Override
     protected void performSave() {
-        if (this.currentComment.getId() == null) {
+        if (this.currentComment.getPublicId() == null) {
             this.commentService.createComment(this.currentComment);
             NotificationUtil.showSuccess("Comment created successfully");
         } else {

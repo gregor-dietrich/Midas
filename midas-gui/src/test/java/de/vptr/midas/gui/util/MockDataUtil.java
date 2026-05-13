@@ -37,6 +37,7 @@ public final class MockDataUtil {
      */
     public static final class TestConstants {
         public static final Long TEST_ID = 1L;
+        public static final String TEST_PUBLIC_ID = "1";
         public static final String TEST_USERNAME = "testuser";
         public static final String TEST_EMAIL = "test@example.com";
         public static final String TEST_PASSWORD = "password123";
@@ -57,7 +58,7 @@ public final class MockDataUtil {
      */
     public static UserDto createUserDto() {
         final var user = new UserDto(TestConstants.TEST_USERNAME, TestConstants.TEST_EMAIL);
-        user.setId(TestConstants.TEST_ID);
+        user.setPublicId(TestConstants.TEST_PUBLIC_ID);
         return user;
     }
 
@@ -66,10 +67,10 @@ public final class MockDataUtil {
      */
     public static UserResponseDto createUserResponseDto() {
         final var user = new UserResponseDto();
-        user.setId(TestConstants.TEST_ID);
+        user.setPublicId(TestConstants.TEST_PUBLIC_ID);
         user.setUsername(TestConstants.TEST_USERNAME);
         user.setEmail(TestConstants.TEST_EMAIL);
-        user.setRankId(1L);
+        user.setRankPublicId("1");
         user.setRankName("User");
         user.setActivated(true);
         user.setBanned(false);
@@ -80,12 +81,12 @@ public final class MockDataUtil {
     /**
      * Create a UserResponseDto with specific values
      */
-    public static UserResponseDto createUserResponseDto(final Long id, final String username, final String email) {
+    public static UserResponseDto createUserResponseDto(final String id, final String username, final String email) {
         final var user = new UserResponseDto();
-        user.setId(id);
+        user.setPublicId(id);
         user.setUsername(username);
         user.setEmail(email);
-        user.setRankId(1L);
+        user.setRankPublicId("1");
         user.setRankName("User");
         user.setActivated(true);
         user.setBanned(false);
@@ -98,7 +99,7 @@ public final class MockDataUtil {
      */
     public static AccountDto createAccountDto() {
         final var account = new AccountDto(TestConstants.TEST_NAME);
-        account.setId(TestConstants.TEST_ID);
+        account.setPublicId(TestConstants.TEST_PUBLIC_ID);
         return account;
     }
 
@@ -107,7 +108,7 @@ public final class MockDataUtil {
      */
     public static AccountDto createAccountDto(final Long id, final String name) {
         final var account = new AccountDto(name);
-        account.setId(id);
+        account.setPublicId(String.valueOf(id));
         return account;
     }
 
@@ -116,7 +117,7 @@ public final class MockDataUtil {
      */
     public static AccountResponseDto createAccountResponseDto() {
         final var account = new AccountResponseDto();
-        account.setId(TestConstants.TEST_ID);
+        account.setPublicId(TestConstants.TEST_PUBLIC_ID);
         account.setName(TestConstants.TEST_NAME);
         return account;
     }
@@ -126,7 +127,7 @@ public final class MockDataUtil {
      */
     public static AccountResponseDto createAccountResponseDto(final Long id, final String name) {
         final var account = new AccountResponseDto();
-        account.setId(id);
+        account.setPublicId(String.valueOf(id));
         account.setName(name);
         return account;
     }
@@ -136,12 +137,12 @@ public final class MockDataUtil {
      */
     public static PostDto createPostDto() {
         final var post = new PostDto();
-        post.setId(TestConstants.TEST_ID);
+        post.setPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setTitle(TestConstants.TEST_TITLE);
         post.setContent(TestConstants.TEST_CONTENT);
-        post.setUserId(TestConstants.TEST_ID);
+        post.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setUsername(TestConstants.TEST_USERNAME);
-        post.setCategoryId(1L);
+        post.setCategoryPublicId("1");
         post.setCategoryName("Test Category");
         post.setPublished(true);
         return post;
@@ -152,12 +153,12 @@ public final class MockDataUtil {
      */
     public static PostResponseDto createPostResponseDto() {
         final var post = new PostResponseDto();
-        post.setId(TestConstants.TEST_ID);
+        post.setPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setTitle(TestConstants.TEST_TITLE);
         post.setContent(TestConstants.TEST_CONTENT);
-        post.setUserId(TestConstants.TEST_ID);
+        post.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setUsername(TestConstants.TEST_USERNAME);
-        post.setCategoryId(1L);
+        post.setCategoryPublicId("1");
         post.setCategoryName("Test Category");
         post.setPublished(true);
         post.setCommentable(true);
@@ -171,12 +172,12 @@ public final class MockDataUtil {
      */
     public static PaymentResponseDto createPaymentResponseDto() {
         final var payment = new PaymentResponseDto();
-        payment.setId(TestConstants.TEST_ID);
-        payment.setUserId(TestConstants.TEST_ID);
+        payment.setPublicId(TestConstants.TEST_PUBLIC_ID);
+        payment.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         payment.setUsername(TestConstants.TEST_USERNAME);
-        payment.setSourceAccountId(1L);
+        payment.setSourceAccountPublicId("1");
         payment.setSourceAccountName("Source Account");
-        payment.setTargetAccountId(2L);
+        payment.setTargetAccountPublicId("2");
         payment.setTargetAccountName("Target Account");
         payment.setAmount(TestConstants.TEST_AMOUNT);
         payment.setComment(TestConstants.TEST_COMMENT);
@@ -189,16 +190,16 @@ public final class MockDataUtil {
     /**
      * Create a PaymentResponseDto with specific values
      */
-    public static PaymentResponseDto createPaymentResponseDto(final Long id, final String username, final Long sourceId,
-            final String sourceAccountName, final Long targetId, final String targetAccountName,
-            final BigDecimal amount, final String comment) {
+    public static PaymentResponseDto createPaymentResponseDto(final String id, final String username,
+            final String sourceId, final String sourceAccountName, final String targetId,
+            final String targetAccountName, final BigDecimal amount, final String comment) {
         final var payment = new PaymentResponseDto();
-        payment.setId(id);
-        payment.setUserId(TestConstants.TEST_ID);
+        payment.setPublicId(id);
+        payment.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         payment.setUsername(username);
-        payment.setSourceAccountId(sourceId);
+        payment.setSourceAccountPublicId(sourceId);
         payment.setSourceAccountName(sourceAccountName);
-        payment.setTargetAccountId(targetId);
+        payment.setTargetAccountPublicId(targetId);
         payment.setTargetAccountName(targetAccountName);
         payment.setAmount(amount);
         payment.setComment(comment);
@@ -213,7 +214,7 @@ public final class MockDataUtil {
      */
     public static PageDto createPageDto() {
         final var page = new PageDto();
-        page.setId(TestConstants.TEST_ID);
+        page.setPublicId(TestConstants.TEST_PUBLIC_ID);
         page.setTitle(TestConstants.TEST_TITLE);
         page.setContent(TestConstants.TEST_CONTENT);
         return page;
@@ -231,7 +232,7 @@ public final class MockDataUtil {
      */
     public static UserRankResponseDto createUserRankResponseDto() {
         final var rank = new UserRankResponseDto();
-        rank.setId(TestConstants.TEST_ID);
+        rank.setPublicId(TestConstants.TEST_PUBLIC_ID);
         rank.setName(TestConstants.TEST_NAME);
         rank.setUserAdd(true);
         rank.setUserEdit(true);
@@ -247,7 +248,7 @@ public final class MockDataUtil {
      */
     public static UserRankDto createUserRankDto() {
         final var rank = new UserRankDto(TestConstants.TEST_NAME);
-        rank.setId(TestConstants.TEST_ID);
+        rank.setPublicId(TestConstants.TEST_PUBLIC_ID);
         rank.setUserAdd(true);
         rank.setUserEdit(true);
         rank.setUserDelete(false);
@@ -262,7 +263,7 @@ public final class MockDataUtil {
      */
     public static PostCategoryDto createPostCategoryDto() {
         final var category = new PostCategoryDto();
-        category.setId(TestConstants.TEST_ID);
+        category.setPublicId(TestConstants.TEST_PUBLIC_ID);
         category.setName(TestConstants.TEST_NAME);
         return category;
     }
@@ -274,11 +275,11 @@ public final class MockDataUtil {
         final var post = createPostDto();
         final var user = createUserDto();
         final var comment = new PostCommentDto();
-        comment.setId(TestConstants.TEST_ID);
+        comment.setPublicId(TestConstants.TEST_PUBLIC_ID);
         comment.setContent(TestConstants.TEST_CONTENT);
-        comment.setPostId(post.getId());
+        comment.setPostPublicId(post.getPublicId());
         comment.setPostTitle(post.getTitle());
-        comment.setUserId(user.getId());
+        comment.setUserPublicId(user.getPublicId());
         comment.setUsername(user.getUsername());
         comment.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return comment;
@@ -287,14 +288,14 @@ public final class MockDataUtil {
     /**
      * Create a PostCommentDto for testing
      */
-    public static PostCommentResponseDto createPostCommentResponseDto(final Long id, final String content,
-            final Long postId, final String postTitle, final Long userId, final String username) {
+    public static PostCommentResponseDto createPostCommentResponseDto(final String id, final String content,
+            final String postId, final String postTitle, final String userId, final String username) {
         final var dto = new PostCommentResponseDto();
-        dto.setId(id);
+        dto.setPublicId(id);
         dto.setContent(content);
-        dto.setPostId(postId);
+        dto.setPostPublicId(postId);
         dto.setPostTitle(postTitle);
-        dto.setUserId(userId);
+        dto.setUserPublicId(userId);
         dto.setUsername(username);
         dto.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         return dto;
@@ -303,9 +304,9 @@ public final class MockDataUtil {
     /**
      * Create a PageResponseDto for testing
      */
-    public static PageResponseDto createPageResponseDto(final Long id, final String title) {
+    public static PageResponseDto createPageResponseDto(final String id, final String title) {
         final var dto = new PageResponseDto();
-        dto.setId(id);
+        dto.setPublicId(id);
         dto.setTitle(title);
         return dto;
     }
@@ -313,10 +314,10 @@ public final class MockDataUtil {
     /**
      * Create a PostCategoryResponseDto for testing
      */
-    public static PostCategoryResponseDto createPostCategoryResponseDto(final Long id, final String name,
+    public static PostCategoryResponseDto createPostCategoryResponseDto(final String id, final String name,
             final String parentName, final int childrenCount, final int postsCount, final boolean isRootCategory) {
         final var dto = new PostCategoryResponseDto();
-        dto.setId(id);
+        dto.setPublicId(id);
         dto.setName(name);
         dto.setParentName(parentName);
         dto.setChildrenCount(childrenCount);

@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.assertj.core.api.Assertions;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,7 +23,6 @@ import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -32,8 +30,6 @@ import jakarta.ws.rs.core.Response;
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
 class AuthServiceTest extends AbstractSessionServiceTestBase {
 
-    @RestClient
-    @Inject
     @Mock
     AuthClient authClient;
 

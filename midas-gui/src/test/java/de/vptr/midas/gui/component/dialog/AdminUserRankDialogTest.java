@@ -67,7 +67,7 @@ class AdminUserRankDialogTest extends AbstractDialogTest {
         final ArgumentCaptor<UserRankDto> captor = ArgumentCaptor.forClass(UserRankDto.class);
         verify(this.userRankService).updateRank(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("Updated Rank");
-        assertThat(captor.getValue().getId()).isEqualTo(existingRank.getId());
+        assertThat(captor.getValue().getPublicId()).isEqualTo(existingRank.getPublicId());
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Rank updated successfully"));
         verify(this.onSave).run();
     }

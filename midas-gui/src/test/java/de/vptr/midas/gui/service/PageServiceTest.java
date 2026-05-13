@@ -76,7 +76,7 @@ class PageServiceTest {
 
     @Test
     void getPageById_shouldReturnPage_whenSuccessful() {
-        final var pageId = 1L;
+        final var pageId = "1";
         final var expectedPageResponse = MockDataUtil.createPageResponseDto(pageId, "Test Page");
         final var response = ResponseTestUtil.createOkResponse(expectedPageResponse);
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -93,13 +93,13 @@ class PageServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.getPageById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.pageService.getPageById("1"));
     }
 
     @Test
     void createPage_shouldReturnCreatedPage_whenSuccessful() {
         final var page = MockDataUtil.createPageDto();
-        final var createdPage = MockDataUtil.createPageResponseDto(1L, "Created Page");
+        final var createdPage = MockDataUtil.createPageResponseDto("1", "Created Page");
         createdPage.setContent("Created content");
         final var response = ResponseTestUtil.createCreatedResponse(createdPage);
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -107,7 +107,7 @@ class PageServiceTest {
 
         final var result = this.pageService.createPage(page);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getTitle()).isEqualTo("Created Page");
         assertThat(result.getContent()).isEqualTo("Created content");
     }
@@ -124,17 +124,17 @@ class PageServiceTest {
     @Test
     void updatePage_shouldReturnUpdatedPage_whenSuccessful() {
         final var page = MockDataUtil.createPageDto();
-        page.setId(1L);
-        final var updatedPage = MockDataUtil.createPageResponseDto(1L, "Updated Page");
+        page.setPublicId("1");
+        final var updatedPage = MockDataUtil.createPageResponseDto("1", "Updated Page");
         updatedPage.setContent("Updated content");
         final var response = ResponseTestUtil.createOkResponse(updatedPage);
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.pageClient.updatePage(eq(page.getId()), eq(page), eq(TestUtil.TEST_AUTH_HEADER)))
+        when(this.pageClient.updatePage(eq(page.getPublicId()), eq(page), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenReturn(response);
 
         final var result = this.pageService.updatePage(page);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getTitle()).isEqualTo("Updated Page");
         assertThat(result.getContent()).isEqualTo("Updated content");
     }
@@ -150,7 +150,7 @@ class PageServiceTest {
 
     @Test
     void deletePage_shouldSucceed_whenSuccessful() {
-        final var pageId = 1L;
+        final var pageId = "1";
         final var response = ResponseTestUtil.createMockResponse(204);
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.pageClient.deletePage(eq(pageId), eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(response);
@@ -165,12 +165,12 @@ class PageServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.pageService.deletePage(1L));
+        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.pageService.deletePage("1"));
     }
 
     @Test
     void searchPages_shouldReturnResults_whenAuthenticated() {
-        final var expectedPages = List.of(MockDataUtil.createPageResponseDto(1L, "Search Result"));
+        final var expectedPages = List.of(MockDataUtil.createPageResponseDto("1", "Search Result"));
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.pageClient.searchPages("result", TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPages);
@@ -191,7 +191,7 @@ class PageServiceTest {
 
     @Test
     void searchContent_shouldReturnResults_whenAuthenticated() {
-        final var expectedPages = List.of(MockDataUtil.createPageResponseDto(1L, "Content Result"));
+        final var expectedPages = List.of(MockDataUtil.createPageResponseDto("1", "Content Result"));
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.pageClient.searchPages("content", TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPages);
 
@@ -211,7 +211,7 @@ class PageServiceTest {
 
     @Test
     void getPageById_shouldUseBackendPayload_whenUnexpectedStatusContainsBody() {
-        final var pageId = 1L;
+        final var pageId = "1";
         final var response = ResponseTestUtil.createMockResponse(500, "{\"message\":\"Page lookup failed\"}");
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.pageClient.getPage(pageId, TestUtil.TEST_AUTH_HEADER)).thenReturn(response);

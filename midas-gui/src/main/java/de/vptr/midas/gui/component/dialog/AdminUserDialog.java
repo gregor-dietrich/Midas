@@ -147,18 +147,18 @@ public class AdminUserDialog extends FormDialog {
         this.binder.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
         this.binder.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
 
-        // Rank binding - convert between UserRankResponseDto and rankId
+        // Rank binding - convert between UserRankResponseDto and rankPublicId
         this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {
-            if (u.getRankId() != null && availableRanks != null) {
-                return availableRanks.stream().filter(rank -> rank.getId().equals(u.getRankId())).findFirst()
-                        .orElse(null);
+            if (u.getRankPublicId() != null && availableRanks != null) {
+                return availableRanks.stream().filter(rank -> rank.getPublicId().equals(u.getRankPublicId()))
+                        .findFirst().orElse(null);
             }
             return null;
         }, (u, value) -> {
             if (value != null) {
-                u.setRankId(value.getId());
+                u.setRankPublicId(value.getPublicId());
             } else {
-                u.setRankId(null);
+                u.setRankPublicId(null);
             }
         });
 
@@ -225,7 +225,7 @@ public class AdminUserDialog extends FormDialog {
                 return;
             }
 
-            this.changeUserPassword(user.getId(), newPassword);
+            this.changeUserPassword(user.getPublicId(), newPassword);
         });
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -242,10 +242,10 @@ public class AdminUserDialog extends FormDialog {
         this.passwordDialog.open();
     }
 
-    private void changeUserPassword(final Long userId, final String newPassword) {
+    private void changeUserPassword(final String userId, final String newPassword) {
         try {
             final var passwordUpdateDto = new UserDto();
-            passwordUpdateDto.setId(userId);
+            passwordUpdateDto.setPublicId(userId);
             passwordUpdateDto.setPassword(newPassword);
 
             this.userService.updateUserPassword(passwordUpdateDto);
@@ -270,7 +270,7 @@ public class AdminUserDialog extends FormDialog {
 
             b.writeBean(u);
 
-            if (u.getId() == null) {
+            if (u.getPublicId() == null) {
                 this.userService.createUser(u);
                 NotificationUtil.showSuccess("User created successfully");
             } else {

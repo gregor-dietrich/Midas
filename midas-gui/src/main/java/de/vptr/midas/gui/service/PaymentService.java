@@ -42,7 +42,7 @@ public class PaymentService {
     }
 
     /** Returns the payment by id. */
-    public Optional<PaymentDto> getPaymentById(final Long id) {
+    public Optional<PaymentDto> getPaymentById(final String id) {
         LOG.debugf("Fetching payment with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.getPayment(id, authHeader), this.authService,
@@ -51,7 +51,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by user. */
-    public List<PaymentResponseDto> getPaymentsByUser(final Long userId) {
+    public List<PaymentResponseDto> getPaymentsByUser(final String userId) {
         LOG.debugf("Fetching payments for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsByUser(userId, authHeader), this.authService,
@@ -76,7 +76,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by source account. */
-    public List<PaymentResponseDto> getPaymentsBySourceAccount(final Long sourceId) {
+    public List<PaymentResponseDto> getPaymentsBySourceAccount(final String sourceId) {
         LOG.debugf("Fetching payments for source account: %s", sourceId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsBySourceAccount(sourceId, authHeader),
@@ -84,7 +84,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by target account. */
-    public List<PaymentResponseDto> getPaymentsByTargetAccount(final Long targetId) {
+    public List<PaymentResponseDto> getPaymentsByTargetAccount(final String targetId) {
         LOG.debugf("Fetching payments for target account: %s", targetId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsByTargetAccount(targetId, authHeader),
@@ -92,7 +92,7 @@ public class PaymentService {
     }
 
     /** Returns the payments by account (source or target). */
-    public List<PaymentResponseDto> getPaymentsByAccount(final Long accountId) {
+    public List<PaymentResponseDto> getPaymentsByAccount(final String accountId) {
         LOG.debugf("Fetching all payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
 
@@ -125,15 +125,15 @@ public class PaymentService {
     public PaymentDto updatePayment(final PaymentDto payment) {
         LOG.debugf("Updating payment: %s", payment);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        final var paymentId = Objects.requireNonNull(payment.getId(), "Payment ID must not be null for update");
+        final var paymentId = Objects.requireNonNull(payment.getPublicId(), "Payment ID must not be null for update");
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.updatePayment(paymentId, payment, authHeader),
-                this.authService, LOG, "updating payment " + payment.getId(), "Failed to update payment",
+                this.authService, LOG, "updating payment " + payment.getPublicId(), "Failed to update payment",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PaymentResponseDto.class,
                         PaymentResponseDto::toPaymentDto, "updated payment response", "Failed to update payment"));
     }
 
     /** Handles the delete payment operation. */
-    public boolean deletePayment(final Long id) {
+    public boolean deletePayment(final String id) {
         LOG.debugf("Deleting payment with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.paymentClient.deletePayment(id, authHeader),

@@ -49,8 +49,8 @@ public interface UserClient {
     Response changePassword(PasswordChangeDto passwordChange, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getUser(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getUser(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/username/{username}")
@@ -65,16 +65,18 @@ public interface UserClient {
     Response createUser(UserDto user, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateUser(@PathParam("id") Long id, UserDto user, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response updateUser(@PathParam("publicId") String publicId, UserDto user,
+            @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchUser(@PathParam("id") Long id, UserDto user, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response patchUser(@PathParam("publicId") String publicId, UserDto user,
+            @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteUser(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteUser(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")

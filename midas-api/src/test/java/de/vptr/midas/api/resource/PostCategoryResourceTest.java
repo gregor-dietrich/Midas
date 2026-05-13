@@ -52,12 +52,12 @@ class PostCategoryResourceTest {
 
     @Test
     void testGetCategoryById_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5");
     }
 
     @Test
     void testGetCategoryById_authorizedWithExistingCategory() {
-        final Long id = createTestCategory();
+        final String id = createTestCategory();
         testAuthorizedGetWithExistingResourceAndJson(ENDPOINT_URL + "/" + id);
     }
 
@@ -68,12 +68,15 @@ class PostCategoryResourceTest {
 
     @Test
     void testGetCategoriesByParent_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/parent/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/parent/01AN4Z07BY79KA1307SR9X4MV5");
     }
 
     @Test
     void testGetCategoriesByParent_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/parent/1");
+        final String parentId = createTestCategory();
+        authenticatedJsonRequest().body("{\"name\":\"Child Category\",\"parentPublicId\":\"" + parentId + "\"}").when()
+                .post(ENDPOINT_URL).then().statusCode(201);
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/parent/" + parentId);
     }
 
     @Test
@@ -108,53 +111,53 @@ class PostCategoryResourceTest {
 
     @Test
     void testUpdateCategory_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPostCategoryJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5", createUpdatedPostCategoryJson());
     }
 
     @Test
     void testUpdateCategory_authorizedWithInsufficientRole() {
-        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().put(ENDPOINT_URL + "/1").then()
-                .statusCode(403);
+        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when()
+                .put(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5").then().statusCode(403);
     }
 
     @Test
     void testUpdateCategory_authorized() {
-        final Long categoryId = createTestCategory();
+        final String categoryId = createTestCategory();
         authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when().put(ENDPOINT_URL + "/" + categoryId)
                 .then().statusCode(200);
     }
 
     @Test
     void testPatchCategory_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedPostCategoryJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5", createUpdatedPostCategoryJson());
     }
 
     @Test
     void testPatchCategory_authorizedWithInsufficientRole() {
-        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/1").then()
-                .statusCode(403);
+        authenticatedGuestJsonRequest().body(createUpdatedPostCategoryJson()).when()
+                .patch(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5").then().statusCode(403);
     }
 
     @Test
     void testPatchCategory_authorized() {
-        final Long categoryId = createTestCategory();
+        final String categoryId = createTestCategory();
         authenticatedJsonRequest().body(createUpdatedPostCategoryJson()).when().patch(ENDPOINT_URL + "/" + categoryId)
                 .then().statusCode(200);
     }
 
     @Test
     void testDeleteCategory_unauthorized() {
-        testUnauthorizedDelete(ENDPOINT_URL + "/1");
+        testUnauthorizedDelete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5");
     }
 
     @Test
     void testDeleteCategory_authorizedWithInsufficientRole() {
-        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV5").then().statusCode(403);
     }
 
     @Test
     void testDeleteCategory_authorized() {
-        final Long categoryId = createTestCategory();
+        final String categoryId = createTestCategory();
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + categoryId).then().statusCode(204);
     }
 
@@ -176,5 +179,6 @@ class PostCategoryResourceTest {
     @Test
     void testSearchCategories_authorized() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
     }
 }

@@ -24,7 +24,7 @@ public class PostCategoryView extends AbstractPostCategoryBaseView {
 
         tg.addItemClickListener(event -> {
             final var category = event.getItem();
-            this.getUI().ifPresent(ui -> ui.navigate("categories/" + category.getId()));
+            this.getUI().ifPresent(ui -> ui.navigate("categories/" + category.getPublicId()));
         });
 
         tg.setPageSize(20);

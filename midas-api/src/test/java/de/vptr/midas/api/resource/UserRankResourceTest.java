@@ -51,7 +51,7 @@ class UserRankResourceTest {
 
     @Test
     void testGetUserRankById_authorizedWithExistingRank() {
-        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/1");
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3");
     }
 
     @Test
@@ -92,6 +92,7 @@ class UserRankResourceTest {
     @Test
     void testSearchUserRanks_authorized() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
     }
 
     @Test
@@ -137,8 +138,8 @@ class UserRankResourceTest {
 
     @Test
     void testUpdateUserRank_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
 
         authenticatedJsonRequest().body(createUniqueUpdatedUserRankJson()).when().put(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
@@ -159,8 +160,8 @@ class UserRankResourceTest {
 
     @Test
     void testPatchUserRank_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
 
         authenticatedJsonRequest().body(createUniqueUpdatedUserRankJson()).when().patch(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
@@ -180,9 +181,14 @@ class UserRankResourceTest {
 
     @Test
     void testDeleteUserRank_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
-                .statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createUniqueUserRankJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
 
         authenticatedRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
+    }
+
+    @Test
+    void testDeleteUserRank_nonexistent() {
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }
 }

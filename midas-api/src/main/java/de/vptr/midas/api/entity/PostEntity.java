@@ -2,22 +2,17 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -29,12 +24,7 @@ import jakarta.validation.constraints.NotBlank;
 @Entity
 @Table(name = "posts", indexes = { @Index(name = "idx_post_user_id", columnList = "user_id"),
         @Index(name = "idx_post_category_id", columnList = "category_id") })
-public class PostEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class PostEntity extends BaseEntity {
 
     @NotBlank
     @Nullable
@@ -75,15 +65,5 @@ public class PostEntity extends PanacheEntityBase {
     @JsonIgnore
     @Nullable
     public List<PostCommentEntity> comments;
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof PostEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
-    }
 
 }

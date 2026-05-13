@@ -46,8 +46,8 @@ class UserServiceTest {
     @Test
     void getAllUsers_shouldReturnUserList_whenAuthenticationProvided() {
         // Given
-        final var user1 = MockDataUtil.createUserResponseDto(1L, "user1", "user1@example.com");
-        final var user2 = MockDataUtil.createUserResponseDto(2L, "user2", "user2@example.com");
+        final var user1 = MockDataUtil.createUserResponseDto("1", "user1", "user1@example.com");
+        final var user2 = MockDataUtil.createUserResponseDto("2", "user2", "user2@example.com");
         final var expectedUsers = Arrays.asList(user1, user2);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -94,7 +94,7 @@ class UserServiceTest {
     @Test
     void getCurrentUser_shouldReturnUser_whenAuthenticated() {
         // Given
-        final var expectedUser = MockDataUtil.createUserResponseDto(1L, "currentuser", "current@example.com");
+        final var expectedUser = MockDataUtil.createUserResponseDto("1", "currentuser", "current@example.com");
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedUser);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -135,7 +135,7 @@ class UserServiceTest {
     @Test
     void getUserById_shouldReturnUser_whenUserExists() {
         // Given
-        final var userId = 1L;
+        final var userId = "1";
         final var expectedUser = MockDataUtil.createUserResponseDto(userId, "testuser", "test@example.com");
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedUser);
 
@@ -147,14 +147,14 @@ class UserServiceTest {
 
         // Then
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(userId);
+        assertThat(result.get().getPublicId()).isEqualTo(userId);
         assertThat(result.get().getUsername()).isEqualTo("testuser");
     }
 
     @Test
     void getUserById_shouldReturnEmpty_whenUserNotFound() {
         // Given
-        final var userId = 999L;
+        final var userId = "999";
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         ServiceTestUtil.testReturnEmptyOn404(
@@ -167,7 +167,7 @@ class UserServiceTest {
     void getUserByUsername_shouldReturnUser_whenUserExists() {
         // Given
         final String username = "testuser";
-        final var expectedUser = MockDataUtil.createUserResponseDto(1L, username, "test@example.com");
+        final var expectedUser = MockDataUtil.createUserResponseDto("1", username, "test@example.com");
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedUser);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -194,7 +194,7 @@ class UserServiceTest {
         // Given
         final var newUser = TestDataBuilder.createUser("newuser", "new@example.com");
         newUser.setPassword("password123");
-        final var createdUser = MockDataUtil.createUserResponseDto(1L, "newuser", "new@example.com");
+        final var createdUser = MockDataUtil.createUserResponseDto("1", "newuser", "new@example.com");
         createdUser.setActivated(false);
         createdUser.setBanned(false);
         createdUser.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
@@ -207,7 +207,7 @@ class UserServiceTest {
         final var result = this.userService.createUser(newUser);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getUsername()).isEqualTo("newuser");
         assertThat(result.getEmail()).isEqualTo("new@example.com");
         verify(this.userClient).createUser(newUser, TestUtil.TEST_AUTH_HEADER);
@@ -228,32 +228,32 @@ class UserServiceTest {
     void updateUser_shouldReturnUpdatedUser_whenValidUser() {
         // Given
         final var userToUpdate = TestDataBuilder.createUser("updateduser", "updated@example.com");
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
         userToUpdate.setActivated(true);
-        final var updatedUser = MockDataUtil.createUserResponseDto(1L, "updateduser", "updated@example.com");
+        final var updatedUser = MockDataUtil.createUserResponseDto("1", "updateduser", "updated@example.com");
         updatedUser.setActivated(true);
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedUser);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.updateUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.userClient.updateUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
         final var result = this.userService.updateUser(userToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getUsername()).isEqualTo("updateduser");
         assertThat(result.getEmail()).isEqualTo("updated@example.com");
-        verify(this.userClient).updateUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.userClient).updateUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
     void updateUser_shouldThrowServiceException_whenUpdateFails() {
         // Given
         final var userToUpdate = TestDataBuilder.createUser("updateduser", "updated@example.com");
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.updateUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER))
+        when(this.userClient.updateUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER))
                 .thenReturn(ResponseTestUtil.createBadRequestResponse());
         assertThatThrownBy(() -> this.userService.updateUser(userToUpdate)).isInstanceOf(ServiceException.class);
     }
@@ -261,7 +261,7 @@ class UserServiceTest {
     @Test
     void deleteUser_shouldReturnTrue_whenDeletionSuccessful() {
         // Given
-        final var userId = 1L;
+        final var userId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -278,7 +278,7 @@ class UserServiceTest {
     @Test
     void deleteUser_shouldReturnFalse_whenDeletionFails() {
         // Given
-        final var userId = 1L;
+        final var userId = "1";
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userClient.deleteUser(userId, TestUtil.TEST_AUTH_HEADER))
@@ -296,7 +296,7 @@ class UserServiceTest {
         // When & Then
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getUserById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userService.getUserById("1"));
     }
 
     @Test
@@ -324,7 +324,7 @@ class UserServiceTest {
     @Test
     void getUserById_shouldThrowServiceException_whenWebApplicationExceptionOccurs() {
         // Given
-        final var userId = 1L;
+        final var userId = "1";
 
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.userClient.getUser(userId, TestUtil.TEST_AUTH_HEADER))
@@ -337,7 +337,7 @@ class UserServiceTest {
 
     @Test
     void getUserById_shouldUseBackendPayload_whenWebApplicationExceptionContainsBody() {
-        final var userId = 1L;
+        final var userId = "1";
         final var response = ResponseTestUtil.createMockResponse(500, "{\"message\":\"User lookup failed\"}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -378,10 +378,10 @@ class UserServiceTest {
     void updateUser_shouldHandleServiceExceptionProperly() {
         // Given
         final var userToUpdate = TestDataBuilder.createUser("updateduser", "updated@example.com");
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.updateUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER))
+        when(this.userClient.updateUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         // When & Then
@@ -392,29 +392,29 @@ class UserServiceTest {
     void updateUserPassword_shouldReturnUpdatedUser_whenValidPassword() {
         // Given
         final var userToUpdate = new UserDto();
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
         userToUpdate.setPassword("newPassword123");
-        final var updatedUser = MockDataUtil.createUserResponseDto(1L, "testuser", "test@example.com");
+        final var updatedUser = MockDataUtil.createUserResponseDto("1", "testuser", "test@example.com");
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedUser);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.patchUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.userClient.patchUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
 
         // When
         final var result = this.userService.updateUserPassword(userToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getUsername()).isEqualTo("testuser");
         assertThat(result.getEmail()).isEqualTo("test@example.com");
-        verify(this.userClient).patchUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.userClient).patchUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
     void updateUserPassword_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
         final var userToUpdate = new UserDto();
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
         userToUpdate.setPassword("newPassword123");
 
         // When & Then
@@ -427,10 +427,10 @@ class UserServiceTest {
     void updateUserPassword_shouldThrowServiceException_whenUpdateFails() {
         // Given
         final var userToUpdate = new UserDto();
-        userToUpdate.setId(1L);
+        userToUpdate.setPublicId("1");
         userToUpdate.setPassword("newPassword123");
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userClient.patchUser(1L, userToUpdate, TestUtil.TEST_AUTH_HEADER))
+        when(this.userClient.patchUser("1", userToUpdate, TestUtil.TEST_AUTH_HEADER))
                 .thenReturn(ResponseTestUtil.createBadRequestResponse());
         assertThatThrownBy(() -> this.userService.updateUserPassword(userToUpdate))
                 .isInstanceOf(ServiceException.class);

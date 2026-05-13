@@ -53,7 +53,7 @@ class AccountServiceTest {
         final var createdAccount = this.accountService.createAccount(newAccount);
 
         assertNotNull(createdAccount);
-        assertNotNull(createdAccount.id);
+        assertNotNull(createdAccount.publicId);
         assertEquals(newAccount.name, createdAccount.name);
     }
 
@@ -66,8 +66,8 @@ class AccountServiceTest {
 
         final var updateAccount = this.createUniqueAccountDto();
 
-        final var updatedAccountDto =
-                this.accountService.updateAccount(Objects.requireNonNull(createdAccountDto.id, "id"), updateAccount);
+        final var updatedAccountDto = this.accountService
+                .updateAccount(Objects.requireNonNull(createdAccountDto.publicId, "publicId"), updateAccount);
 
         assertNotNull(updatedAccountDto);
         assertEquals(updateAccount.name, updatedAccountDto.name);
@@ -80,8 +80,8 @@ class AccountServiceTest {
         final var createdAccountDto = this.accountService.createAccount(newAccount);
         final var patchDto = new AccountDto();
 
-        final var patchedAccountDto =
-                this.accountService.patchAccount(Objects.requireNonNull(createdAccountDto.id, "id"), patchDto);
+        final var patchedAccountDto = this.accountService
+                .patchAccount(Objects.requireNonNull(createdAccountDto.publicId, "publicId"), patchDto);
 
         assertNotNull(patchedAccountDto);
         assertEquals(newAccount.name, patchedAccountDto.name);
@@ -94,18 +94,18 @@ class AccountServiceTest {
         final var newAccount = this.createUniqueAccountDto();
         final var createdAccount = this.accountService.createAccount(newAccount);
 
-        final Long accountId = Objects.requireNonNull(createdAccount.id, "id");
+        final String accountPublicId = Objects.requireNonNull(createdAccount.publicId, "publicId");
 
-        final var deleted = this.accountService.deleteAccount(accountId);
+        final var deleted = this.accountService.deleteAccount(accountPublicId);
 
         assertTrue(deleted);
-        final var deletedAccount = this.accountService.findById(accountId);
+        final var deletedAccount = this.accountService.findById(accountPublicId);
         assertTrue(deletedAccount.isEmpty());
     }
 
     @Test
     void testDeleteNonExistentAccount() {
-        final var deleted = this.accountService.deleteAccount(999999L);
+        final var deleted = this.accountService.deleteAccount("999999");
         assertFalse(deleted);
     }
 
@@ -116,17 +116,17 @@ class AccountServiceTest {
         final var newAccount = this.createUniqueAccountDto();
         final var createdAccount = this.accountService.createAccount(newAccount);
 
-        final Long createdId = Objects.requireNonNull(createdAccount.id, "id");
-        final var foundAccount = this.accountService.findById(createdId);
+        final String createdPublicId = Objects.requireNonNull(createdAccount.publicId, "publicId");
+        final var foundAccount = this.accountService.findById(createdPublicId);
 
         assertTrue(foundAccount.isPresent());
-        assertEquals(createdId, foundAccount.get().id);
+        assertEquals(createdPublicId, foundAccount.get().publicId);
         assertEquals(newAccount.name, foundAccount.get().name);
     }
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundAccount = this.accountService.findById(999999L);
+        final var foundAccount = this.accountService.findById("999999");
         assertTrue(foundAccount.isEmpty());
     }
 
@@ -143,29 +143,30 @@ class AccountServiceTest {
         final var firstUser = this.userService.createUser(createUniqueUserDto());
         final var secondUser = this.userService.createUser(createUniqueUserDto());
 
-        final Long firstUserId = Objects.requireNonNull(firstUser.id, "firstUser.id");
-        final Long secondUserId = Objects.requireNonNull(secondUser.id, "secondUser.id");
-        final Long createdFirstId = Objects.requireNonNull(createdFirst.id, "createdFirst.id");
-        final Long createdSecondId = Objects.requireNonNull(createdSecond.id, "createdSecond.id");
-        this.accountAccessService.associateUserWithAccount(firstUserId, createdFirstId);
-        this.accountAccessService.associateUserWithAccount(secondUserId, createdSecondId);
+        final String firstUserPublicId = Objects.requireNonNull(firstUser.publicId, "firstUser.publicId");
+        final String secondUserPublicId = Objects.requireNonNull(secondUser.publicId, "secondUser.publicId");
+        final String createdFirstPublicId = Objects.requireNonNull(createdFirst.publicId, "createdFirst.publicId");
+        final String createdSecondPublicId = Objects.requireNonNull(createdSecond.publicId, "createdSecond.publicId");
+        this.accountAccessService.associateUserWithAccount(firstUserPublicId, createdFirstPublicId);
+        this.accountAccessService.associateUserWithAccount(secondUserPublicId, createdSecondPublicId);
 
         final var results = this.accountService.searchAccounts(searchToken);
         assertEquals(2, results.size());
 
-        final Map<Long, AccountResponseDto> resultsById = results.stream().collect(
-                Collectors.toMap(account -> Objects.requireNonNull(account.id, "account.id"), account -> account));
+        final Map<String, AccountResponseDto> resultsById = results.stream().collect(Collectors
+                .toMap(account -> Objects.requireNonNull(account.publicId, "account.publicId"), account -> account));
 
-        assertTrue(resultsById.containsKey(createdFirstId));
-        assertTrue(resultsById.containsKey(createdSecondId));
-        assertEquals(1, Objects.requireNonNull(resultsById.get(createdFirstId), "result").userCount);
-        assertEquals(1, Objects.requireNonNull(resultsById.get(createdSecondId), "result").userCount);
+        assertTrue(resultsById.containsKey(createdFirstPublicId));
+        assertTrue(resultsById.containsKey(createdSecondPublicId));
+        assertEquals(1, Objects.requireNonNull(resultsById.get(createdFirstPublicId), "result").userCount);
+        assertEquals(1, Objects.requireNonNull(resultsById.get(createdSecondPublicId), "result").userCount);
         assertTrue(Objects
-                .requireNonNull(Objects.requireNonNull(resultsById.get(createdFirstId), "result").associatedUserIds)
-                .contains(firstUserId));
-        assertTrue(Objects
-                .requireNonNull(Objects.requireNonNull(resultsById.get(createdSecondId), "result").associatedUserIds)
-                .contains(secondUserId));
+                .requireNonNull(
+                        Objects.requireNonNull(resultsById.get(createdFirstPublicId), "result").associatedUserPublicIds)
+                .contains(firstUserPublicId));
+        assertTrue(Objects.requireNonNull(
+                Objects.requireNonNull(resultsById.get(createdSecondPublicId), "result").associatedUserPublicIds)
+                .contains(secondUserPublicId));
     }
 
     @Test
@@ -174,8 +175,8 @@ class AccountServiceTest {
 
         final var results = this.accountService.searchAccounts("   ");
 
-        assertEquals(expected.stream().map(account -> account.id).toList(),
-                results.stream().map(account -> account.id).toList());
+        assertEquals(expected.stream().map(account -> account.publicId).toList(),
+                results.stream().map(account -> account.publicId).toList());
     }
 
     @Test
@@ -190,8 +191,8 @@ class AccountServiceTest {
 
         final var results = this.accountService.searchAccounts(token + "-%");
 
-        assertEquals(List.of(Objects.requireNonNull(createdLiteralMatch.id, "id")),
-                results.stream().map(account -> account.id).toList());
+        assertEquals(List.of(Objects.requireNonNull(createdLiteralMatch.publicId, "publicId")),
+                results.stream().map(account -> account.publicId).toList());
     }
 
     @Test

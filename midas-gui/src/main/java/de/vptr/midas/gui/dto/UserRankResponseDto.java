@@ -31,7 +31,7 @@ public class UserRankResponseDto extends AbstractUserRankDto {
     /** Handles the to user rank dto operation. */
     public UserRankDto toUserRankDto() {
         final UserRankDto dto = new UserRankDto();
-        dto.setId(this.getId());
+        dto.setPublicId(this.getPublicId());
         dto.setName(this.getName());
         dto.setAdminView(this.isAdminView());
         dto.setPageAdd(this.isPageAdd());

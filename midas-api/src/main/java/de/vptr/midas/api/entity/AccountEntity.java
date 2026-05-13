@@ -3,21 +3,16 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -25,12 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 /** JPA entity representing a user account. */
 @Entity
 @Table(name = "user_accounts")
-public class AccountEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class AccountEntity extends BaseEntity {
 
     @NotBlank
     @Column(unique = true)
@@ -72,15 +62,5 @@ public class AccountEntity extends PanacheEntityBase {
             return Collections.emptyList();
         }
         return this.userAccountMetas.stream().map(meta -> meta.user).toList();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof AccountEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

@@ -12,14 +12,14 @@ public abstract class AbstractPostDto extends AbstractTitleContentDto {
         super();
     }
 
-    @JsonProperty("userId")
-    private Long userId;
+    @JsonProperty("userPublicId")
+    private String userPublicId;
 
     @JsonProperty("username")
     private String username;
 
-    @JsonProperty("categoryId")
-    private Long categoryId;
+    @JsonProperty("categoryPublicId")
+    private String categoryPublicId;
 
     @JsonProperty("categoryName")
     private String categoryName;
@@ -39,12 +39,12 @@ public abstract class AbstractPostDto extends AbstractTitleContentDto {
     @JsonProperty("commentsCount")
     private Long commentsCount;
 
-    public Long getUserId() {
-        return this.userId;
+    public String getUserPublicId() {
+        return this.userPublicId;
     }
 
-    public void setUserId(final Long userId) {
-        this.userId = userId;
+    public void setUserPublicId(final String userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
     public String getUsername() {
@@ -55,12 +55,12 @@ public abstract class AbstractPostDto extends AbstractTitleContentDto {
         this.username = username;
     }
 
-    public Long getCategoryId() {
-        return this.categoryId;
+    public String getCategoryPublicId() {
+        return this.categoryPublicId;
     }
 
-    public void setCategoryId(final Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryPublicId(final String categoryPublicId) {
+        this.categoryPublicId = categoryPublicId;
     }
 
     public String getCategoryName() {

@@ -121,7 +121,7 @@ public class AdminUserView extends AbstractAdminEntityView<UserResponseDto> {
 
     @Override
     protected void configureGrid(final Grid<UserResponseDto> g) {
-        g.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getId).setHeader("ID").setWidth("80px")
+        g.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getPublicId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
         g.addComponentColumn(user -> this.createClickableSpan(user.getUsername(),
@@ -155,7 +155,7 @@ public class AdminUserView extends AbstractAdminEntityView<UserResponseDto> {
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.userDialog).open(user,
                 this.availableRanks != null ? this.availableRanks : List.of()));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.userService.deleteUser(Objects.requireNonNull(user.getId()));
+            this.userService.deleteUser(Objects.requireNonNull(user.getPublicId()));
         }));
 
         layout.add(editButton, deleteButton);

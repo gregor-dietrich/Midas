@@ -16,12 +16,12 @@ public class PostResponseDto extends AbstractPostDto {
     /** Handles the to post dto operation. */
     public PostDto toPostDto() {
         final PostDto dto = new PostDto();
-        dto.setId(this.getId());
+        dto.setPublicId(this.getPublicId());
         dto.setTitle(this.getTitle());
         dto.setContent(this.getContent());
-        dto.setUserId(this.getUserId());
+        dto.setUserPublicId(this.getUserPublicId());
         dto.setUsername(this.getUsername());
-        dto.setCategoryId(this.getCategoryId());
+        dto.setCategoryPublicId(this.getCategoryPublicId());
         dto.setCategoryName(this.getCategoryName());
         dto.setPublished(this.isPublished());
         dto.setCommentable(this.isCommentable());

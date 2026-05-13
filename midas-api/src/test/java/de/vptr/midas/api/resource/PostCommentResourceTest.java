@@ -29,15 +29,15 @@ class PostCommentResourceTest {
 
     @Test
     void testGetCommentById_unauthorized() {
-        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     @TestTransaction
     void testGetCommentById_authorizedWithExistingComment() {
         // Create a comment first to ensure it exists
-        final Long postId = TestUtil.createTestPost();
-        final Long commentId = TestUtil.createTestComment(postId);
+        final String postId = TestUtil.createTestPost();
+        final String commentId = TestUtil.createTestComment(postId);
 
         TestUtil.authenticatedRequest().when().get(ENDPOINT_URL + "/" + commentId).then().statusCode(200);
     }
@@ -49,30 +49,30 @@ class PostCommentResourceTest {
 
     @Test
     void testGetCommentsByPost_unauthorized() {
-        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/post/1");
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/post/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetCommentsByPost_authorized() {
-        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/post/1");
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/post/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testCreateComment_unauthorized() {
-        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(1L);
+        final String commentJson = TestDataBuilder.createDefaultPostCommentJson("1");
         TestUtil.testUnauthorizedPost(ENDPOINT_URL, commentJson);
     }
 
     @Test
     void testCreateComment_authorized() {
-        final Long postId = TestUtil.createTestPost();
+        final String postId = TestUtil.createTestPost();
         final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithCreation(ENDPOINT_URL, commentJson);
     }
 
     @Test
     void testCreateComment_authorizedWithInsufficientRole() {
-        final Long postId = TestUtil.createTestPost();
+        final String postId = TestUtil.createTestPost();
         final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         TestUtil.testAuthorizedPostWithInsufficientRole(ENDPOINT_URL, commentJson);
     }
@@ -95,14 +95,14 @@ class PostCommentResourceTest {
     @Test
     void testUpdateComment_unauthorized() {
         final String commentJson = TestDataBuilder.createUpdatedPostCommentJson();
-        TestUtil.testUnauthorizedPut(ENDPOINT_URL + "/1", commentJson);
+        TestUtil.testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", commentJson);
     }
 
     @Test
     void testUpdateComment_authorized() {
         // First create a comment to update
-        final Long postId = TestUtil.createTestPost();
-        final Long commentId = TestUtil.createTestComment(postId);
+        final String postId = TestUtil.createTestPost();
+        final String commentId = TestUtil.createTestComment(postId);
 
         // Now update the comment
         final String updateCommentJson = TestDataBuilder.createUpdatedPostCommentJson();
@@ -112,14 +112,14 @@ class PostCommentResourceTest {
     @Test
     void testPatchComment_unauthorized() {
         final String commentJson = TestDataBuilder.createPatchedPostCommentJson();
-        TestUtil.testUnauthorizedPatch(ENDPOINT_URL + "/1", commentJson);
+        TestUtil.testUnauthorizedPatch(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", commentJson);
     }
 
     @Test
     void testPatchComment_authorized() {
         // First create a comment to patch
-        final Long postId = TestUtil.createTestPost();
-        final Long commentId = TestUtil.createTestComment(postId);
+        final String postId = TestUtil.createTestPost();
+        final String commentId = TestUtil.createTestComment(postId);
 
         // Now patch the comment
         final String patchCommentJson = TestDataBuilder.createPatchedPostCommentJson();
@@ -128,24 +128,24 @@ class PostCommentResourceTest {
 
     @Test
     void testDeleteComment_unauthorized() {
-        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/1", "DELETE");
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", "DELETE");
     }
 
     @Test
     void testDeleteComment_authorized() {
-        final Long postId = TestUtil.createTestPost();
-        final Long commentId = TestUtil.createTestComment(postId);
+        final String postId = TestUtil.createTestPost();
+        final String commentId = TestUtil.createTestComment(postId);
         TestUtil.authenticatedRequest().when().delete(ENDPOINT_URL + "/" + commentId).then().statusCode(204);
     }
 
     @Test
     void testGetCommentsByUser_unauthorized() {
-        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+        TestUtil.testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetCommentsByUser_authorized() {
-        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
+        TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
@@ -166,6 +166,8 @@ class PostCommentResourceTest {
     @Test
     void testSearchComments_authorized() {
         TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        TestUtil.authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then()
+                .statusCode(200);
     }
 
     @Test
@@ -181,5 +183,10 @@ class PostCommentResourceTest {
     @Test
     void testGetCommentsByDateRange_missingParams() {
         TestUtil.testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range");
+    }
+
+    @Test
+    void testDeleteComment_nonexistent() {
+        TestUtil.authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }
 }

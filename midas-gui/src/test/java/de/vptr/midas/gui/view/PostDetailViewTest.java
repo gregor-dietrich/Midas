@@ -30,8 +30,8 @@ import de.vptr.midas.gui.service.Broadcaster;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 
-@SuppressWarnings({ "PMD.AvoidAccessibilityAlteration", "PMD.AvoidThrowingRawExceptionTypes",
-        "StringConcatToTextBlock" })
+@SuppressWarnings({ "PMD.AvoidAccessibilityAlteration", "PMD.AvoidThrowingRawExceptionTypes", "StringConcatToTextBlock",
+        "UnnecessaryAssignment" })
 class PostDetailViewTest {
 
     private MockedStatic<UI> uiMock;
@@ -103,7 +103,7 @@ class PostDetailViewTest {
         try {
             final var field = PostDetailView.class.getDeclaredField("currentPostId");
             field.setAccessible(true);
-            field.set(this.view, 123L);
+            field.set(this.view, "123");
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -121,7 +121,7 @@ class PostDetailViewTest {
 
         callback.accept("comment-created:123");
 
-        verify(this.postCommentService).getCommentsByPost(123L);
+        verify(this.postCommentService).getCommentsByPost("123");
     }
 
     @Test

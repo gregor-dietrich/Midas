@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -40,21 +41,21 @@ public class UserGroupService {
                 this.authService, LOG, "fetching groups");
     }
 
-    /** Returns the group by id. */
-    public Optional<UserGroupResponseDto> getGroupById(final Long id) {
-        LOG.debugf("Fetching group with ID: %s", id);
+    /** Returns the group by publicId. */
+    public Optional<UserGroupResponseDto> getGroupById(final String publicId) {
+        LOG.debugf("Fetching group with publicID: %s", publicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(id, authHeader), this.authService, LOG,
-                "fetching group " + id, response -> ServiceHelper.readOptionalEntity(response,
-                        UserGroupResponseDto.class, dto -> dto, "group response"));
+        return ServiceHelper.executeWithResponse(() -> this.groupClient.getGroup(publicId, authHeader),
+                this.authService, LOG, "fetching group " + publicId, response -> ServiceHelper
+                        .readOptionalEntity(response, UserGroupResponseDto.class, dto -> dto, "group response"));
     }
 
     /** Returns the users in group. */
-    public List<UserDto> getUsersInGroup(final Long groupId) {
-        LOG.debugf("Fetching users in group: %s", groupId);
+    public List<UserDto> getUsersInGroup(final String groupPublicId) {
+        LOG.debugf("Fetching users in group: %s", groupPublicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.groupClient.getUsersInGroup(groupId, authHeader), this.authService, LOG,
-                "fetching users in group " + groupId);
+        return ServiceHelper.execute(() -> this.groupClient.getUsersInGroup(groupPublicId, authHeader),
+                this.authService, LOG, "fetching users in group " + groupPublicId);
     }
 
     /** Handles the search groups operation. */
@@ -77,53 +78,55 @@ public class UserGroupService {
 
     /** Updates the group. */
     public UserGroupDto updateGroup(final UserGroupDto group) {
-        LOG.debugf("Updating group: %s", group.getId());
+        LOG.debugf("Updating group: %s", group.getPublicId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.updateGroup(group.getId(), group, authHeader),
-                this.authService, LOG, "updating group " + group.getId(), "Failed to update group",
+        return ServiceHelper.executeWithResponse(
+                () -> this.groupClient.updateGroup(Objects.requireNonNull(group.getPublicId()), group, authHeader),
+                this.authService, LOG, "updating group " + group.getPublicId(), "Failed to update group",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserGroupResponseDto.class,
                         UserGroupResponseDto::toUserGroupDto, "updated group response", "Failed to update group"));
     }
 
     /** Handles the delete group operation. */
-    public boolean deleteGroup(final Long id) {
-        LOG.debugf("Deleting group: %s", id);
+    public boolean deleteGroup(final String publicId) {
+        LOG.debugf("Deleting group: %s", publicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.groupClient.deleteGroup(id, authHeader), this.authService,
-                LOG, "deleting group " + id, response -> response.getStatus() == 204);
+        return ServiceHelper.executeWithResponse(() -> this.groupClient.deleteGroup(publicId, authHeader),
+                this.authService, LOG, "deleting group " + publicId, response -> response.getStatus() == 204);
     }
 
     /** Adds the user to group. */
-    public boolean addUserToGroup(final Long groupId, final Long userId) {
-        LOG.debugf("Adding user %s to group %s", userId, groupId);
+    public boolean addUserToGroup(final String groupPublicId, final String userPublicId) {
+        LOG.debugf("Adding user %s to group %s", userPublicId, groupPublicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> {
             try {
-                return this.groupClient.addUserToGroup(groupId, userId, authHeader);
+                return this.groupClient.addUserToGroup(groupPublicId, userPublicId, authHeader);
             } catch (final WebApplicationException e) {
                 if (e.getResponse().getStatus() == 409) {
                     throw new ServiceException("User is already a member of this group");
                 }
                 throw e;
             }
-        }, this.authService, LOG, "adding user " + userId + " to group " + groupId,
+        }, this.authService, LOG, "adding user " + userPublicId + " to group " + groupPublicId,
                 response -> response.getStatus() == 201);
     }
 
     /** Removes the user from group. */
-    public boolean removeUserFromGroup(final Long groupId, final Long userId) {
-        LOG.debugf("Removing user %s from group %s", userId, groupId);
+    public boolean removeUserFromGroup(final String groupPublicId, final String userPublicId) {
+        LOG.debugf("Removing user %s from group %s", userPublicId, groupPublicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
-                () -> this.groupClient.removeUserFromGroup(groupId, userId, authHeader), this.authService, LOG,
-                "removing user " + userId + " from group " + groupId, response -> response.getStatus() == 204);
+                () -> this.groupClient.removeUserFromGroup(groupPublicId, userPublicId, authHeader), this.authService,
+                LOG, "removing user " + userPublicId + " from group " + groupPublicId,
+                response -> response.getStatus() == 204);
     }
 
     /** Returns the groups by user. */
-    public List<UserGroupResponseDto> getGroupsByUser(final Long userId) {
-        LOG.debugf("Fetching groups for user: %s", userId);
+    public List<UserGroupResponseDto> getGroupsByUser(final String userPublicId) {
+        LOG.debugf("Fetching groups for user: %s", userPublicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.groupClient.getGroupsForUser(userId, authHeader), this.authService, LOG,
-                "fetching groups for user " + userId);
+        return ServiceHelper.execute(() -> this.groupClient.getGroupsForUser(userPublicId, authHeader),
+                this.authService, LOG, "fetching groups for user " + userPublicId);
     }
 }

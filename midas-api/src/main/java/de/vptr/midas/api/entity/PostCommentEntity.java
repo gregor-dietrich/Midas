@@ -2,19 +2,14 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -25,12 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 @Entity
 @Table(name = "post_comments", indexes = { @Index(name = "idx_post_comment_post_id", columnList = "post_id"),
         @Index(name = "idx_post_comment_user_id", columnList = "user_id") })
-public class PostCommentEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class PostCommentEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     @NotBlank
@@ -69,15 +59,5 @@ public class PostCommentEntity extends PanacheEntityBase {
     // Helper method to find recent comments
     public static List<PostCommentEntity> findRecentComments(final int limit) {
         return find("ORDER BY created DESC").page(0, limit).list();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof PostCommentEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

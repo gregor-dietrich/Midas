@@ -8,7 +8,7 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for page response data. */
 public class PageResponseDto {
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String title;
     @Nullable
@@ -23,7 +23,7 @@ public class PageResponseDto {
 
     /** Creates a new instance. */
     public PageResponseDto(final PageEntity entity) {
-        this.id = entity.id;
+        this.publicId = entity.publicId;
         this.title = entity.title;
         this.content = entity.content;
         this.created = entity.created;

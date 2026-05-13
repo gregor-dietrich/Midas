@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class PageResponseDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("title")
     private String title;
@@ -21,8 +21,8 @@ public class PageResponseDto {
         // Default constructor for Jackson
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     public String getTitle() {
@@ -33,8 +33,8 @@ public class PageResponseDto {
         return this.content;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setTitle(final String title) {
@@ -48,7 +48,7 @@ public class PageResponseDto {
     /** Handles the to page dto operation. */
     public PageDto toPageDto() {
         final PageDto dto = new PageDto();
-        dto.setId(this.id);
+        dto.setPublicId(this.publicId);
         dto.setTitle(this.title);
         dto.setContent(this.content);
         return dto;

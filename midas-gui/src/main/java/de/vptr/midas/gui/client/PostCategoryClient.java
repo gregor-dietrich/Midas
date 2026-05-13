@@ -44,30 +44,30 @@ public interface PostCategoryClient {
     List<PostCategoryResponseDto> getRootCategories(@HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getCategory(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/parent/{parentId}")
-    List<PostCategoryResponseDto> getCategoriesByParent(@PathParam("parentId") Long parentId,
+    @Path("/parent/{parentPublicId}")
+    List<PostCategoryResponseDto> getCategoriesByParent(@PathParam("parentPublicId") String parentPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @POST
     Response createCategory(PostCategoryDto category, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateCategory(@PathParam("id") Long id, PostCategoryDto category,
+    @Path("/{publicId}")
+    Response updateCategory(@PathParam("publicId") String publicId, PostCategoryDto category,
             @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchCategory(@PathParam("id") Long id, PostCategoryDto category,
+    @Path("/{publicId}")
+    Response patchCategory(@PathParam("publicId") String publicId, PostCategoryDto category,
             @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteCategory(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteCategory(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")

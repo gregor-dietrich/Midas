@@ -83,7 +83,7 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
         // Clickable title column that navigates to detail view
         this.grid
                 .addComponentColumn(page -> this.createClickableSpan(page.getTitle(),
-                        ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getId()))))
+                        ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getPublicId()))))
                 .setHeader("Title").setFlexGrow(1);
 
         // Content preview column (first 100 chars)

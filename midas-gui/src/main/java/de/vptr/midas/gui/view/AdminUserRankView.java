@@ -98,7 +98,7 @@ public class AdminUserRankView extends AbstractAdminEntityView<UserRankResponseD
 
     @Override
     protected void configureGrid(final Grid<UserRankResponseDto> g) {
-        g.addColumn(UserRankResponseDto::getId).setHeader("ID").setWidth("80px").setFlexGrow(0);
+        g.addColumn(UserRankResponseDto::getPublicId).setHeader("ID").setWidth("80px").setFlexGrow(0);
 
         g.addComponentColumn(rank -> this.createClickableSpan(rank.getName(),
                 ignore -> Objects.requireNonNull(this.rankDialog).open(rank))).setHeader("Name").setFlexGrow(2);
@@ -185,7 +185,7 @@ public class AdminUserRankView extends AbstractAdminEntityView<UserRankResponseD
 
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.rankDialog).open(rank));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.rankService.deleteRank(Objects.requireNonNull(rank.getId()));
+            this.rankService.deleteRank(Objects.requireNonNull(rank.getPublicId()));
         }));
 
         layout.add(editButton, deleteButton);

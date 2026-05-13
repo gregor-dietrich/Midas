@@ -9,17 +9,17 @@ import jakarta.annotation.Nullable;
 public class PostResponseDto {
 
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String title;
     @Nullable
     public String content;
     @Nullable
-    public Long userId;
+    public String userPublicId;
     @Nullable
     public String username;
     @Nullable
-    public Long categoryId;
+    public String categoryPublicId;
     @Nullable
     public String categoryName;
     @Nullable
@@ -41,12 +41,12 @@ public class PostResponseDto {
      */
     public PostResponseDto(@Nullable final PostEntity entity, final long commentsCount) {
         if (entity != null) {
-            this.id = entity.id;
+            this.publicId = entity.publicId;
             this.title = entity.title;
             this.content = entity.content;
-            this.userId = entity.user != null ? entity.user.id : null;
+            this.userPublicId = entity.user != null ? entity.user.publicId : null;
             this.username = entity.user != null ? entity.user.username : null;
-            this.categoryId = entity.category != null ? entity.category.id : null;
+            this.categoryPublicId = entity.category != null ? entity.category.publicId : null;
             this.categoryName = entity.category != null ? entity.category.name : null;
             this.published = entity.published;
             this.commentable = entity.commentable;

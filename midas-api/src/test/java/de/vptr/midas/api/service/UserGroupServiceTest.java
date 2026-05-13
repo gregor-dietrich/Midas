@@ -44,7 +44,7 @@ class UserGroupServiceTest {
         final var createdGroup = this.userGroupService.createGroup(newGroupDto);
 
         assertNotNull(createdGroup);
-        assertNotNull(createdGroup.id);
+        assertNotNull(createdGroup.publicId);
         assertEquals(newGroupDto.name, createdGroup.name);
     }
 
@@ -58,7 +58,8 @@ class UserGroupServiceTest {
         // Update the group
         final var updateDto = createUniqueUserGroupDto();
 
-        final var updatedGroup = this.userGroupService.updateGroup(Objects.requireNonNull(createdGroup.id), updateDto);
+        final var updatedGroup =
+                this.userGroupService.updateGroup(Objects.requireNonNull(createdGroup.publicId), updateDto);
 
         assertNotNull(updatedGroup);
         assertEquals(updateDto.name, updatedGroup.name);
@@ -71,7 +72,7 @@ class UserGroupServiceTest {
         final var newGroupDto = createUniqueUserGroupDto();
         final var createdGroup = this.userGroupService.createGroup(newGroupDto);
 
-        final Long groupId = Objects.requireNonNull(createdGroup.id);
+        final String groupId = Objects.requireNonNull(createdGroup.publicId);
 
         final var deleted = this.userGroupService.deleteGroup(groupId);
 
@@ -82,7 +83,7 @@ class UserGroupServiceTest {
 
     @Test
     void testDeleteNonExistentGroup() {
-        final var deleted = this.userGroupService.deleteGroup(999999L);
+        final var deleted = this.userGroupService.deleteGroup("non-existent-id");
         assertFalse(deleted);
     }
 
@@ -93,16 +94,16 @@ class UserGroupServiceTest {
         final var newGroupDto = createUniqueUserGroupDto();
         final var createdGroup = this.userGroupService.createGroup(newGroupDto);
 
-        final var foundGroup = this.userGroupService.findById(Objects.requireNonNull(createdGroup.id));
+        final var foundGroup = this.userGroupService.findById(Objects.requireNonNull(createdGroup.publicId));
 
         assertTrue(foundGroup.isPresent());
-        assertEquals(createdGroup.id, foundGroup.get().id);
+        assertEquals(createdGroup.publicId, foundGroup.get().publicId);
         assertEquals(createdGroup.name, foundGroup.get().name);
     }
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundGroup = this.userGroupService.findById(999999L);
+        final var foundGroup = this.userGroupService.findById("non-existent-id");
         assertTrue(foundGroup.isEmpty());
     }
 
@@ -113,10 +114,10 @@ class UserGroupServiceTest {
         final var nullResults = this.userGroupService.searchGroups("");
         final var blankResults = this.userGroupService.searchGroups("   ");
 
-        assertEquals(expected.stream().map(group -> group.id).toList(),
-                nullResults.stream().map(group -> group.id).toList());
-        assertEquals(expected.stream().map(group -> group.id).toList(),
-                blankResults.stream().map(group -> group.id).toList());
+        assertEquals(expected.stream().map(group -> group.publicId).toList(),
+                nullResults.stream().map(group -> group.publicId).toList());
+        assertEquals(expected.stream().map(group -> group.publicId).toList(),
+                blankResults.stream().map(group -> group.publicId).toList());
     }
 
     @Test

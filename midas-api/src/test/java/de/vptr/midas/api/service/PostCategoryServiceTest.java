@@ -45,9 +45,9 @@ class PostCategoryServiceTest {
         final var createdCategory = this.postCategoryService.createCategory(category);
 
         assertNotNull(createdCategory);
-        assertNotNull(createdCategory.id);
+        assertNotNull(createdCategory.publicId);
         assertEquals(category.name, createdCategory.name);
-        assertNull(createdCategory.parentId);
+        assertNull(createdCategory.parentPublicId);
     }
 
     @Test
@@ -57,22 +57,22 @@ class PostCategoryServiceTest {
         final var createdParent = this.postCategoryService.createCategory(parentCategory);
 
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory.parentId = createdParent.id;
+        childCategory.parentPublicId = createdParent.publicId;
 
         final var createdChild = this.postCategoryService.createCategory(childCategory);
 
         assertNotNull(createdChild);
-        assertNotNull(createdChild.id);
+        assertNotNull(createdChild.publicId);
         assertEquals(childCategory.name, createdChild.name);
-        assertNotNull(createdChild.parentId);
-        assertEquals(createdParent.id, createdChild.parentId);
+        assertNotNull(createdChild.parentPublicId);
+        assertEquals(createdParent.publicId, createdChild.parentPublicId);
     }
 
     @Test
     @TestTransaction
     void testCreateCategoryWithNonExistentParent() {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        category.parentId = 999999L;
+        category.parentPublicId = "999999";
 
         assertThrows(WebApplicationException.class, () -> {
             this.postCategoryService.createCategory(category);
@@ -118,17 +118,17 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
-        final var foundCategory = this.postCategoryService.findById(catId);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
+        final var foundCategory = this.postCategoryService.findById(catPublicId);
 
         assertTrue(foundCategory.isPresent());
-        assertEquals(catId, foundCategory.get().id);
+        assertEquals(catPublicId, foundCategory.get().publicId);
         assertEquals(createdCategory.name, foundCategory.get().name);
     }
 
     @Test
     void testFindByIdNonExistent() {
-        final var foundCategory = this.postCategoryService.findById(999999L);
+        final var foundCategory = this.postCategoryService.findById("999999");
         assertTrue(foundCategory.isEmpty());
     }
 
@@ -139,14 +139,14 @@ class PostCategoryServiceTest {
         final var createdRoot = this.postCategoryService.createCategory(rootCategory);
 
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory.parentId = createdRoot.id;
+        childCategory.parentPublicId = createdRoot.publicId;
         this.postCategoryService.createCategory(childCategory);
 
         final var rootCategories = this.postCategoryService.findRootCategories();
 
         assertNotNull(rootCategories);
-        assertTrue(rootCategories.stream().anyMatch(cat -> Objects.equals(cat.id, createdRoot.id)));
-        assertTrue(rootCategories.stream().noneMatch(cat -> cat.parentId != null));
+        assertTrue(rootCategories.stream().anyMatch(cat -> Objects.equals(cat.publicId, createdRoot.publicId)));
+        assertTrue(rootCategories.stream().noneMatch(cat -> cat.parentPublicId != null));
     }
 
     @Test
@@ -156,25 +156,25 @@ class PostCategoryServiceTest {
         final var createdParent = this.postCategoryService.createCategory(parentCategory);
 
         final var childCategory1 = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory1.parentId = createdParent.id;
+        childCategory1.parentPublicId = createdParent.publicId;
         final var createdChild1 = this.postCategoryService.createCategory(childCategory1);
 
         final var childCategory2 = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory2.parentId = createdParent.id;
+        childCategory2.parentPublicId = createdParent.publicId;
         final var createdChild2 = this.postCategoryService.createCategory(childCategory2);
 
-        final Long parentId = Objects.requireNonNull(createdParent.id);
-        final var childCategories = this.postCategoryService.findByParentId(parentId);
+        final String parentPublicId = Objects.requireNonNull(createdParent.publicId);
+        final var childCategories = this.postCategoryService.findByParentPublicId(parentPublicId);
 
         assertNotNull(childCategories);
         assertEquals(2, childCategories.size());
-        assertTrue(childCategories.stream().anyMatch(cat -> Objects.equals(cat.id, createdChild1.id)));
-        assertTrue(childCategories.stream().anyMatch(cat -> Objects.equals(cat.id, createdChild2.id)));
+        assertTrue(childCategories.stream().anyMatch(cat -> Objects.equals(cat.publicId, createdChild1.publicId)));
+        assertTrue(childCategories.stream().anyMatch(cat -> Objects.equals(cat.publicId, createdChild2.publicId)));
     }
 
     @Test
     void testFindByParentIdNonExistent() {
-        final var childCategories = this.postCategoryService.findByParentId(999999L);
+        final var childCategories = this.postCategoryService.findByParentPublicId("999999");
         assertNotNull(childCategories);
         assertTrue(childCategories.isEmpty());
     }
@@ -185,14 +185,14 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
         final var updateCategory = new PostCategoryDto();
         updateCategory.name = "Updated Category " + ServiceTestUtil.generateUniqueTestSuffix();
 
-        final var updatedCategory = this.postCategoryService.updateCategory(catId, updateCategory);
+        final var updatedCategory = this.postCategoryService.updateCategory(catPublicId, updateCategory);
 
         assertNotNull(updatedCategory);
-        assertEquals(catId, updatedCategory.id);
+        assertEquals(catPublicId, updatedCategory.publicId);
         assertEquals(updateCategory.name, updatedCategory.name);
     }
 
@@ -202,12 +202,12 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
         final var updateCategory = new PostCategoryDto();
         updateCategory.name = "";
 
         assertThrows(ValidationException.class, () -> {
-            this.postCategoryService.updateCategory(catId, updateCategory);
+            this.postCategoryService.updateCategory(catPublicId, updateCategory);
         });
     }
 
@@ -217,12 +217,12 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
         final var updateCategory = new PostCategoryDto();
         updateCategory.name = null;
 
         assertThrows(ValidationException.class, () -> {
-            this.postCategoryService.updateCategory(catId, updateCategory);
+            this.postCategoryService.updateCategory(catPublicId, updateCategory);
         });
     }
 
@@ -233,7 +233,7 @@ class PostCategoryServiceTest {
         updateCategory.name = "Updated Category";
 
         assertThrows(WebApplicationException.class, () -> {
-            this.postCategoryService.updateCategory(999999L, updateCategory);
+            this.postCategoryService.updateCategory("999999", updateCategory);
         });
     }
 
@@ -243,14 +243,14 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
         final var patchCategory = new PostCategoryDto();
         patchCategory.name = "Patched Category " + ServiceTestUtil.generateUniqueTestSuffix();
 
-        final var patchedCategory = this.postCategoryService.patchCategory(catId, patchCategory);
+        final var patchedCategory = this.postCategoryService.patchCategory(catPublicId, patchCategory);
 
         assertNotNull(patchedCategory);
-        assertEquals(catId, patchedCategory.id);
+        assertEquals(catPublicId, patchedCategory.publicId);
         assertEquals(patchCategory.name, patchedCategory.name);
     }
 
@@ -260,14 +260,14 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
         final var patchCategory = new PostCategoryDto();
         patchCategory.name = null;
 
-        final var patchedCategory = this.postCategoryService.patchCategory(catId, patchCategory);
+        final var patchedCategory = this.postCategoryService.patchCategory(catPublicId, patchCategory);
 
         assertNotNull(patchedCategory);
-        assertEquals(catId, patchedCategory.id);
+        assertEquals(catPublicId, patchedCategory.publicId);
         assertEquals(createdCategory.name, patchedCategory.name);
     }
 
@@ -278,7 +278,7 @@ class PostCategoryServiceTest {
         patchCategory.name = "Patched Category";
 
         assertThrows(WebApplicationException.class, () -> {
-            this.postCategoryService.patchCategory(999999L, patchCategory);
+            this.postCategoryService.patchCategory("999999", patchCategory);
         });
     }
 
@@ -288,18 +288,18 @@ class PostCategoryServiceTest {
         final var category = ServiceTestDataBuilder.createUniquePostCategoryDto();
         final var createdCategory = this.postCategoryService.createCategory(category);
 
-        final Long catId = Objects.requireNonNull(createdCategory.id);
-        final boolean deleted = this.postCategoryService.deleteCategory(catId);
+        final String catPublicId = Objects.requireNonNull(createdCategory.publicId);
+        final boolean deleted = this.postCategoryService.deleteCategory(catPublicId);
 
         assertTrue(deleted);
 
-        final var deletedCategory = this.postCategoryService.findById(catId);
+        final var deletedCategory = this.postCategoryService.findById(catPublicId);
         assertTrue(deletedCategory.isEmpty());
     }
 
     @Test
     void testDeleteNonExistentCategory() {
-        final boolean deleted = this.postCategoryService.deleteCategory(999999L);
+        final boolean deleted = this.postCategoryService.deleteCategory("999999");
         assertFalse(deleted);
     }
 
@@ -310,30 +310,30 @@ class PostCategoryServiceTest {
         final var createdRoot = this.postCategoryService.createCategory(rootCategory);
 
         final var childCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        childCategory.parentId = createdRoot.id;
+        childCategory.parentPublicId = createdRoot.publicId;
         final var createdChild = this.postCategoryService.createCategory(childCategory);
 
         final var grandchildCategory = ServiceTestDataBuilder.createUniquePostCategoryDto();
-        grandchildCategory.parentId = createdChild.id;
+        grandchildCategory.parentPublicId = createdChild.publicId;
         final var createdGrandchild = this.postCategoryService.createCategory(grandchildCategory);
 
-        assertNull(createdRoot.parentId);
-        assertEquals(createdRoot.id, createdChild.parentId);
-        assertEquals(createdChild.id, createdGrandchild.parentId);
+        assertNull(createdRoot.parentPublicId);
+        assertEquals(createdRoot.publicId, createdChild.parentPublicId);
+        assertEquals(createdChild.publicId, createdGrandchild.parentPublicId);
 
-        final Long rootId = Objects.requireNonNull(createdRoot.id);
-        final Long childId = Objects.requireNonNull(createdChild.id);
-        final Long grandchildId = Objects.requireNonNull(createdGrandchild.id);
+        final String rootPublicId = Objects.requireNonNull(createdRoot.publicId);
+        final String childPublicId = Objects.requireNonNull(createdChild.publicId);
+        final String grandchildPublicId = Objects.requireNonNull(createdGrandchild.publicId);
 
-        final var rootChildren = this.postCategoryService.findByParentId(rootId);
+        final var rootChildren = this.postCategoryService.findByParentPublicId(rootPublicId);
         assertEquals(1, rootChildren.size());
-        assertEquals(childId, rootChildren.get(0).id);
+        assertEquals(childPublicId, rootChildren.get(0).publicId);
 
-        final var childChildren = this.postCategoryService.findByParentId(childId);
+        final var childChildren = this.postCategoryService.findByParentPublicId(childPublicId);
         assertEquals(1, childChildren.size());
-        assertEquals(grandchildId, childChildren.get(0).id);
+        assertEquals(grandchildPublicId, childChildren.get(0).publicId);
 
-        final var grandchildChildren = this.postCategoryService.findByParentId(grandchildId);
+        final var grandchildChildren = this.postCategoryService.findByParentPublicId(grandchildPublicId);
         assertTrue(grandchildChildren.isEmpty());
     }
 }

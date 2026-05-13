@@ -11,18 +11,18 @@ import jakarta.validation.constraints.Size;
 
 /** Data transfer object for payment data. */
 public class PaymentDto {
-    // At least one of targetAccountId or sourceAccountId must be provided
+    // At least one of targetAccountPublicId or sourceAccountPublicId must be provided
     // Custom validation will be handled in the service layer
     @Nullable
-    public Long targetAccountId;
+    public String targetAccountPublicId;
 
     @Nullable
-    public Long sourceAccountId;
+    public String sourceAccountPublicId;
 
     @SuppressWarnings("MultipleNullnessAnnotations")
-    @NotNull(message = "User ID is required")
+    @NotNull(message = "User public ID is required")
     @Nullable
-    public Long userId;
+    public String userPublicId;
 
     @NotBlank(message = "Comment is required")
     @Size(max = 1000, message = "Comment must not exceed 1000 characters")

@@ -41,17 +41,17 @@ public interface PostCommentClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getComment(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/post/{postId}")
-    List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") Long postId,
+    @Path("/post/{postPublicId}")
+    List<PostCommentResponseDto> getCommentsByPost(@PathParam("postPublicId") String postPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}")
-    List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") Long userId,
+    @Path("/user/{userPublicId}")
+    List<PostCommentResponseDto> getCommentsByUser(@PathParam("userPublicId") String userPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
@@ -73,16 +73,16 @@ public interface PostCommentClient {
     Response createComment(PostCommentDto comment, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateComment(@PathParam("id") Long id, PostCommentDto comment,
+    @Path("/{publicId}")
+    Response updateComment(@PathParam("publicId") String publicId, PostCommentDto comment,
             @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchComment(@PathParam("id") Long id, PostCommentDto comment,
+    @Path("/{publicId}")
+    Response patchComment(@PathParam("publicId") String publicId, PostCommentDto comment,
             @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteComment(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteComment(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 }

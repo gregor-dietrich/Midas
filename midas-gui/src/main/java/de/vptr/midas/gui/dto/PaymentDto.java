@@ -12,21 +12,21 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for payment. */
 public class PaymentDto {
 
-    @JsonProperty("id")
+    @JsonProperty("publicId")
     @Nullable
-    private Long id;
+    private String publicId;
 
-    @JsonProperty("userId")
+    @JsonProperty("userPublicId")
     @Nullable
-    private Long userId;
+    private String userPublicId;
 
-    @JsonProperty("sourceAccountId")
+    @JsonProperty("sourceAccountPublicId")
     @Nullable
-    private Long sourceAccountId;
+    private String sourceAccountPublicId;
 
-    @JsonProperty("targetAccountId")
+    @JsonProperty("targetAccountPublicId")
     @Nullable
-    private Long targetAccountId;
+    private String targetAccountPublicId;
 
     @JsonProperty("amount")
     @Nullable
@@ -66,13 +66,13 @@ public class PaymentDto {
     }
 
     /** Creates a new instance. */
-    public PaymentDto(@Nullable final Long userId, @Nullable final Long sourceAccountId,
-            @Nullable final Long targetAccountId, @Nullable final BigDecimal amount, @Nullable final LocalDate date,
-            @Nullable final String comment, @Nullable final LocalDateTime created,
+    public PaymentDto(@Nullable final String userPublicId, @Nullable final String sourceAccountPublicId,
+            @Nullable final String targetAccountPublicId, @Nullable final BigDecimal amount,
+            @Nullable final LocalDate date, @Nullable final String comment, @Nullable final LocalDateTime created,
             @Nullable final LocalDateTime lastEdit) {
-        this.userId = userId;
-        this.sourceAccountId = sourceAccountId;
-        this.targetAccountId = targetAccountId;
+        this.userPublicId = userPublicId;
+        this.sourceAccountPublicId = sourceAccountPublicId;
+        this.targetAccountPublicId = targetAccountPublicId;
         this.amount = amount;
         this.date = date;
         this.comment = comment;
@@ -81,23 +81,23 @@ public class PaymentDto {
     }
 
     @Nullable
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     @Nullable
-    public Long getUserId() {
-        return this.userId;
+    public String getUserPublicId() {
+        return this.userPublicId;
     }
 
     @Nullable
-    public Long getSourceAccountId() {
-        return this.sourceAccountId;
+    public String getSourceAccountPublicId() {
+        return this.sourceAccountPublicId;
     }
 
     @Nullable
-    public Long getTargetAccountId() {
-        return this.targetAccountId;
+    public String getTargetAccountPublicId() {
+        return this.targetAccountPublicId;
     }
 
     @Nullable
@@ -140,20 +140,20 @@ public class PaymentDto {
         return this.username;
     }
 
-    public void setId(@Nullable final Long id) {
-        this.id = id;
+    public void setPublicId(@Nullable final String publicId) {
+        this.publicId = publicId;
     }
 
-    public void setUserId(@Nullable final Long userId) {
-        this.userId = userId;
+    public void setUserPublicId(@Nullable final String userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
-    public void setSourceAccountId(@Nullable final Long sourceAccountId) {
-        this.sourceAccountId = sourceAccountId;
+    public void setSourceAccountPublicId(@Nullable final String sourceAccountPublicId) {
+        this.sourceAccountPublicId = sourceAccountPublicId;
     }
 
-    public void setTargetAccountId(@Nullable final Long targetAccountId) {
-        this.targetAccountId = targetAccountId;
+    public void setTargetAccountPublicId(@Nullable final String targetAccountPublicId) {
+        this.targetAccountPublicId = targetAccountPublicId;
     }
 
     public void setAmount(@Nullable final BigDecimal amount) {

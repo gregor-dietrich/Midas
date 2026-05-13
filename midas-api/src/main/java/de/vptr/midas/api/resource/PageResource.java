@@ -11,7 +11,6 @@ import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -46,9 +45,9 @@ public class PageResource {
     }
 
     @GET
-    @Path("/{id}")
-    public Response getPage(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.pageService.findById(id));
+    @Path("/{publicId}")
+    public Response getPage(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.pageService.findById(publicId));
     }
 
     /** Returns all pages matching the search query. */
@@ -69,27 +68,27 @@ public class PageResource {
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "page:edit" })
-    public Response updatePage(@PathParam("id") @Min(1) final Long id, @Valid final PageDto pageDto) {
-        final PageResponseDto updated = this.pageService.updatePage(id, pageDto);
+    public Response updatePage(@PathParam("publicId") final String publicId, @Valid final PageDto pageDto) {
+        final PageResponseDto updated = this.pageService.updatePage(publicId, pageDto);
         return ResponseUtil.ok(updated);
     }
 
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "page:edit" })
-    public Response patchPage(@PathParam("id") @Min(1) final Long id, final PageDto pageDto) {
-        final PageResponseDto updated = this.pageService.patchPage(id, pageDto);
+    public Response patchPage(@PathParam("publicId") final String publicId, final PageDto pageDto) {
+        final PageResponseDto updated = this.pageService.patchPage(publicId, pageDto);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the page with the given id. */
+    /** Deletes the page with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "page:delete" })
-    public Response deletePage(@PathParam("id") @Min(1) final Long id) {
-        final boolean deleted = this.pageService.deletePage(id);
+    public Response deletePage(@PathParam("publicId") final String publicId) {
+        final boolean deleted = this.pageService.deletePage(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }

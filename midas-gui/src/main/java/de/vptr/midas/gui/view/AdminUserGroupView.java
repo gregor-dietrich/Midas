@@ -78,7 +78,7 @@ public class AdminUserGroupView extends AbstractAdminEntityView<UserGroupRespons
 
     @Override
     protected void executeUserFilter(final Integer userId) {
-        this.loadDataAsync(() -> this.groupService.getGroupsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.groupService.getGroupsByUser(userId.toString()),
                 result -> Objects.requireNonNull(this.grid).setItems(result));
     }
 
@@ -113,7 +113,7 @@ public class AdminUserGroupView extends AbstractAdminEntityView<UserGroupRespons
 
     @Override
     protected void configureGrid(final Grid<UserGroupResponseDto> g) {
-        g.addColumn((ValueProvider<UserGroupResponseDto, ?>) UserGroupResponseDto::getId).setHeader("ID")
+        g.addColumn((ValueProvider<UserGroupResponseDto, ?>) UserGroupResponseDto::getPublicId).setHeader("ID")
                 .setWidth("80px").setFlexGrow(0);
 
         g.addComponentColumn(group -> this.createClickableSpan(group.getName(),
@@ -131,7 +131,7 @@ public class AdminUserGroupView extends AbstractAdminEntityView<UserGroupRespons
 
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.groupDialog).open(group));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.groupService.deleteGroup(Objects.requireNonNull(group.getId()));
+            this.groupService.deleteGroup(Objects.requireNonNull(group.getPublicId()));
         }));
         final var manageUsersButton =
                 new ManageUsersButton(ignore -> Objects.requireNonNull(this.memberPanel).open(group));

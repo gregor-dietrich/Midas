@@ -47,7 +47,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private H2 groupTitle;
 
     @Nullable
-    private Long groupId;
+    private String groupId;
     @Nullable
     private transient UserGroupResponseDto currentGroup;
 
@@ -80,11 +80,10 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     private void resolveGroupAndLoad(final String identifier) {
         this.loadDataAsync(() -> {
             LOG.infof("Resolving group with identifier: %s", identifier);
-            try {
-                final Long id = Long.parseLong(identifier);
-                return this.groupService.getGroupById(id).orElse(null);
-            } catch (final NumberFormatException e) {
-                LOG.infof("Identifier is not numeric, searching by name: %s", identifier);
+            if (identifier != null && identifier.length() == 26 && identifier.matches("^[0-9A-Z]{26}$")) {
+                return this.groupService.getGroupById(identifier).orElse(null);
+            } else {
+                LOG.infof("Identifier is not a ULID, searching by name: %s", identifier);
                 final var results = this.groupService.searchGroups(identifier);
                 return results.stream().filter(group -> identifier.equalsIgnoreCase(group.getName())).findFirst()
                         .orElse(null);
@@ -96,7 +95,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
                 return;
             }
             this.currentGroup = group;
-            this.groupId = group.getId();
+            this.groupId = group.getPublicId();
             this.buildUi();
             this.loadMembersAsync();
         }, MidasErrorHandler::handleInUiContext, 30);

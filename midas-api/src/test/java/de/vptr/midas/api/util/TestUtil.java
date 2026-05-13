@@ -225,60 +225,57 @@ public final class TestUtil {
      * Creates a test category and returns its ID
      */
     @Nullable
-    public static Long createTestCategory() {
+    public static String createTestCategory() {
         final var categoryJson = TestDataBuilder.createDefaultPostCategoryJson();
         final var response = authenticatedRequest().contentType(ContentType.JSON).body(categoryJson).when()
                 .post("/api/v1/categories");
-        final Integer id = response.then().statusCode(201).extract().path("id");
-        return id != null ? id.longValue() : null;
+        return response.then().statusCode(201).extract().path("publicId");
     }
 
     /**
      * Creates a test post and returns its ID
      */
     @Nullable
-    public static Long createTestPost() {
+    public static String createTestPost() {
         final var categoryId = createTestCategory();
-        final var postJson = TestDataBuilder.createPostJson("Test Post", "Test content", true, true, 1L,
-                Objects.requireNonNull(categoryId));
+        final var postJson = TestDataBuilder.createPostJson("Test Post", "Test content", true, true,
+                "01AN4Z07BY79KA1307SR9X4MV7", Objects.requireNonNull(categoryId));
         final var response =
                 authenticatedRequest().contentType(ContentType.JSON).body(postJson).when().post("/api/v1/posts");
-        final Integer id = response.then().statusCode(201).extract().path("id");
-        return id != null ? id.longValue() : null;
+        return response.then().statusCode(201).extract().path("publicId");
     }
 
     /**
      * Creates a test comment and returns its ID
      */
     @Nullable
-    public static Long createTestComment(@Nullable final Long postId) {
+    public static String createTestComment(@Nullable final String postId) {
         final var commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         final var response =
                 authenticatedRequest().contentType(ContentType.JSON).body(commentJson).when().post("/api/v1/comments");
-        final Integer id = response.then().statusCode(201).extract().path("id");
-        return id != null ? id.longValue() : null;
+        return response.then().statusCode(201).extract().path("publicId");
     }
 
     /**
      * Creates a test account and returns its ID
      */
     @Nullable
-    public static Long createTestAccount() {
+    public static String createTestAccount() {
         final var accountJson = TestDataBuilder.createUniqueAccountJson();
         final var response =
                 authenticatedRequest().contentType(ContentType.JSON).body(accountJson).when().post("/api/v1/accounts");
-        final Integer id = response.then().statusCode(201).extract().path("id");
-        return id != null ? id.longValue() : null;
+        return response.then().statusCode(201).extract().path("publicId");
     }
 
     /**
      * Creates payment JSON with test accounts
      */
     public static String createPaymentJsonWithTestAccounts() {
-        final Long targetAccountId = createTestAccount();
-        final Long sourceAccountId = createTestAccount();
+        final String targetAccountId = createTestAccount();
+        final String sourceAccountId = createTestAccount();
         return TestDataBuilder.createPaymentJson(Objects.requireNonNull(targetAccountId),
-                Objects.requireNonNull(sourceAccountId), 1L, "100.00", "Test payment", "2024-01-01");
+                Objects.requireNonNull(sourceAccountId), "01AN4Z07BY79KA1307SR9X4MV7", "100.00", "Test payment",
+                "2024-01-01");
     }
 
     /**

@@ -3,21 +3,16 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -25,12 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 /** JPA entity representing a user group. */
 @Entity
 @Table(name = "user_groups")
-public class UserGroupEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class UserGroupEntity extends BaseEntity {
 
     @NotBlank
     @Nullable
@@ -73,15 +63,5 @@ public class UserGroupEntity extends PanacheEntityBase {
     // Helper method to get user count in this group
     public long getUserCount() {
         return this.userGroupMetas != null ? this.userGroupMetas.size() : 0;
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof UserGroupEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

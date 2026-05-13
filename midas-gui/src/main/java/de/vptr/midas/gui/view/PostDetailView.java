@@ -51,7 +51,7 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
     private Registration broadcasterRegistration;
 
     @Nullable
-    private Long currentPostId;
+    private String currentPostId;
 
     private final VerticalLayout commentsContainer = new VerticalLayout();
 
@@ -63,7 +63,7 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
                 final var _ = ui.access(() -> {
                     if (message.startsWith("comment-created:") && this.currentPostId != null) {
                         final String postIdStr = message.substring("comment-created:".length());
-                        if (postIdStr.equals(this.currentPostId.toString())) {
+                        if (postIdStr.equals(this.currentPostId)) {
                             LOG.info("Received real-time update for comments, refreshing...");
                             this.loadCommentsAsync(this.currentPostId);
                         }
@@ -99,15 +99,13 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
         LOG.infof("Loading post with identifier: %s", idStr);
 
         this.loadDataAsync(() -> {
-            // Try parsing as ID first
-            try {
-                final var id = Long.parseLong(idStr);
-                final var post = this.postService.getPostById(id);
+            if (idStr.length() == 26 && idStr.matches("^[0-9A-Z]{26}$")) {
+                final var post = this.postService.getPostById(idStr);
                 if (post.isPresent()) {
                     return post.get();
                 }
-            } catch (final NumberFormatException e) {
-                LOG.debugf("Identifier '%s' is not a numeric ID, trying search", idStr);
+            } else {
+                LOG.debugf("Identifier '%s' is not a ULID, trying search", idStr);
             }
 
             // Fallback: search by title
@@ -121,9 +119,9 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
             if (post == null) {
                 this.showNotFound();
             } else {
-                this.currentPostId = post.getId();
+                this.currentPostId = post.getPublicId();
                 this.buildPostContent(post);
-                final var postId = post.getId();
+                final var postId = post.getPublicId();
                 if (postId != null) {
                     this.loadCommentsAsync(postId); // ensure uses loadDataAsync
                 }
@@ -165,7 +163,7 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
         this.add(backButton, title, metaLayout, contentDiv, this.commentsContainer);
     }
 
-    private void loadCommentsAsync(final Long postId) {
+    private void loadCommentsAsync(final String postId) {
         LOG.infof("Loading comments for post: %s", postId);
 
         this.loadDataAsync(() -> this.postCommentService.getCommentsByPost(postId), this::buildCommentsSection,

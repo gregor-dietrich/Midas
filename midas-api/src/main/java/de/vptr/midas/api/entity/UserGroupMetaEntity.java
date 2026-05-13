@@ -2,19 +2,14 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -26,12 +21,7 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "user_groups_meta", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "group_id" }) },
         indexes = { @Index(name = "idx_user_group_meta_user_id", columnList = "user_id"),
                 @Index(name = "idx_user_group_meta_group_id", columnList = "group_id") })
-public class UserGroupMetaEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class UserGroupMetaEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -70,15 +60,5 @@ public class UserGroupMetaEntity extends PanacheEntityBase {
     // Helper method to find all users in a group
     public static List<UserGroupMetaEntity> findByGroupId(final Long groupId) {
         return find("group.id", groupId).list();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof UserGroupMetaEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

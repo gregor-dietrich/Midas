@@ -4,19 +4,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -31,12 +26,7 @@ import jakarta.validation.constraints.NotNull;
         indexes = { @Index(name = "idx_payment_target_id", columnList = "target_id"),
                 @Index(name = "idx_payment_source_id", columnList = "source_id"),
                 @Index(name = "idx_payment_user_id", columnList = "user_id") })
-public class PaymentEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class PaymentEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_id")
@@ -110,15 +100,5 @@ public class PaymentEntity extends PanacheEntityBase {
         return getEntityManager()
                 .createQuery("SELECT SUM(p.amount) FROM PaymentEntity p WHERE p.user.id = :userId", BigDecimal.class)
                 .setParameter("userId", userId).getSingleResult();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof PaymentEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

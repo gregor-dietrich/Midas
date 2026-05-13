@@ -15,7 +15,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -57,34 +56,36 @@ public class PaymentResource {
         return this.paymentService.getAllPayments(safePage, safeSize);
     }
 
-    /** Gets a payment by id. */
+    /** Gets a payment by publicId. */
     @GET
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public Response getPayment(@PathParam("id") @Min(1) final Long id) {
+    public Response getPayment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        return ResponseUtil.okOrNotFound(this.paymentService.findById(id, currentUsername));
+        return ResponseUtil.okOrNotFound(this.paymentService.findById(publicId, currentUsername));
     }
 
     @GET
-    @Path("/user/{userId}")
+    @Path("/user/{userPublicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getPaymentsByUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.paymentService.findByUserId(userId);
+    public List<PaymentResponseDto> getPaymentsByUser(@PathParam("userPublicId") final String userPublicId) {
+        return this.paymentService.findByUserPublicId(userPublicId);
     }
 
     @GET
-    @Path("/source/{sourceId}")
+    @Path("/source/{sourcePublicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getPaymentsBySourceAccount(@PathParam("sourceId") @Min(1) final Long sourceId) {
-        return this.paymentService.findBySourceAccountId(sourceId);
+    public List<PaymentResponseDto>
+            getPaymentsBySourceAccount(@PathParam("sourcePublicId") final String sourcePublicId) {
+        return this.paymentService.findBySourceAccountPublicId(sourcePublicId);
     }
 
     @GET
-    @Path("/target/{targetId}")
+    @Path("/target/{targetPublicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public List<PaymentResponseDto> getPaymentsByTargetAccount(@PathParam("targetId") @Min(1) final Long targetId) {
-        return this.paymentService.findByTargetAccountId(targetId);
+    public List<PaymentResponseDto>
+            getPaymentsByTargetAccount(@PathParam("targetPublicId") final String targetPublicId) {
+        return this.paymentService.findByTargetAccountPublicId(targetPublicId);
     }
 
     /** Returns all payments within the given date range. */
@@ -108,10 +109,10 @@ public class PaymentResource {
     }
 
     @GET
-    @Path("/user/{userId}/total")
+    @Path("/user/{userPublicId}/total")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
-    public Response getTotalAmountByUser(@PathParam("userId") @Min(1) final Long userId) {
-        final BigDecimal total = this.paymentService.getTotalAmountByUser(userId);
+    public Response getTotalAmountByUser(@PathParam("userPublicId") final String userPublicId) {
+        final BigDecimal total = this.paymentService.getTotalAmountByUserPublicId(userPublicId);
         return ResponseUtil.ok(total);
     }
 
@@ -122,33 +123,33 @@ public class PaymentResource {
         return ResponseUtil.created(created);
     }
 
-    /** Updates the payment with the given id. */
+    /** Updates the payment with the given publicId. */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response updatePayment(@PathParam("id") @Min(1) final Long id, @Valid final PaymentDto paymentDto) {
+    public Response updatePayment(@PathParam("publicId") final String publicId, @Valid final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PaymentResponseDto updated = this.paymentService.updatePayment(id, paymentDto, currentUsername);
+        final PaymentResponseDto updated = this.paymentService.updatePayment(publicId, paymentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
-    /** Partially updates the payment with the given id. */
+    /** Partially updates the payment with the given publicId. */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
-    public Response patchPayment(@PathParam("id") @Min(1) final Long id, final PaymentDto paymentDto) {
+    public Response patchPayment(@PathParam("publicId") final String publicId, final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PaymentResponseDto updated = this.paymentService.patchPayment(id, paymentDto, currentUsername);
+        final PaymentResponseDto updated = this.paymentService.patchPayment(publicId, paymentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the payment with the given id. */
+    /** Deletes the payment with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-account:delete" })
-    public Response deletePayment(@PathParam("id") @Min(1) final Long id) {
+    public Response deletePayment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final boolean deleted = this.paymentService.deletePayment(id, currentUsername);
+        final boolean deleted = this.paymentService.deletePayment(publicId, currentUsername);
         if (deleted) {
             return ResponseUtil.noContent();
         }

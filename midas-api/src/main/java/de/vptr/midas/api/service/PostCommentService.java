@@ -47,37 +47,36 @@ public class PostCommentService {
         return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
-    /** Returns the comment with the given id. */
-    public Optional<PostCommentResponseDto> findById(final Long id) {
-        return PostCommentEntity
-                .find("SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.id = ?1",
-                        id)
-                .<PostCommentEntity>firstResultOptional().map(PostCommentResponseDto::new);
+    /** Returns the comment with the given publicId. */
+    public Optional<PostCommentResponseDto> findById(final String publicId) {
+        return PostCommentEntity.find(
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.publicId = ?1",
+                publicId).<PostCommentEntity>firstResultOptional().map(PostCommentResponseDto::new);
     }
 
     /** Returns all comments for the given post with default pagination. */
-    public List<PostCommentResponseDto> findByPostId(final Long postId) {
-        return this.findByPostId(postId, 0, 20);
+    public List<PostCommentResponseDto> findByPostPublicId(final String postPublicId) {
+        return this.findByPostPublicId(postPublicId, 0, 20);
     }
 
     /** Returns all comments for the given post with pagination. */
-    public List<PostCommentResponseDto> findByPostId(final Long postId, final int page, final int size) {
+    public List<PostCommentResponseDto> findByPostPublicId(final String postPublicId, final int page, final int size) {
         final List<PostCommentEntity> comments = PostCommentEntity.find(
-                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.post.id = ?1",
-                postId).page(page, size).list();
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.post.publicId = ?1",
+                postPublicId).page(page, size).list();
         return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
     /** Returns all comments by the given user with default pagination. */
-    public List<PostCommentResponseDto> findByUserId(final Long userId) {
-        return this.findByUserId(userId, 0, 20);
+    public List<PostCommentResponseDto> findByUserPublicId(final String userPublicId) {
+        return this.findByUserPublicId(userPublicId, 0, 20);
     }
 
     /** Returns all comments by the given user with pagination. */
-    public List<PostCommentResponseDto> findByUserId(final Long userId, final int page, final int size) {
+    public List<PostCommentResponseDto> findByUserPublicId(final String userPublicId, final int page, final int size) {
         final List<PostCommentEntity> comments = PostCommentEntity.find(
-                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.user.id = ?1",
-                userId).page(page, size).list();
+                "SELECT c FROM PostCommentEntity c LEFT JOIN FETCH c.post LEFT JOIN FETCH c.user WHERE c.user.publicId = ?1",
+                userPublicId).page(page, size).list();
         return comments.stream().map(PostCommentResponseDto::new).toList();
     }
 
@@ -92,9 +91,9 @@ public class PostCommentService {
     /** Creates a new comment, assigning the current user. */
     @Transactional
     public PostCommentResponseDto createComment(final PostCommentDto dto, final String currentUsername) {
-        final PostEntity existingPost = PostEntity.findById(dto.postId);
+        final PostEntity existingPost = PostEntity.find("publicId", dto.postPublicId).firstResult();
         if (existingPost == null) {
-            throw new WebApplicationException("Post with ID " + dto.postId + " does not exist.",
+            throw new WebApplicationException("Post with Public ID " + dto.postPublicId + " does not exist.",
                     Response.Status.BAD_REQUEST);
         }
         if (existingPost.published == null || !existingPost.published) {
@@ -111,14 +110,15 @@ public class PostCommentService {
                 .orElseThrow(() -> new WebApplicationException("User with username '" + currentUsername + "' not found",
                         Response.Status.NOT_FOUND));
         comment.persistAndFlush();
-        this.commentEvent.fire("comment-created:" + comment.post.id);
+        this.commentEvent.fire("comment-created:" + comment.post.publicId);
         return new PostCommentResponseDto(comment);
     }
 
-    /** Updates the comment with the given id. */
+    /** Updates the comment with the given publicId. */
     @Transactional
-    public PostCommentResponseDto updateComment(final Long id, final PostCommentDto dto, final String currentUsername) {
-        final PostCommentEntity existingComment = PostCommentEntity.findById(id);
+    public PostCommentResponseDto updateComment(final String publicId, final PostCommentDto dto,
+            final String currentUsername) {
+        final PostCommentEntity existingComment = PostCommentEntity.find("publicId", publicId).firstResult();
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
@@ -128,10 +128,11 @@ public class PostCommentService {
         return new PostCommentResponseDto(existingComment);
     }
 
-    /** Partially updates the comment with the given id. */
+    /** Partially updates the comment with the given publicId. */
     @Transactional
-    public PostCommentResponseDto patchComment(final Long id, final PostCommentDto dto, final String currentUsername) {
-        final PostCommentEntity existingComment = PostCommentEntity.findById(id);
+    public PostCommentResponseDto patchComment(final String publicId, final PostCommentDto dto,
+            final String currentUsername) {
+        final PostCommentEntity existingComment = PostCommentEntity.find("publicId", publicId).firstResult();
         if (existingComment == null) {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
@@ -143,17 +144,17 @@ public class PostCommentService {
         return new PostCommentResponseDto(existingComment);
     }
 
-    /** Deletes the comment with the given id. */
+    /** Deletes the comment with the given publicId. */
     @Transactional
-    public boolean deleteComment(final Long id, @Nullable final String currentUsername) {
-        final PostCommentEntity existingComment = PostCommentEntity.findById(id);
+    public boolean deleteComment(final String publicId, @Nullable final String currentUsername) {
+        final PostCommentEntity existingComment = PostCommentEntity.find("publicId", publicId).firstResult();
         if (existingComment == null) {
             return false;
         }
 
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to delete comment");
 
-        return PostCommentEntity.deleteById(id);
+        return PostCommentEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all comments matching the given query. */

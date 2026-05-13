@@ -12,7 +12,6 @@ import io.quarkus.security.Authenticated;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -49,9 +48,9 @@ public class UserGroupResource {
     }
 
     @GET
-    @Path("/{id}")
-    public Response getGroup(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.groupService.findById(id));
+    @Path("/{publicId}")
+    public Response getGroup(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.groupService.findById(publicId));
     }
 
     @GET
@@ -61,25 +60,25 @@ public class UserGroupResource {
     }
 
     @GET
-    @Path("/{id}/users")
+    @Path("/{publicId}/users")
     @RolesAllowed({ "user-group:edit", "user-group:delete" })
-    public List<UserResponseDto> getUsersInGroup(@PathParam("id") @Min(1) final Long groupId) {
-        return this.groupService.getUsersInGroup(groupId);
+    public List<UserResponseDto> getUsersInGroup(@PathParam("publicId") final String publicId) {
+        return this.groupService.getUsersInGroup(publicId);
     }
 
     @GET
-    @Path("/user/{userId}")
+    @Path("/user/{userPublicId}")
     @RolesAllowed({ "user-group:edit", "user-group:delete" })
-    public List<UserGroupResponseDto> getGroupsForUser(@PathParam("userId") @Min(1) final Long userId) {
-        return this.groupService.getGroupsForUser(userId);
+    public List<UserGroupResponseDto> getGroupsForUser(@PathParam("userPublicId") final String userPublicId) {
+        return this.groupService.getGroupsForUser(userPublicId);
     }
 
     @GET
-    @Path("/user/{userId}/group/{groupId}/check")
+    @Path("/user/{userPublicId}/group/{groupPublicId}/check")
     @RolesAllowed({ "user-group:edit", "user-group:delete" })
-    public Response checkUserInGroup(@PathParam("userId") @Min(1) final Long userId,
-            @PathParam("groupId") @Min(1) final Long groupId) {
-        final boolean isInGroup = this.groupService.isUserInGroup(userId, groupId);
+    public Response checkUserInGroup(@PathParam("userPublicId") final String userPublicId,
+            @PathParam("groupPublicId") final String groupPublicId) {
+        final boolean isInGroup = this.groupService.isUserInGroup(userPublicId, groupPublicId);
         return ResponseUtil.ok(isInGroup);
     }
 
@@ -101,27 +100,27 @@ public class UserGroupResource {
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-group:edit" })
-    public Response updateGroup(@PathParam("id") @Min(1) final Long id, @Valid final UserGroupDto groupDto) {
-        final UserGroupResponseDto updated = this.groupService.updateGroup(id, groupDto);
+    public Response updateGroup(@PathParam("publicId") final String publicId, @Valid final UserGroupDto groupDto) {
+        final UserGroupResponseDto updated = this.groupService.updateGroup(publicId, groupDto);
         return ResponseUtil.ok(updated);
     }
 
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-group:edit" })
-    public Response patchGroup(@PathParam("id") @Min(1) final Long id, final UserGroupDto groupDto) {
-        final UserGroupResponseDto updated = this.groupService.patchGroup(id, groupDto);
+    public Response patchGroup(@PathParam("publicId") final String publicId, final UserGroupDto groupDto) {
+        final UserGroupResponseDto updated = this.groupService.patchGroup(publicId, groupDto);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the group with the given id. */
+    /** Deletes the group with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user-group:delete" })
-    public Response deleteGroup(@PathParam("id") @Min(1) final Long id) {
-        final boolean deleted = this.groupService.deleteGroup(id);
+    public Response deleteGroup(@PathParam("publicId") final String publicId) {
+        final boolean deleted = this.groupService.deleteGroup(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }
@@ -129,21 +128,21 @@ public class UserGroupResource {
     }
 
     @POST
-    @Path("/{groupId}/users/{userId}")
+    @Path("/{groupPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-group:edit" })
-    public Response addUserToGroup(@PathParam("groupId") @Min(1) final Long groupId,
-            @PathParam("userId") @Min(1) final Long userId) {
-        this.groupService.addUserToGroup(userId, groupId);
+    public Response addUserToGroup(@PathParam("groupPublicId") final String groupPublicId,
+            @PathParam("userPublicId") final String userPublicId) {
+        this.groupService.addUserToGroup(userPublicId, groupPublicId);
         return ResponseUtil.created(null);
     }
 
     /** Removes a user from a group. */
     @DELETE
-    @Path("/{groupId}/users/{userId}")
+    @Path("/{groupPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-group:edit" })
-    public Response removeUserFromGroup(@PathParam("groupId") @Min(1) final Long groupId,
-            @PathParam("userId") @Min(1) final Long userId) {
-        final boolean removed = this.groupService.removeUserFromGroup(userId, groupId);
+    public Response removeUserFromGroup(@PathParam("groupPublicId") final String groupPublicId,
+            @PathParam("userPublicId") final String userPublicId) {
+        final boolean removed = this.groupService.removeUserFromGroup(userPublicId, groupPublicId);
         if (removed) {
             return ResponseUtil.noContent();
         }

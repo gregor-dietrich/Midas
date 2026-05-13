@@ -12,23 +12,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class PaymentResponseDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
-    @JsonProperty("targetAccountId")
-    private Long targetAccountId;
+    @JsonProperty("targetAccountPublicId")
+    private String targetAccountPublicId;
 
     @JsonProperty("targetAccountName")
     private String targetAccountName;
 
-    @JsonProperty("sourceAccountId")
-    private Long sourceAccountId;
+    @JsonProperty("sourceAccountPublicId")
+    private String sourceAccountPublicId;
 
     @JsonProperty("sourceAccountName")
     private String sourceAccountName;
 
-    @JsonProperty("userId")
-    private Long userId;
+    @JsonProperty("userPublicId")
+    private String userPublicId;
 
     @JsonProperty("username")
     private String username;
@@ -54,28 +54,28 @@ public class PaymentResponseDto {
         // Default constructor for Jackson
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
-    public Long getTargetAccountId() {
-        return this.targetAccountId;
+    public String getTargetAccountPublicId() {
+        return this.targetAccountPublicId;
     }
 
     public String getTargetAccountName() {
         return this.targetAccountName;
     }
 
-    public Long getSourceAccountId() {
-        return this.sourceAccountId;
+    public String getSourceAccountPublicId() {
+        return this.sourceAccountPublicId;
     }
 
     public String getSourceAccountName() {
         return this.sourceAccountName;
     }
 
-    public Long getUserId() {
-        return this.userId;
+    public String getUserPublicId() {
+        return this.userPublicId;
     }
 
     public String getUsername() {
@@ -102,28 +102,28 @@ public class PaymentResponseDto {
         return this.lastEdit;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
-    public void setTargetAccountId(final Long targetAccountId) {
-        this.targetAccountId = targetAccountId;
+    public void setTargetAccountPublicId(final String targetAccountPublicId) {
+        this.targetAccountPublicId = targetAccountPublicId;
     }
 
     public void setTargetAccountName(final String targetAccountName) {
         this.targetAccountName = targetAccountName;
     }
 
-    public void setSourceAccountId(final Long sourceAccountId) {
-        this.sourceAccountId = sourceAccountId;
+    public void setSourceAccountPublicId(final String sourceAccountPublicId) {
+        this.sourceAccountPublicId = sourceAccountPublicId;
     }
 
     public void setSourceAccountName(final String sourceAccountName) {
         this.sourceAccountName = sourceAccountName;
     }
 
-    public void setUserId(final Long userId) {
-        this.userId = userId;
+    public void setUserPublicId(final String userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
     public void setUsername(final String username) {
@@ -153,12 +153,12 @@ public class PaymentResponseDto {
     /** Handles the to payment dto operation. */
     public PaymentDto toPaymentDto() {
         final PaymentDto dto = new PaymentDto();
-        dto.setId(this.id);
-        dto.setSourceAccountId(this.sourceAccountId);
+        dto.setPublicId(this.publicId);
+        dto.setSourceAccountPublicId(this.sourceAccountPublicId);
         dto.setSourceAccountName(this.sourceAccountName);
-        dto.setTargetAccountId(this.targetAccountId);
+        dto.setTargetAccountPublicId(this.targetAccountPublicId);
         dto.setTargetAccountName(this.targetAccountName);
-        dto.setUserId(this.userId);
+        dto.setUserPublicId(this.userPublicId);
         dto.setUsername(this.username);
         dto.setComment(this.comment);
         dto.setDate(this.date);

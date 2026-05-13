@@ -34,7 +34,7 @@ public class PageDetailView extends AbstractDetailViewBase<PageResponseDto> {
     }
 
     @Override
-    protected void loadById(final Long id) {
+    protected void loadById(final String id) {
         this.loadDataAsync(() -> this.pageService.getPageById(id),
                 optionalPage -> this.handleLoadResult(optionalPage, id));
     }

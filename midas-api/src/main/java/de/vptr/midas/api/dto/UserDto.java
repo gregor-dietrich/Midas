@@ -24,7 +24,7 @@ public class UserDto {
     public String email;
 
     @Nullable
-    public Long rankId;
+    public String rankPublicId;
 
     @Nullable
     public Boolean banned;
@@ -45,12 +45,12 @@ public class UserDto {
 
     /** Creates a new instance. */
     public UserDto(@Nullable final String username, @Nullable final String password, @Nullable final String email,
-            @Nullable final Long rankId, @Nullable final Boolean banned, @Nullable final Boolean activated,
+            @Nullable final String rankPublicId, @Nullable final Boolean banned, @Nullable final Boolean activated,
             @Nullable final String activationKey, @Nullable final String lastIp) {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.rankId = rankId;
+        this.rankPublicId = rankPublicId;
         this.banned = banned;
         this.activated = activated;
         this.activationKey = activationKey;

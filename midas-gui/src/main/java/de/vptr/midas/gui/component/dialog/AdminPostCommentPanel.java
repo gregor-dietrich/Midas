@@ -45,7 +45,7 @@ public class AdminPostCommentPanel extends AbstractPostCommentDialogBase {
 
     @Override
     protected void performSave() {
-        this.currentComment.setPostId(this.selectedPost.getId());
+        this.currentComment.setPostPublicId(this.selectedPost.getPublicId());
         this.currentComment.setPostTitle(this.selectedPost.getTitle());
 
         this.commentService.createComment(this.currentComment);

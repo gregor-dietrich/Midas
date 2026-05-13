@@ -63,7 +63,7 @@ public class PostService {
     }
 
     /** Returns the post by id. */
-    public Optional<PostResponseDto> getPostById(final Long id) {
+    public Optional<PostResponseDto> getPostById(final String id) {
         LOG.debugf("Fetching post with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.postClient.getPost(id, authHeader), this.authService, LOG,
@@ -72,7 +72,7 @@ public class PostService {
     }
 
     /** Returns the posts by user. */
-    public List<PostResponseDto> getPostsByUser(final Long userId) {
+    public List<PostResponseDto> getPostsByUser(final String userId) {
         LOG.debugf("Fetching posts for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.postClient.getPostsByUser(userId, authHeader), this.authService, LOG,
@@ -80,7 +80,7 @@ public class PostService {
     }
 
     /** Returns the posts by category. */
-    public List<PostResponseDto> getPostsByCategory(final Long categoryId) {
+    public List<PostResponseDto> getPostsByCategory(final String categoryId) {
         LOG.debugf("Fetching posts for category: %s", categoryId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.postClient.getPostsByCategory(categoryId, authHeader), this.authService,
@@ -99,16 +99,16 @@ public class PostService {
 
     /** Updates the post. */
     public PostDto updatePost(final PostDto post) {
-        LOG.debugf("Updating post: %s", post.getId());
+        LOG.debugf("Updating post: %s", post.getPublicId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(post.getId(), post, authHeader),
-                this.authService, LOG, "updating post " + post.getId(), "Failed to update post",
+        return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(post.getPublicId(), post, authHeader),
+                this.authService, LOG, "updating post " + post.getPublicId(), "Failed to update post",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostDto.class, dto -> dto,
                         "updated post response", "Failed to update post"));
     }
 
     /** Handles the delete post operation. */
-    public void deletePost(final Long id) {
+    public void deletePost(final String id) {
         LOG.debugf("Deleting post: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         ServiceHelper.executeWithResponse(() -> this.postClient.deletePost(id, authHeader), this.authService, LOG,

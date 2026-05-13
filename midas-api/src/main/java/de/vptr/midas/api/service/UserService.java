@@ -37,9 +37,9 @@ public class UserService {
     @Inject
     EncryptionService encryptionService;
 
-    @ConfigProperty(name = "midas.default-rank-id", defaultValue = "2")
+    @ConfigProperty(name = "midas.default-rank-public-id")
     @Nullable
-    Long defaultRankId;
+    String defaultRankPublicId;
 
     /** Returns all users with default pagination. */
     public List<UserResponseDto> getAllUsers() {
@@ -49,7 +49,7 @@ public class UserService {
     /** Returns all users with the given pagination. */
     public List<UserResponseDto> getAllUsers(final int page, final int size) {
         final List<UserEntity> users = UserEntity
-                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank ORDER BY u.id").page(page, size).list();
+                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank ORDER BY u.publicId").page(page, size).list();
         return this.userResponseAssembler.toResponseDtos(users);
     }
 
@@ -59,9 +59,9 @@ public class UserService {
                 .<UserEntity>firstResultOptional().map(this.userResponseAssembler::toResponseDto);
     }
 
-    /** Returns the user with the given id. */
-    public Optional<UserResponseDto> findById(final Long id) {
-        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id = ?1", id)
+    /** Returns the user with the given publicId. */
+    public Optional<UserResponseDto> findById(final String publicId) {
+        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.publicId = ?1", publicId)
                 .<UserEntity>firstResultOptional().map(this.userResponseAssembler::toResponseDto);
     }
 
@@ -114,15 +114,15 @@ public class UserService {
         user.lastIp = userDto.lastIp;
 
         this.applyPassword(user, userDto.password);
-        this.applyRank(user, userDto.rankId, true);
+        this.applyRank(user, userDto.rankPublicId, true);
 
         return user;
     }
 
-    /** Updates the user with the given id. */
+    /** Updates the user with the given publicId. */
     @Transactional
-    public UserResponseDto updateUser(final Long id, final UserDto userDto) {
-        final UserEntity existingUser = UserEntity.findById(id);
+    public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
+        final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
         if (existingUser == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
@@ -147,16 +147,16 @@ public class UserService {
         existingUser.activated = Boolean.TRUE.equals(userDto.activated);
 
         this.applyPassword(existingUser, userDto.password);
-        this.applyRank(existingUser, userDto.rankId, true);
+        this.applyRank(existingUser, userDto.rankPublicId, true);
 
         existingUser.persistAndFlush();
         return this.userResponseAssembler.toResponseDto(existingUser);
     }
 
-    /** Partially updates the user with the given id. */
+    /** Partially updates the user with the given publicId. */
     @Transactional
-    public UserResponseDto patchUser(final Long id, final UserDto userDto) {
-        final UserEntity existingUser = UserEntity.findById(id);
+    public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
+        final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
         if (existingUser == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
@@ -192,7 +192,7 @@ public class UserService {
         }
 
         this.applyPassword(existingUser, userDto.password);
-        this.applyRank(existingUser, userDto.rankId, false);
+        this.applyRank(existingUser, userDto.rankPublicId, false);
 
         existingUser.persistAndFlush();
         return this.userResponseAssembler.toResponseDto(existingUser);
@@ -231,29 +231,29 @@ public class UserService {
         }
     }
 
-    private void applyRank(final UserEntity user, @Nullable final Long rankId, final boolean useDefault) {
-        if (rankId != null) {
-            final UserRankEntity rank = UserRankEntity.findById(rankId);
+    private void applyRank(final UserEntity user, @Nullable final String rankPublicId, final boolean useDefault) {
+        if (rankPublicId != null) {
+            final UserRankEntity rank = UserRankEntity.find("publicId", rankPublicId).firstResult();
             if (rank == null) {
-                throw new ValidationException("Rank with ID " + rankId + " not found");
+                throw new ValidationException("Rank with Public ID " + rankPublicId + " not found");
             }
             user.rank = rank;
         } else if (useDefault) {
-            if (this.defaultRankId == null) {
-                throw new ValidationException("Default rank ID is not configured");
+            if (this.defaultRankPublicId == null) {
+                throw new ValidationException("Default rank Public ID is not configured");
             }
-            final UserRankEntity defaultRank = UserRankEntity.findById(this.defaultRankId);
+            final UserRankEntity defaultRank = UserRankEntity.find("publicId", this.defaultRankPublicId).firstResult();
             if (defaultRank == null) {
-                throw new ValidationException("Default rank with ID " + this.defaultRankId + " not found");
+                throw new ValidationException("Default rank with Public ID " + this.defaultRankPublicId + " not found");
             }
             user.rank = defaultRank;
         }
     }
 
-    /** Deletes the user with the given id. */
+    /** Deletes the user with the given publicId. */
     @Transactional
-    public boolean deleteUser(final Long id) {
-        return UserEntity.deleteById(id);
+    public boolean deleteUser(final String publicId) {
+        return UserEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all active non-banned users. */

@@ -48,7 +48,7 @@ public class PostCategoryService {
     }
 
     /** Returns the category by id. */
-    public Optional<PostCategoryResponseDto> getCategoryById(final Long id) {
+    public Optional<PostCategoryResponseDto> getCategoryById(final String id) {
         LOG.debugf("Fetching category with ID: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -58,7 +58,7 @@ public class PostCategoryService {
     }
 
     /** Returns the categories by parent. */
-    public List<PostCategoryResponseDto> getCategoriesByParent(final Long parentId) {
+    public List<PostCategoryResponseDto> getCategoriesByParent(final String parentId) {
         LOG.debugf("Fetching categories for parent: %s", parentId);
         return ServiceHelper.execute(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
@@ -72,8 +72,8 @@ public class PostCategoryService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
 
-            if (category.getParent() != null && category.getParentId() == null) {
-                category.setParentId(category.getParent().getId());
+            if (category.getParent() != null && category.getParentPublicId() == null) {
+                category.setParentPublicId(category.getParent().getPublicId());
             }
 
             return this.categoryClient.createCategory(category, authHeader);
@@ -84,22 +84,22 @@ public class PostCategoryService {
 
     /** Updates the category. */
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
-        LOG.debugf("Updating category: %s", category.getId());
+        LOG.debugf("Updating category: %s", category.getPublicId());
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
 
-            if (category.getParent() != null && category.getParentId() == null) {
-                category.setParentId(category.getParent().getId());
+            if (category.getParent() != null && category.getParentPublicId() == null) {
+                category.setParentPublicId(category.getParent().getPublicId());
             }
 
-            return this.categoryClient.updateCategory(category.getId(), category, authHeader);
-        }, this.authService, LOG, "updating category " + category.getId(), "Failed to update category",
+            return this.categoryClient.updateCategory(category.getPublicId(), category, authHeader);
+        }, this.authService, LOG, "updating category " + category.getPublicId(), "Failed to update category",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostCategoryResponseDto.class,
                         this::fromApiResponse, "updated category response", "Failed to update category"));
     }
 
     /** Handles the delete category operation. */
-    public boolean deleteCategory(final Long id) {
+    public boolean deleteCategory(final String id) {
         LOG.debugf("Deleting category: %s", id);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();

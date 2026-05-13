@@ -2,6 +2,7 @@ package de.vptr.midas.api.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import de.vptr.midas.api.dto.UserGroupDto;
@@ -36,9 +37,10 @@ public class UserGroupService {
         return this.toGroupResponseDtos(groups);
     }
 
-    /** Returns the group with the given id. */
-    public Optional<UserGroupResponseDto> findById(final Long id) {
-        return UserGroupEntity.findByIdOptional(id).map(entity -> this.toGroupResponseDto((UserGroupEntity) entity));
+    /** Returns the group with the given publicId. */
+    public Optional<UserGroupResponseDto> findById(final String publicId) {
+        return UserGroupEntity.find("publicId", publicId).firstResultOptional()
+                .map(entity -> this.toGroupResponseDto((UserGroupEntity) entity));
     }
 
     /** Returns the group with the given name. */
@@ -46,23 +48,27 @@ public class UserGroupService {
         return Optional.ofNullable(UserGroupEntity.findByName(name)).map(this::toGroupResponseDto);
     }
 
-    /** Returns all users in the given group. */
-    public List<UserResponseDto> getUsersInGroup(final Long groupId) {
-        final UserGroupEntity group = UserGroupEntity.findById(groupId);
+    /** Returns all users in the given group publicId. */
+    public List<UserResponseDto> getUsersInGroup(final String groupPublicId) {
+        final UserGroupEntity group = UserGroupEntity.find("publicId", groupPublicId).firstResult();
         if (group == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);
         }
         final List<UserEntity> users = UserEntity.find("""
                 SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.id IN \
-                (SELECT m.user.id FROM UserGroupMetaEntity m WHERE m.group.id = ?1)""", groupId).list();
+                (SELECT m.user.id FROM UserGroupMetaEntity m WHERE m.group.id = ?1)""", group.id).list();
         return this.userResponseAssembler.toResponseDtos(users);
     }
 
     /** Returns all groups that the given user belongs to. */
-    public List<UserGroupResponseDto> getGroupsForUser(final Long userId) {
+    public List<UserGroupResponseDto> getGroupsForUser(final String userPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        if (user == null) {
+            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
+        }
         final List<UserGroupEntity> groups = UserGroupEntity.find("""
                 SELECT g FROM UserGroupEntity g WHERE g.id IN \
-                (SELECT m.group.id FROM UserGroupMetaEntity m WHERE m.user.id = ?1)""", userId).list();
+                (SELECT m.group.id FROM UserGroupMetaEntity m WHERE m.user.id = ?1)""", user.id).list();
         return this.toGroupResponseDtos(groups);
     }
 
@@ -77,10 +83,10 @@ public class UserGroupService {
         return new UserGroupResponseDto(savedGroup, 0L);
     }
 
-    /** Updates the group with the given id. */
+    /** Updates the group with the given publicId. */
     @Transactional
-    public UserGroupResponseDto updateGroup(final Long id, final UserGroupDto groupDto) {
-        final UserGroupEntity existingGroup = UserGroupEntity.findById(id);
+    public UserGroupResponseDto updateGroup(final String publicId, final UserGroupDto groupDto) {
+        final UserGroupEntity existingGroup = UserGroupEntity.find("publicId", publicId).firstResult();
         if (existingGroup == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);
         }
@@ -92,10 +98,10 @@ public class UserGroupService {
         return this.toGroupResponseDto(existingGroup);
     }
 
-    /** Partially updates the group with the given id. */
+    /** Partially updates the group with the given publicId. */
     @Transactional
-    public UserGroupResponseDto patchGroup(final Long id, final UserGroupDto groupDto) {
-        final UserGroupEntity existingGroup = UserGroupEntity.findById(id);
+    public UserGroupResponseDto patchGroup(final String publicId, final UserGroupDto groupDto) {
+        final UserGroupEntity existingGroup = UserGroupEntity.find("publicId", publicId).firstResult();
         if (existingGroup == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);
         }
@@ -109,28 +115,28 @@ public class UserGroupService {
         return this.toGroupResponseDto(existingGroup);
     }
 
-    /** Deletes the group with the given id. */
+    /** Deletes the group with the given publicId. */
     @Transactional
-    public boolean deleteGroup(final Long id) {
-        return UserGroupEntity.deleteById(id);
+    public boolean deleteGroup(final String publicId) {
+        return UserGroupEntity.delete("publicId", publicId) > 0;
     }
 
     /** Adds a user to a group. */
     @Transactional
-    public UserGroupMetaEntity addUserToGroup(final Long userId, final Long groupId) {
-        // Check if association already exists
-        if (UserGroupMetaEntity.isUserInGroup(userId, groupId)) {
-            throw new WebApplicationException("User is already in this group", Response.Status.CONFLICT);
-        }
-
-        final UserEntity user = UserEntity.findById(userId);
-        final UserGroupEntity group = UserGroupEntity.findById(groupId);
+    public UserGroupMetaEntity addUserToGroup(final String userPublicId, final String groupPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final UserGroupEntity group = UserGroupEntity.find("publicId", groupPublicId).firstResult();
 
         if (user == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
         }
         if (group == null) {
             throw new WebApplicationException("Group not found", Response.Status.NOT_FOUND);
+        }
+
+        // Check if association already exists
+        if (UserGroupMetaEntity.isUserInGroup(Objects.requireNonNull(user.id), Objects.requireNonNull(group.id))) {
+            throw new WebApplicationException("User is already in this group", Response.Status.CONFLICT);
         }
 
         final var meta = new UserGroupMetaEntity();
@@ -142,13 +148,28 @@ public class UserGroupService {
 
     /** Removes a user from a group. */
     @Transactional
-    public boolean removeUserFromGroup(final Long userId, final Long groupId) {
-        return UserGroupMetaEntity.delete("user.id = ?1 AND group.id = ?2", userId, groupId) > 0;
+    public boolean removeUserFromGroup(final String userPublicId, final String groupPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final UserGroupEntity group = UserGroupEntity.find("publicId", groupPublicId).firstResult();
+
+        if (user == null || group == null) {
+            return false;
+        }
+
+        return UserGroupMetaEntity.delete("user.id = ?1 AND group.id = ?2", Objects.requireNonNull(user.id),
+                Objects.requireNonNull(group.id)) > 0;
     }
 
     /** Returns whether the given user is in the given group. */
-    public boolean isUserInGroup(final Long userId, final Long groupId) {
-        return UserGroupMetaEntity.isUserInGroup(userId, groupId);
+    public boolean isUserInGroup(final String userPublicId, final String groupPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        final UserGroupEntity group = UserGroupEntity.find("publicId", groupPublicId).firstResult();
+
+        if (user == null || group == null) {
+            return false;
+        }
+
+        return UserGroupMetaEntity.isUserInGroup(Objects.requireNonNull(user.id), Objects.requireNonNull(group.id));
     }
 
     /** Returns all groups matching the given query. */

@@ -40,13 +40,13 @@ class UserGroupResourceTest {
 
     @Test
     void testGetGroupById_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3");
     }
 
     @Test
     void testGetGroupById_authorizedWithExistingGroup() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
 
         testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + id);
     }
@@ -58,13 +58,13 @@ class UserGroupResourceTest {
 
     @Test
     void testGetUsersInGroup_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1/users");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users");
     }
 
     @Test
     void testGetUsersInGroup_authorizedWithExistingGroup() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
 
         testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + id + "/users");
     }
@@ -106,12 +106,12 @@ class UserGroupResourceTest {
 
     @Test
     void testUpdateGroup_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createUpdatedUserGroupJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3", createUpdatedUserGroupJson());
     }
 
     @Test
     void testDeleteGroup_unauthorized() {
-        testUnauthorizedDelete(ENDPOINT_URL + "/1");
+        testUnauthorizedDelete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3");
     }
 
     @Test
@@ -120,7 +120,7 @@ class UserGroupResourceTest {
         given()
             .contentType(ContentType.JSON)
         .when()
-            .post(ENDPOINT_URL + "/1/users/1")
+            .post(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8")
         .then()
             .statusCode(401);
         // @formatter:on
@@ -131,7 +131,7 @@ class UserGroupResourceTest {
         // @formatter:off
         given()
         .when()
-            .delete(ENDPOINT_URL + "/1/users/1")
+            .delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8")
         .then()
             .statusCode(401);
         // @formatter:on
@@ -144,49 +144,59 @@ class UserGroupResourceTest {
 
     @Test
     void testGetGroupsForUser_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/user/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV8");
     }
 
     @Test
     void testGetGroupsForUser_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1");
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV8");
     }
 
     @Test
     void testCheckUserInGroup_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/user/1/group/1/check");
+        testUnauthorizedAccess(
+                ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV8/group/01AN4Z07BY79KA1307SR9X4MV3/check");
     }
 
     @Test
     void testCheckUserInGroup_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/1/group/1/check");
+        testAuthorizedGetWithJson(
+                ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV8/group/01AN4Z07BY79KA1307SR9X4MV3/check");
     }
 
     @Test
     void testSearchGroups_authorized() {
         authenticatedJsonRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(200);
+        authenticatedJsonRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+    }
+
+    @Test
+    void testDeleteGroup_nonexistent() {
+        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
+        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/999999").then()
+                .statusCode(404);
     }
 
     @Test
     void testUpdateGroup_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
         authenticatedJsonRequest().body(createUpdatedUserGroupJson()).when().put(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
     }
 
     @Test
     void testPatchGroup_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
         authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().patch(ENDPOINT_URL + "/" + id).then()
                 .statusCode(200);
     }
 
     @Test
     void testDeleteGroup_authorized() {
-        final Integer id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
+        final String id = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
         authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + id).then().statusCode(204);
     }
 
@@ -197,14 +207,16 @@ class UserGroupResourceTest {
 
     @Test
     void testRemoveUserFromGroup_authorized() {
-        final Integer groupId = createGroupWithUser();
-        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(204);
+        final String groupId = createGroupWithUser();
+        authenticatedJsonRequest().when().delete(ENDPOINT_URL + "/" + groupId + "/users/01AN4Z07BY79KA1307SR9X4MV8")
+                .then().statusCode(204);
     }
 
-    private Integer createGroupWithUser() {
-        final Integer groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("id");
-        authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/2").then().statusCode(201);
+    private String createGroupWithUser() {
+        final String groupId = authenticatedJsonRequest().body(createDefaultUserGroupJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().when().post(ENDPOINT_URL + "/" + groupId + "/users/01AN4Z07BY79KA1307SR9X4MV8")
+                .then().statusCode(201);
         return groupId;
     }
 }

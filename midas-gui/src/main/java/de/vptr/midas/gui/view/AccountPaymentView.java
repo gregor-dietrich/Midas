@@ -89,7 +89,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private Span balanceLabel;
 
     @Nullable
-    private Long accountId;
+    private String accountId;
     @Nullable
     private transient AccountResponseDto currentAccount;
     @Nullable
@@ -131,13 +131,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return;
         }
 
-        try {
-            this.accountId = Long.parseLong(accountIdStr);
-        } catch (final NumberFormatException e) {
-            NotificationUtil.showError("Invalid Account ID");
-            event.forwardTo(HomeView.class);
-            return;
-        }
+        this.accountId = accountIdStr;
 
         if (!this.initialized) {
             this.buildUi();
@@ -152,7 +146,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.loadDataAsync(() -> {
             final var userAccounts = this.accountService.getMyAccounts();
             final var currentAccount =
-                    userAccounts.stream().filter(acc -> acc.getId().equals(aid)).findFirst().orElse(null);
+                    userAccounts.stream().filter(acc -> acc.getPublicId().equals(aid)).findFirst().orElse(null);
             return new AccountAccessResult(currentAccount, userAccounts);
         }, result -> {
             if (result.currentAccount() == null) {
@@ -241,25 +235,25 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.grid.setSizeFull();
 
-        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getId).setHeader("ID")
+        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getPublicId).setHeader("ID")
                 .setWidth("80px").setFlexGrow(0);
         this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getDate).setHeader("Date")
                 .setWidth("120px").setFlexGrow(0);
 
         this.grid.addColumn(new ComponentRenderer<>(payment -> {
-            final var isSender = Objects.equals(payment.getSourceAccountId(), this.accountId);
+            final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             final var span = new Span(isSender ? "Sent" : "Received");
             span.getElement().getThemeList().add(isSender ? "badge error" : "badge success");
             return span;
         })).setHeader("Type").setWidth("100px").setFlexGrow(0);
 
         this.grid.addColumn(payment -> {
-            final var isSender = Objects.equals(payment.getSourceAccountId(), this.accountId);
+            final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             return isSender ? payment.getTargetAccountName() : payment.getSourceAccountName();
         }).setHeader("Counterparty").setFlexGrow(1);
 
         this.grid.addColumn(new ComponentRenderer<>(payment -> {
-            final var isSender = Objects.equals(payment.getSourceAccountId(), this.accountId);
+            final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             final var amount = payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
             final var span = new Span((isSender ? "-" : "+") + amount + " EUR");
             span.getStyle().set("color", isSender ? "var(--lumo-error-text-color)" : "var(--lumo-success-text-color)");
@@ -354,10 +348,10 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
         });
 
-        this.binder.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountId()),
-                (p, v) -> p.setSourceAccountId(v != null ? v.getId() : null));
-        this.binder.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountId()),
-                (p, v) -> p.setTargetAccountId(v != null ? v.getId() : null));
+        this.binder.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountPublicId()),
+                (p, v) -> p.setSourceAccountPublicId(v != null ? v.getPublicId() : null));
+        this.binder.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountPublicId()),
+                (p, v) -> p.setTargetAccountPublicId(v != null ? v.getPublicId() : null));
 
         this.binder.forField(amountField)
                 .withValidator(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0, "Amount must be positive")
@@ -393,11 +387,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     @Nullable
-    private AccountResponseDto findAccountById(@Nullable final Long id) {
+    private AccountResponseDto findAccountById(@Nullable final String id) {
         if (id == null || this.userAccounts == null) {
             return null;
         }
-        return this.userAccounts.stream().filter(acc -> acc.getId().equals(id)).findFirst().orElse(null);
+        return this.userAccounts.stream().filter(acc -> acc.getPublicId().equals(id)).findFirst().orElse(null);
     }
 
     private void savePayment() {
@@ -410,20 +404,20 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
             b.writeBean(cp);
 
-            if (cp.getSourceAccountId() == null && cp.getTargetAccountId() == null) {
+            if (cp.getSourceAccountPublicId() == null && cp.getTargetAccountPublicId() == null) {
                 NotificationUtil.showError("At least one account must be selected");
                 return;
             }
 
             final var aid = Objects.requireNonNull(this.accountId);
-            if (cp.getId() == null) {
-                if (cp.getUserId() == null) {
-                    this.userService.getCurrentUser().ifPresent(u -> cp.setUserId(u.getId()));
+            if (cp.getPublicId() == null) {
+                if (cp.getUserPublicId() == null) {
+                    this.userService.getCurrentUser().ifPresent(u -> cp.setUserPublicId(u.getPublicId()));
                 }
                 this.accountService.createMyAccountPayment(aid, cp);
                 NotificationUtil.showSuccess("Payment created successfully");
             } else {
-                this.accountService.updateMyAccountPayment(aid, Objects.requireNonNull(cp.getId()), cp);
+                this.accountService.updateMyAccountPayment(aid, Objects.requireNonNull(cp.getPublicId()), cp);
                 NotificationUtil.showSuccess("Payment updated successfully");
             }
 

@@ -5,6 +5,7 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUniqueUserJson;
+import static de.vptr.midas.api.util.TestDataBuilder.createUniqueUserUpdateJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUserJson;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
@@ -19,12 +20,13 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
+import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.util.TestUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -133,12 +135,12 @@ class UserResourceTest {
 
     @Test
     void testGetUserById_unauthorized() {
-        testUnauthorizedAccess(ENDPOINT_URL + "/1");
+        testUnauthorizedAccess(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testGetUserById_authorizedWithExistingUser() {
-        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/1");
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
@@ -148,63 +150,62 @@ class UserResourceTest {
 
     @Test
     void testGetUserById_authorizedWithInsufficientRole() {
-        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/1").then().statusCode(403);
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7").then().statusCode(403);
     }
 
     @Test
     void testUpdateUser_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createDefaultUserUpdateJson());
+        testUnauthorizedPut(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", createDefaultUserUpdateJson());
     }
 
     @Test
     void testUpdateUser_authorizedWithInsufficientRole() {
-        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when().put(ENDPOINT_URL + "/1").then()
-                .statusCode(403);
+        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when()
+                .put(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7").then().statusCode(403);
     }
 
     @Test
     void testUpdateUser_authorized() {
-        // Test authorization is enforced; guest would get 403, admin gets past authorization
-        final int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
-                .put(ENDPOINT_URL + "/99999").then().extract().statusCode();
-        assertNotEquals(403, statusCode);
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body(createUniqueUserJson()).when().put(ENDPOINT_URL + "/" + userId).then()
+                .statusCode(200);
     }
 
     @Test
     void testPatchUser_unauthorized() {
-        testUnauthorizedPut(ENDPOINT_URL + "/1", createDefaultUserUpdateJson());
+        testUnauthorizedPatch(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7", createDefaultUserUpdateJson());
     }
 
     @Test
     void testPatchUser_authorizedWithInsufficientRole() {
-        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when().patch(ENDPOINT_URL + "/1").then()
-                .statusCode(403);
+        authenticatedGuestJsonRequest().body(createDefaultUserUpdateJson()).when()
+                .patch(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7").then().statusCode(403);
     }
 
     @Test
     void testPatchUser_authorized() {
-        // Test authorization is enforced; guest would get 403, admin gets past authorization
-        final int statusCode = authenticatedJsonRequest().body(createDefaultUserUpdateJson()).when()
-                .patch(ENDPOINT_URL + "/99999").then().extract().statusCode();
-        assertNotEquals(403, statusCode);
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body(createUniqueUserUpdateJson()).when().patch(ENDPOINT_URL + "/" + userId).then()
+                .statusCode(200);
     }
 
     @Test
     void testDeleteUser_unauthorized() {
-        testUnauthorizedDelete(ENDPOINT_URL + "/1");
+        testUnauthorizedDelete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     @Test
     void testDeleteUser_authorizedWithInsufficientRole() {
-        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/1").then().statusCode(403);
+        authenticatedGuestRequest().when().delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV7").then().statusCode(403);
     }
 
     @Test
     void testDeleteUser_authorized() {
-        // Test authorization is enforced; guest would get 403, admin gets past authorization
-        final int statusCode =
-                authenticatedRequest().when().delete(ENDPOINT_URL + "/99999").then().extract().statusCode();
-        assertNotEquals(403, statusCode);
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + userId).then().statusCode(204);
     }
 
     @Test
@@ -220,5 +221,36 @@ class UserResourceTest {
     @Test
     void testSearchUsers_authorized() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+    }
+
+    @Test
+    void testUserResource_Additional404Checks() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/999999").then().statusCode(404);
+        authenticatedRequest().when().get(ENDPOINT_URL + "/username/nonexistent-" + TestUtil.generateUniqueSuffix())
+                .then().statusCode(404);
+        authenticatedRequest().when()
+                .get(ENDPOINT_URL + "/email?email=nonexistent-" + TestUtil.generateUniqueSuffix() + "@example.com")
+                .then().statusCode(404);
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
+        authenticatedRequest().contentType("application/json").body(createUniqueUserJson()).when()
+                .put(ENDPOINT_URL + "/999999").then().statusCode(404);
+        authenticatedRequest().contentType("application/json").body("{\"username\":\"new\"}").when()
+                .patch(ENDPOINT_URL + "/999999").then().statusCode(404);
+    }
+
+    @Test
+    void testGetUserByEmail_authorizedWithExistingEmail() {
+        final String email = "findme_" + TestUtil.generateUniqueSuffix() + "@example.com";
+        final String jsonBody = createUserJson("findme_" + TestUtil.generateUniqueSuffix(), email, "validpass123");
+        authenticatedJsonRequest().body(jsonBody).when().post(ENDPOINT_URL).then().statusCode(201);
+
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/email?email=" + email);
+    }
+
+    @Test
+    void testCreateUser_customRank() {
+        final String jsonBody = createUserJson("customrankuser", "customrank@example.com", "validpass123");
+        final String customJson = jsonBody.replace("}", ",\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\"}");
+        authenticatedJsonRequest().body(customJson).when().post(ENDPOINT_URL).then().statusCode(201);
     }
 }

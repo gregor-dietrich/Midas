@@ -312,6 +312,7 @@
           </executions>
           <configuration>
             <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+            <propertyExpansion>org.checkstyle.google.suppressionfilter.config=${project.basedir}/checkstyle-suppressions.xml</propertyExpansion>
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>

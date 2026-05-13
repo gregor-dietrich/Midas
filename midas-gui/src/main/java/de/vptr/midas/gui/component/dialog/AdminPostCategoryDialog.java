@@ -48,7 +48,7 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
         if (allCategories != null) {
             final var availableParents = allCategories.stream().map(PostCategoryResponseDto::toPostCategoryDto)
                     .filter(cat -> category == null || !this.isDescendantOf(cat, category, allCategories))
-                    .filter(cat -> category == null || !cat.getId().equals(category.getId())).toList();
+                    .filter(cat -> category == null || !cat.getPublicId().equals(category.getPublicId())).toList();
             parentField.setItems(availableParents);
         }
         parentField.setClearButtonVisible(true);
@@ -57,7 +57,7 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
 
         form.add(nameField, parentField);
 
-        final var title = category != null && category.getId() != null ? "Edit Category" : "Create Category";
+        final var title = category != null && category.getPublicId() != null ? "Edit Category" : "Create Category";
         this.initDialogLayout(title, form);
     }
 
@@ -66,19 +66,20 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
         if (potential.getParent() == null) {
             return false;
         }
-        if (potential.getParent().getId().equals(ancestor.getId())) {
+        if (potential.getParent().getPublicId().equals(ancestor.getPublicId())) {
             return true;
         }
 
-        final var parent = allCategories.stream().filter(cat -> cat.getId().equals(potential.getParent().getId()))
-                .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
+        final var parent =
+                allCategories.stream().filter(cat -> cat.getPublicId().equals(potential.getParent().getPublicId()))
+                        .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
 
         return parent != null && this.isDescendantOf(parent, ancestor, allCategories);
     }
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Category created successfully", "Category updated successfully",
                 this.categoryService::createCategory, this.categoryService::updateCategory, "Category");
     }

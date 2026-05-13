@@ -14,7 +14,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -39,11 +38,16 @@ import jakarta.ws.rs.core.SecurityContext;
 @Authenticated
 public class UserResource {
 
-    /** Default rank ID assigned to newly registered users ("User" rank). */
-    private static final long DEFAULT_USER_RANK_ID = 2L;
+    /** Default rank Public ID assigned to newly registered users ("User" rank). */
+    private static final String DEFAULT_USER_RANK_PUBLIC_ID = "01AN4Z07BY79KA1307SR9X4MV4";
 
     @Inject
     UserService userService;
+
+    @SuppressWarnings("UnnecessaryAssignment")
+    void setUserServiceForTest(final UserService userService) {
+        this.userService = userService;
+    }
 
     @Context
     @Nullable
@@ -97,9 +101,9 @@ public class UserResource {
     @RolesAllowed({ "user:add" })
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        if (userDto.rankId != null && userDto.rankId != DEFAULT_USER_RANK_ID
+        if (userDto.rankPublicId != null && !DEFAULT_USER_RANK_PUBLIC_ID.equals(userDto.rankPublicId)
                 && (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit"))) {
-            userDto.rankId = DEFAULT_USER_RANK_ID;
+            userDto.rankPublicId = DEFAULT_USER_RANK_PUBLIC_ID;
         }
         final UserResponseDto created = this.userService.createUser(userDto);
         return ResponseUtil.created(created);
@@ -120,65 +124,65 @@ public class UserResource {
     }
 
     /**
-     * Get a user by ID.
+     * Get a user by publicId.
      * 
-     * @param id
-     *            the id
+     * @param publicId
+     *            the publicId
      * @return the user
      */
     @GET
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user:delete", "user:edit" })
-    public Response getUser(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.userService.findById(id));
+    public Response getUser(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.userService.findById(publicId));
     }
 
     /**
      * Update a user fully.
      * 
-     * @param id
-     *            the id
+     * @param publicId
+     *            the publicId
      * @param userDto
      *            the dto
      * @return true
      */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user:edit" })
-    public Response updateUser(@PathParam("id") @Min(1) final Long id, @Valid final UserDto userDto) {
+    public Response updateUser(@PathParam("publicId") final String publicId, @Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        final UserResponseDto existing = this.userService.findById(id).orElse(null);
+        final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
         enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
-        final UserResponseDto updated = this.userService.updateUser(id, userDto);
+        final UserResponseDto updated = this.userService.updateUser(publicId, userDto);
         return ResponseUtil.ok(updated);
     }
 
     /**
      * Patch a user.
      * 
-     * @param id
-     *            the user id
+     * @param publicId
+     *            the user publicId
      * @param userDto
      *            patch data
      * @return the updated user
      */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user:edit" })
-    public Response patchUser(@PathParam("id") @Min(1) final Long id, final UserDto userDto) {
+    public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
-        final UserResponseDto existing = this.userService.findById(id).orElse(null);
+        final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
         enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
-        final UserResponseDto updated = this.userService.patchUser(id, userDto);
+        final UserResponseDto updated = this.userService.patchUser(publicId, userDto);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the user with the given id. */
+    /** Deletes the user with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "user:delete" })
-    public Response deleteUser(@PathParam("id") @Min(1) final Long id) {
-        final boolean deleted = this.userService.deleteUser(id);
+    public Response deleteUser(@PathParam("publicId") final String publicId) {
+        final boolean deleted = this.userService.deleteUser(publicId);
         if (deleted) {
             return ResponseUtil.noContent();
         }
@@ -205,7 +209,7 @@ public class UserResource {
             return;
         }
         if (!securityContext.isUserInRole("user-rank:edit")) {
-            dto.rankId = existing.rankId;
+            dto.rankPublicId = existing.rankPublicId;
         }
         if (!securityContext.isUserInRole("admin:view")) {
             dto.banned = existing.banned;

@@ -40,8 +40,8 @@ public interface PageClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getPage(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getPage(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")
@@ -52,14 +52,16 @@ public interface PageClient {
     Response createPage(PageDto page, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updatePage(@PathParam("id") Long id, PageDto page, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response updatePage(@PathParam("publicId") String publicId, PageDto page,
+            @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchPage(@PathParam("id") Long id, PageDto page, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response patchPage(@PathParam("publicId") String publicId, PageDto page,
+            @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deletePage(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deletePage(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 }

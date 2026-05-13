@@ -52,7 +52,7 @@ public class AccountService {
     }
 
     /** Returns the account by id. */
-    public Optional<AccountDto> getAccountById(final Long id) {
+    public Optional<AccountDto> getAccountById(final String id) {
         LOG.debugf("Fetching account with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccount(id, authHeader), this.authService,
@@ -68,7 +68,7 @@ public class AccountService {
     }
 
     /** Returns the accounts by user. */
-    public List<AccountResponseDto> getAccountsByUser(final Long userId) {
+    public List<AccountResponseDto> getAccountsByUser(final String userId) {
         LOG.debugf("Fetching accounts for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getAccountsByUser(userId, authHeader), this.authService,
@@ -102,7 +102,7 @@ public class AccountService {
     }
 
     /** Returns the outgoing payments. */
-    public List<PaymentDto> getOutgoingPayments(final Long accountId) {
+    public List<PaymentDto> getOutgoingPayments(final String accountId) {
         LOG.debugf("Fetching outgoing payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getOutgoingPayments(accountId, authHeader),
@@ -111,7 +111,7 @@ public class AccountService {
     }
 
     /** Returns the incoming payments. */
-    public List<PaymentDto> getIncomingPayments(final Long accountId) {
+    public List<PaymentDto> getIncomingPayments(final String accountId) {
         LOG.debugf("Fetching incoming payments for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getIncomingPayments(accountId, authHeader),
@@ -120,7 +120,7 @@ public class AccountService {
     }
 
     /** Returns the associated users. */
-    public List<UserResponseDto> getAssociatedUsers(final Long accountId) {
+    public List<UserResponseDto> getAssociatedUsers(final String accountId) {
         LOG.debugf("Fetching users associated with account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getAssociatedUsers(accountId, authHeader),
@@ -142,15 +142,15 @@ public class AccountService {
         LOG.debugf("Updating account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper
-                .executeWithResponse(() -> this.accountClient.updateAccount(account.getId(), account, authHeader),
-                        this.authService, LOG, "updating account " + account.getId(), "Failed to update account",
+                .executeWithResponse(() -> this.accountClient.updateAccount(account.getPublicId(), account, authHeader),
+                        this.authService, LOG, "updating account " + account.getPublicId(), "Failed to update account",
                         response -> ServiceHelper.readExpectedStatusEntity(response, 200, AccountResponseDto.class,
                                 AccountResponseDto::toAccountDto, "updated account response",
                                 "Failed to update account"));
     }
 
     /** Handles the delete account operation. */
-    public boolean deleteAccount(final Long id) {
+    public boolean deleteAccount(final String id) {
         LOG.debugf("Deleting account with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.deleteAccount(id, authHeader),
@@ -158,7 +158,7 @@ public class AccountService {
     }
 
     /** Handles the associate user with account operation. */
-    public boolean associateUserWithAccount(final Long accountId, final Long userId) {
+    public boolean associateUserWithAccount(final String accountId, final String userId) {
         LOG.debugf("Associating user %s with account %s", userId, accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> {
@@ -175,7 +175,7 @@ public class AccountService {
     }
 
     /** Removes the user from account. */
-    public boolean removeUserFromAccount(final Long accountId, final Long userId) {
+    public boolean removeUserFromAccount(final String accountId, final String userId) {
         LOG.debugf("Removing user %s from account %s", userId, accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
@@ -184,7 +184,7 @@ public class AccountService {
     }
 
     /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
-    public void updateUserAccountMeta(final Long accountId, final Long userId, final boolean isNegative) {
+    public void updateUserAccountMeta(final String accountId, final String userId, final boolean isNegative) {
         LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s", accountId, userId,
                 (Object) isNegative);
         final var authHeader = this.authService.requireAuthorizationHeader();
@@ -201,7 +201,7 @@ public class AccountService {
     }
 
     /** Returns the account balance. */
-    public BigDecimal getAccountBalance(final Long accountId) {
+    public BigDecimal getAccountBalance(final String accountId) {
         LOG.debugf("Fetching balance for account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getAccountBalance(accountId, authHeader),
@@ -216,7 +216,7 @@ public class AccountService {
 
     // User-facing method that checks account access before returning balance
     /** Returns the my account balance. */
-    public BigDecimal getMyAccountBalance(final Long accountId) {
+    public BigDecimal getMyAccountBalance(final String accountId) {
         LOG.debugf("Fetching balance for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.accountClient.getMyAccountBalance(accountId, authHeader),
@@ -246,7 +246,7 @@ public class AccountService {
 
     // User-facing method that checks account access before returning payments
     /** Returns the my account payments. */
-    public List<PaymentResponseDto> getMyAccountPayments(final Long accountId) {
+    public List<PaymentResponseDto> getMyAccountPayments(final String accountId) {
         LOG.debugf("Fetching payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountPayments(accountId, authHeader),
@@ -256,7 +256,7 @@ public class AccountService {
     // User-facing method that checks account access before returning outgoing
     // payments
     /** Returns the my account outgoing payments. */
-    public List<PaymentResponseDto> getMyAccountOutgoingPayments(final Long accountId) {
+    public List<PaymentResponseDto> getMyAccountOutgoingPayments(final String accountId) {
         LOG.debugf("Fetching outgoing payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountOutgoingPayments(accountId, authHeader),
@@ -266,7 +266,7 @@ public class AccountService {
     // User-facing method that checks account access before returning incoming
     // payments
     /** Returns the my account incoming payments. */
-    public List<PaymentResponseDto> getMyAccountIncomingPayments(final Long accountId) {
+    public List<PaymentResponseDto> getMyAccountIncomingPayments(final String accountId) {
         LOG.debugf("Fetching incoming payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountIncomingPayments(accountId, authHeader),
@@ -275,7 +275,7 @@ public class AccountService {
 
     // User-facing method that checks account access before creating payment
     /** Creates a new my account payment. */
-    public PaymentDto createMyAccountPayment(final Long accountId, final PaymentDto payment) {
+    public PaymentDto createMyAccountPayment(final String accountId, final PaymentDto payment) {
         LOG.debugf("Creating payment for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(
@@ -292,7 +292,7 @@ public class AccountService {
 
     // User-facing method that checks account access before updating payment
     /** Updates the my account payment. */
-    public PaymentDto updateMyAccountPayment(final Long accountId, final Long paymentId, final PaymentDto payment) {
+    public PaymentDto updateMyAccountPayment(final String accountId, final String paymentId, final PaymentDto payment) {
         LOG.debugf("Updating payment %s for my account: %s", paymentId, accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(

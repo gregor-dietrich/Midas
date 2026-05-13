@@ -44,7 +44,7 @@ class AdminPostCommentDialogTest extends AbstractDialogTest {
         final ArgumentCaptor<PostCommentDto> captor = ArgumentCaptor.forClass(PostCommentDto.class);
         verify(this.commentService).updateComment(captor.capture());
         assertThat(captor.getValue().getContent()).isEqualTo("Updated comment content");
-        assertThat(captor.getValue().getId()).isEqualTo(existingComment.getId());
+        assertThat(captor.getValue().getPublicId()).isEqualTo(existingComment.getPublicId());
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Comment updated successfully"));
         verify(this.onSave).run();
     }

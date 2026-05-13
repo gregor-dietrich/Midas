@@ -17,10 +17,10 @@ public class PostCategoryDto {
     @Nullable
     public String name;
 
-    // Optional parentId for setting parent category
+    // Optional parentPublicId for setting parent category
     // null = make it a root category
     // positive value = set to that parent
     @Nullable
-    public Long parentId;
+    public String parentPublicId;
 
 }

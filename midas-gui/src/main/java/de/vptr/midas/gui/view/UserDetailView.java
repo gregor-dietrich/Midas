@@ -56,7 +56,7 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
     }
 
     @Override
-    protected void loadById(final Long id) {
+    protected void loadById(final String id) {
         this.loadDataAsync(() -> this.userService.getUserById(id),
                 optionalUser -> this.handleLoadResult(optionalUser, id));
     }
@@ -99,7 +99,7 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
 
         this.add(activityHeader, statsLayout, groupsHeader, Objects.requireNonNull(this.groupsGrid));
 
-        this.loadGroupsAsync(Objects.requireNonNull(user.getId()));
+        this.loadGroupsAsync(Objects.requireNonNull(user.getPublicId()));
     }
 
     private boolean isCurrentUser(final UserResponseDto user) {
@@ -116,7 +116,7 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
         this.groupsGrid.addColumn(UserGroupResponseDto::getName).setHeader("Group Name").setFlexGrow(1);
     }
 
-    private void loadGroupsAsync(final Long userId) {
+    private void loadGroupsAsync(final String userId) {
         this.loadDataAsync(() -> {
             LOG.infof("Loading groups for user: %s", userId);
             return this.userGroupService.getGroupsByUser(userId);

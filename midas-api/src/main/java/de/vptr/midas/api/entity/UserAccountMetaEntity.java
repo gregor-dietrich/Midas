@@ -2,19 +2,14 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -27,12 +22,7 @@ import jakarta.persistence.UniqueConstraint;
         uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "account_id" }) },
         indexes = { @Index(name = "idx_user_account_meta_user_id", columnList = "user_id"),
                 @Index(name = "idx_user_account_meta_account_id", columnList = "account_id") })
-public class UserAccountMetaEntity extends PanacheEntityBase {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Nullable
-    public Long id;
+public class UserAccountMetaEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -74,15 +64,5 @@ public class UserAccountMetaEntity extends PanacheEntityBase {
     // Helper method to find all users for an account
     public static List<UserAccountMetaEntity> findByAccountId(final Long accountId) {
         return find("account.id", accountId).list();
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        return this == o || (o instanceof UserAccountMetaEntity that && Objects.equals(this.id, that.id));
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.id);
     }
 }

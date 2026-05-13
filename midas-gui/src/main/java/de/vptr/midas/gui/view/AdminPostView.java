@@ -142,7 +142,7 @@ public class AdminPostView extends AbstractAdminEntityView<PostResponseDto> {
 
     @Override
     protected void executeUserFilter(final Integer userId) {
-        this.loadDataAsync(() -> this.postService.getPostsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.postService.getPostsByUser(userId.toString()),
                 posts -> Objects.requireNonNull(this.grid).setItems(posts));
     }
 
@@ -159,7 +159,7 @@ public class AdminPostView extends AbstractAdminEntityView<PostResponseDto> {
 
     @Override
     protected void configureGrid(final Grid<PostResponseDto> g) {
-        g.addColumn((ValueProvider<PostResponseDto, ?>) PostResponseDto::getId).setHeader("ID").setWidth("80px")
+        g.addColumn((ValueProvider<PostResponseDto, ?>) PostResponseDto::getPublicId).setHeader("ID").setWidth("80px")
                 .setFlexGrow(0);
 
         g.addComponentColumn(post -> {
@@ -207,7 +207,7 @@ public class AdminPostView extends AbstractAdminEntityView<PostResponseDto> {
         final var editButton =
                 new EditButton(ignore -> Objects.requireNonNull(this.postDialog).open(post, this.availableCategories));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.postService.deletePost(Objects.requireNonNull(post.getId()));
+            this.postService.deletePost(Objects.requireNonNull(post.getPublicId()));
         }));
         final var commentButton = new AddCommentButton(ignore -> Objects.requireNonNull(this.commentPanel).open(post));
 

@@ -49,7 +49,7 @@ public class UserService {
     }
 
     /** Returns the user by id. */
-    public Optional<UserResponseDto> getUserById(final Long id) {
+    public Optional<UserResponseDto> getUserById(final String id) {
         LOG.debugf("Fetching user with ID: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.getUser(id, authHeader), this.authService, LOG,
@@ -78,28 +78,28 @@ public class UserService {
 
     /** Updates the user. */
     public UserResponseDto updateUser(final UserDto user) {
-        LOG.debugf("Updating user: %s", user.getId());
+        LOG.debugf("Updating user: %s", user.getPublicId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for update");
+        final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for update");
         return ServiceHelper.executeWithResponse(() -> this.userClient.updateUser(userId, user, authHeader),
-                this.authService, LOG, "updating user " + user.getId(), "Failed to update user",
+                this.authService, LOG, "updating user " + user.getPublicId(), "Failed to update user",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserResponseDto.class,
                         "updated user response", "Failed to update user"));
     }
 
     /** Updates the user password. */
     public UserResponseDto updateUserPassword(final UserDto user) {
-        LOG.debugf("Updating password for user: %s", user.getId());
+        LOG.debugf("Updating password for user: %s", user.getPublicId());
         final var authHeader = this.authService.requireAuthorizationHeader();
-        final var userId = Objects.requireNonNull(user.getId(), "User ID must not be null for password update");
+        final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for password update");
         return ServiceHelper.executeWithResponse(() -> this.userClient.patchUser(userId, user, authHeader),
-                this.authService, LOG, "updating user password " + user.getId(), "Failed to update user password",
+                this.authService, LOG, "updating user password " + user.getPublicId(), "Failed to update user password",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, UserResponseDto.class,
                         "updated user password response", "Failed to update user password"));
     }
 
     /** Handles the delete user operation. */
-    public boolean deleteUser(final Long id) {
+    public boolean deleteUser(final String id) {
         LOG.debugf("Deleting user: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.userClient.deleteUser(id, authHeader), this.authService,

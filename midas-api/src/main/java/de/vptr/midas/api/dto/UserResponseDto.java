@@ -9,14 +9,14 @@ import jakarta.annotation.Nullable;
 public class UserResponseDto {
 
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String username;
     // Note: password and salt are never exposed in responses for security
     @Nullable
     public String email;
     @Nullable
-    public Long rankId;
+    public String rankPublicId;
     @Nullable
     public String rankName;
     @Nullable
@@ -44,11 +44,11 @@ public class UserResponseDto {
      */
     public UserResponseDto(@Nullable final UserEntity entity, final long postsCount, final long commentsCount) {
         if (entity != null) {
-            this.id = entity.id;
+            this.publicId = entity.publicId;
             this.username = entity.username;
             // password and salt are NEVER exposed
             this.email = entity.email;
-            this.rankId = entity.rank != null ? entity.rank.id : null;
+            this.rankPublicId = entity.rank != null ? entity.rank.publicId : null;
             this.rankName = entity.rank != null ? entity.rank.name : null;
             this.banned = entity.banned;
             this.activated = entity.activated;

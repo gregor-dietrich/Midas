@@ -46,33 +46,35 @@ public interface PostClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getPost(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getPost(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}")
-    List<PostResponseDto> getPostsByUser(@PathParam("userId") Long userId,
+    @Path("/user/{userPublicId}")
+    List<PostResponseDto> getPostsByUser(@PathParam("userPublicId") String userPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/category/{categoryId}")
-    List<PostResponseDto> getPostsByCategory(@PathParam("categoryId") Long categoryId,
+    @Path("/category/{categoryPublicId}")
+    List<PostResponseDto> getPostsByCategory(@PathParam("categoryPublicId") String categoryPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @POST
     Response createPost(PostDto post, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updatePost(@PathParam("id") Long id, PostDto post, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response updatePost(@PathParam("publicId") String publicId, PostDto post,
+            @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchPost(@PathParam("id") Long id, PostDto post, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response patchPost(@PathParam("publicId") String publicId, PostDto post,
+            @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deletePost(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deletePost(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")

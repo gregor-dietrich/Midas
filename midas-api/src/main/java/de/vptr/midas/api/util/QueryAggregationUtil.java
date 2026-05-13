@@ -20,6 +20,15 @@ public final class QueryAggregationUtil {
         return valuesByKey;
     }
 
+    /** Groups the second column by the first column (where second column is String). */
+    public static Map<Long, List<String>> groupStringValuesByKey(final List<Object[]> rows) {
+        final Map<Long, List<String>> valuesByKey = new HashMap<>();
+        for (final Object[] row : rows) {
+            valuesByKey.computeIfAbsent((Long) row[0], ignored -> new ArrayList<>()).add((String) row[1]);
+        }
+        return valuesByKey;
+    }
+
     /** Maps id/count rows into a lookup map. */
     public static Map<Long, Long> toLongCountMap(final List<Object[]> rows) {
         final Map<Long, Long> countsById = new HashMap<>();

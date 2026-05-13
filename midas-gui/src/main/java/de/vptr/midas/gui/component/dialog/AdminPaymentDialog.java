@@ -56,12 +56,12 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
 
         final var accounts = availableAccounts != null ? availableAccounts : List.<AccountResponseDto>of();
         sourceAccountField.setItems(accounts);
-        sourceAccountField.setItemLabelGenerator(account -> account.getId() + " - " + account.getName());
+        sourceAccountField.setItemLabelGenerator(account -> account.getPublicId() + " - " + account.getName());
         sourceAccountField.setPlaceholder("Select source account...");
         sourceAccountField.setInvalid(false);
 
         targetAccountField.setItems(accounts);
-        targetAccountField.setItemLabelGenerator(account -> account.getId() + " - " + account.getName());
+        targetAccountField.setItemLabelGenerator(account -> account.getPublicId() + " - " + account.getName());
         targetAccountField.setPlaceholder("Select target account...");
         targetAccountField.setInvalid(false);
 
@@ -83,11 +83,13 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
             }
         });
 
-        this.binder.forField(sourceAccountField).bind(p -> findAccountById(accounts, p.getSourceAccountId()),
-                (p, value) -> p.setSourceAccountId(value != null ? value.getId() : null));
+        this.binder.forField(sourceAccountField).bind(
+                p -> findAccountByPublicId(accounts, p.getSourceAccountPublicId()),
+                (p, value) -> p.setSourceAccountPublicId(value != null ? value.getPublicId() : null));
 
-        this.binder.forField(targetAccountField).bind(p -> findAccountById(accounts, p.getTargetAccountId()),
-                (p, value) -> p.setTargetAccountId(value != null ? value.getId() : null));
+        this.binder.forField(targetAccountField).bind(
+                p -> findAccountByPublicId(accounts, p.getTargetAccountPublicId()),
+                (p, value) -> p.setTargetAccountPublicId(value != null ? value.getPublicId() : null));
 
         this.binder.forField(amountField).withValidator(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0,
                 "Amount must not equal 0").bind(PaymentDto::getAmount, PaymentDto::setAmount);
@@ -102,42 +104,44 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
         form.add(sourceAccountField, targetAccountField, amountField, dateField, commentField);
 
         final var bean = Objects.requireNonNull(this.currentBean);
-        if (bean.getSourceAccountId() != null) {
-            sourceAccountField.setValue(findAccountById(accounts, bean.getSourceAccountId()));
+        if (bean.getSourceAccountPublicId() != null) {
+            sourceAccountField.setValue(findAccountByPublicId(accounts, bean.getSourceAccountPublicId()));
         }
-        if (bean.getTargetAccountId() != null) {
-            targetAccountField.setValue(findAccountById(accounts, bean.getTargetAccountId()));
+        if (bean.getTargetAccountPublicId() != null) {
+            targetAccountField.setValue(findAccountByPublicId(accounts, bean.getTargetAccountPublicId()));
         }
 
         this.initDialogLayout(payment != null ? "Edit Payment" : "Create Payment", form);
     }
 
     @Nullable
-    private static AccountResponseDto findAccountById(final List<AccountResponseDto> accounts, final Long accountId) {
-        if (accountId == null) {
+    private static AccountResponseDto findAccountByPublicId(final List<AccountResponseDto> accounts,
+            final String accountPublicId) {
+        if (accountPublicId == null) {
             return null;
         }
-        return accounts.stream().filter(account -> account.getId().equals(accountId)).findFirst().orElse(null);
+        return accounts.stream().filter(account -> account.getPublicId().equals(accountPublicId)).findFirst()
+                .orElse(null);
     }
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Payment created successfully", "Payment updated successfully",
                 this.paymentService::createPayment, this.paymentService::updatePayment, "Payment");
     }
 
     @Override
     protected boolean preSave(final PaymentDto bean) {
-        if (bean.getSourceAccountId() == null && bean.getTargetAccountId() == null) {
+        if (bean.getSourceAccountPublicId() == null && bean.getTargetAccountPublicId() == null) {
             NotificationUtil.showError("At least one account (source or target) must be selected");
             return false;
         }
 
-        if (bean.getUserId() == null) {
+        if (bean.getUserPublicId() == null) {
             final var currentUser = this.userService.getCurrentUser();
             if (currentUser.isPresent()) {
-                bean.setUserId(currentUser.get().getId());
+                bean.setUserPublicId(currentUser.get().getPublicId());
             } else {
                 NotificationUtil.showError("Unable to determine current user");
                 return false;

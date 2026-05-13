@@ -25,15 +25,14 @@ public class AccountResponseAssembler {
         }
 
         final List<Long> accountIds = accounts.stream().map(account -> account.id).toList();
-        final Map<Long, List<Long>> userIdsByAccount = QueryAggregationUtil.groupLongValuesByKey(UserAccountMetaEntity
-                .getEntityManager()
-                .createQuery("SELECT m.account.id, m.user.id FROM UserAccountMetaEntity m WHERE m.account.id IN :ids",
-                        Object[].class)
-                .setParameter("ids", accountIds).getResultList());
+        final Map<Long, List<String>> userPublicIdsByAccount =
+                QueryAggregationUtil.groupStringValuesByKey(UserAccountMetaEntity.getEntityManager().createQuery(
+                        "SELECT m.account.id, m.user.publicId FROM UserAccountMetaEntity m WHERE m.account.id IN :ids",
+                        Object[].class).setParameter("ids", accountIds).getResultList());
 
         return accounts.stream().map(account -> {
-            final List<Long> userIds = userIdsByAccount.getOrDefault(account.id, List.of());
-            return new AccountResponseDto(account, userIds.size(), userIds);
+            final List<String> userPublicIds = userPublicIdsByAccount.getOrDefault(account.id, List.of());
+            return new AccountResponseDto(account, userPublicIds.size(), userPublicIds);
         }).toList();
     }
 }

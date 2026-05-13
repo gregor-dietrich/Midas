@@ -94,8 +94,7 @@ public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView
         if (this.allCategories == null) {
             return List.of();
         }
-        return this.allCategories.stream()
-                .filter(category -> category.getParentId() != null && category.getParentId().equals(parent.getId()))
-                .toList();
+        return this.allCategories.stream().filter(category -> category.getParentPublicId() != null
+                && category.getParentPublicId().equals(parent.getPublicId())).toList();
     }
 }

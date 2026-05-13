@@ -44,7 +44,7 @@ public class AdminUserGroupDialog extends AbstractAdminEntityDialogBase<UserGrou
 
     @Override
     protected void handleSave() {
-        final boolean isNew = Objects.requireNonNull(this.currentBean).getId() == null;
+        final boolean isNew = Objects.requireNonNull(this.currentBean).getPublicId() == null;
         this.executeSaveWorkflow(isNew, "Group created successfully", "Group updated successfully",
                 this.groupService::createGroup, this.groupService::updateGroup, "Group");
     }

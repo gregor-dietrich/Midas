@@ -14,7 +14,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -57,32 +56,32 @@ public class PostCommentResource {
     }
 
     @GET
-    @Path("/{id}")
-    public Response getComment(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.commentService.findById(id));
+    @Path("/{publicId}")
+    public Response getComment(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.commentService.findById(publicId));
     }
 
     /** Returns comments for a post with pagination. */
     @GET
-    @Path("/post/{postId}")
-    public List<PostCommentResponseDto> getCommentsByPost(@PathParam("postId") @Min(1) final Long postId,
+    @Path("/post/{postPublicId}")
+    public List<PostCommentResponseDto> getCommentsByPost(@PathParam("postPublicId") final String postPublicId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.commentService.findByPostId(postId, safePage, safeSize);
+        return this.commentService.findByPostPublicId(postPublicId, safePage, safeSize);
     }
 
     /** Returns comments by user with pagination. */
     @GET
-    @Path("/user/{userId}")
+    @Path("/user/{userPublicId}")
     @Authenticated
-    public List<PostCommentResponseDto> getCommentsByUser(@PathParam("userId") @Min(1) final Long userId,
+    public List<PostCommentResponseDto> getCommentsByUser(@PathParam("userPublicId") final String userPublicId,
             @QueryParam("page") @DefaultValue("0") final int pageIdx,
             @QueryParam("size") @DefaultValue("20") final int pageSize) {
         final int safePage = PaginationUtil.sanitizePage(pageIdx);
         final int safeSize = PaginationUtil.sanitizeSize(pageSize);
-        return this.commentService.findByUserId(userId, safePage, safeSize);
+        return this.commentService.findByUserPublicId(userPublicId, safePage, safeSize);
     }
 
     @GET
@@ -127,31 +126,32 @@ public class PostCommentResource {
 
     /** Processes the request and returns the result. */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-comment:edit" })
-    public Response updateComment(@PathParam("id") @Min(1) final Long id, @Valid final PostCommentDto commentDto) {
+    public Response updateComment(@PathParam("publicId") final String publicId,
+            @Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PostCommentResponseDto updated = this.commentService.updateComment(id, commentDto, currentUsername);
+        final PostCommentResponseDto updated = this.commentService.updateComment(publicId, commentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
     /** Processes the request and returns the result. */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-comment:edit" })
-    public Response patchComment(@PathParam("id") @Min(1) final Long id, final PostCommentDto commentDto) {
+    public Response patchComment(@PathParam("publicId") final String publicId, final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PostCommentResponseDto updated = this.commentService.patchComment(id, commentDto, currentUsername);
+        final PostCommentResponseDto updated = this.commentService.patchComment(publicId, commentDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
     /** Processes the request and returns the result. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post-comment:delete" })
-    public Response deleteComment(@PathParam("id") @Min(1) final Long id) {
+    public Response deleteComment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final boolean deleted = this.commentService.deleteComment(id, currentUsername);
+        final boolean deleted = this.commentService.deleteComment(publicId, currentUsername);
         if (deleted) {
             return ResponseUtil.noContent();
         }

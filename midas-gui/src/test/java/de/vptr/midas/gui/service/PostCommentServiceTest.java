@@ -50,9 +50,9 @@ class PostCommentServiceTest {
     void getAllComments_shouldReturnCommentList_whenAuthenticationProvided() {
         // Given
         final var comment1 =
-                MockDataUtil.createPostCommentResponseDto(1L, "First comment", 1L, "Test Post", 1L, "testuser");
+                MockDataUtil.createPostCommentResponseDto("1", "First comment", "1", "Test Post", "1", "testuser");
         final var comment2 =
-                MockDataUtil.createPostCommentResponseDto(2L, "Second comment", 1L, "Test Post", 1L, "testuser");
+                MockDataUtil.createPostCommentResponseDto("2", "Second comment", "1", "Test Post", "1", "testuser");
         final var expectedComments = Arrays.asList(comment1, comment2);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -101,10 +101,10 @@ class PostCommentServiceTest {
     @Test
     void getCommentsByPost_shouldReturnComments_whenPostExists() {
         // Given
-        final var postId = 1L;
+        final var postId = "1";
 
         final var comment =
-                MockDataUtil.createPostCommentResponseDto(1L, "Test comment", postId, "Test Post", 1L, "testuser");
+                MockDataUtil.createPostCommentResponseDto("1", "Test comment", postId, "Test Post", "1", "testuser");
         final var expectedComments = Collections.singletonList(comment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -122,7 +122,7 @@ class PostCommentServiceTest {
     @Test
     void getCommentsByPost_shouldThrowAuthenticationException_whenNotAuthenticated() {
         // Given
-        final var postId = 1L;
+        final var postId = "1";
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
@@ -133,12 +133,12 @@ class PostCommentServiceTest {
     @Test
     void getCommentById_shouldReturnComment_whenCommentExists() {
         // Given
-        final var commentId = 1L;
+        final var commentId = "1";
         final var user = MockDataUtil.createUserDto();
         final var post = MockDataUtil.createPostDto();
-        post.setId(1L);
-        final var expectedComment = MockDataUtil.createPostCommentResponseDto(commentId, "Test comment", post.getId(),
-                post.getTitle(), user.getId(), user.getUsername());
+        post.setPublicId("1");
+        final var expectedComment = MockDataUtil.createPostCommentResponseDto(commentId, "Test comment",
+                post.getPublicId(), post.getTitle(), user.getPublicId(), user.getUsername());
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedComment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -148,14 +148,14 @@ class PostCommentServiceTest {
         final var result = this.postCommentService.getCommentById(commentId);
 
         // Then
-        assertThat(result.getId()).isEqualTo(commentId);
+        assertThat(result.getPublicId()).isEqualTo(commentId);
         assertThat(result.getContent()).isEqualTo("Test comment");
     }
 
     @Test
     void getCommentById_shouldThrowServiceException_whenCommentNotFound() {
         // Given
-        final var commentId = 999L;
+        final var commentId = "999";
         final var mockResponse = ResponseTestUtil.createNotFoundResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -171,17 +171,17 @@ class PostCommentServiceTest {
         // Given
         final var user = MockDataUtil.createUserDto();
         final var post = MockDataUtil.createPostDto();
-        post.setId(1L);
+        post.setPublicId("1");
         final var newComment = MockDataUtil.createPostCommentDto();
-        newComment.setId(null);
+        newComment.setPublicId(null);
         newComment.setContent("New comment");
-        newComment.setPostId(1L);
+        newComment.setPostPublicId("1");
         newComment.setPostTitle(post.getTitle());
-        newComment.setUserId(user.getId());
+        newComment.setUserPublicId(user.getPublicId());
         newComment.setUsername(user.getUsername());
         newComment.setCreated(null);
-        final var createdComment = MockDataUtil.createPostCommentResponseDto(1L, "New comment", post.getId(),
-                post.getTitle(), user.getId(), user.getUsername());
+        final var createdComment = MockDataUtil.createPostCommentResponseDto("1", "New comment", post.getPublicId(),
+                post.getTitle(), user.getPublicId(), user.getUsername());
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdComment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -192,7 +192,7 @@ class PostCommentServiceTest {
         final var result = this.postCommentService.createComment(newComment);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getContent()).isEqualTo("New comment");
         verify(this.commentClient).createComment(any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER));
     }
@@ -202,7 +202,7 @@ class PostCommentServiceTest {
         // Given
         final var newComment = MockDataUtil.createPostCommentDto();
         newComment.setContent("New comment");
-        newComment.setPostId(1L);
+        newComment.setPostPublicId("1");
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -219,36 +219,36 @@ class PostCommentServiceTest {
         // Given
         final var user = MockDataUtil.createUserDto();
         final var post = MockDataUtil.createPostDto();
-        post.setId(1L);
+        post.setPublicId("1");
         final var commentToUpdate = MockDataUtil.createPostCommentDto();
-        commentToUpdate.setId(1L);
+        commentToUpdate.setPublicId("1");
         commentToUpdate.setContent("Updated comment");
-        commentToUpdate.setPostId(post.getId());
+        commentToUpdate.setPostPublicId(post.getPublicId());
         commentToUpdate.setPostTitle(post.getTitle());
-        commentToUpdate.setUserId(user.getId());
+        commentToUpdate.setUserPublicId(user.getPublicId());
         commentToUpdate.setUsername(user.getUsername());
         commentToUpdate.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
-        final var updatedComment = MockDataUtil.createPostCommentResponseDto(1L, "Updated comment", post.getId(),
-                post.getTitle(), user.getId(), user.getUsername());
+        final var updatedComment = MockDataUtil.createPostCommentResponseDto("1", "Updated comment", post.getPublicId(),
+                post.getTitle(), user.getPublicId(), user.getUsername());
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedComment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.commentClient.updateComment(eq(1L), any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER)))
+        when(this.commentClient.updateComment(eq("1"), any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenReturn(mockResponse);
 
         // When
         final var result = this.postCommentService.updateComment(commentToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getContent()).isEqualTo("Updated comment");
-        verify(this.commentClient).updateComment(eq(1L), any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER));
+        verify(this.commentClient).updateComment(eq("1"), any(PostCommentDto.class), eq(TestUtil.TEST_AUTH_HEADER));
     }
 
     @Test
     void deleteComment_shouldSucceed_whenDeletionSuccessful() {
         // Given
-        final var commentId = 1L;
+        final var commentId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -264,7 +264,7 @@ class PostCommentServiceTest {
     @Test
     void deleteComment_shouldThrowServiceException_whenDeletionFails() {
         // Given
-        final var commentId = 1L;
+        final var commentId = "1";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -277,7 +277,7 @@ class PostCommentServiceTest {
     @Test
     void getCommentsByPost_shouldThrowServiceException_whenWebApplicationExceptionOccurs() {
         // Given
-        final var postId = 1L;
+        final var postId = "1";
         final var webException = ExceptionTestUtil.createWebApplicationException(500);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -291,7 +291,7 @@ class PostCommentServiceTest {
     @Test
     void getCommentsByPost_shouldThrowAuthenticationException_when401ErrorOnFetch() {
         // Given
-        final var postId = 1L;
+        final var postId = "1";
         final var webException = ExceptionTestUtil.create401Exception();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -316,9 +316,9 @@ class PostCommentServiceTest {
 
     @Test
     void getCommentsByUser_shouldReturnComments_whenUserExists() {
-        final var userId = 1L;
+        final var userId = "1";
         final var comment =
-                MockDataUtil.createPostCommentResponseDto(1L, "User comment", 1L, "Test Post", userId, "testuser");
+                MockDataUtil.createPostCommentResponseDto("1", "User comment", "1", "Test Post", userId, "testuser");
         final var expected = Collections.singletonList(comment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -335,12 +335,12 @@ class PostCommentServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCommentService.getCommentsByUser(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCommentService.getCommentsByUser("1"));
     }
 
     @Test
     void getCommentsByUser_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        final var userId = 1L;
+        final var userId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.commentClient.getCommentsByUser(userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
@@ -350,7 +350,7 @@ class PostCommentServiceTest {
 
     @Test
     void getCommentsByUser_shouldThrowAuthenticationException_when401Error() {
-        final var userId = 1L;
+        final var userId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
         when(this.commentClient.getCommentsByUser(userId, TestUtil.TEST_AUTH_HEADER))
                 .thenThrow(ExceptionTestUtil.create401Exception());
@@ -365,7 +365,7 @@ class PostCommentServiceTest {
     void searchComments_shouldReturnComments_whenQueryProvided() {
         final String query = "test";
         final var comment =
-                MockDataUtil.createPostCommentResponseDto(1L, "Search result", 1L, "Test Post", 1L, "testuser");
+                MockDataUtil.createPostCommentResponseDto("1", "Search result", "1", "Test Post", "1", "testuser");
         final var expected = Collections.singletonList(comment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -412,7 +412,7 @@ class PostCommentServiceTest {
         final LocalDate startDate = LocalDate.of(2023, 1, 1);
         final LocalDate endDate = LocalDate.of(2023, 12, 31);
         final var comment =
-                MockDataUtil.createPostCommentResponseDto(1L, "Date range comment", 1L, "Test Post", 1L, "testuser");
+                MockDataUtil.createPostCommentResponseDto("1", "Date range comment", "1", "Test Post", "1", "testuser");
         final var expected = Collections.singletonList(comment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);

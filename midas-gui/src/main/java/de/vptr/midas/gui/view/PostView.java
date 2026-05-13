@@ -152,7 +152,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         card.add(title, metaLayout, excerpt);
 
         // Navigate to detail view on click
-        card.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+        card.addClickListener(ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getPublicId())));
 
         return card;
     }
@@ -175,7 +175,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         final LocalDate endDate = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (selectedCategory != null) {
-            this.loadDataAsync(() -> this.postService.getPostsByCategory(selectedCategory.getId()), posts -> {
+            this.loadDataAsync(() -> this.postService.getPostsByCategory(selectedCategory.getPublicId()), posts -> {
                 LOG.infof("Successfully loaded %s posts for category %s", posts.size(), selectedCategory.getName());
                 Objects.requireNonNull(this.grid).setItems(this.applyDateFilter(posts, startDate, endDate));
             });
@@ -231,9 +231,9 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
             final var selectedCategory = Objects.requireNonNull(this.categoryFilter).getValue();
             var filtered = posts;
             if (selectedCategory != null) {
-                final Long categoryId = selectedCategory.getId();
-                filtered = posts.stream()
-                        .filter(post -> post.getCategoryId() != null && post.getCategoryId().equals(categoryId))
+                final String categoryId = selectedCategory.getPublicId();
+                filtered = posts.stream().filter(
+                        post -> post.getCategoryPublicId() != null && post.getCategoryPublicId().equals(categoryId))
                         .toList();
             }
             final LocalDate startDate = Objects.requireNonNull(this.startDatePicker).getValue();

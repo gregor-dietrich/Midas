@@ -41,26 +41,27 @@ public interface UserGroupClient {
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getGroup(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getGroup(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/name/{name}")
     Response getGroupByName(@PathParam("name") String name, @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}/users")
-    List<UserDto> getUsersInGroup(@PathParam("id") Long groupId, @HeaderParam("Authorization") String authorization);
-
-    @GET
-    @Path("/user/{userId}")
-    List<UserGroupResponseDto> getGroupsForUser(@PathParam("userId") Long userId,
+    @Path("/{publicId}/users")
+    List<UserDto> getUsersInGroup(@PathParam("publicId") String groupPublicId,
             @HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/user/{userId}/group/{groupId}/check")
-    Response checkUserInGroup(@PathParam("userId") Long userId, @PathParam("groupId") Long groupId,
+    @Path("/user/{userPublicId}")
+    List<UserGroupResponseDto> getGroupsForUser(@PathParam("userPublicId") String userPublicId,
             @HeaderParam("Authorization") String authorization);
+
+    @GET
+    @Path("/user/{userPublicId}/group/{groupPublicId}/check")
+    Response checkUserInGroup(@PathParam("userPublicId") String userPublicId,
+            @PathParam("groupPublicId") String groupPublicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/search")
@@ -71,26 +72,26 @@ public interface UserGroupClient {
     Response createGroup(UserGroupDto group, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateGroup(@PathParam("id") Long id, UserGroupDto group,
+    @Path("/{publicId}")
+    Response updateGroup(@PathParam("publicId") String publicId, UserGroupDto group,
             @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchGroup(@PathParam("id") Long id, UserGroupDto group,
+    @Path("/{publicId}")
+    Response patchGroup(@PathParam("publicId") String publicId, UserGroupDto group,
             @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteGroup(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteGroup(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @POST
-    @Path("/{groupId}/users/{userId}")
-    Response addUserToGroup(@PathParam("groupId") Long groupId, @PathParam("userId") Long userId,
-            @HeaderParam("Authorization") String authorization);
+    @Path("/{groupPublicId}/users/{userPublicId}")
+    Response addUserToGroup(@PathParam("groupPublicId") String groupPublicId,
+            @PathParam("userPublicId") String userPublicId, @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{groupId}/users/{userId}")
-    Response removeUserFromGroup(@PathParam("groupId") Long groupId, @PathParam("userId") Long userId,
-            @HeaderParam("Authorization") String authorization);
+    @Path("/{groupPublicId}/users/{userPublicId}")
+    Response removeUserFromGroup(@PathParam("groupPublicId") String groupPublicId,
+            @PathParam("userPublicId") String userPublicId, @HeaderParam("Authorization") String authorization);
 }

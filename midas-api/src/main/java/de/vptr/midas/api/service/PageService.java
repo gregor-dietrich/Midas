@@ -17,7 +17,7 @@ public class PageService {
 
     /** Returns all pages with default pagination. */
     public List<PageResponseDto> getAllPages() {
-        return getAllPages(0, 20);
+        return this.getAllPages(0, 20);
     }
 
     /** Returns all pages with the given pagination. */
@@ -26,9 +26,10 @@ public class PageService {
                 .map(entity -> new PageResponseDto((PageEntity) entity)).toList();
     }
 
-    /** Returns the page with the given id. */
-    public Optional<PageResponseDto> findById(final Long id) {
-        return PageEntity.findByIdOptional(id).map(entity -> new PageResponseDto((PageEntity) entity));
+    /** Returns the page with the given publicId. */
+    public Optional<PageResponseDto> findById(final String publicId) {
+        return PageEntity.find("publicId", publicId).firstResultOptional()
+                .map(entity -> new PageResponseDto((PageEntity) entity));
     }
 
     /** Returns all pages matching the given search term. */
@@ -46,10 +47,10 @@ public class PageService {
         return new PageResponseDto(page);
     }
 
-    /** Updates the page with the given id. */
+    /** Updates the page with the given publicId. */
     @Transactional
-    public PageResponseDto updatePage(final Long id, final PageDto pageDto) {
-        final PageEntity existingPage = PageEntity.findById(id);
+    public PageResponseDto updatePage(final String publicId, final PageDto pageDto) {
+        final PageEntity existingPage = PageEntity.find("publicId", publicId).firstResult();
         if (existingPage == null) {
             throw new WebApplicationException("Page not found", Response.Status.NOT_FOUND);
         }
@@ -61,10 +62,10 @@ public class PageService {
         return new PageResponseDto(existingPage);
     }
 
-    /** Partially updates the page with the given id. */
+    /** Partially updates the page with the given publicId. */
     @Transactional
-    public PageResponseDto patchPage(final Long id, final PageDto pageDto) {
-        final PageEntity existingPage = PageEntity.findById(id);
+    public PageResponseDto patchPage(final String publicId, final PageDto pageDto) {
+        final PageEntity existingPage = PageEntity.find("publicId", publicId).firstResult();
         if (existingPage == null) {
             throw new WebApplicationException("Page not found", Response.Status.NOT_FOUND);
         }
@@ -81,9 +82,9 @@ public class PageService {
         return new PageResponseDto(existingPage);
     }
 
-    /** Deletes the page with the given id. */
+    /** Deletes the page with the given publicId. */
     @Transactional
-    public boolean deletePage(final Long id) {
-        return PageEntity.deleteById(id);
+    public boolean deletePage(final String publicId) {
+        return PageEntity.delete("publicId", publicId) > 0;
     }
 }

@@ -14,7 +14,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -65,32 +64,32 @@ public class PostResource {
     }
 
     @GET
-    @Path("/{id}")
-    public Response getPost(@PathParam("id") @Min(1) final Long id) {
-        return ResponseUtil.okOrNotFound(this.postService.findById(id));
+    @Path("/{publicId}")
+    public Response getPost(@PathParam("publicId") final String publicId) {
+        return ResponseUtil.okOrNotFound(this.postService.findById(publicId));
     }
 
     /** Returns published posts by user with pagination. */
     @GET
-    @Path("/user/{userId}")
+    @Path("/user/{userPublicId}")
     // TODO: add an admin-only path that returns all posts (including drafts) for a user.
-    public List<PostResponseDto> getPostsByUser(@PathParam("userId") @Min(1) final Long userId,
+    public List<PostResponseDto> getPostsByUser(@PathParam("userPublicId") final String userPublicId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.findPublishedByUserId(userId, safePage, safeSize);
+        return this.postService.findPublishedByUserPublicId(userPublicId, safePage, safeSize);
     }
 
     /** Returns published posts by category with pagination. */
     @GET
-    @Path("/category/{categoryId}")
-    public List<PostResponseDto> getPostsByCategory(@PathParam("categoryId") @Min(1) final Long categoryId,
+    @Path("/category/{categoryPublicId}")
+    public List<PostResponseDto> getPostsByCategory(@PathParam("categoryPublicId") final String categoryPublicId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.findByCategoryId(categoryId, safePage, safeSize);
+        return this.postService.findByCategoryPublicId(categoryPublicId, safePage, safeSize);
     }
 
     /** Returns all posts matching the search query. */
@@ -122,33 +121,33 @@ public class PostResource {
         return ResponseUtil.created(created);
     }
 
-    /** Updates the post with the given id. */
+    /** Updates the post with the given publicId. */
     @PUT
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post:edit" })
-    public Response updatePost(@PathParam("id") @Min(1) final Long id, @Valid final PostDto postDto) {
+    public Response updatePost(@PathParam("publicId") final String publicId, @Valid final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PostResponseDto updated = this.postService.updatePost(id, postDto, currentUsername);
+        final PostResponseDto updated = this.postService.updatePost(publicId, postDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
-    /** Partially updates the post with the given id. */
+    /** Partially updates the post with the given publicId. */
     @PATCH
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post:edit" })
-    public Response patchPost(@PathParam("id") @Min(1) final Long id, final PostDto postDto) {
+    public Response patchPost(@PathParam("publicId") final String publicId, final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final PostResponseDto updated = this.postService.patchPost(id, postDto, currentUsername);
+        final PostResponseDto updated = this.postService.patchPost(publicId, postDto, currentUsername);
         return ResponseUtil.ok(updated);
     }
 
-    /** Deletes the post with the given id. */
+    /** Deletes the post with the given publicId. */
     @DELETE
-    @Path("/{id}")
+    @Path("/{publicId}")
     @RolesAllowed({ "post:delete" })
-    public Response deletePost(@PathParam("id") @Min(1) final Long id) {
+    public Response deletePost(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
-        final boolean deleted = this.postService.deletePost(id, currentUsername);
+        final boolean deleted = this.postService.deletePost(publicId, currentUsername);
         if (deleted) {
             return ResponseUtil.noContent();
         }

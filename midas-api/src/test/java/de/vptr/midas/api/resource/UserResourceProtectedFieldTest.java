@@ -22,20 +22,20 @@ class UserResourceProtectedFieldTest {
     @Test
     void updateUser_shouldKeepProtectedFields_whenRolesMissing() {
         final var resource = new UserResource();
-        final var stubUserService = new StubUserService(existingUser(2L, false, true));
-        resource.userService = stubUserService;
+        final var stubUserService = new StubUserService(existingUser("rank-2", false, true));
+        resource.setUserServiceForTest(stubUserService);
         resource.securityContext = new TestSecurityContext("editor", Set.of("user:edit"));
 
         final var dto = new UserDto();
         dto.username = "updated-user";
-        dto.rankId = 99L;
+        dto.rankPublicId = "rank-99";
         dto.banned = true;
         dto.activated = false;
 
-        resource.updateUser(1L, dto);
+        resource.updateUser("user-1", dto);
 
         final UserDto updatedUser = Objects.requireNonNull(stubUserService.lastUpdatedUser);
-        assertEquals(2L, updatedUser.rankId);
+        assertEquals("rank-2", updatedUser.rankPublicId);
         assertEquals(false, updatedUser.banned);
         assertEquals(true, updatedUser.activated);
     }
@@ -43,26 +43,27 @@ class UserResourceProtectedFieldTest {
     @Test
     void patchUser_shouldKeepProtectedFields_whenRolesMissing() {
         final var resource = new UserResource();
-        final var stubUserService = new StubUserService(existingUser(3L, true, false));
-        resource.userService = stubUserService;
+        final var stubUserService = new StubUserService(existingUser("rank-3", true, false));
+        resource.setUserServiceForTest(stubUserService);
         resource.securityContext = new TestSecurityContext("editor", Set.of("user:edit"));
 
         final var dto = new UserDto();
-        dto.rankId = 100L;
+        dto.rankPublicId = "rank-100";
         dto.banned = false;
         dto.activated = true;
 
-        resource.patchUser(1L, dto);
+        resource.patchUser("user-1", dto);
 
         final UserDto patchedUser = Objects.requireNonNull(stubUserService.lastPatchedUser);
-        assertEquals(3L, patchedUser.rankId);
+        assertEquals("rank-3", patchedUser.rankPublicId);
         assertEquals(true, patchedUser.banned);
         assertEquals(false, patchedUser.activated);
     }
 
-    private static UserResponseDto existingUser(final Long rankId, final Boolean banned, final Boolean activated) {
+    private static UserResponseDto existingUser(final String rankPublicId, final Boolean banned,
+            final Boolean activated) {
         final var existing = new UserResponseDto();
-        existing.rankId = rankId;
+        existing.rankPublicId = rankPublicId;
         existing.banned = banned;
         existing.activated = activated;
         return existing;
@@ -80,18 +81,18 @@ class UserResourceProtectedFieldTest {
         }
 
         @Override
-        public Optional<UserResponseDto> findById(final Long id) {
+        public Optional<UserResponseDto> findById(final String publicId) {
             return Optional.of(this.existingUser);
         }
 
         @Override
-        public UserResponseDto updateUser(final Long id, final UserDto userDto) {
+        public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
             this.lastUpdatedUser = userDto;
             return this.existingUser;
         }
 
         @Override
-        public UserResponseDto patchUser(final Long id, final UserDto userDto) {
+        public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
             this.lastPatchedUser = userDto;
             return this.existingUser;
         }

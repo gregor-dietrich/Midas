@@ -60,7 +60,7 @@ public final class ServiceTestUtil {
     public static UserEntity setupTestUser(final UserService userService) {
         final var testUserDto = ServiceTestDataBuilder.createUniqueUserDto();
         final var createdUser = userService.createUser(testUserDto);
-        return UserEntity.findById(createdUser.id);
+        return UserEntity.find("publicId", createdUser.publicId).firstResult();
     }
 
     /**

@@ -39,8 +39,8 @@ public interface UserRankClient {
     List<UserRankResponseDto> getAllRanks(@HeaderParam("Authorization") String authorization);
 
     @GET
-    @Path("/{id}")
-    Response getRank(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response getRank(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/name/{name}")
@@ -55,14 +55,16 @@ public interface UserRankClient {
     Response createRank(UserRankDto rank, @HeaderParam("Authorization") String authorization);
 
     @PUT
-    @Path("/{id}")
-    Response updateRank(@PathParam("id") Long id, UserRankDto rank, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response updateRank(@PathParam("publicId") String publicId, UserRankDto rank,
+            @HeaderParam("Authorization") String authorization);
 
     @PATCH
-    @Path("/{id}")
-    Response patchRank(@PathParam("id") Long id, UserRankDto rank, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response patchRank(@PathParam("publicId") String publicId, UserRankDto rank,
+            @HeaderParam("Authorization") String authorization);
 
     @DELETE
-    @Path("/{id}")
-    Response deleteRank(@PathParam("id") Long id, @HeaderParam("Authorization") String authorization);
+    @Path("/{publicId}")
+    Response deleteRank(@PathParam("publicId") String publicId, @HeaderParam("Authorization") String authorization);
 }

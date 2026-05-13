@@ -8,15 +8,15 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for post comment response data. */
 public class PostCommentResponseDto {
     @Nullable
-    public Long id;
+    public String publicId;
     @Nullable
     public String content;
     @Nullable
-    public Long postId;
+    public String postPublicId;
     @Nullable
     public String postTitle;
     @Nullable
-    public Long userId;
+    public String userPublicId;
     @Nullable
     public String username;
     @Nullable
@@ -29,17 +29,17 @@ public class PostCommentResponseDto {
 
     /** Creates a new instance. */
     public PostCommentResponseDto(final PostCommentEntity entity) {
-        this.id = entity.id;
+        this.publicId = entity.publicId;
         this.content = entity.content;
         this.created = entity.created;
 
         if (entity.post != null) {
-            this.postId = entity.post.id;
+            this.postPublicId = entity.post.publicId;
             this.postTitle = entity.post.title;
         }
 
         if (entity.user != null) {
-            this.userId = entity.user.id;
+            this.userPublicId = entity.user.publicId;
             this.username = entity.user.username;
         }
         this.lastEdit = entity.lastEdit;

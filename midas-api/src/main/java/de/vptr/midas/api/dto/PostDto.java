@@ -19,12 +19,12 @@ public class PostDto {
     public String content;
 
     @SuppressWarnings("MultipleNullnessAnnotations")
-    @NotNull(message = "User ID is required")
+    @NotNull(message = "User Public ID is required")
     @Nullable
-    public Long userId;
+    public String userPublicId;
 
     @Nullable
-    public Long categoryId;
+    public String categoryPublicId;
 
     @Nullable
     public Boolean published;
@@ -36,12 +36,13 @@ public class PostDto {
     }
 
     /** Creates a new instance. */
-    public PostDto(@Nullable final String title, @Nullable final String content, @Nullable final Long userId,
-            @Nullable final Long categoryId, @Nullable final Boolean published, @Nullable final Boolean commentable) {
+    public PostDto(@Nullable final String title, @Nullable final String content, @Nullable final String userPublicId,
+            @Nullable final String categoryPublicId, @Nullable final Boolean published,
+            @Nullable final Boolean commentable) {
         this.title = title;
         this.content = content;
-        this.userId = userId;
-        this.categoryId = categoryId;
+        this.userPublicId = userPublicId;
+        this.categoryPublicId = categoryPublicId;
         this.published = published;
         this.commentable = commentable;
     }

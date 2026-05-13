@@ -54,7 +54,8 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
 
     @Override
     protected void configureGridColumns(final Grid<UserDto> grid) {
-        grid.addColumn((ValueProvider<UserDto, ?>) UserDto::getId).setHeader("ID").setWidth("80px").setFlexGrow(0);
+        grid.addColumn((ValueProvider<UserDto, ?>) UserDto::getPublicId).setHeader("ID").setWidth("120px")
+                .setFlexGrow(0);
         grid.addColumn((ValueProvider<UserDto, ?>) UserDto::getUsername).setHeader("Username").setFlexGrow(1);
         grid.addColumn(user -> user.getEmail() != null ? user.getEmail() : "no email").setHeader("Email")
                 .setFlexGrow(1);
@@ -64,14 +65,15 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
     }
 
     @Override
-    protected Long getUserId(final UserDto item) {
-        return item.getId();
+    protected String getUserPublicId(final UserDto item) {
+        return item.getPublicId();
     }
 
     @Override
     protected void loadAssociatedUsers() {
         this.executeWithHandling(() -> {
-            final var users = this.groupService.getUsersInGroup(Objects.requireNonNull(this.selectedEntity).getId());
+            final var users =
+                    this.groupService.getUsersInGroup(Objects.requireNonNull(this.selectedEntity).getPublicId());
             Objects.requireNonNull(this.userGrid).setItems(users);
         }, "Loading group users failed. Please try again.");
     }
@@ -83,9 +85,9 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
 
             final var currentUsers = Objects.requireNonNull(this.userGrid).getDataProvider().fetch(new Query<>())
                     .collect(Collectors.toList());
-            final var currentUserIds = currentUsers.stream().map(UserDto::getId).collect(Collectors.toSet());
+            final var currentUserIds = currentUsers.stream().map(UserDto::getPublicId).collect(Collectors.toSet());
 
-            final var availableUsers = allUsers.stream().filter(user -> !currentUserIds.contains(user.getId()))
+            final var availableUsers = allUsers.stream().filter(user -> !currentUserIds.contains(user.getPublicId()))
                     .collect(Collectors.toList());
 
             Objects.requireNonNull(this.availableUsersCombo).setItems(availableUsers);
@@ -105,8 +107,8 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
         final var combo = Objects.requireNonNull(this.availableUsersCombo);
 
         this.executeWithHandling(() -> {
-            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedEntity).getId(),
-                    selectedUser.getId())) {
+            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    selectedUser.getPublicId())) {
                 NotificationUtil.showSuccess("User added to group successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();
@@ -119,8 +121,8 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
 
     private void removeUserFromGroup(final UserDto user) {
         this.executeWithHandling(() -> {
-            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedEntity).getId(),
-                    Objects.requireNonNull(user.getId()))) {
+            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    Objects.requireNonNull(user.getPublicId()))) {
                 NotificationUtil.showSuccess("User removed from group successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();

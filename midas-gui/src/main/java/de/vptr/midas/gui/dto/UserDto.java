@@ -9,9 +9,9 @@ import jakarta.annotation.Nullable;
 /** Data transfer object for user. */
 public class UserDto {
 
-    @JsonProperty("id")
+    @JsonProperty("publicId")
     @Nullable
-    private Long id;
+    private String publicId;
 
     @JsonProperty("username")
     @Nullable
@@ -21,9 +21,9 @@ public class UserDto {
     @Nullable
     private String password;
 
-    @JsonProperty("rankId")
+    @JsonProperty("rankPublicId")
     @Nullable
-    private Long rankId;
+    private String rankPublicId;
 
     @JsonProperty("rankName")
     @Nullable
@@ -75,8 +75,8 @@ public class UserDto {
     }
 
     @Nullable
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     @Nullable
@@ -90,8 +90,8 @@ public class UserDto {
     }
 
     @Nullable
-    public Long getRankId() {
-        return this.rankId;
+    public String getRankPublicId() {
+        return this.rankPublicId;
     }
 
     @Nullable
@@ -142,8 +142,8 @@ public class UserDto {
         return this.commentsCount;
     }
 
-    public void setId(@Nullable final Long id) {
-        this.id = id;
+    public void setPublicId(@Nullable final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setUsername(@Nullable final String username) {
@@ -154,8 +154,8 @@ public class UserDto {
         this.password = password;
     }
 
-    public void setRankId(@Nullable final Long rankId) {
-        this.rankId = rankId;
+    public void setRankPublicId(@Nullable final String rankPublicId) {
+        this.rankPublicId = rankPublicId;
     }
 
     public void setRankName(@Nullable final String rankName) {

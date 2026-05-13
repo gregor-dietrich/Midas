@@ -54,7 +54,7 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
 
         this.loadDataAsync(() -> {
             try {
-                final var categoryId = Long.parseLong(identifier);
+                final var categoryId = identifier;
                 final var opt = this.categoryService.getCategoryById(categoryId);
                 if (opt.isPresent()) {
                     return opt.get();
@@ -98,7 +98,7 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
 
         this.postGrid.addComponentColumn(post -> {
             final var titleButton = new Button(post.getTitle(),
-                    ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getId())));
+                    ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getPublicId())));
             titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);
@@ -115,7 +115,7 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
         final var cat = Objects.requireNonNull(this.category);
         LOG.infof("Loading posts for category: %s", cat.getName());
 
-        this.loadDataAsync(() -> this.postService.getPostsByCategory(cat.getId()), posts -> {
+        this.loadDataAsync(() -> this.postService.getPostsByCategory(cat.getPublicId()), posts -> {
             LOG.infof("Successfully loaded %s posts", posts.size());
             Objects.requireNonNull(this.postGrid).setItems(posts);
         }, MidasErrorHandler::handleInUiContext, 30);

@@ -19,6 +19,6 @@ public class PostCommentDto {
 
     // Required for POST operations (creation); null is allowed for PUT/PATCH.
     @Nullable
-    public Long postId;
+    public String postPublicId;
 
 }

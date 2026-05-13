@@ -34,10 +34,10 @@ public class PostCategoryService {
         return this.toCategoryResponseDtos(categories);
     }
 
-    /** Returns the category with the given id. */
-    public Optional<PostCategoryResponseDto> findById(final Long id) {
+    /** Returns the category with the given publicId. */
+    public Optional<PostCategoryResponseDto> findById(final String publicId) {
         return PostCategoryEntity
-                .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE c.id = ?1", id)
+                .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE c.publicId = ?1", publicId)
                 .<PostCategoryEntity>firstResultOptional().map(this::toCategoryResponseDto);
     }
 
@@ -48,10 +48,11 @@ public class PostCategoryService {
         return this.toCategoryResponseDtos(categories);
     }
 
-    /** Returns by parent id. */
-    public List<PostCategoryResponseDto> findByParentId(final Long parentId) {
+    /** Returns by parent publicId. */
+    public List<PostCategoryResponseDto> findByParentPublicId(final String parentPublicId) {
         final List<PostCategoryEntity> categories = PostCategoryEntity
-                .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE c.parent.id = ?1", parentId)
+                .find("SELECT c FROM PostCategoryEntity c LEFT JOIN FETCH c.parent WHERE c.parent.publicId = ?1",
+                        parentPublicId)
                 .list();
         return this.toCategoryResponseDtos(categories);
     }
@@ -61,45 +62,45 @@ public class PostCategoryService {
     public PostCategoryResponseDto createCategory(final PostCategoryDto dto) {
         final PostCategoryEntity category = new PostCategoryEntity();
         category.name = dto.name;
-        this.applyParent(category, dto.parentId, false);
+        this.applyParent(category, dto.parentPublicId, false);
         category.persistAndFlush();
         return this.toCategoryResponseDto(category);
     }
 
-    /** Updates the category with the given id. */
+    /** Updates the category with the given publicId. */
     @Transactional
-    public PostCategoryResponseDto updateCategory(final Long id, final PostCategoryDto dto) {
-        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(id);
+    public PostCategoryResponseDto updateCategory(final String publicId, final PostCategoryDto dto) {
+        final PostCategoryEntity existingCategory = PostCategoryEntity.find("publicId", publicId).firstResult();
         if (existingCategory == null) {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
         }
         existingCategory.name = dto.name;
-        this.applyParent(existingCategory, dto.parentId, true);
+        this.applyParent(existingCategory, dto.parentPublicId, true);
         existingCategory.persistAndFlush();
         return this.toCategoryResponseDto(existingCategory);
     }
 
-    /** Partially updates the category with the given id. */
+    /** Partially updates the category with the given publicId. */
     @Transactional
-    public PostCategoryResponseDto patchCategory(final Long id, final PostCategoryDto dto) {
-        final var existingCategory = (PostCategoryEntity) PostCategoryEntity.findById(id);
+    public PostCategoryResponseDto patchCategory(final String publicId, final PostCategoryDto dto) {
+        final PostCategoryEntity existingCategory = PostCategoryEntity.find("publicId", publicId).firstResult();
         if (existingCategory == null) {
             throw new WebApplicationException("Category not found", Response.Status.NOT_FOUND);
         }
         if (dto.name != null) {
             existingCategory.name = dto.name;
         }
-        if (dto.parentId != null) {
-            this.applyParent(existingCategory, dto.parentId, false);
+        if (dto.parentPublicId != null) {
+            this.applyParent(existingCategory, dto.parentPublicId, false);
         }
         existingCategory.persistAndFlush();
         return this.toCategoryResponseDto(existingCategory);
     }
 
-    private void applyParent(final PostCategoryEntity category, @Nullable final Long parentId,
+    private void applyParent(final PostCategoryEntity category, @Nullable final String parentPublicId,
             final boolean clearIfNull) {
-        if (parentId != null) {
-            final PostCategoryEntity newParent = (PostCategoryEntity) PostCategoryEntity.findById(parentId);
+        if (parentPublicId != null) {
+            final PostCategoryEntity newParent = PostCategoryEntity.find("publicId", parentPublicId).firstResult();
             if (newParent == null) {
                 throw new WebApplicationException("Parent category not found", Response.Status.BAD_REQUEST);
             }
@@ -136,10 +137,10 @@ public class PostCategoryService {
         return ancestors.contains(categoryId);
     }
 
-    /** Deletes the category with the given id. */
+    /** Deletes the category with the given publicId. */
     @Transactional
-    public boolean deleteCategory(final Long id) {
-        return PostCategoryEntity.deleteById(id);
+    public boolean deleteCategory(final String publicId) {
+        return PostCategoryEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all categories matching the given query. */
@@ -155,11 +156,11 @@ public class PostCategoryService {
     }
 
     private PostCategoryResponseDto toCategoryResponseDto(final PostCategoryEntity category) {
-        final List<Long> childrenIds = PostCategoryEntity.getEntityManager()
-                .createQuery("SELECT c.id FROM PostCategoryEntity c WHERE c.parent.id = :parentId", Long.class)
+        final List<String> childrenPublicIds = PostCategoryEntity.getEntityManager()
+                .createQuery("SELECT c.publicId FROM PostCategoryEntity c WHERE c.parent.id = :parentId", String.class)
                 .setParameter("parentId", category.id).getResultList();
         final int postsCount = (int) PostEntity.count("category.id", category.id);
-        return new PostCategoryResponseDto(category, childrenIds.size(), childrenIds, postsCount);
+        return new PostCategoryResponseDto(category, childrenPublicIds.size(), childrenPublicIds, postsCount);
     }
 
     private List<PostCategoryResponseDto> toCategoryResponseDtos(final List<PostCategoryEntity> categories) {
@@ -170,12 +171,12 @@ public class PostCategoryService {
 
         // Batch fetch children info
         final List<Object[]> childResults = PostCategoryEntity.getEntityManager()
-                .createQuery("SELECT c.parent.id, c.id FROM PostCategoryEntity c WHERE c.parent.id IN :ids",
+                .createQuery("SELECT c.parent.id, c.publicId FROM PostCategoryEntity c WHERE c.parent.id IN :ids",
                         Object[].class)
                 .setParameter("ids", ids).getResultList();
-        final Map<Long, List<Long>> childrenByParent = new HashMap<>();
+        final Map<Long, List<String>> childrenByParent = new HashMap<>();
         for (final Object[] row : childResults) {
-            childrenByParent.computeIfAbsent((Long) row[0], k -> new ArrayList<>()).add((Long) row[1]);
+            childrenByParent.computeIfAbsent((Long) row[0], k -> new ArrayList<>()).add((String) row[1]);
         }
 
         // Batch fetch post counts
@@ -188,9 +189,9 @@ public class PostCategoryService {
         }
 
         return categories.stream().map(c -> {
-            final List<Long> childrenIds = childrenByParent.getOrDefault(c.id, List.of());
+            final List<String> childrenPublicIds = childrenByParent.getOrDefault(c.id, List.of());
             final int postsCount = postCounts.getOrDefault(c.id, 0L).intValue();
-            return new PostCategoryResponseDto(c, childrenIds.size(), childrenIds, postsCount);
+            return new PostCategoryResponseDto(c, childrenPublicIds.size(), childrenPublicIds, postsCount);
         }).toList();
     }
 }

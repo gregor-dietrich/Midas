@@ -44,7 +44,7 @@ public class PostCommentService {
     }
 
     /** Returns the comments by post. */
-    public List<PostCommentResponseDto> getCommentsByPost(final Long postId) {
+    public List<PostCommentResponseDto> getCommentsByPost(final String postId) {
         LOG.infof("Getting comments for post: %s", postId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> {
@@ -55,7 +55,7 @@ public class PostCommentService {
     }
 
     /** Returns the comments by user. */
-    public List<PostCommentResponseDto> getCommentsByUser(final Long userId) {
+    public List<PostCommentResponseDto> getCommentsByUser(final String userId) {
         LOG.debugf("Fetching comments for user: %s", userId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.commentClient.getCommentsByUser(userId, authHeader), this.authService,
@@ -71,7 +71,7 @@ public class PostCommentService {
     }
 
     /** Returns the comment by id. */
-    public PostCommentDto getCommentById(final Long id) {
+    public PostCommentDto getCommentById(final String id) {
         LOG.infof("Getting comment by id: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.executeWithResponse(() -> this.commentClient.getComment(id, authHeader), this.authService,
@@ -90,19 +90,20 @@ public class PostCommentService {
 
     /** Creates a new comment. */
     public PostCommentDto createComment(final PostCommentDto comment) {
-        LOG.infof("Creating comment for post: %s", comment.getPostId() != null ? comment.getPostId() : "unknown");
+        LOG.infof("Creating comment for post: %s",
+                comment.getPostPublicId() != null ? comment.getPostPublicId() : "unknown");
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
-        apiComment.setPostId(comment.getPostId());
+        apiComment.setPostPublicId(comment.getPostPublicId());
         return ServiceHelper.executeWithResponse(() -> this.commentClient.createComment(apiComment, authHeader),
                 this.authService, LOG, "creating comment", "Failed to create comment", response -> {
                     if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
                         final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                                 "created comment response");
                         final var createdComment = responseDto.toPostCommentDto();
-                        LOG.infof("Successfully created comment: %s", createdComment.getId());
-                        this.commentEvent.fire("comment-created:" + createdComment.getPostId());
+                        LOG.infof("Successfully created comment: %s", createdComment.getPublicId());
+                        this.commentEvent.fire("comment-created:" + createdComment.getPostPublicId());
                         return createdComment;
                     }
                     throw ServiceHelper.responseFailure("Failed to create comment", response);
@@ -111,18 +112,18 @@ public class PostCommentService {
 
     /** Updates the comment. */
     public PostCommentDto updateComment(final PostCommentDto comment) {
-        LOG.infof("Updating comment: %s", comment.getId());
+        LOG.infof("Updating comment: %s", comment.getPublicId());
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
         return ServiceHelper.executeWithResponse(
-                () -> this.commentClient.updateComment(comment.getId(), apiComment, authHeader), this.authService, LOG,
-                "updating comment " + comment.getId(), "Failed to update comment", response -> {
+                () -> this.commentClient.updateComment(comment.getPublicId(), apiComment, authHeader), this.authService,
+                LOG, "updating comment " + comment.getPublicId(), "Failed to update comment", response -> {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                                 "updated comment response");
                         final var updatedComment = responseDto.toPostCommentDto();
-                        LOG.infof("Successfully updated comment: %s", updatedComment.getId());
+                        LOG.infof("Successfully updated comment: %s", updatedComment.getPublicId());
                         return updatedComment;
                     }
                     throw ServiceHelper.responseFailure("Failed to update comment", response);
@@ -130,7 +131,7 @@ public class PostCommentService {
     }
 
     /** Handles the delete comment operation. */
-    public void deleteComment(final Long id) {
+    public void deleteComment(final String id) {
         LOG.infof("Deleting comment: %s", id);
         final var authHeader = this.authService.requireAuthorizationHeader();
         ServiceHelper.executeWithResponse(() -> this.commentClient.deleteComment(id, authHeader), this.authService, LOG,

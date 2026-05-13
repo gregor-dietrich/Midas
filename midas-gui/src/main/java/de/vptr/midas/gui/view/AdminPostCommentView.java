@@ -84,7 +84,7 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
 
     @Override
     protected void executeUserFilter(final Integer userId) {
-        this.loadDataAsync(() -> this.commentService.getCommentsByUser(userId.longValue()),
+        this.loadDataAsync(() -> this.commentService.getCommentsByUser(userId.toString()),
                 comments -> Objects.requireNonNull(this.grid).setItems(comments));
     }
 
@@ -98,7 +98,7 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
 
     @Override
     protected void configureGrid(final Grid<PostCommentResponseDto> g) {
-        g.addColumn((ValueProvider<PostCommentResponseDto, ?>) PostCommentResponseDto::getId).setHeader("ID")
+        g.addColumn((ValueProvider<PostCommentResponseDto, ?>) PostCommentResponseDto::getPublicId).setHeader("ID")
                 .setWidth("80px").setFlexGrow(0);
 
         g.addComponentColumn(comment -> {
@@ -133,7 +133,7 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
         final var editButton =
                 new EditButton(ignore -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            this.commentService.deleteComment(Objects.requireNonNull(comment.getId()));
+            this.commentService.deleteComment(Objects.requireNonNull(comment.getPublicId()));
         }));
 
         layout.add(editButton, deleteButton);

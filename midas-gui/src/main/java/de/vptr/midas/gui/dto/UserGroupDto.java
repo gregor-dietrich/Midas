@@ -6,14 +6,16 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.Nullable;
 
 /** Data transfer object for user group. */
 @SuppressFBWarnings(value = "EI_EXPOSE_REP",
         justification = "DTO used only within GUI; not serialized across trust boundaries")
 public class UserGroupDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    @Nullable
+    private String publicId;
 
     @JsonProperty("name")
     private String name;
@@ -33,18 +35,19 @@ public class UserGroupDto {
     }
 
     @SuppressWarnings("NullAway")
-    public UserGroupDto(final Long id, final String name) {
-        this.id = id;
+    public UserGroupDto(@Nullable final String publicId, final String name) {
+        this.publicId = publicId;
         this.name = name;
     }
 
     // Getters and setters
-    public Long getId() {
-        return this.id;
+    @Nullable
+    public String getPublicId() {
+        return this.publicId;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(@Nullable final String publicId) {
+        this.publicId = publicId;
     }
 
     public String getName() {

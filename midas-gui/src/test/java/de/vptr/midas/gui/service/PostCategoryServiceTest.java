@@ -40,8 +40,8 @@ class PostCategoryServiceTest {
     @Test
     void getAllCategories_shouldReturnCategoryList_whenAuthenticationProvided() {
         // Given
-        final var categoryResponse1 = MockDataUtil.createPostCategoryResponseDto(1L, "Category 1", null, 0, 0, true);
-        final var categoryResponse2 = MockDataUtil.createPostCategoryResponseDto(2L, "Category 2", null, 0, 0, true);
+        final var categoryResponse1 = MockDataUtil.createPostCategoryResponseDto("1", "Category 1", null, 0, 0, true);
+        final var categoryResponse2 = MockDataUtil.createPostCategoryResponseDto("2", "Category 2", null, 0, 0, true);
         final var expectedCategories = Arrays.asList(categoryResponse1, categoryResponse2);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -92,7 +92,7 @@ class PostCategoryServiceTest {
     void getRootCategories_shouldReturnRootCategories_whenAuthenticated() {
         // Given
         final var rootCategoryResponse =
-                MockDataUtil.createPostCategoryResponseDto(1L, "Root Category", null, 0, 0, true);
+                MockDataUtil.createPostCategoryResponseDto("1", "Root Category", null, 0, 0, true);
         final var expectedCategories = Collections.singletonList(rootCategoryResponse);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -118,9 +118,9 @@ class PostCategoryServiceTest {
     @Test
     void getCategoryById_shouldReturnCategory_whenCategoryExists() {
         // Given
-        final var categoryId = 1L;
+        final var categoryId = "1";
         final var expectedCategoryResponse =
-                MockDataUtil.createPostCategoryResponseDto(categoryId, "Test Category", null, 0, 0, false);
+                MockDataUtil.createPostCategoryResponseDto("1", "Test Category", null, 0, 0, false);
         final var mockResponse = ResponseTestUtil.createOkResponse(expectedCategoryResponse);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -131,7 +131,7 @@ class PostCategoryServiceTest {
 
         // Then
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(categoryId);
+        assertThat(result.get().getPublicId()).isEqualTo(categoryId);
         assertThat(result.get().getName()).isEqualTo("Test Category");
     }
 
@@ -140,13 +140,13 @@ class PostCategoryServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getCategoryById(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getCategoryById("1"));
     }
 
     @Test
     void getCategoryById_shouldReturnEmpty_whenCategoryNotFound() {
         // Given
-        final var categoryId = 999L;
+        final var categoryId = "999";
         final var mockResponse = ResponseTestUtil.createNotFoundResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -162,9 +162,9 @@ class PostCategoryServiceTest {
     @Test
     void getCategoriesByParent_shouldReturnChildCategories_whenParentExists() {
         // Given
-        final var parentId = 1L;
-        final var childResponse1 = MockDataUtil.createPostCategoryResponseDto(2L, "Child 1", "Parent", 0, 0, false);
-        final var childResponse2 = MockDataUtil.createPostCategoryResponseDto(3L, "Child 2", "Parent", 0, 0, false);
+        final var parentId = "1";
+        final var childResponse1 = MockDataUtil.createPostCategoryResponseDto("2", "Child 1", "Parent", 0, 0, false);
+        final var childResponse2 = MockDataUtil.createPostCategoryResponseDto("3", "Child 2", "Parent", 0, 0, false);
         final var expectedChildren = Arrays.asList(childResponse1, childResponse2);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -184,7 +184,7 @@ class PostCategoryServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getCategoriesByParent(1L));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.getCategoriesByParent("1"));
     }
 
     @Test
@@ -192,7 +192,7 @@ class PostCategoryServiceTest {
         // Given
         final var newCategory = MockDataUtil.createPostCategoryDto();
         newCategory.setName("New Category");
-        final var createdCategory = MockDataUtil.createPostCategoryResponseDto(1L, "New Category", null, 0, 0, true);
+        final var createdCategory = MockDataUtil.createPostCategoryResponseDto("1", "New Category", null, 0, 0, true);
         final var mockResponse = ResponseTestUtil.createCreatedResponse(createdCategory);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -202,7 +202,7 @@ class PostCategoryServiceTest {
         final var result = this.postCategoryService.createCategory(newCategory);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("New Category");
         verify(this.categoryClient).createCategory(newCategory, TestUtil.TEST_AUTH_HEADER);
     }
@@ -226,29 +226,29 @@ class PostCategoryServiceTest {
     void updateCategory_shouldReturnUpdatedCategory_whenValidCategory() {
         // Given
         final var categoryToUpdate = MockDataUtil.createPostCategoryDto();
-        categoryToUpdate.setId(1L);
+        categoryToUpdate.setPublicId("1");
         categoryToUpdate.setName("Updated Category");
         final var updatedCategory =
-                MockDataUtil.createPostCategoryResponseDto(1L, "Updated Category", null, 0, 0, true);
+                MockDataUtil.createPostCategoryResponseDto("1", "Updated Category", null, 0, 0, true);
         final var mockResponse = ResponseTestUtil.createOkResponse(updatedCategory);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.categoryClient.updateCategory(1L, categoryToUpdate, TestUtil.TEST_AUTH_HEADER))
+        when(this.categoryClient.updateCategory("1", categoryToUpdate, TestUtil.TEST_AUTH_HEADER))
                 .thenReturn(mockResponse);
 
         // When
         final var result = this.postCategoryService.updateCategory(categoryToUpdate);
 
         // Then
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getPublicId()).isEqualTo("1");
         assertThat(result.getName()).isEqualTo("Updated Category");
-        verify(this.categoryClient).updateCategory(1L, categoryToUpdate, TestUtil.TEST_AUTH_HEADER);
+        verify(this.categoryClient).updateCategory("1", categoryToUpdate, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test
     void deleteCategory_shouldReturnTrue_whenDeletionSuccessful() {
         // Given
-        final var categoryId = 1L;
+        final var categoryId = "1";
         final var mockResponse = ResponseTestUtil.createMockResponse(204);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
@@ -265,7 +265,7 @@ class PostCategoryServiceTest {
     @Test
     void deleteCategory_shouldReturnFalse_whenDeletionFails() {
         // Given
-        final var categoryId = 1L;
+        final var categoryId = "1";
         final var mockResponse = ResponseTestUtil.createBadRequestResponse();
 
         ServiceTestUtil.setupAuthHeader(this.authService);

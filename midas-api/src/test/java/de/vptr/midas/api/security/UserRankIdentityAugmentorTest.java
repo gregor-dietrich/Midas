@@ -168,7 +168,7 @@ public class UserRankIdentityAugmentorTest {
         // Convert ResponseDto to Entity for the augmentor method that expects an entity
         if (rank != null) {
             final var rankEntity = new UserRankEntity();
-            rankEntity.id = rank.id;
+            rankEntity.publicId = rank.publicId;
             rankEntity.name = rank.name;
             rankEntity.adminView = Boolean.TRUE.equals(rank.adminView);
             rankEntity.pageAdd = Boolean.TRUE.equals(rank.pageAdd);

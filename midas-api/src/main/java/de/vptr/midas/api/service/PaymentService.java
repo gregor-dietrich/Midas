@@ -41,12 +41,12 @@ public class PaymentService {
             throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
         }
         boolean hasAccess = false;
-        if (payment.sourceAccount != null && payment.sourceAccount.id != null
-                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.sourceAccount.id)) {
+        if (payment.sourceAccount != null && payment.sourceAccount.publicId != null
+                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.sourceAccount.publicId)) {
             hasAccess = true;
         }
-        if (!hasAccess && payment.targetAccount != null && payment.targetAccount.id != null
-                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.targetAccount.id)) {
+        if (!hasAccess && payment.targetAccount != null && payment.targetAccount.publicId != null
+                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.targetAccount.publicId)) {
             hasAccess = true;
         }
         if (!hasAccess && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
@@ -61,17 +61,17 @@ public class PaymentService {
     }
 
     private static void validatePaymentAccountIds(final PaymentDto paymentDto) {
-        if (paymentDto.targetAccountId == null && paymentDto.sourceAccountId == null) {
+        if (paymentDto.targetAccountPublicId == null && paymentDto.sourceAccountPublicId == null) {
             throw new ValidationException(PAYMENT_ACCOUNT_REQUIRED_MESSAGE);
         }
     }
 
     @Nullable
-    private static AccountEntity resolveAccount(@Nullable final Long accountId, final String accountType) {
-        if (accountId == null) {
+    private static AccountEntity resolveAccount(@Nullable final String accountPublicId, final String accountType) {
+        if (accountPublicId == null) {
             return null;
         }
-        final AccountEntity account = AccountEntity.findById(accountId);
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
         if (account == null) {
             throw new ValidationException(accountType + " account not found");
         }
@@ -91,11 +91,11 @@ public class PaymentService {
                 .toList();
     }
 
-    /** Returns the payment with the given id. */
-    public Optional<PaymentResponseDto> findById(final Long id, @Nullable final String currentUsername) {
+    /** Returns the payment with the given publicId. */
+    public Optional<PaymentResponseDto> findById(final String publicId, @Nullable final String currentUsername) {
         final PaymentEntity entity = PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.id = ?1",
-                id).firstResult();
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.publicId = ?1",
+                publicId).firstResult();
         if (entity == null) {
             return Optional.empty();
         }
@@ -103,25 +103,25 @@ public class PaymentService {
         return Optional.of(new PaymentResponseDto(entity));
     }
 
-    /** Returns all payments for the given user. */
-    public List<PaymentResponseDto> findByUserId(final Long userId) {
+    /** Returns all payments for the given user publicId. */
+    public List<PaymentResponseDto> findByUserPublicId(final String userPublicId) {
         return PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.user.id = ?1",
-                userId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.user.publicId = ?1",
+                userPublicId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
-    /** Returns all payments for the given source account. */
-    public List<PaymentResponseDto> findBySourceAccountId(final Long sourceId) {
+    /** Returns all payments for the given source account publicId. */
+    public List<PaymentResponseDto> findBySourceAccountPublicId(final String sourcePublicId) {
         return PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.id = ?1",
-                sourceId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.sourceAccount.publicId = ?1",
+                sourcePublicId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
-    /** Returns all payments for the given target account. */
-    public List<PaymentResponseDto> findByTargetAccountId(final Long targetId) {
+    /** Returns all payments for the given target account publicId. */
+    public List<PaymentResponseDto> findByTargetAccountPublicId(final String targetPublicId) {
         return PaymentEntity.find(
-                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.id = ?1",
-                targetId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
+                "SELECT p FROM PaymentEntity p LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user WHERE p.targetAccount.publicId = ?1",
+                targetPublicId).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
     /** Returns all payments within the given date range. */
@@ -139,9 +139,13 @@ public class PaymentService {
                 .page(0, limit).list().stream().map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
-    /** Returns the total payment amount for the given user. */
-    public BigDecimal getTotalAmountByUser(final Long userId) {
-        return Optional.ofNullable(PaymentEntity.getTotalAmountByUser(userId)).orElse(BigDecimal.ZERO);
+    /** Returns the total payment amount for the given user publicId. */
+    public BigDecimal getTotalAmountByUserPublicId(final String userPublicId) {
+        final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
+        if (user == null || user.id == null) {
+            return BigDecimal.ZERO;
+        }
+        return Optional.ofNullable(PaymentEntity.getTotalAmountByUser(user.id)).orElse(BigDecimal.ZERO);
     }
 
     /** Creates a new payment. */
@@ -149,10 +153,10 @@ public class PaymentService {
     public PaymentResponseDto createPayment(final PaymentDto paymentDto) {
         validatePaymentAccountIds(paymentDto);
 
-        final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountId, "Target");
-        final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountId, "Source");
+        final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
+        final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
 
-        final UserEntity user = UserEntity.findById(paymentDto.userId);
+        final UserEntity user = UserEntity.find("publicId", paymentDto.userPublicId).firstResult();
         if (user == null) {
             throw new ValidationException("User not found");
         }
@@ -170,23 +174,23 @@ public class PaymentService {
         return new PaymentResponseDto(payment);
     }
 
-    /** Updates the payment with the given id. */
+    /** Updates the payment with the given publicId. */
     @Transactional
-    public PaymentResponseDto updatePayment(final Long id, final PaymentDto paymentDto,
+    public PaymentResponseDto updatePayment(final String publicId, final PaymentDto paymentDto,
             @Nullable final String currentUsername) {
         validatePaymentAccountIds(paymentDto);
 
-        final PaymentEntity existingPayment = PaymentEntity.findById(id);
+        final PaymentEntity existingPayment = PaymentEntity.find("publicId", publicId).firstResult();
         if (existingPayment == null) {
             throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
         }
 
         this.verifyPaymentAccess(currentUsername, existingPayment);
 
-        final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountId, "Target");
-        final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountId, "Source");
+        final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
+        final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
 
-        final UserEntity user = UserEntity.findById(paymentDto.userId);
+        final UserEntity user = UserEntity.find("publicId", paymentDto.userPublicId).firstResult();
         if (user == null) {
             throw new ValidationException("User not found");
         }
@@ -210,10 +214,10 @@ public class PaymentService {
      */
     @Transactional
     public PaymentResponseDto createPaymentForUser(final PaymentDto paymentDto, final String username,
-            final Long accountId) {
-        this.verifyAccountAccessForPayment(username, accountId, paymentDto);
+            final String accountPublicId) {
+        this.verifyAccountAccessForPayment(username, accountPublicId, paymentDto);
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-        paymentDto.userId = currentUser != null ? currentUser.id : null;
+        paymentDto.userPublicId = currentUser != null ? currentUser.publicId : null;
         return this.createPayment(paymentDto);
     }
 
@@ -222,65 +226,65 @@ public class PaymentService {
      * that the payment belongs to it.
      */
     @Transactional
-    public PaymentResponseDto updatePaymentForUser(final Long paymentId, final PaymentDto paymentDto,
-            final String username, final Long accountId) {
-        if (!this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+    public PaymentResponseDto updatePaymentForUser(final String paymentPublicId, final PaymentDto paymentDto,
+            final String username, final String accountPublicId) {
+        if (!this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
         }
-        final PaymentEntity existingPayment = PaymentEntity.findById(paymentId);
+        final PaymentEntity existingPayment = PaymentEntity.find("publicId", paymentPublicId).firstResult();
         if (existingPayment == null) {
             throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
         }
-        if (!paymentBelongsToAccount(existingPayment, accountId)) {
+        if (!paymentBelongsToAccount(existingPayment, accountPublicId)) {
             throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
         }
         if (existingPayment.user != null) {
-            paymentDto.userId = existingPayment.user.id;
+            paymentDto.userPublicId = existingPayment.user.publicId;
         } else {
             final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-            paymentDto.userId = currentUser != null ? currentUser.id : null;
+            paymentDto.userPublicId = currentUser != null ? currentUser.publicId : null;
         }
-        if (paymentDto.sourceAccountId != null
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
+        if (paymentDto.sourceAccountPublicId != null
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountPublicId)) {
             throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.targetAccountId != null
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
+        if (paymentDto.targetAccountPublicId != null
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountPublicId)) {
             throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
-        return this.updatePayment(paymentId, paymentDto, username);
+        return this.updatePayment(paymentPublicId, paymentDto, username);
     }
 
-    private void verifyAccountAccessForPayment(final String username, final Long accountId,
+    private void verifyAccountAccessForPayment(final String username, final String accountPublicId,
             final PaymentDto paymentDto) {
-        if (paymentDto.sourceAccountId != null && paymentDto.sourceAccountId.equals(accountId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+        if (paymentDto.sourceAccountPublicId != null && paymentDto.sourceAccountPublicId.equals(accountPublicId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.targetAccountId != null && paymentDto.targetAccountId.equals(accountId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, accountId)) {
+        if (paymentDto.targetAccountPublicId != null && paymentDto.targetAccountPublicId.equals(accountPublicId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.sourceAccountId != null && !paymentDto.sourceAccountId.equals(accountId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountId)) {
+        if (paymentDto.sourceAccountPublicId != null && !paymentDto.sourceAccountPublicId.equals(accountPublicId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountPublicId)) {
             throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
         }
-        if (paymentDto.targetAccountId != null && !paymentDto.targetAccountId.equals(accountId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountId)) {
+        if (paymentDto.targetAccountPublicId != null && !paymentDto.targetAccountPublicId.equals(accountPublicId)
+                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountPublicId)) {
             throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
     }
 
-    private static boolean paymentBelongsToAccount(final PaymentEntity payment, final Long accountId) {
-        return (payment.sourceAccount != null && accountId.equals(payment.sourceAccount.id))
-                || (payment.targetAccount != null && accountId.equals(payment.targetAccount.id));
+    private static boolean paymentBelongsToAccount(final PaymentEntity payment, final String accountPublicId) {
+        return (payment.sourceAccount != null && accountPublicId.equals(payment.sourceAccount.publicId))
+                || (payment.targetAccount != null && accountPublicId.equals(payment.targetAccount.publicId));
     }
 
-    /** Partially updates the payment with the given id. */
+    /** Partially updates the payment with the given publicId. */
     @Transactional
-    public PaymentResponseDto patchPayment(final Long id, final PaymentDto paymentDto,
+    public PaymentResponseDto patchPayment(final String publicId, final PaymentDto paymentDto,
             @Nullable final String currentUsername) {
-        final PaymentEntity existingPayment = PaymentEntity.findById(id);
+        final PaymentEntity existingPayment = PaymentEntity.find("publicId", publicId).firstResult();
         if (existingPayment == null) {
             throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
         }
@@ -288,16 +292,16 @@ public class PaymentService {
         this.verifyPaymentAccess(currentUsername, existingPayment);
 
         // Partial update (PATCH semantics) - only update provided fields
-        if (paymentDto.targetAccountId != null) {
-            existingPayment.targetAccount = resolveAccount(paymentDto.targetAccountId, "Target");
+        if (paymentDto.targetAccountPublicId != null) {
+            existingPayment.targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
         }
-        if (paymentDto.sourceAccountId != null) {
-            existingPayment.sourceAccount = resolveAccount(paymentDto.sourceAccountId, "Source");
+        if (paymentDto.sourceAccountPublicId != null) {
+            existingPayment.sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
         }
-        if (paymentDto.userId != null) {
+        if (paymentDto.userPublicId != null) {
             // Block re-attribution of payments to a different user
-            final Long existingUserId = existingPayment.user != null ? existingPayment.user.id : null;
-            if (!paymentDto.userId.equals(existingUserId)) {
+            final String existingUserPublicId = existingPayment.user != null ? existingPayment.user.publicId : null;
+            if (!paymentDto.userPublicId.equals(existingUserPublicId)) {
                 throw new ValidationException("Payment user re-attribution is not allowed.");
             }
         }
@@ -323,15 +327,15 @@ public class PaymentService {
         return new PaymentResponseDto(existingPayment);
     }
 
-    /** Deletes the payment with the given id. */
+    /** Deletes the payment with the given publicId. */
     @Transactional
-    public boolean deletePayment(final Long id, @Nullable final String currentUsername) {
-        final PaymentEntity existingPayment = PaymentEntity.findById(id);
+    public boolean deletePayment(final String publicId, @Nullable final String currentUsername) {
+        final PaymentEntity existingPayment = PaymentEntity.find("publicId", publicId).firstResult();
         if (existingPayment == null) {
             return false;
         }
         this.verifyPaymentAccess(currentUsername, existingPayment);
-        return PaymentEntity.deleteById(id);
+        return PaymentEntity.delete("publicId", publicId) > 0;
     }
 
     /** Returns all payments matching the given query. */

@@ -47,7 +47,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private Grid<AccountResponseDto> grid;
     @Nullable
     private Span totalBalanceLabel;
-    private Map<Long, BigDecimal> accountBalances = new HashMap<>();
+    private Map<String, BigDecimal> accountBalances = new HashMap<>();
     private List<AccountResponseDto> accountsList = new ArrayList<>();
     private boolean initialized = false;
 
@@ -74,8 +74,9 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.loadDataAsync(() -> {
             LOG.info("Making optimized REST call to load user accounts with balances");
             final var accounts = this.accountService.getMyAccountsWithBalances();
-            final Map<Long, BigDecimal> balances = accounts.stream().collect(Collectors.toMap(AccountResponseDto::getId,
-                    account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO));
+            final Map<String, BigDecimal> balances =
+                    accounts.stream().collect(Collectors.toMap(AccountResponseDto::getPublicId,
+                            account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO));
             return new AccountsWithBalances(accounts, balances);
         }, result -> {
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());
@@ -127,7 +128,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
         this.grid.addColumn(new ComponentRenderer<>(account -> {
             final Span balanceSpan = new Span();
-            final BigDecimal raw = this.getAccountBalance(account.getId());
+            final BigDecimal raw = this.getAccountBalance(account.getPublicId());
             final BigDecimal effective = account.isNegative() ? raw.negate() : raw;
             balanceSpan.setText(String.format("€ %.2f", effective));
             if (effective.compareTo(BigDecimal.ZERO) > 0) {
@@ -145,14 +146,14 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         // Add item click listener to navigate to payments view
         this.grid.addItemClickListener(event -> {
             final AccountResponseDto account = event.getItem();
-            this.getUI().ifPresent(ui -> ui.navigate("accounts/" + account.getId()));
+            this.getUI().ifPresent(ui -> ui.navigate("accounts/" + account.getPublicId()));
         });
 
         // Enable pagination for performance
         this.grid.setPageSize(20);
     }
 
-    private BigDecimal getAccountBalance(final Long accountId) {
+    private BigDecimal getAccountBalance(final String accountId) {
         return this.accountBalances.getOrDefault(accountId, BigDecimal.ZERO);
     }
 
@@ -160,7 +161,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         if (this.totalBalanceLabel != null && this.accountBalances != null) {
             // Sum balances, subtracting those flagged as negative for the current user
             final BigDecimal totalBalance = this.accountsList.stream().reduce(BigDecimal.ZERO, (sum, account) -> {
-                final BigDecimal bal = this.accountBalances.getOrDefault(account.getId(), BigDecimal.ZERO);
+                final BigDecimal bal = this.accountBalances.getOrDefault(account.getPublicId(), BigDecimal.ZERO);
                 return account.isNegative() ? sum.subtract(bal) : sum.add(bal);
             }, BigDecimal::add);
 
@@ -183,9 +184,9 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     // Helper class to return both accounts and balances from the async operation
     private static class AccountsWithBalances {
         final List<AccountResponseDto> accounts;
-        final Map<Long, BigDecimal> balances;
+        final Map<String, BigDecimal> balances;
 
-        AccountsWithBalances(final List<AccountResponseDto> accounts, final Map<Long, BigDecimal> balances) {
+        AccountsWithBalances(final List<AccountResponseDto> accounts, final Map<String, BigDecimal> balances) {
             this.accounts = accounts;
             this.balances = balances;
         }

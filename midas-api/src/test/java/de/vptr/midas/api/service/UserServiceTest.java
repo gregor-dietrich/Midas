@@ -54,7 +54,7 @@ class UserServiceTest {
         final var createdUser = this.userService.createUser(newUser);
 
         assertNotNull(createdUser);
-        assertNotNull(createdUser.id);
+        assertNotNull(createdUser.publicId);
         assertEquals(newUser.username, createdUser.username);
         assertEquals(newUser.email, createdUser.email);
         // Password is not returned in response DTO
@@ -96,7 +96,7 @@ class UserServiceTest {
         // Update the user
         final var updateDto = createUserUpdateDto("testUser", "updated");
 
-        final var updatedUser = this.userService.updateUser(createdUser.id, updateDto);
+        final var updatedUser = this.userService.updateUser(createdUser.publicId, updateDto);
 
         assertNotNull(updatedUser);
         assertEquals(updateDto.email, updatedUser.email);
@@ -110,19 +110,19 @@ class UserServiceTest {
         final var newUser = createUniqueUserDto("deleteTestUser", "delete");
         final var createdUser = this.userService.createUser(newUser);
 
-        final Long userId = createdUser.id;
+        final String publicId = createdUser.publicId;
 
-        final var deleted = this.userService.deleteUser(userId);
+        final var deleted = this.userService.deleteUser(publicId);
 
         assertTrue(deleted);
-        // UserEntity.findById returns null if not found
-        final var deletedUser = UserEntity.findById(userId);
+        // UserEntity.find returns null if not found
+        final var deletedUser = UserEntity.find("publicId", publicId).firstResult();
         assertNull(deletedUser);
     }
 
     @Test
     void testDeleteNonExistentUser() {
-        final var deleted = this.userService.deleteUser(999999L);
+        final var deleted = this.userService.deleteUser("999999");
         assertFalse(deleted);
     }
 
@@ -231,7 +231,8 @@ class UserServiceTest {
 
         final var results = this.userService.searchUsers(null);
 
-        assertEquals(expected.stream().map(user -> user.id).toList(), results.stream().map(user -> user.id).toList());
+        assertEquals(expected.stream().map(user -> user.publicId).toList(),
+                results.stream().map(user -> user.publicId).toList());
     }
 
     @Test
@@ -240,7 +241,8 @@ class UserServiceTest {
 
         final var results = this.userService.searchUsers("   ");
 
-        assertEquals(expected.stream().map(user -> user.id).toList(), results.stream().map(user -> user.id).toList());
+        assertEquals(expected.stream().map(user -> user.publicId).toList(),
+                results.stream().map(user -> user.publicId).toList());
     }
 
     @Test
@@ -271,7 +273,7 @@ class UserServiceTest {
 
         final var results = this.userService.searchUsers(token + "_");
 
-        assertEquals(List.of(createdLiteralMatch.id), results.stream().map(user -> user.id).toList());
+        assertEquals(List.of(createdLiteralMatch.publicId), results.stream().map(user -> user.publicId).toList());
     }
 
     @Test
@@ -299,7 +301,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.username = "patchedUsername_" + ServiceTestUtil.generateUniqueTestSuffix();
 
-        final var patched = this.userService.patchUser(created.id, patchDto);
+        final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertNotNull(patched);
         assertEquals(patchDto.username, patched.username);
     }
@@ -313,7 +315,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.email = "patched_" + ServiceTestUtil.generateUniqueTestSuffix() + "@example.com";
 
-        final var patched = this.userService.patchUser(created.id, patchDto);
+        final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertNotNull(patched);
         assertEquals(patchDto.email, patched.email);
     }
@@ -328,7 +330,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.banned = true;
 
-        final var patched = this.userService.patchUser(created.id, patchDto);
+        final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertTrue(patched.banned);
     }
 
@@ -342,7 +344,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.activated = true;
 
-        final var patched = this.userService.patchUser(created.id, patchDto);
+        final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertTrue(patched.activated);
     }
 
@@ -350,7 +352,7 @@ class UserServiceTest {
     void testPatchUserNotFound() {
         final var patchDto = new UserDto();
         patchDto.username = "test";
-        assertThrows(WebApplicationException.class, () -> this.userService.patchUser(999999L, patchDto));
+        assertThrows(WebApplicationException.class, () -> this.userService.patchUser("999999", patchDto));
     }
 
     @Test
@@ -365,7 +367,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.username = user1.username;
 
-        assertThrows(ValidationException.class, () -> this.userService.patchUser(created2.id, patchDto));
+        assertThrows(ValidationException.class, () -> this.userService.patchUser(created2.publicId, patchDto));
     }
 
     @Test
@@ -377,7 +379,7 @@ class UserServiceTest {
         final var patchDto = new UserDto();
         patchDto.password = "newPassword123";
 
-        final var patched = this.userService.patchUser(created.id, patchDto);
+        final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertNotNull(patched);
     }
 
@@ -390,14 +392,14 @@ class UserServiceTest {
         final var updateDto = createUserUpdateDto("updatedPw", "updatedpw");
         updateDto.password = "newPassword456";
 
-        final var updated = this.userService.updateUser(created.id, updateDto);
+        final var updated = this.userService.updateUser(created.publicId, updateDto);
         assertNotNull(updated);
     }
 
     @Test
     void testUpdateUserNotFound() {
         final var updateDto = createUserUpdateDto("noUser", "nouser");
-        assertThrows(WebApplicationException.class, () -> this.userService.updateUser(999999L, updateDto));
+        assertThrows(WebApplicationException.class, () -> this.userService.updateUser("999999", updateDto));
     }
 
     @Test
@@ -426,14 +428,14 @@ class UserServiceTest {
         final var dto = createUniqueUserDto("findByIdUser", "findbyid");
         final var created = this.userService.createUser(dto);
 
-        final var found = this.userService.findById(created.id);
+        final var found = this.userService.findById(created.publicId);
         assertTrue(found.isPresent());
         assertEquals(created.username, found.get().username);
     }
 
     @Test
     void testFindByIdNonExistent() {
-        final var found = this.userService.findById(999999L);
+        final var found = this.userService.findById("999999");
         assertTrue(found.isEmpty());
     }
 

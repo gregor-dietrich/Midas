@@ -14,8 +14,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
         justification = "DTO used only within GUI; not serialized across trust boundaries")
 public class AccountResponseDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("name")
     private String name;
@@ -23,8 +23,8 @@ public class AccountResponseDto {
     @JsonProperty("userCount")
     private int userCount;
 
-    @JsonProperty("associatedUserIds")
-    private List<Long> associatedUserIds;
+    @JsonProperty("associatedUserPublicIds")
+    private List<String> associatedUserPublicIds;
 
     @JsonProperty("balance")
     private BigDecimal balance; // Optional balance field
@@ -37,8 +37,8 @@ public class AccountResponseDto {
         // Default constructor for Jackson
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
     public String getName() {
@@ -49,8 +49,8 @@ public class AccountResponseDto {
         return this.userCount;
     }
 
-    public List<Long> getAssociatedUserIds() {
-        return this.associatedUserIds;
+    public List<String> getAssociatedUserPublicIds() {
+        return this.associatedUserPublicIds;
     }
 
     public BigDecimal getBalance() {
@@ -71,8 +71,8 @@ public class AccountResponseDto {
         this.isNegative = isNegative;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public void setName(final String name) {
@@ -83,14 +83,14 @@ public class AccountResponseDto {
         this.userCount = userCount;
     }
 
-    public void setAssociatedUserIds(final List<Long> associatedUserIds) {
-        this.associatedUserIds = associatedUserIds;
+    public void setAssociatedUserPublicIds(final List<String> associatedUserPublicIds) {
+        this.associatedUserPublicIds = associatedUserPublicIds;
     }
 
     /** Handles the to account dto operation. */
     public AccountDto toAccountDto() {
         final AccountDto dto = new AccountDto();
-        dto.setId(this.id);
+        dto.setPublicId(this.publicId);
         dto.setName(this.name);
         return dto;
     }

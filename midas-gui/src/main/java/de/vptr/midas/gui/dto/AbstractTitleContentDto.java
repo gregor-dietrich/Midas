@@ -2,11 +2,11 @@ package de.vptr.midas.gui.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Base DTO for entities containing id, title, and content fields. */
+/** Base DTO for entities containing publicId, title, and content fields. */
 public abstract class AbstractTitleContentDto {
 
-    @JsonProperty("id")
-    private Long id;
+    @JsonProperty("publicId")
+    private String publicId;
 
     @JsonProperty("title")
     private String title;
@@ -19,18 +19,18 @@ public abstract class AbstractTitleContentDto {
         // Default constructor
     }
 
-    protected AbstractTitleContentDto(final Long id, final String title, final String content) {
-        this.id = id;
+    protected AbstractTitleContentDto(final String publicId, final String title, final String content) {
+        this.publicId = publicId;
         this.title = title;
         this.content = content;
     }
 
-    public Long getId() {
-        return this.id;
+    public String getPublicId() {
+        return this.publicId;
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public void setPublicId(final String publicId) {
+        this.publicId = publicId;
     }
 
     public String getTitle() {

@@ -43,13 +43,13 @@ public final class TestDataBuilder {
      * Creates a basic post JSON for testing
      */
     public static String createPostJson(final String title, final String content, final boolean published,
-            final Long userId) {
+            final String userPublicId) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
             data.put("published", published);
-            data.put("userId", userId);
+            data.put("userPublicId", userPublicId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to serialize post test data", e);
@@ -60,15 +60,15 @@ public final class TestDataBuilder {
      * Creates a complete post JSON with all fields for testing
      */
     public static String createPostJson(final String title, final String content, final boolean published,
-            final boolean commentable, final Long userId, final Long categoryId) {
+            final boolean commentable, final String userPublicId, final String categoryPublicId) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("title", title);
             data.put("content", content);
             data.put("published", published);
             data.put("commentable", commentable);
-            data.put("userId", userId);
-            data.put("categoryId", categoryId);
+            data.put("userPublicId", userPublicId);
+            data.put("categoryPublicId", categoryPublicId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to serialize post test data", e);
@@ -79,14 +79,14 @@ public final class TestDataBuilder {
      * Creates a default test post JSON
      */
     public static String createDefaultPostJson() {
-        return createPostJson("Test Post", "Test content", false, 1L);
+        return createPostJson("Test Post", "Test content", false, "01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     /**
      * Creates an updated post JSON for testing updates
      */
     public static String createUpdatedPostJson() {
-        return createPostJson("Updated Post", "Updated content", true, 1L);
+        return createPostJson("Updated Post", "Updated content", true, "01AN4Z07BY79KA1307SR9X4MV7");
     }
 
     /**
@@ -134,13 +134,13 @@ public final class TestDataBuilder {
     /**
      * Creates a payment JSON for testing with full payment fields.
      */
-    public static String createPaymentJson(final Long targetAccountId, final Long sourceAccountId, final Long userId,
-            final String amount, final String comment, final String date) {
+    public static String createPaymentJson(final String targetAccountPublicId, final String sourceAccountPublicId,
+            final String userPublicId, final String amount, final String comment, final String date) {
         try {
             final var data = new LinkedHashMap<String, Object>();
-            data.put("targetAccountId", targetAccountId);
-            data.put("sourceAccountId", sourceAccountId);
-            data.put("userId", userId);
+            data.put("targetAccountPublicId", targetAccountPublicId);
+            data.put("sourceAccountPublicId", sourceAccountPublicId);
+            data.put("userPublicId", userPublicId);
             data.put("amount", amount);
             data.put("comment", comment);
             data.put("date", date);
@@ -154,14 +154,16 @@ public final class TestDataBuilder {
      * Creates a default test payment JSON.
      */
     public static String createDefaultPaymentJson() {
-        return createPaymentJson(1L, 2L, 1L, "100.00", "Test payment", "2024-01-01");
+        return createPaymentJson("acc_target", "acc_source", "01AN4Z07BY79KA1307SR9X4MV7", "100.00", "Test payment",
+                "2024-01-01");
     }
 
     /**
      * Creates an updated test payment JSON.
      */
     public static String createUpdatedPaymentJson() {
-        return createPaymentJson(1L, 2L, 1L, "150.00", "Updated payment", "2024-01-01");
+        return createPaymentJson("acc_target", "acc_source", "01AN4Z07BY79KA1307SR9X4MV7", "150.00", "Updated payment",
+                "2024-01-01");
     }
 
     /**
@@ -299,11 +301,11 @@ public final class TestDataBuilder {
     /**
      * Creates a post comment JSON for testing.
      */
-    public static String createPostCommentJson(final String content, final Long postId) {
+    public static String createPostCommentJson(final String content, final String postPublicId) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("content", content);
-            data.put("postId", postId);
+            data.put("postPublicId", postPublicId);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to serialize post comment test data", e);
@@ -313,8 +315,8 @@ public final class TestDataBuilder {
     /**
      * Creates a default post comment JSON for testing.
      */
-    public static String createDefaultPostCommentJson(final Long postId) {
-        return createPostCommentJson("Test comment", postId);
+    public static String createDefaultPostCommentJson(final String postPublicId) {
+        return createPostCommentJson("Test comment", postPublicId);
     }
 
     /**
@@ -459,5 +461,13 @@ public final class TestDataBuilder {
      */
     public static String createDefaultUserUpdateJson() {
         return createUserUpdateJson("updateduser", "updated@example.com");
+    }
+
+    /**
+     * Creates a unique user update JSON
+     */
+    public static String createUniqueUserUpdateJson() {
+        final var suffix = TestUtil.generateUniqueSuffix();
+        return createUserUpdateJson("updated_" + suffix, "updated_" + suffix + "@example.com");
     }
 }
