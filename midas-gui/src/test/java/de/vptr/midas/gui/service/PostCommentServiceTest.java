@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +29,7 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
+import jakarta.inject.Inject;
 import jakarta.enterprise.event.Event;
 
 @SuppressWarnings({ "NullAway", "PMD.LinguisticNaming", "microprofile-restclient" })
@@ -35,6 +37,8 @@ import jakarta.enterprise.event.Event;
 class PostCommentServiceTest {
 
     @Mock
+    @Inject
+    @RestClient
     PostCommentClient commentClient;
 
     @Mock

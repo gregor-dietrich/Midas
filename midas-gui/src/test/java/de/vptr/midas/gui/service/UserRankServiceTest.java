@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Optional;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,12 +23,15 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 @SuppressWarnings("PMD.LinguisticNaming")
 class UserRankServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock
+    @Inject
+    @RestClient
     UserRankClient userRankClient;
 
     @Mock

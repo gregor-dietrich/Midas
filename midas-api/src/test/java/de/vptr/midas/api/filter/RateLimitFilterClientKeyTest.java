@@ -17,6 +17,7 @@ import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.container.ContainerRequestContext;
 
+@SuppressWarnings("unchecked")
 class RateLimitFilterClientKeyTest {
 
     @Test

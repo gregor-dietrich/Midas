@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,12 +22,15 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
+import jakarta.inject.Inject;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("PMD.LinguisticNaming")
 class PageServiceTest {
 
     @Mock
+    @Inject
+    @RestClient
     PageClient pageClient;
 
     @Mock

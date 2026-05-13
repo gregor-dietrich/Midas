@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +28,7 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestDataBuilder;
 import de.vptr.midas.gui.util.TestUtil;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -35,6 +37,8 @@ import jakarta.ws.rs.core.Response;
 class AccountServiceTest {
 
     @Mock
+    @Inject
+    @RestClient
     AccountClient accountClient;
 
     @Mock
