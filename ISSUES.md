@@ -75,7 +75,7 @@ public abstract class BaseEntity extends PanacheEntityBase {
 
 **Goal:** Protect PII (Email) at rest using AES-256-GCM.
 
-### Sub-Task: Crypto Infrastructure
+- [x] **Sub-Task: Crypto Infrastructure**
 
 - **API:** Implement `EncryptionKeyManager` (file-backed) and `EncryptionService`.
 - **Envelope Format:** `1|base64(iv)|base64(ciphertext+tag)`.
@@ -92,7 +92,7 @@ public class EncryptedStringConverter implements AttributeConverter<String, Stri
 }
 ```
 
-### Sub-Task: User Entity Email Encryption
+- [x] **Sub-Task: User Entity Email Encryption**
 
 - **Entity:** Annotate `UserEntity.email` with `@Convert(converter = EncryptedStringConverter.class)`.
 - **Blind Index:** Add `email_blind_index` for searchable lookups.

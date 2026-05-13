@@ -10,10 +10,12 @@ import org.hibernate.generator.EventType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.vptr.midas.api.security.EncryptedStringConverter;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -53,9 +55,14 @@ public class UserEntity extends PanacheEntityBase {
     public UserRankEntity rank;
 
     @Email
-    @Column(unique = true)
+    @Column(length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
     @Nullable
     public String email;
+
+    @Column(name = "email_blind_index", unique = true)
+    @Nullable
+    public String emailBlindIndex;
 
     @Column(nullable = false)
     public boolean banned;

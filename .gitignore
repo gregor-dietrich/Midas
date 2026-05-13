@@ -71,3 +71,7 @@ midas-gui/webpack.generated.js
 midas-gui/tsconfig.json
 midas-gui/types.d.ts
 midas-gui/vite.config.ts
+
+# Encryption keys
+**/encryption.key
+

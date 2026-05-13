@@ -12,6 +12,7 @@ import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
+import de.vptr.midas.api.security.EncryptionService;
 import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.EntityValidator;
 import de.vptr.midas.api.util.SearchQueryUtil;
@@ -32,6 +33,9 @@ public class UserService {
 
     @Inject
     PasswordHashingService passwordHashingService;
+
+    @Inject
+    EncryptionService encryptionService;
 
     @ConfigProperty(name = "midas.default-rank-id", defaultValue = "2")
     @Nullable
@@ -63,7 +67,9 @@ public class UserService {
 
     /** Returns the user with the given email. */
     public Optional<UserResponseDto> findByEmail(@Nullable final String email) {
-        return UserEntity.find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.email = ?1", email)
+        final String blindIndex = this.encryptionService.generateBlindIndex(email);
+        return UserEntity
+                .find("SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank WHERE u.emailBlindIndex = ?1", blindIndex)
                 .<UserEntity>firstResultOptional().map(this.userResponseAssembler::toResponseDto);
     }
 
@@ -101,6 +107,7 @@ public class UserService {
         final UserEntity user = new UserEntity();
         user.username = userDto.username;
         user.email = normalizedEmail;
+        user.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
         user.banned = Boolean.TRUE.equals(userDto.banned);
         user.activated = Boolean.TRUE.equals(userDto.activated);
         user.activationKey = userDto.activationKey != null ? userDto.activationKey : UUID.randomUUID().toString();
@@ -135,6 +142,7 @@ public class UserService {
         // Complete replacement (PUT semantics)
         existingUser.username = userDto.username;
         existingUser.email = normalizedEmail;
+        existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
         existingUser.banned = Boolean.TRUE.equals(userDto.banned);
         existingUser.activated = Boolean.TRUE.equals(userDto.activated);
 
@@ -172,7 +180,9 @@ public class UserService {
             existingUser.username = userDto.username;
         }
         if (userDto.email != null) {
-            existingUser.email = this.normalizeEmail(userDto.email);
+            final String normalizedEmail = this.normalizeEmail(userDto.email);
+            existingUser.email = normalizedEmail;
+            existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
         }
         if (userDto.banned != null) {
             existingUser.banned = userDto.banned;
@@ -262,8 +272,7 @@ public class UserService {
         }
         final List<UserEntity> users = SearchQueryUtil.applyDefaultSearchLimit(UserEntity.find("""
                 SELECT u FROM UserEntity u LEFT JOIN FETCH u.rank \
-                WHERE LOWER(u.username) LIKE ?1 ESCAPE '\\' OR LOWER(u.email) LIKE ?1 ESCAPE '\\'""", searchTerm))
-                .list();
+                WHERE LOWER(u.username) LIKE ?1 ESCAPE '\\'""", searchTerm)).list();
         return this.userResponseAssembler.toResponseDtos(users);
     }
 }
