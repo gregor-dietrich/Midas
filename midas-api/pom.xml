@@ -37,11 +37,7 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- Quarkus Core dependencies -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
-    </dependency>
+    <!-- Quarkus Core (module-specific) -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-jdbc-postgresql</artifactId>
@@ -68,14 +64,6 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-health</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-logging-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-security</artifactId>
     </dependency>
     <dependency>
@@ -88,17 +76,7 @@
       <version>${bucket4j.version}</version>
     </dependency>
 
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit-mockito</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <!-- Test (module-specific) -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-panache-mock</artifactId>
@@ -107,11 +85,6 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jacoco</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -143,6 +116,12 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <excludes>
+                <exclude>org/jboss/**</exclude>
+                <exclude>io/netty/**</exclude>
+              </excludes>
+            </configuration>
           </execution>
           <execution>
             <id>report</id>
