@@ -159,6 +159,7 @@
                 -Xep:StringSplitter:ERROR
                 -Xep:StringConcatToTextBlock:ERROR
                 -Xep:StatementSwitchToExpressionSwitch:ERROR
+                -Xep:UnnecessaryAssignment:ERROR
                 -Xep:UnnecessaryMethodReference:ERROR
                 -Xep:UnusedVariable:ERROR
                 -Xep:EffectivelyPrivate:ERROR</arg>
