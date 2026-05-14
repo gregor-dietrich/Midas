@@ -22,7 +22,7 @@ public class LoginAttemptService {
      *            the IP address
      */
     public void recordFailure(final String username, final String ip) {
-        final String key = this.buildKey(username, ip);
+        final var key = this.buildKey(username, ip);
         this.attemptsCache.computeIfAbsent(key, k -> new AtomicInteger(0)).incrementAndGet();
     }
 
@@ -48,8 +48,8 @@ public class LoginAttemptService {
      * @return the delay in seconds
      */
     public long getDelay(final String username, final String ip) {
-        final String key = this.buildKey(username, ip);
-        final int attempts = this.attemptsCache.getOrDefault(key, new AtomicInteger(0)).get();
+        final var key = this.buildKey(username, ip);
+        final var attempts = this.attemptsCache.getOrDefault(key, new AtomicInteger(0)).get();
 
         if (attempts < 5) {
             return 0;

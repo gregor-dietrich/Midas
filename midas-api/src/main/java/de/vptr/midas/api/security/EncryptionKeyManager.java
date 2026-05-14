@@ -53,7 +53,7 @@ public class EncryptionKeyManager {
             return this.key;
         }
 
-        final Path path = Paths.get(this.keyPath);
+        final var path = Paths.get(this.keyPath);
         LOG.infof("Encryption key file: %s", path.toAbsolutePath());
 
         if (Files.exists(path)) {
@@ -67,7 +67,7 @@ public class EncryptionKeyManager {
 
     private static SecretKey loadKey(final Path path) {
         try {
-            final byte[] content = Files.readAllBytes(path);
+            final var content = Files.readAllBytes(path);
             final byte[] keyBytes;
 
             if (content.length == KEY_BYTES) {
@@ -84,6 +84,7 @@ public class EncryptionKeyManager {
                     throw new IllegalStateException("Failed to decode Base64 encryption key", e);
                 }
             }
+
             return new SecretKeySpec(keyBytes, "AES");
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to read encryption key from: " + path, e);
@@ -92,17 +93,19 @@ public class EncryptionKeyManager {
 
     private static SecretKey generateAndPersistKey(final Path path) {
         try {
-            final byte[] keyBytes = new byte[KEY_BYTES];
+            final var keyBytes = new byte[KEY_BYTES];
             SECURE_RANDOM.nextBytes(keyBytes);
 
-            final Path parent = path.getParent();
+            final var parent = path.getParent();
             if (parent != null) {
                 Files.createDirectories(parent);
             }
 
-            // Write to a temp file in the same directory, set 0600 permissions before writing,
-            // then atomically move to the target path to avoid a window of world-readable exposure.
-            final Path tmp = parent != null ? Files.createTempFile(parent, ".key-", ".tmp")
+            // Write to a temp file in the same directory, set 0600 permissions before
+            // writing,
+            // then atomically move to the target path to avoid a window of world-readable
+            // exposure.
+            final var tmp = parent != null ? Files.createTempFile(parent, ".key-", ".tmp")
                     : Files.createTempFile(".key-", ".tmp");
             try {
                 try {

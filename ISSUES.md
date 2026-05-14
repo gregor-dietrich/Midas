@@ -6,7 +6,7 @@
 
 ### Sub-Task: Auth Hardening & DoS Prevention
 
-- [ ] **Fix User Lockout DoS:** Update `AuthFailureRateLimitFilter` to use a composite key (`username:ip`) for rate limiting. This prevents attackers from locking out legitimate users via username-only throttling.
+- [x] **Fix User Lockout DoS:** Update `AuthFailureRateLimitFilter` to use a composite key (`username:ip`) for rate limiting. This prevents attackers from locking out legitimate users via username-only throttling.
 
 ### Sub-Task: Authorization & IDOR Prevention
 

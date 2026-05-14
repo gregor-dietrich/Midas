@@ -135,6 +135,51 @@ class RateLimitFilterTest {
                 .body("message", equalTo("Too many invalid authentication attempts"));
     }
 
+    @Test
+    void testInvalidBasicAuthAttemptsAreThrottledByRealIp() {
+        final String ip = "198.51.100.15";
+        for (int i = 0; i < 2; ++i) {
+            TestUtil.given().header(REAL_IP_HEADER, ip).auth().preemptive().basic("another_user", "invalid_password")
+                    .when().get("/api/v1/users").then().statusCode(401);
+        }
+
+        TestUtil.given().header(REAL_IP_HEADER, ip).auth().preemptive().basic("another_user", "invalid_password").when()
+                .get("/api/v1/users").then().statusCode(429);
+    }
+
+    @Test
+    void testInvalidBasicAuthAttemptsAreThrottledByRemoteAddress() {
+        for (int i = 0; i < 2; ++i) {
+            TestUtil.given().auth().preemptive().basic("yet_another_user", "invalid_password").when()
+                    .get("/api/v1/users").then().statusCode(401);
+        }
+
+        TestUtil.given().auth().preemptive().basic("yet_another_user", "invalid_password").when().get("/api/v1/users")
+                .then().statusCode(429);
+    }
+
+    @Test
+    void testInvalidBasicAuthAttemptsAreThrottledWithBlankForwardedFor() {
+        for (int i = 0; i < 2; ++i) {
+            TestUtil.given().header(FORWARDED_FOR_HEADER, "  ").auth().preemptive()
+                    .basic("blank_user", "invalid_password").when().get("/api/v1/users").then().statusCode(401);
+        }
+
+        TestUtil.given().header(FORWARDED_FOR_HEADER, "  ").auth().preemptive().basic("blank_user", "invalid_password")
+                .when().get("/api/v1/users").then().statusCode(429);
+    }
+
+    @Test
+    void testInvalidBasicAuthAttemptsAreThrottledWithMultipleForwardedFor() {
+        for (int i = 0; i < 2; ++i) {
+            TestUtil.given().header(FORWARDED_FOR_HEADER, "198.51.100.16, 10.0.0.1").auth().preemptive()
+                    .basic("multi_user", "invalid_password").when().get("/api/v1/users").then().statusCode(401);
+        }
+
+        TestUtil.given().header(FORWARDED_FOR_HEADER, "198.51.100.16, 10.0.0.1").auth().preemptive()
+                .basic("multi_user", "invalid_password").when().get("/api/v1/users").then().statusCode(429);
+    }
+
     private static void assertRateLimitResponse(@Nullable final String ip, final String path, final String method,
             final String message) {
         final var request = (ip != null) ? TestUtil.given().header(FORWARDED_FOR_HEADER, ip) : TestUtil.given();

@@ -6,6 +6,8 @@ import java.util.Base64;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import de.vptr.midas.api.exception.ApiErrorResponse;
+import de.vptr.midas.api.util.IpUtil;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -34,20 +36,32 @@ public class AuthFailureRateLimitFilter {
     @ConfigProperty(name = "midas.rate-limit.period-seconds", defaultValue = "60")
     long periodSeconds;
 
+    @ConfigProperty(name = "rate-limit.trust-forwarded-for", defaultValue = "false")
+    boolean trustForwardedFor;
+
     void init(@Observes final Router router) {
         router.route().order(Integer.MIN_VALUE).handler(this::enforceAuthFailureRateLimit);
     }
 
     void enforceAuthFailureRateLimit(final RoutingContext routingContext) {
-        final String authorizationHeader = routingContext.request().getHeader(AUTHORIZATION_HEADER);
+        final var authorizationHeader = routingContext.request().getHeader(AUTHORIZATION_HEADER);
         if (authorizationHeader != null && authorizationHeader.startsWith(BASIC_PREFIX)) {
-            final String username = extractUsername(authorizationHeader);
-            if (username != null && this.authFailureRateLimitService.isBlocked(username)) {
-                routingContext.response().setStatusCode(429)
-                        .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                        .putHeader(HttpHeaders.RETRY_AFTER, String.valueOf(this.periodSeconds))
-                        .end(TOO_MANY_REQUESTS_BODY);
-                return;
+            final var username = extractUsername(authorizationHeader);
+            if (username != null) {
+                final String ip = IpUtil.resolveIp(routingContext.request(), this.trustForwardedFor);
+
+                if (Vertx.currentContext() != null) {
+                    Vertx.currentContext().putLocal("midas.client-ip", ip);
+                }
+
+                final String key = username + ":" + ip;
+                if (this.authFailureRateLimitService.isBlocked(key)) {
+                    routingContext.response().setStatusCode(429)
+                            .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                            .putHeader(HttpHeaders.RETRY_AFTER, String.valueOf(this.periodSeconds))
+                            .end(TOO_MANY_REQUESTS_BODY);
+                    return;
+                }
             }
         }
         routingContext.next();
@@ -57,8 +71,8 @@ public class AuthFailureRateLimitFilter {
     private static String extractUsername(final String authorizationHeader) {
         final String base64Credentials = authorizationHeader.substring(BASIC_PREFIX.length());
         try {
-            final String decoded = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
-            final int separator = decoded.indexOf(':');
+            final var decoded = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
+            final var separator = decoded.indexOf(':');
             return separator > 0 ? decoded.substring(0, separator) : null;
         } catch (final IllegalArgumentException exception) {
             return null;

@@ -60,13 +60,14 @@ public class UserRankIdentityAugmentor implements SecurityIdentityAugmentor {
             if (userOpt.isEmpty()) {
                 return identity;
             }
-            final UserEntity user = userOpt.get();
-            final UserRankEntity rank = user.rank;
+
+            final var user = userOpt.get();
+            final var rank = user.rank;
             if (rank == null) {
                 return identity;
             }
 
-            final Set<String> roles = this.buildRolesFromUserRank(rank);
+            final var roles = this.buildRolesFromUserRank(rank);
 
             return QuarkusSecurityIdentity.builder(identity).addRoles(roles).build();
         });

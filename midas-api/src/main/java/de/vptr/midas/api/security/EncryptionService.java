@@ -32,15 +32,19 @@ public class EncryptionService {
         if (plainText == null) {
             return null;
         }
+
         try {
-            final Cipher cipher = Cipher.getInstance(ALGORITHM);
-            final byte[] iv = new byte[IV_LENGTH];
+            final var cipher = Cipher.getInstance(ALGORITHM);
+            final var iv = new byte[IV_LENGTH];
+
             SECURE_RANDOM.nextBytes(iv);
             final GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.ENCRYPT_MODE, this.keyManager.getKey(), spec);
-            final byte[] cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-            final String base64Iv = Base64.getEncoder().encodeToString(iv);
-            final String base64CipherText = Base64.getEncoder().encodeToString(cipherText);
+            final var cipherText = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+            final var base64Iv = Base64.getEncoder().encodeToString(iv);
+            final var base64CipherText = Base64.getEncoder().encodeToString(cipherText);
+
             return "1|" + base64Iv + "|" + base64CipherText;
         } catch (final RuntimeException | GeneralSecurityException e) {
             throw new IllegalStateException("Encryption failed", e);
@@ -54,17 +58,19 @@ public class EncryptionService {
         if (cipherTextEnv == null) {
             return null;
         }
-        final String[] parts = cipherTextEnv.split("\\|");
+
+        final var parts = cipherTextEnv.split("\\|");
         if (parts.length != 3 || !"1".equals(parts[0])) {
             return cipherTextEnv;
         }
+
         try {
-            final byte[] iv = Base64.getDecoder().decode(parts[1]);
-            final byte[] cipherText = Base64.getDecoder().decode(parts[2]);
-            final Cipher cipher = Cipher.getInstance(ALGORITHM);
-            final GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            final var iv = Base64.getDecoder().decode(parts[1]);
+            final var cipherText = Base64.getDecoder().decode(parts[2]);
+            final var cipher = Cipher.getInstance(ALGORITHM);
+            final var spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.DECRYPT_MODE, this.keyManager.getKey(), spec);
-            final byte[] plainTextBytes = cipher.doFinal(cipherText);
+            final var plainTextBytes = cipher.doFinal(cipherText);
             return new String(plainTextBytes, StandardCharsets.UTF_8);
         } catch (final RuntimeException | GeneralSecurityException e) {
             throw new IllegalStateException("Decryption failed", e);
@@ -77,10 +83,11 @@ public class EncryptionService {
         if (plainText == null) {
             return null;
         }
+
         try {
-            final Mac mac = Mac.getInstance("HmacSHA256");
+            final var mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(this.keyManager.getKey().getEncoded(), "HmacSHA256"));
-            final byte[] hash = mac.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+            final var hash = mac.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hash);
         } catch (final RuntimeException | GeneralSecurityException e) {
             throw new IllegalStateException("Blind index generation failed", e);
