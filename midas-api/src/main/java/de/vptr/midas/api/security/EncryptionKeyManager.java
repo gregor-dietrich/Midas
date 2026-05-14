@@ -23,15 +23,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 /**
  * Manages the encryption key for data at rest.
  *
- * <p>The key is resolved in the following order:
+ * <p>
+ * The key is resolved in the following order:
  * <ol>
- *   <li>System property or environment variable {@code midas.encryption.key.path}</li>
- *   <li>The default value {@code encryption.key} in the current working directory</li>
+ * <li>System property or environment variable {@code midas.encryption.key.path}</li>
+ * <li>The default value {@code encryption.key} in the current working directory</li>
  * </ol>
  *
- * <p>New keys are generated as 256-bit AES keys, Base64-encoded, and stored with 0600 permissions
- * using an atomic move operation. Existing 32-byte raw binary keys are supported for backward
- * compatibility.
+ * <p>
+ * New keys are generated as 256-bit AES keys, Base64-encoded, and stored with 0600 permissions using an atomic move
+ * operation. Existing 32-byte raw binary keys are supported for backward compatibility.
  */
 @ApplicationScoped
 public class EncryptionKeyManager {

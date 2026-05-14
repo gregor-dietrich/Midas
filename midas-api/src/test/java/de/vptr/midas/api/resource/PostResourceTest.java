@@ -6,6 +6,7 @@ import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createUpdatedPostJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.createTestPost;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResourceAndJson;
@@ -107,6 +108,38 @@ class PostResourceTest {
     @Test
     void testGetPostsByDateRange_missingParams() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range");
+    }
+
+    @Test
+    void testGetAllPostsByUserAdmin_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7/admin");
+    }
+
+    @Test
+    void testGetAllPostsByUserAdmin_forbiddenForGuest() {
+        authenticatedGuestRequest().when().get(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7/admin").then()
+                .statusCode(403);
+    }
+
+    @Test
+    void testGetAllPostsByUserAdmin_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7/admin");
+    }
+
+    @Test
+    void testGetAllPostsByDateRangeAdmin_unauthorized() {
+        testUnauthorizedAccess(ENDPOINT_URL + "/date-range/admin?startDate=2024-01-01&endDate=2024-12-31");
+    }
+
+    @Test
+    void testGetAllPostsByDateRangeAdmin_forbiddenForGuest() {
+        authenticatedGuestRequest().when()
+                .get(ENDPOINT_URL + "/date-range/admin?startDate=2024-01-01&endDate=2024-12-31").then().statusCode(403);
+    }
+
+    @Test
+    void testGetAllPostsByDateRangeAdmin_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range/admin?startDate=2024-01-01&endDate=2024-12-31");
     }
 
     @Test

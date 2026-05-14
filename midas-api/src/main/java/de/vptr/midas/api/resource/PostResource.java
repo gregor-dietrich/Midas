@@ -72,13 +72,24 @@ public class PostResource {
     /** Returns published posts by user with pagination. */
     @GET
     @Path("/user/{userPublicId}")
-    // TODO: add an admin-only path that returns all posts (including drafts) for a user.
     public List<PostResponseDto> getPostsByUser(@PathParam("userPublicId") final String userPublicId,
             @QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
         return this.postService.findPublishedByUserPublicId(userPublicId, safePage, safeSize);
+    }
+
+    /** Returns all posts (including drafts) by user with pagination. Admin-only. */
+    @GET
+    @Path("/user/{userPublicId}/admin")
+    @RolesAllowed({ "admin:view" })
+    public List<PostResponseDto> getAllPostsByUser(@PathParam("userPublicId") final String userPublicId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size) {
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.postService.findByUserPublicId(userPublicId, safePage, safeSize);
     }
 
     /** Returns published posts by category with pagination. */
@@ -105,13 +116,21 @@ public class PostResource {
     /** Returns posts within the given date range. */
     @GET
     @Path("/date-range")
-    // TODO: add an admin-only path that returns all posts (including drafts) within a date range.
     public List<PostResponseDto> getPostsByDateRange(@QueryParam("startDate") final LocalDate startDate,
             @QueryParam("endDate") final LocalDate endDate) {
         if (startDate == null || endDate == null) {
             return List.of();
         }
         return this.postService.findPublishedByDateRange(startDate, endDate);
+    }
+
+    /** Returns all posts (including drafts) within the given date range. Admin-only. */
+    @GET
+    @Path("/date-range/admin")
+    @RolesAllowed({ "admin:view" })
+    public List<PostResponseDto> getAllPostsByDateRange(@QueryParam("startDate") final LocalDate startDate,
+            @QueryParam("endDate") final LocalDate endDate) {
+        return this.postService.findByDateRange(startDate, endDate);
     }
 
     @POST

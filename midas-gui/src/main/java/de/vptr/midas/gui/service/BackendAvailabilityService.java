@@ -55,7 +55,6 @@ public class BackendAvailabilityService {
 
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD",
             justification = "Called reflectively by SmallRye Fault Tolerance @Fallback")
-    @SuppressWarnings("unused")
     private boolean fallbackAvailability() {
         LOG.error("Backend availability check failed after retries, assuming unavailable");
         return false;
