@@ -52,7 +52,7 @@ If any quality gates or tests fail, work on them until all problems are resolved
 
 - **API Response**: Standardized JSON error payloads with `status`, `error`, and `message`.
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at both GUI and API levels.
-- **Security**: Basic Auth with PBKDF2-SHA256. The GUI stores backend credentials behind an opaque session ID.
+- **Security**: Basic Auth with BCrypt. The GUI stores backend credentials behind an opaque session ID.
 - **Architecture**: Prefer composition and clear abstraction. Use MicroProfile Fault Tolerance in the GUI for resilient API communication.
 
 ## Directory Structure

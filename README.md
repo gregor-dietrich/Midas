@@ -190,7 +190,7 @@ Key variables (see `docker-compose.yml` for all):
 - **ORM**: Hibernate ORM with Panache (Active Record pattern)
 - **Validation**: Hibernate Validator (Bean Validation)
 - **API**: Jakarta REST (`@ApplicationPath("/api/v1")`) with Jackson
-- **Security**: Basic Auth with PBKDF2-SHA256, role-based access control
+- **Security**: Basic Auth with BCrypt, role-based access control
 - **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP dependency-check
 
 ### Frontend (midas-gui)

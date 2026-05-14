@@ -1,157 +1,33 @@
 # Issues
 
-## 1. Profile Management & Security Hardening
+## 1. Security Remediation & Hardening
 
-**Goal:** Implement comprehensive user profile management and upgrade core security primitives (Hashing, Throttling).
+**Goal:** Address critical vulnerabilities and architectural weaknesses identified during the security audit.
 
-- [x] **Sub-Task: Upgrade to Bcrypt & Remove Salt Column**
+### Sub-Task: Auth Hardening & DoS Prevention
 
-- **API Change:** Replace PBKDF2 with Bcrypt in `PasswordHashingService`.
+- [ ] **Fix User Lockout DoS:** Update `AuthFailureRateLimitFilter` to use a composite key (`username:ip`) for rate limiting. This prevents attackers from locking out legitimate users via username-only throttling.
 
-```java
-// midas-api/.../security/PasswordHashingService.java
-@ApplicationScoped
-public class PasswordHashingService {
-    public String hashPassword(String password) {
-        return BcryptUtil.bcryptHash(password);
-    }
-    public boolean verifyPassword(String password, String hash) {
-        return BcryptUtil.matches(password, hash);
-    }
-}
-```
+### Sub-Task: Authorization & IDOR Prevention
 
-- **Entity Change:** Remove `String salt` from `UserEntity`.
-- **Database:** Update `init.sql` to remove `salt` column and update default hashes (e.g., admin:admin -> `$2a$10$8K1p/v87C.YmG.D.y.X.9.M.V.W.X.Y.Z`).
+- [ ] **Eliminate Impersonation in Posts/Payments:**
+  - Remove `userPublicId` from `PostDto` and `PaymentDto` request bodies.
+  - Update `PostService` and `PaymentService` to resolve the owner entity via `SecurityContext.getUserPrincipal().getName()`.
+- [ ] **Granular Ownership Checks:** Ensure all `PUT`, `PATCH`, and `DELETE` operations on user-owned resources (Posts, Comments, Payments) verify that the authenticated user is the actual owner (or an admin).
 
-- [x] **Sub-Task: Password Change Endpoint**
+### Sub-Task: Content Security (XSS Protection)
 
-- **API:** Implement `POST /api/v1/users/me/password`.
-- **Validation:** Add `@Size(min = 8)` and complexity checks to `PasswordChangeDto`.
-- **GUI:** Add "Change Password" dialog to `UserDetailView`.
+- [ ] **OWASP HTML Sanitization:** Integrate the OWASP Java HTML Sanitizer (already in `pom.xml`) into the service layer.
+- [ ] **Sanitize User Content:** Apply strict HTML sanitization to `content` fields in `PostService` and `PageService`, and the `comment` field in `PostCommentService`.
 
-- [x] **Sub-Task: Login Throttling (Exponential Backoff)**
+### Sub-Task: Cryptographic Integrity
 
-- **API:** Implement `LoginAttemptService` to track failures by IP/Username.
-- **Logic:** `long delay = 1L << (attempts - 5);` (start slowing down after 5 failures).
-- **Integration:** Call `loginAttemptService.recordFailure(username, ip)` in `AuthResource`.
+- [ ] **Key Separation:** Update `EncryptionService` to use a Key Derivation Function (KDF) to derive distinct sub-keys for AES-GCM encryption and HMAC-SHA256 blind indexing from the master key.
 
----
+### Sub-Task: Session & GUI Hardening
 
-## 2. ULIDs as Public Keys
-
-**Goal:** Replace sequential IDs in all external APIs and URLs with ULIDs.
-
-### Sub-Task: Infrastructure Implementation
-
-- **API:** Add `UlidUtil` and `BaseEntity`.
-
-```java
-// midas-api/.../entity/BaseEntity.java
-@MappedSuperclass
-public abstract class BaseEntity extends PanacheEntityBase {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
-
-    @Column(name = "public_id", nullable = false, unique = true, length = 26, updatable = false)
-    public String publicId;
-
-    @PrePersist
-    public void generatePublicId() {
-        if (this.publicId == null) this.publicId = UlidCreator.getUlid().toString();
-    }
-}
-```
-
-### Sub-Task: Migration & DTO Update
-
-- **DB:** Migration to add `public_id`, backfill existing rows, add `UNIQUE INDEX`.
-- **DTOs:** All Response DTOs must use `publicId` (String) instead of `id` (Long).
-- **Resources:** Update `@Path("/{id}")` to `@Path("/{publicId}")` and use `find("publicId", publicId).firstResult()`.
-
----
-
-## 3. Encrypt-at-Rest
-
-**Goal:** Protect PII (Email) at rest using AES-256-GCM.
-
-- [x] **Sub-Task: Crypto Infrastructure**
-
-- **API:** Implement `EncryptionKeyManager` (file-backed) and `EncryptionService`.
-- **Envelope Format:** `1|base64(iv)|base64(ciphertext+tag)`.
-- **Converter:**
-
-```java
-@Converter
-public class EncryptedStringConverter implements AttributeConverter<String, String> {
-    @Override
-    public String convertToDatabaseColumn(String attr) {
-        return CDI.current().select(EncryptionService.class).get().encrypt(attr);
-    }
-    // ... decrypt on convertToEntityAttribute
-}
-```
-
-- [x] **Sub-Task: User Entity Email Encryption**
-
-- **Entity:** Annotate `UserEntity.email` with `@Convert(converter = EncryptedStringConverter.class)`.
-- **Blind Index:** Add `email_blind_index` for searchable lookups.
-- **Repository:** Update `UserRepository.findByEmail(email)` to use `generateBlindIndex(email)`.
-
----
-
-## 4. Resilience & Timeouts in Clients
-
-**Goal:** Centralize fault tolerance in the REST client layer.
-
-- [x] **Sub-Task: Client Refactoring**
-
-- **GUI:** Move `@Retry` and `@Timeout` from `Service` classes to `Client` interfaces.
-
-```java
-@RegisterRestClient(configKey = "user-api")
-public interface UserClient {
-    @GET
-    @Path("/{publicId}")
-    @Retry(maxRetries = 3)
-    @Timeout(2000)
-    UserResponseDto getUser(@PathParam("publicId") String publicId);
-}
-```
-
-- **Config:** Define timeouts in `application.properties`:
-  `quarkus.rest-client."user-api".connect-timeout=2000`
-
----
-
-## 5. UI/UX Enhancements & Real-time Updates
-
-**Goal:** Modernize the GUI with glassmorphism and real-time push.
-
-- [x] **Sub-Task: GlassAccentBar Component**
-
-- **GUI:** Create `GlassAccentBar.java` (Div with gradient top border).
-- **Style:** Use absolute positioning and `var(--lumo-primary-color)`.
-
-- [x] **Sub-Task: Real-time via Vaadin Push**
-
-- **GUI:** Add `@Push` to `AppConfig`.
-- **Flow:** API fires CDI Event -> GUI `Broadcaster` -> `UI.access()` to update Grid/Comments.
-
----
-
-## 6. Admin Improvements & Bug Fixes
-
-**Goal:** Fix layout and filtering bugs in Admin views.
-
-- [x] **Sub-Task: Date Range Filtering Fix**
-
-- **API:** Ensure `Resource` methods handle invalid date strings by returning `400 Bad Request` or empty result, never the full dataset.
-- **GUI:** Update `AdminCommentView` to validate date pickers before calling the service.
-
-- [x] **Sub-Task: Sidebar Responsiveness**
-
-- **GUI:** Fix CSS for `AdminLayout` to ensure the sidebar occupies 100% height and content scrolls independently.
+- [ ] **Tighten CSP:** Remove `unsafe-inline` and `unsafe-eval` from the Content Security Policy in `midas-gui/src/main/resources/application.properties`.
+- [ ] **Persist Session Key:** Externalize the session encryption key in `SessionAuthorizationStore` (e.g., via `EncryptionKeyManager` or config) to support horizontal scaling and prevent session loss on restart.
 
 ---
 
@@ -160,4 +36,5 @@ public interface UserClient {
 1. **API-Side Auth:** Never trust the GUI for permissions. Always use `@RolesAllowed` on every API endpoint.
 2. **Re-verification:** The API should re-fetch user status from DB on sensitive operations (e.g., `isBanned`, `rank`).
 3. **No Plaintext:** Never log PII or passwords. Scrub DTOs before logging.
-4. **Quality Gates:** Every task is incomplete until `make lint test` passes for both `midas-api` and `midas-gui`.
+4. **Ownership Principle:** Always derive "owner" IDs from the authenticated session, never from request parameters.
+5. **Quality Gates:** Every task is incomplete until `make format lint test` passes for both `midas-api` and `midas-gui`.
