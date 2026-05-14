@@ -14,6 +14,7 @@ import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.security.HtmlSanitizerService;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
@@ -30,6 +31,9 @@ public class PostService {
 
     @Inject
     AdminAccessService adminAccessService;
+
+    @Inject
+    HtmlSanitizerService htmlSanitizer;
 
     private void verifyPostOwnership(@Nullable final String currentUsername, final PostEntity post) {
         if (currentUsername == null) {
@@ -128,7 +132,7 @@ public class PostService {
     private PostEntity buildPostEntity(final PostDto postDto, final String currentUsername) {
         final PostEntity post = new PostEntity();
         post.title = postDto.title;
-        post.content = postDto.content;
+        post.content = this.htmlSanitizer.sanitizeRichContent(postDto.content);
         post.published = postDto.published != null ? postDto.published : false;
         post.commentable = postDto.commentable != null ? postDto.commentable : false;
 
@@ -165,7 +169,7 @@ public class PostService {
 
         // Complete replacement (PUT semantics)
         existingPost.title = postDto.title;
-        existingPost.content = postDto.content;
+        existingPost.content = this.htmlSanitizer.sanitizeRichContent(postDto.content);
         existingPost.published = postDto.published != null ? postDto.published : false;
         existingPost.commentable = postDto.commentable != null ? postDto.commentable : false;
 
@@ -203,7 +207,7 @@ public class PostService {
             existingPost.title = postDto.title;
         }
         if (postDto.content != null && !postDto.content.trim().isEmpty()) {
-            existingPost.content = postDto.content;
+            existingPost.content = this.htmlSanitizer.sanitizeRichContent(postDto.content);
         }
         if (postDto.published != null) {
             existingPost.published = postDto.published;

@@ -55,4 +55,37 @@ class BackendAvailabilityServiceTest {
         assertThat(result).isFalse();
         verify(response).close();
     }
+
+    @Test
+    void isBackendAvailableRaw_shouldReturnTrue_whenBackendReturns200() {
+        final var response = Mockito.mock(Response.class);
+        when(this.backendHealthClient.checkHealth()).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+
+        final var result = this.service.isBackendAvailableRaw();
+
+        assertThat(result).isTrue();
+        verify(response).close();
+    }
+
+    @Test
+    void isBackendAvailableRaw_shouldReturnFalse_whenBackendReturnsNon200() {
+        final var response = Mockito.mock(Response.class);
+        when(this.backendHealthClient.checkHealth()).thenReturn(response);
+        when(response.getStatus()).thenReturn(503);
+
+        final var result = this.service.isBackendAvailableRaw();
+
+        assertThat(result).isFalse();
+        verify(response).close();
+    }
+
+    @Test
+    void isBackendAvailableRaw_shouldReturnFalse_whenExceptionThrown() {
+        when(this.backendHealthClient.checkHealth()).thenThrow(new RuntimeException("Connection refused"));
+
+        final var result = this.service.isBackendAvailableRaw();
+
+        assertThat(result).isFalse();
+    }
 }

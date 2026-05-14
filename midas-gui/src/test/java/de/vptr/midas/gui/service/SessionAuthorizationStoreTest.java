@@ -2,20 +2,34 @@ package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("NullAway")
 class SessionAuthorizationStoreTest {
 
+    private static SecretKey testKey() {
+        try {
+            final var kg = KeyGenerator.getInstance("AES");
+            kg.init(256);
+            return kg.generateKey();
+        } catch (final NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     @Test
     void createSession_shouldStoreAndResolveAuthorization() {
-        final var sessionAuthorizationStore = new SessionAuthorizationStore();
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(Clock.systemUTC(), testKey());
         final var sessionId = sessionAuthorizationStore.createSession("Basic abc");
 
         assertThat(sessionId).isNotBlank();
@@ -24,7 +38,7 @@ class SessionAuthorizationStoreTest {
 
     @Test
     void revokeSession_shouldRemoveStoredAuthorization() {
-        final var sessionAuthorizationStore = new SessionAuthorizationStore();
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(Clock.systemUTC(), testKey());
         final var sessionId = sessionAuthorizationStore.createSession("Basic def");
 
         sessionAuthorizationStore.revokeSession(sessionId);
@@ -34,7 +48,7 @@ class SessionAuthorizationStoreTest {
 
     @Test
     void resolveAndRevoke_shouldHandleNullSessionId() {
-        final var sessionAuthorizationStore = new SessionAuthorizationStore();
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(Clock.systemUTC(), testKey());
         assertThat(sessionAuthorizationStore.resolveAuthorization(null)).isNull();
 
         sessionAuthorizationStore.revokeSession(null);
@@ -43,7 +57,7 @@ class SessionAuthorizationStoreTest {
     @Test
     void resolveAuthorization_shouldExpireInactiveSessions() {
         final var clock = new MutableClock(Instant.parse("2025-01-01T00:00:00Z"));
-        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock);
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock, testKey());
         final var sessionId = sessionAuthorizationStore.createSession("Basic ghi");
 
         clock.advance(SessionAuthorizationStore.SESSION_TTL.plusSeconds(1));
@@ -55,7 +69,7 @@ class SessionAuthorizationStoreTest {
     @Test
     void resolveAuthorization_shouldExpireSessionAtExactTtlBoundary() {
         final var clock = new MutableClock(Instant.parse("2025-01-01T00:00:00Z"));
-        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock);
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock, testKey());
         final var sessionId = sessionAuthorizationStore.createSession("Basic exact");
 
         clock.advance(SessionAuthorizationStore.SESSION_TTL);
@@ -67,7 +81,7 @@ class SessionAuthorizationStoreTest {
     @Test
     void resolveAuthorization_shouldRefreshExpiryForActiveSessions() {
         final var clock = new MutableClock(Instant.parse("2025-01-01T00:00:00Z"));
-        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock);
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock, testKey());
         final var sessionId = sessionAuthorizationStore.createSession("Basic jkl");
 
         clock.advance(SessionAuthorizationStore.SESSION_TTL.minusSeconds(1));
@@ -80,7 +94,7 @@ class SessionAuthorizationStoreTest {
     @Test
     void cleanupExpiredSessions_shouldRemoveOnlyExpiredEntries() {
         final var clock = new MutableClock(Instant.parse("2025-01-01T00:00:00Z"));
-        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock);
+        final var sessionAuthorizationStore = new SessionAuthorizationStore(clock, testKey());
         final var expiredSessionId = sessionAuthorizationStore.createSession("Basic mno");
 
         clock.advance(SessionAuthorizationStore.SESSION_TTL.plusSeconds(1));

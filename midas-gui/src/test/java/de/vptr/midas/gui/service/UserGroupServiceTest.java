@@ -344,4 +344,63 @@ class UserGroupServiceTest {
         // Then
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void addUserToGroup_shouldThrowServiceException_whenUserAlreadyInGroup() {
+        final var groupId = "1";
+        final var userId = "1";
+        final Response conflictResponse = ResponseTestUtil.createMockResponse(409);
+        final WebApplicationException conflictException = new WebApplicationException(conflictResponse);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.groupClient.addUserToGroup(groupId, userId, TEST_AUTH_HEADER)).thenThrow(conflictException);
+
+        assertThatThrownBy(() -> this.userGroupService.addUserToGroup(groupId, userId))
+                .isInstanceOf(ServiceException.class).hasMessage("User is already a member of this group");
+    }
+
+    @Test
+    void removeUserFromGroup_shouldReturnFalse_whenNotSuccessful() {
+        final var groupId = "1";
+        final var userId = "1";
+        final Response badRequest = ResponseTestUtil.createBadRequestResponse();
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.groupClient.removeUserFromGroup(groupId, userId, TEST_AUTH_HEADER)).thenReturn(badRequest);
+
+        final boolean result = this.userGroupService.removeUserFromGroup(groupId, userId);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void searchGroups_shouldReturnMatchingGroups_whenAuthenticated() {
+        final var group = new UserGroupResponseDto();
+        group.setPublicId("1");
+        group.setName("Admin Group");
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.groupClient.searchGroups("admin", TEST_AUTH_HEADER)).thenReturn(List.of(group));
+
+        final var result = this.userGroupService.searchGroups("admin");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Admin Group");
+    }
+
+    @Test
+    void getGroupsByUser_shouldReturnUserGroups_whenAuthenticated() {
+        final var userPublicId = "1";
+        final var group = new UserGroupResponseDto();
+        group.setPublicId("1");
+        group.setName("Test Group");
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.groupClient.getGroupsForUser(userPublicId, TEST_AUTH_HEADER)).thenReturn(List.of(group));
+
+        final var result = this.userGroupService.getGroupsByUser(userPublicId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Test Group");
+    }
 }

@@ -17,17 +17,17 @@
 
 ### Sub-Task: Content Security (XSS Protection)
 
-- [ ] **OWASP HTML Sanitization:** Integrate the OWASP Java HTML Sanitizer (already in `pom.xml`) into the service layer.
-- [ ] **Sanitize User Content:** Apply strict HTML sanitization to `content` fields in `PostService` and `PageService`, and the `comment` field in `PostCommentService`.
+- [x] **OWASP HTML Sanitization:** Integrate the OWASP Java HTML Sanitizer (already in `pom.xml`) into the service layer.
+- [x] **Sanitize User Content:** Apply strict HTML sanitization to `content` fields in `PostService` and `PageService`, and the `comment` field in `PostCommentService`.
 
 ### Sub-Task: Cryptographic Integrity
 
-- [ ] **Key Separation:** Update `EncryptionService` to use a Key Derivation Function (KDF) to derive distinct sub-keys for AES-GCM encryption and HMAC-SHA256 blind indexing from the master key.
+- [x] **Key Separation:** Update `EncryptionService` to use a Key Derivation Function (KDF) to derive distinct sub-keys for AES-GCM encryption and HMAC-SHA256 blind indexing from the master key.
 
 ### Sub-Task: Session & GUI Hardening
 
-- [ ] **Tighten CSP:** Remove `unsafe-inline` and `unsafe-eval` from the Content Security Policy in `midas-gui/src/main/resources/application.properties`.
-- [ ] **Persist Session Key:** Externalize the session encryption key in `SessionAuthorizationStore` (e.g., via `EncryptionKeyManager` or config) to support horizontal scaling and prevent session loss on restart.
+- [x] **Tighten CSP:** Remove `unsafe-inline` and `unsafe-eval` from the Content Security Policy in `midas-gui/src/main/resources/application.properties`.
+- [x] **Persist Session Key:** Externalize the session encryption key in `SessionAuthorizationStore` (e.g., via `EncryptionKeyManager` or config) to support horizontal scaling and prevent session loss on restart.
 
 ---
 

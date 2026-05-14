@@ -119,7 +119,8 @@ public class PaymentResource {
     /**
      * Creates a new payment.
      *
-     * @param paymentDto the payment data
+     * @param paymentDto
+     *            the payment data
      * @return the created payment
      */
     @POST

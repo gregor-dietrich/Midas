@@ -6,7 +6,9 @@ import java.util.Optional;
 import de.vptr.midas.api.dto.PageDto;
 import de.vptr.midas.api.dto.PageResponseDto;
 import de.vptr.midas.api.entity.PageEntity;
+import de.vptr.midas.api.security.HtmlSanitizerService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -14,6 +16,9 @@ import jakarta.ws.rs.core.Response;
 /** Service for page business logic. */
 @ApplicationScoped
 public class PageService {
+
+    @Inject
+    HtmlSanitizerService htmlSanitizer;
 
     /** Returns all pages with default pagination. */
     public List<PageResponseDto> getAllPages() {
@@ -42,7 +47,7 @@ public class PageService {
     public PageResponseDto createPage(final PageDto pageDto) {
         final PageEntity page = new PageEntity();
         page.title = pageDto.title;
-        page.content = pageDto.content;
+        page.content = this.htmlSanitizer.sanitizeRichContent(pageDto.content);
         page.persistAndFlush();
         return new PageResponseDto(page);
     }
@@ -57,7 +62,7 @@ public class PageService {
 
         // Complete replacement (PUT semantics)
         existingPage.title = pageDto.title;
-        existingPage.content = pageDto.content;
+        existingPage.content = this.htmlSanitizer.sanitizeRichContent(pageDto.content);
         existingPage.persistAndFlush();
         return new PageResponseDto(existingPage);
     }
@@ -75,7 +80,7 @@ public class PageService {
             existingPage.title = pageDto.title;
         }
         if (pageDto.content != null && !pageDto.content.trim().isEmpty()) {
-            existingPage.content = pageDto.content;
+            existingPage.content = this.htmlSanitizer.sanitizeRichContent(pageDto.content);
         }
 
         existingPage.persistAndFlush();

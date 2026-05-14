@@ -146,8 +146,7 @@ public final class TestDataBuilder {
         final var created = LocalDateTime.now(ZoneId.systemDefault());
         final var updated = LocalDateTime.now(ZoneId.systemDefault());
 
-        final var payment =
-                new PaymentDto(fromAccountId, toAccountId, amount, date, comment, created, updated);
+        final var payment = new PaymentDto(fromAccountId, toAccountId, amount, date, comment, created, updated);
         payment.setPublicId(suffix);
         return payment;
     }

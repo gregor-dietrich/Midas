@@ -32,7 +32,7 @@ import de.vptr.midas.gui.util.TestUtil;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert" })
+@SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert", "NullAway" })
 class PaymentServiceTest {
 
     @Mock
@@ -198,8 +198,8 @@ class PaymentServiceTest {
 
     @Test
     void createPayment_shouldReturnCreatedPayment_whenValidPayment() {
-        final var newPayment = new PaymentDto("1", "2", new BigDecimal("100.00"),
-                LocalDate.now(ZoneId.systemDefault()), "New Payment", null, null);
+        final var newPayment = new PaymentDto("1", "2", new BigDecimal("100.00"), LocalDate.now(ZoneId.systemDefault()),
+                "New Payment", null, null);
         final var createdPayment = MockDataUtil.createPaymentResponseDto();
         createdPayment.setPublicId("1");
         createdPayment.setComment("New Payment");
@@ -474,5 +474,75 @@ class PaymentServiceTest {
                 .thenThrow(ExceptionTestUtil.create401Exception());
 
         ExceptionTestUtil.assertHandles401WithLogout(() -> this.paymentService.searchPayments(query), this.authService);
+    }
+
+    @Test
+    void getPaymentsByAccount_shouldReturnMergedPayments_whenBothSourceAndTargetExist() {
+        final var accountId = "1";
+        final var sourcePayment = MockDataUtil.createPaymentResponseDto("10", "user1", accountId, "Acct A", "2",
+                "Acct B", new BigDecimal("100.00"), "Source payment");
+        sourcePayment.setDate(LocalDate.of(2024, 1, 10));
+        final var targetPayment = MockDataUtil.createPaymentResponseDto("20", "user2", "3", "Acct C", accountId,
+                "Acct A", new BigDecimal("50.00"), "Target payment");
+        targetPayment.setDate(LocalDate.of(2024, 1, 20));
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.paymentClient.getPaymentsBySourceAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(sourcePayment));
+        when(this.paymentClient.getPaymentsByTargetAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(targetPayment));
+
+        final var result = this.paymentService.getPaymentsByAccount(accountId);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getPublicId()).isEqualTo("20");
+        assertThat(result.get(1).getPublicId()).isEqualTo("10");
+    }
+
+    @Test
+    void getPaymentsByAccount_shouldDeduplicatePayments_whenSamePaymentInBothLists() {
+        final var accountId = "1";
+        final var payment = MockDataUtil.createPaymentResponseDto("10", "user1", accountId, "Acct A", "2", "Acct B",
+                new BigDecimal("100.00"), "Shared payment");
+        payment.setDate(LocalDate.of(2024, 1, 15));
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.paymentClient.getPaymentsBySourceAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(payment));
+        when(this.paymentClient.getPaymentsByTargetAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(payment));
+
+        final var result = this.paymentService.getPaymentsByAccount(accountId);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getPaymentsByAccount_shouldHandleNullDates_whenSorting() {
+        final var accountId = "1";
+        final var nullDate1 = MockDataUtil.createPaymentResponseDto("10", "user1", accountId, "Acct A", "2", "Acct B",
+                new BigDecimal("100.00"), "Null date payment 1");
+        nullDate1.setDate(null);
+        final var nullDate2 = MockDataUtil.createPaymentResponseDto("20", "user2", "3", "Acct C", accountId, "Acct A",
+                new BigDecimal("50.00"), "Null date payment 2");
+        nullDate2.setDate(null);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.paymentClient.getPaymentsBySourceAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(nullDate1));
+        when(this.paymentClient.getPaymentsByTargetAccount(accountId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(Collections.singletonList(nullDate2));
+
+        final var result = this.paymentService.getPaymentsByAccount(accountId);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void getPaymentsByAccount_shouldThrowAuthenticationException_whenNotAuthenticated() {
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
+
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.paymentService.getPaymentsByAccount("1"));
     }
 }

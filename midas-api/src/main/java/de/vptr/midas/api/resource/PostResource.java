@@ -136,7 +136,8 @@ public class PostResource {
     /**
      * Creates a new post.
      *
-     * @param postDto the post data
+     * @param postDto
+     *            the post data
      * @return the created post
      */
     @POST

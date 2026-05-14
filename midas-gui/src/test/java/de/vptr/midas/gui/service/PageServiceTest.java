@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.vptr.midas.gui.client.PageClient;
 import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
+import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.ResponseTestUtil;
@@ -220,5 +222,53 @@ class PageServiceTest {
 
         ExceptionTestUtil.assertThrowsServiceException(() -> this.pageService.getPageById(pageId),
                 "Page lookup failed");
+    }
+
+    @Test
+    void getAllPages_withPagination_shouldReturnPages_whenAuthenticated() {
+        final var expectedPages = List.of(new PageResponseDto(), new PageResponseDto());
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.pageClient.getAllPages(1, 10, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPages);
+
+        final var result = this.pageService.getAllPages(1, 10);
+
+        assertThat(result).isEqualTo(expectedPages);
+        verify(this.pageClient).getAllPages(1, 10, TestUtil.TEST_AUTH_HEADER);
+    }
+
+    @Test
+    void getAllPages_withPagination_shouldNormalizeInvalidValues() {
+        final var expectedPages = List.of(new PageResponseDto());
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.pageClient.getAllPages(0, 20, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPages);
+
+        final var result = this.pageService.getAllPages(-1, 0);
+
+        assertThat(result).isEqualTo(expectedPages);
+        verify(this.pageClient).getAllPages(0, 20, TestUtil.TEST_AUTH_HEADER);
+    }
+
+    @Test
+    void deletePage_shouldThrowServiceException_whenPageNotFound() {
+        final var pageId = "999";
+        final var response = ResponseTestUtil.createNotFoundResponse();
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.pageClient.deletePage(eq(pageId), eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(response);
+
+        assertThatThrownBy(() -> this.pageService.deletePage(pageId)).isInstanceOf(ServiceException.class)
+                .hasMessage("Page not found");
+    }
+
+    @Test
+    void deletePage_shouldThrowServiceException_whenUnexpectedStatusReturned() {
+        final var pageId = "1";
+        final var response = ResponseTestUtil.createBadRequestResponse();
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.pageClient.deletePage(eq(pageId), eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(response);
+
+        assertThatThrownBy(() -> this.pageService.deletePage(pageId)).isInstanceOf(ServiceException.class)
+                .hasMessageContaining("Failed to delete page");
     }
 }

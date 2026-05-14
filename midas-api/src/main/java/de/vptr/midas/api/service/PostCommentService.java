@@ -11,6 +11,7 @@ import de.vptr.midas.api.dto.PostCommentResponseDto;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.security.HtmlSanitizerService;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,6 +31,9 @@ public class PostCommentService {
 
     @Inject
     AdminAccessService adminAccessService;
+
+    @Inject
+    HtmlSanitizerService htmlSanitizer;
 
     @Inject
     Event<String> commentEvent;
@@ -104,7 +108,7 @@ public class PostCommentService {
             throw new WebApplicationException("Comments are not allowed on this post.", Response.Status.BAD_REQUEST);
         }
         final PostCommentEntity comment = new PostCommentEntity();
-        comment.content = dto.content;
+        comment.content = this.htmlSanitizer.sanitizeComment(dto.content);
         comment.post = existingPost;
         comment.user = (UserEntity) UserEntity.find("username", currentUsername).firstResultOptional()
                 .orElseThrow(() -> new WebApplicationException("User with username '" + currentUsername + "' not found",
@@ -123,7 +127,7 @@ public class PostCommentService {
             throw new WebApplicationException("Comment not found", Response.Status.NOT_FOUND);
         }
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to edit comment");
-        existingComment.content = dto.content;
+        existingComment.content = this.htmlSanitizer.sanitizeComment(dto.content);
         existingComment.persistAndFlush();
         return new PostCommentResponseDto(existingComment);
     }
@@ -138,7 +142,7 @@ public class PostCommentService {
         }
         this.verifyCommentOwnership(currentUsername, existingComment, "Access denied to patch comment");
         if (dto.content != null) {
-            existingComment.content = dto.content;
+            existingComment.content = this.htmlSanitizer.sanitizeComment(dto.content);
         }
         existingComment.persistAndFlush();
         return new PostCommentResponseDto(existingComment);
