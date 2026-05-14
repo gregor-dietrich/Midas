@@ -6,10 +6,51 @@
 PLATFORMS="linux/amd64,linux/arm64"
 MODULE=${1:-"both"}
 
+# Detect native platform
+NATIVE_ARCH_RAW="$(uname -m)"
+if [[ "$NATIVE_ARCH_RAW" == "x86_64" ]]; then
+    NATIVE_PLATFORM="linux/amd64"
+elif [[ "$NATIVE_ARCH_RAW" == "aarch64" || "$NATIVE_ARCH_RAW" == "arm64" ]]; then
+    NATIVE_PLATFORM="linux/arm64"
+else
+    NATIVE_PLATFORM="linux/amd64" # Default fallback
+fi
+
 set -e
 
 # Run environment check first
 "$DIR/check.sh" "$MODULE"
+
+# Register QEMU binfmt handlers only for non-native target platforms
+if docker buildx version >/dev/null 2>&1; then
+    _binfmt_install_targets=""
+    for _platform in ${PLATFORMS//,/ }; do
+        _arch="${_platform#linux/}"
+        case "$_arch" in
+            amd64) _qemu_entry="qemu-x86_64"  ;;
+            arm64) _qemu_entry="qemu-aarch64" ;;
+            *)     continue ;;
+        esac
+        [[ "$NATIVE_PLATFORM" == "$_platform" ]] && continue
+        grep -q "enabled" "/proc/sys/fs/binfmt_misc/${_qemu_entry}" 2>/dev/null && continue
+        _binfmt_install_targets="${_binfmt_install_targets} ${_arch}"
+    done
+    _binfmt_install_targets="${_binfmt_install_targets# }"
+
+    if [[ -n "$_binfmt_install_targets" ]]; then
+        echo "Registering QEMU binfmt handlers for: ${_binfmt_install_targets}"
+        # Image is pinned to a specific digest to prevent supply chain attacks from a mutable tag.
+        if docker run --privileged --rm \
+            tonistiigi/binfmt:qemu-v10.2.1@sha256:d3b963f787999e6c0219a48dba02978769286ff61a5f4d26245cb6a6e5567ea3 \
+            --install "${_binfmt_install_targets}" >/dev/null 2>&1; then
+            echo "QEMU binfmt handlers installed."
+        else
+            echo "Warning: failed to install QEMU binfmt handlers; ${_binfmt_install_targets} builds may fail on this host."
+        fi
+    else
+        echo "QEMU binfmt handlers already registered or not required."
+    fi
+fi
 
 echo "Starting build..."
 
@@ -50,24 +91,27 @@ build_docker() {
     local module_dir="$1"
     local module_name="${module_dir#midas-}"
     local image_name="gregordietrich/${module_dir}"
-    local dockerfile="src/main/docker/Dockerfile.jvm-ubuntu"
+    local dockerfile="src/main/docker/Dockerfile.jvm-alpine"
     local tag="${image_name}:${REVISION}"
 
     echo "=== Building Docker Image for $module_dir ==="
     cd "$PROJECT_ROOT/$module_dir"
 
     # Docker buildx if available
-    if docker buildx inspect default >/dev/null 2>&1; then
-        echo "Using buildx 'default' builder for $module_dir image..."
-        # (QEMU registration logic omitted for brevity in template, but kept in actual implementation)
-        if docker buildx build --builder default --platform "$PLATFORMS" -t "$tag" -f "$dockerfile" .; then
+    if docker buildx version >/dev/null 2>&1; then
+        echo "Using buildx to build $module_dir image..."
+        if docker buildx build --platform "$PLATFORMS" -t "$tag" -f "$dockerfile" .; then
             echo "buildx multi-platform build finished for $module_dir."
         else
-            echo "buildx multi-platform build failed; attempting single-platform local build with --load."
-            docker buildx build --load --platform linux/amd64 -t "$tag" -f "$dockerfile" .
+            echo "buildx multi-platform build failed; attempting single-platform local build with --load for current arch ($NATIVE_PLATFORM)."
+            # Try loading a single-platform image into local docker. If that fails, fallback to plain docker build.
+            if ! docker buildx build --load --platform "$NATIVE_PLATFORM" -t "$tag" -f "$dockerfile" .; then
+                echo "--load build failed; falling back to plain 'docker build' (single-platform)."
+                docker build -t "$tag" -f "$dockerfile" .
+            fi
         fi
     else
-        echo "buildx 'default' builder not available; performing plain docker build for $module_dir."
+        echo "buildx not available; performing plain docker build for $module_dir."
         docker build -t "$tag" -f "$dockerfile" .
     fi
 
