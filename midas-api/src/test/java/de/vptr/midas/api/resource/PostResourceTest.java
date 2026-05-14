@@ -18,11 +18,13 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficient
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPutWithJson;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedSearchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.jupiter.api.Test;
 
@@ -91,8 +93,7 @@ class PostResourceTest {
 
     @Test
     void testSearchPosts_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
-        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+        testAuthorizedSearchWithJson(ENDPOINT_URL + "/search");
     }
 
     @Test
@@ -108,6 +109,8 @@ class PostResourceTest {
     @Test
     void testGetPostsByDateRange_missingParams() {
         testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range");
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?startDate=2024-01-01");
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/date-range?endDate=2024-12-31");
     }
 
     @Test
@@ -208,5 +211,11 @@ class PostResourceTest {
     @Test
     void testDeletePost_nonexistent() {
         authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
+    }
+
+    @Test
+    void testGetPostsByUser_nonexistent() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/user/999999").then().statusCode(200).body("size()",
+                equalTo(0));
     }
 }

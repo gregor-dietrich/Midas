@@ -310,8 +310,8 @@ public final class TestUtil {
      * Creates payment JSON with test accounts
      */
     public static String createPaymentJsonWithTestAccounts() {
-        final String targetAccountId = createTestAccount();
-        final String sourceAccountId = createTestAccount();
+        final var targetAccountId = createTestAccount();
+        final var sourceAccountId = createTestAccount();
         return TestDataBuilder.createPaymentJson(Objects.requireNonNull(targetAccountId),
                 Objects.requireNonNull(sourceAccountId), "01AN4Z07BY79KA1307SR9X4MV7", "100.00", "Test payment",
                 "2024-01-01");
@@ -345,5 +345,15 @@ public final class TestUtil {
     public static void assertRateLimitResponse(final ValidatableResponse response, final String message) {
         response.statusCode(429).contentType(ContentType.JSON).header("Retry-After", "60").body("status", equalTo(429))
                 .body("error", equalTo("Too Many Requests")).body("message", equalTo(message));
+    }
+
+    /**
+     * Tests authorized search request with various query scenarios
+     */
+    public static void testAuthorizedSearchWithJson(final String endpoint) {
+        testAuthorizedGetWithJson(endpoint + "?query=test");
+        authenticatedRequest().when().get(endpoint + "?query=nonexistentxyz").then().statusCode(200);
+        authenticatedRequest().when().get(endpoint + "?query=").then().statusCode(200);
+        authenticatedRequest().when().get(endpoint).then().statusCode(200);
     }
 }

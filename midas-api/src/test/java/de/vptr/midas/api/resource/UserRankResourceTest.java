@@ -16,6 +16,7 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedSearchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
@@ -76,6 +77,7 @@ class UserRankResourceTest {
 
     @Test
     void testGetUserRankByName_authorized() {
+        testAuthorizedGetWithJson(ENDPOINT_URL + "/name/Administrator");
         testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/name/nonexistent");
     }
 
@@ -91,8 +93,7 @@ class UserRankResourceTest {
 
     @Test
     void testSearchUserRanks_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
-        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+        testAuthorizedSearchWithJson(ENDPOINT_URL + "/search");
     }
 
     @Test

@@ -14,6 +14,7 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedSearchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
@@ -196,14 +197,20 @@ class PaymentResourceTest {
     }
 
     @Test
+    void testGetPaymentsByDateRange_missingParams() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/date-range").then().statusCode(400);
+        authenticatedRequest().when().get(ENDPOINT_URL + "/date-range?startDate=2024-01-01").then().statusCode(400);
+        authenticatedRequest().when().get(ENDPOINT_URL + "/date-range?endDate=2024-12-31").then().statusCode(400);
+    }
+
+    @Test
     void testSearchPayments_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/search?query=test");
     }
 
     @Test
     void testSearchPayments_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
-        authenticatedRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+        testAuthorizedSearchWithJson(ENDPOINT_URL + "/search");
     }
 
     @Test

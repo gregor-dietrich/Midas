@@ -558,24 +558,27 @@ class AccountResourceTest {
     }
 
     @Test
-    void testAccountResource_Additional404AndAssociationChecks() {
-        final String name = "Coverage Account " + TestUtil.generateUniqueSuffix();
-        final String accountId = authenticatedJsonRequest().body(createAccountJson(name)).when().post(ENDPOINT_URL)
-                .then().statusCode(201).extract().path("publicId");
-        authenticatedRequest().when().get(ENDPOINT_URL + "/name/" + name).then().statusCode(200).body("name",
-                equalTo(name));
+    void testGetMyAccountsWithBalances_empty() {
+        authenticatedRequest().when().get(ENDPOINT_URL + "/my/with-balances").then().statusCode(200);
+    }
 
-        testAuthorizedGetWithNonExistentResource(ENDPOINT_URL + "/999999");
+    @Test
+    void testAccountResource_negativeScenarios() {
+        // getAccount not found
+        authenticatedRequest().when().get(ENDPOINT_URL + "/999999").then().statusCode(404);
+
+        // getAccountByName not found
+        authenticatedRequest().when().get(ENDPOINT_URL + "/name/NonExistent").then().statusCode(404);
+
+        // deleteAccount not found
         authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
-        authenticatedRequest().when().delete(ENDPOINT_URL + "/" + accountId + "/users/999999").then().statusCode(404);
-        authenticatedJsonRequest().body("{\"isNegative\":true}").when()
-                .patch(ENDPOINT_URL + "/" + accountId + "/users/01AN4Z07BY79KA1307SR9X4MV7").then().statusCode(404);
 
-        authenticatedRequest().when().get(ENDPOINT_URL + "/name/nonexistent-" + TestUtil.generateUniqueSuffix()).then()
+        // removeUserFromAccount not found
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/999999/users/01AN4Z07BY79KA1307SR9X4MV7").then()
                 .statusCode(404);
 
-        authenticatedRequest().when()
-                .get(ENDPOINT_URL + "/user/01AN4Z07BY79KA1307SR9X4MV7/account/" + accountId + "/check").then()
-                .statusCode(200);
+        // deleteMyAccountPayment not found
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/my/01AN4Z07BY79KA1307SR9X4MV7/payments/999999").then()
+                .statusCode(404);
     }
 }

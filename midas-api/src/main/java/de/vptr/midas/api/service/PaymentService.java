@@ -258,6 +258,10 @@ public class PaymentService {
 
     private PaymentEntity verifyPaymentWriteAccess(final String paymentPublicId, final String username,
             final String accountPublicId) {
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
+        if (account == null) {
+            throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
+        }
         if (!this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
             throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
         }
@@ -277,11 +281,12 @@ public class PaymentService {
 
     private void verifyCounterpartyAccess(final PaymentEntity existingPayment, final String username,
             final String accountPublicId, final String errorMessage) {
-        // Counterparty rule: if payment has source AND target, user must be associated with both
+        // Counterparty rule: if payment has source AND target, user must be associated
+        // with both
         if (existingPayment.sourceAccount != null && existingPayment.targetAccount != null) {
-            final String sourceId = Objects.requireNonNull(existingPayment.sourceAccount.publicId);
-            final String targetId = Objects.requireNonNull(existingPayment.targetAccount.publicId);
-            final String counterpartyId = accountPublicId.equals(sourceId) ? targetId : sourceId;
+            final var sourceId = Objects.requireNonNull(existingPayment.sourceAccount.publicId);
+            final var targetId = Objects.requireNonNull(existingPayment.targetAccount.publicId);
+            final var counterpartyId = accountPublicId.equals(sourceId) ? targetId : sourceId;
             if (!this.accountAccessService.hasUserAccessToAccount(username, counterpartyId)) {
                 throw new WebApplicationException(errorMessage, Response.Status.FORBIDDEN);
             }

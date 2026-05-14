@@ -11,18 +11,22 @@ import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
+import static de.vptr.midas.api.util.TestUtil.generateUniqueEmail;
+import static de.vptr.midas.api.util.TestUtil.generateUniqueUsername;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
-import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedSearchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +35,7 @@ import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
+@SuppressWarnings("PMD.TooManyMethods")
 class UserResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/users";
 
@@ -220,7 +225,7 @@ class UserResourceTest {
 
     @Test
     void testSearchUsers_authorized() {
-        testAuthorizedGetWithJson(ENDPOINT_URL + "/search?query=test");
+        testAuthorizedSearchWithJson(ENDPOINT_URL + "/search");
     }
 
     @Test
@@ -248,9 +253,63 @@ class UserResourceTest {
     }
 
     @Test
-    void testCreateUser_customRank() {
-        final String jsonBody = createUserJson("customrankuser", "customrank@example.com", "validpass123");
-        final String customJson = jsonBody.replace("}", ",\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\"}");
-        authenticatedJsonRequest().body(customJson).when().post(ENDPOINT_URL).then().statusCode(201);
+    void testChangePassword_authorized() {
+        // Create a temporary user to avoid breaking admin auth for other tests
+        final String username = generateUniqueUsername("pwchange");
+        final String password = "ValidPass123!";
+        authenticatedJsonRequest().body(createUserJson(username, generateUniqueEmail("pwchange"), password).replace("}",
+                ",\"activated\":true}")).when().post(ENDPOINT_URL).then().statusCode(201);
+
+        final String jsonBody = "{\"currentPassword\":\"" + password + "\",\"newPassword\":\"NewPass456!\"}";
+        TestUtil.given().auth().preemptive().basic(username, password).contentType("application/json").body(jsonBody)
+                .when().post(ENDPOINT_URL + "/me/password").then().statusCode(200);
     }
+
+    @Test
+    void testChangePassword_unauthorized() {
+        testUnauthorizedPost(ENDPOINT_URL + "/me/password", "{}");
+    }
+
+    @Test
+    void testCreateUser_stripsProtectedFields() {
+        final String email = generateUniqueEmail("strip");
+        final String jsonBody = createUserJson(generateUniqueUsername("strip"), email, "ValidPass123!").replace("}",
+                ",\"activationKey\":\"secret\",\"lastIp\":\"1.2.3.4\"}");
+        authenticatedJsonRequest().body(jsonBody).when().post(ENDPOINT_URL).then().statusCode(201);
+
+        final var userBody = authenticatedRequest().when().get(ENDPOINT_URL + "/email?email=" + email).then()
+                .statusCode(200).extract().asString();
+        assertFalse(userBody.contains("secret"));
+    }
+
+    @Test
+    void testUpdateUser_enforcesFieldPermissions() {
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+
+        // 1. Admin can update everything
+        final String updateJson = createUniqueUserUpdateJson().replace("}",
+                ",\"password\":\"ValidPass123!\",\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\",\"banned\":true}");
+        authenticatedJsonRequest().body(updateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
+                .body("rankPublicId", equalTo("01AN4Z07BY79KA1307SR9X4MV3")).body("banned", equalTo(true));
+
+        // 2. Create a user with user:edit but WITHOUT user-rank:edit and WITHOUT admin:view
+        final String rankId = authenticatedJsonRequest().body("{\"name\":\"Limited Editor\",\"userEdit\":true}").when()
+                .post("/api/v1/user-ranks").then().statusCode(201).extract().path("publicId");
+        final String username = generateUniqueUsername("editor");
+        final String password = "ValidPass123!";
+        authenticatedJsonRequest()
+                .body(createUserJson(username, generateUniqueEmail("editor"), password).replace("}",
+                        ",\"rankPublicId\":\"" + rankId + "\",\"activated\":true}"))
+                .when().post(ENDPOINT_URL).then().statusCode(201);
+
+        // Try updating protected fields as limited editor
+        final String limitedUpdateJson = "{\"username\":\"" + username + "-mod\",\"password\":\"" + password
+                + "\",\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\",\"banned\":false}";
+        TestUtil.given().auth().preemptive().basic(username, password).contentType("application/json")
+                .body(limitedUpdateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
+                // Still banned/rank from previous admin update
+                .body("rankPublicId", equalTo("01AN4Z07BY79KA1307SR9X4MV3")).body("banned", equalTo(true));
+    }
+
 }

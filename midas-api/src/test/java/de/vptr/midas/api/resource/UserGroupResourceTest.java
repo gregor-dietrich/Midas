@@ -13,6 +13,7 @@ import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithCreation;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithInsufficientRole;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithSyntaxError;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedPostWithValidationError;
+import static de.vptr.midas.api.util.TestUtil.testAuthorizedSearchWithJson;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
@@ -151,8 +152,7 @@ class UserGroupResourceTest {
 
     @Test
     void testSearchGroups_authorized() {
-        authenticatedJsonRequest().when().get(ENDPOINT_URL + "/search?query=test").then().statusCode(200);
-        authenticatedJsonRequest().when().get(ENDPOINT_URL + "/search?query=nonexistentxyz").then().statusCode(200);
+        testAuthorizedSearchWithJson(ENDPOINT_URL + "/search");
     }
 
     @Test
