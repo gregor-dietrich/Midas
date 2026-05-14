@@ -78,14 +78,15 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
     }
 
     private void resolveGroupAndLoad(final String identifier) {
+        final String safeIdentifier = Objects.requireNonNull(identifier, "identifier must not be null");
         this.loadDataAsync(() -> {
-            LOG.infof("Resolving group with identifier: %s", identifier);
-            if (identifier != null && identifier.length() == 26 && identifier.matches("^[0-9A-Z]{26}$")) {
-                return this.groupService.getGroupById(identifier).orElse(null);
+            LOG.infof("Resolving group with identifier: %s", safeIdentifier);
+            if (safeIdentifier.length() == 26 && safeIdentifier.matches("^[0-9A-Z]{26}$")) {
+                return this.groupService.getGroupById(safeIdentifier).orElse(null);
             } else {
-                LOG.infof("Identifier is not a ULID, searching by name: %s", identifier);
-                final var results = this.groupService.searchGroups(identifier);
-                return results.stream().filter(group -> identifier.equalsIgnoreCase(group.getName())).findFirst()
+                LOG.infof("Identifier is not a ULID, searching by name: %s", safeIdentifier);
+                final var results = this.groupService.searchGroups(safeIdentifier);
+                return results.stream().filter(group -> safeIdentifier.equalsIgnoreCase(group.getName())).findFirst()
                         .orElse(null);
             }
         }, group -> {
