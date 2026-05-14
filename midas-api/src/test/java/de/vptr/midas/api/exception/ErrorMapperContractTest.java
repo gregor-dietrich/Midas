@@ -39,6 +39,25 @@ class ErrorMapperContractTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
+    void validationExceptionMapper_shouldFallbackMessage_whenNullException() {
+        final var response = this.validationExceptionMapper.toResponse(null);
+        final var body = (ApiErrorResponse) response.getEntity();
+
+        assertEquals(422, response.getStatus());
+        assertEquals("Validation failed", body.message());
+    }
+
+    @Test
+    void validationExceptionMapper_shouldFallbackMessage_whenNullMessage() {
+        final var response = this.validationExceptionMapper.toResponse(new ValidationException());
+        final var body = (ApiErrorResponse) response.getEntity();
+
+        assertEquals(422, response.getStatus());
+        assertEquals("Validation failed", body.message());
+    }
+
+    @Test
     void jsonParseExceptionMapper_shouldNotLeakParserDetails() {
         final var response = this.jsonParseExceptionMapper.toResponse(new JsonParseException(null, "unexpected token"));
         final var body = (ApiErrorResponse) response.getEntity();

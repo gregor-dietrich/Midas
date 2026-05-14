@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.PostCategoryClient;
+import de.vptr.midas.gui.dto.PostCategoryDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ExceptionTestUtil;
@@ -289,5 +290,89 @@ class PostCategoryServiceTest {
 
         // When & Then
         ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.postCategoryService.getAllCategories());
+    }
+
+    @Test
+    void updateCategory_shouldThrowServiceException_whenUpdateFails() {
+        final var categoryToUpdate = MockDataUtil.createPostCategoryDto();
+        categoryToUpdate.setPublicId("1");
+        categoryToUpdate.setName("Updated Category");
+        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.updateCategory("1", categoryToUpdate, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
+
+        assertThatThrownBy(() -> this.postCategoryService.updateCategory(categoryToUpdate))
+                .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void searchCategories_shouldReturnResults_whenAuthenticated() {
+        final String query = "test";
+        final var category = MockDataUtil.createPostCategoryResponseDto("1", "Test Category", null, 0, 0, true);
+        final var expected = Collections.singletonList(category);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.searchCategories(query, TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
+
+        final var result = this.postCategoryService.searchCategories(query);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Test Category");
+        verify(this.categoryClient).searchCategories(query, TestUtil.TEST_AUTH_HEADER);
+    }
+
+    @Test
+    void searchCategories_shouldThrowAuthenticationException_whenNotAuthenticated() {
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
+
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.postCategoryService.searchCategories("test"));
+    }
+
+    @Test
+    void createCategory_shouldResolveParentPublicId_fromParent_whenPublicIdIsNull() {
+        // Simulate a category DTO where parent is set but parentPublicId was not carried over
+        final var parentDto = new PostCategoryDto();
+        parentDto.setPublicId("parent-1");
+
+        final var newCategory = MockDataUtil.createPostCategoryDto();
+        newCategory.setParent(parentDto); // sets parentPublicId = "parent-1" via setParent
+        newCategory.setParentPublicId(null); // override to null to trigger the resolution branch
+
+        final var createdCategory =
+                MockDataUtil.createPostCategoryResponseDto("1", "New Category", "parent-1", 0, 0, false);
+        final var mockResponse = ResponseTestUtil.createCreatedResponse(createdCategory);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.createCategory(newCategory, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+
+        this.postCategoryService.createCategory(newCategory);
+
+        assertThat(newCategory.getParentPublicId()).isEqualTo("parent-1");
+    }
+
+    @Test
+    void updateCategory_shouldResolveParentPublicId_fromParent_whenPublicIdIsNull() {
+        final var parentDto = new PostCategoryDto();
+        parentDto.setPublicId("parent-1");
+
+        final var categoryToUpdate = MockDataUtil.createPostCategoryDto();
+        categoryToUpdate.setPublicId("1");
+        categoryToUpdate.setParent(parentDto); // sets parentPublicId = "parent-1"
+        categoryToUpdate.setParentPublicId(null); // override to null to trigger the resolution branch
+
+        final var updatedCategory =
+                MockDataUtil.createPostCategoryResponseDto("1", "Updated Category", "parent-1", 0, 0, false);
+        final var mockResponse = ResponseTestUtil.createOkResponse(updatedCategory);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.categoryClient.updateCategory("1", categoryToUpdate, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
+
+        this.postCategoryService.updateCategory(categoryToUpdate);
+
+        assertThat(categoryToUpdate.getParentPublicId()).isEqualTo("parent-1");
     }
 }

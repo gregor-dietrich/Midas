@@ -1074,4 +1074,130 @@ class AccountServiceTest {
         ExceptionTestUtil.assertHandles401WithLogout(
                 () -> this.accountService.updateUserAccountMeta(accountId, userId, true, false), this.authService);
     }
+
+    @Test
+    void getMyAccountBalance_shouldThrowServiceException_whenForbidden() {
+        final var accountId = "1";
+        final var mockResponse = ResponseTestUtil.createMockResponse(403);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+
+        ExceptionTestUtil.assertThrowsServiceException(() -> this.accountService.getMyAccountBalance(accountId),
+                "Access denied to this account");
+    }
+
+    @Test
+    void getMyAccountBalance_shouldThrowServiceException_whenNon200AndNon403() {
+        final var accountId = "1";
+        final var mockResponse = ResponseTestUtil.createMockResponse(500);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+
+        assertThatThrownBy(() -> this.accountService.getMyAccountBalance(accountId))
+                .isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void getAccountBalance_shouldThrowServiceException_whenNon200Response() {
+        final var accountId = "1";
+        final var mockResponse = ResponseTestUtil.createMockResponse(500);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.getAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+
+        assertThatThrownBy(() -> this.accountService.getAccountBalance(accountId)).isInstanceOf(ServiceException.class);
+    }
+
+    @Test
+    void deleteMyAccountPayment_shouldReturnTrue_whenDeletionSuccessful() {
+        final var accountId = "1";
+        final var paymentId = "2";
+        final var mockResponse = ResponseTestUtil.createMockResponse(204);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.deleteMyAccountPayment(accountId, paymentId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
+
+        assertThat(this.accountService.deleteMyAccountPayment(accountId, paymentId)).isTrue();
+    }
+
+    @Test
+    void deleteMyAccountPayment_shouldReturnFalse_whenDeletionFails() {
+        final var accountId = "1";
+        final var paymentId = "2";
+        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.deleteMyAccountPayment(accountId, paymentId, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
+
+        assertThat(this.accountService.deleteMyAccountPayment(accountId, paymentId)).isFalse();
+    }
+
+    @Test
+    void deleteMyAccountPayment_shouldThrowAuthenticationException_whenNotAuthenticated() {
+        when(this.authService.requireAuthorizationHeader())
+                .thenThrow(new AuthenticationException("Authentication required"));
+
+        ExceptionTestUtil
+                .assertThrowsAuthenticationRequired(() -> this.accountService.deleteMyAccountPayment("1", "2"));
+    }
+
+    @Test
+    void getOutgoingPayments_shouldThrowServiceException_whenNon200Response() {
+        final var accountId = "1";
+        final var response = Mockito.mock(Response.class);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.getOutgoingPayments(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        assertThatThrownBy(() -> this.accountService.getOutgoingPayments(accountId))
+                .isInstanceOf(ServiceException.class);
+        verify(response).close();
+    }
+
+    @Test
+    void getIncomingPayments_shouldThrowServiceException_whenNon200Response() {
+        final var accountId = "1";
+        final var response = Mockito.mock(Response.class);
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.getIncomingPayments(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(response);
+        when(response.getStatus()).thenReturn(500);
+
+        assertThatThrownBy(() -> this.accountService.getIncomingPayments(accountId))
+                .isInstanceOf(ServiceException.class);
+        verify(response).close();
+    }
+
+    @Test
+    void updateUserAccountMeta_shouldThrowServiceException_whenNon204Response() {
+        final var accountId = "1";
+        final var userId = "2";
+        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.updateUserAccountMeta(eq(accountId), eq(userId), Mockito.any(UserAccountMetaDto.class),
+                eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(mockResponse);
+
+        assertThatThrownBy(() -> this.accountService.updateUserAccountMeta(accountId, userId, true, false))
+                .isInstanceOf(ServiceException.class).hasMessage("Failed to update user-account meta: HTTP 400");
+    }
+
+    @Test
+    void createMyAccountPayment_shouldThrowServiceException_whenNon201Response() {
+        final var accountId = "1";
+        final var payment = TestDataBuilder.createUniquePayment();
+        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
+
+        ServiceTestUtil.setupAuthHeader(this.authService);
+        when(this.accountClient.createMyAccountPayment(accountId, payment, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(mockResponse);
+
+        assertThatThrownBy(() -> this.accountService.createMyAccountPayment(accountId, payment))
+                .isInstanceOf(ServiceException.class).hasMessage("Failed to create payment: HTTP 400");
+    }
 }

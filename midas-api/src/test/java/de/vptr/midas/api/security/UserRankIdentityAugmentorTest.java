@@ -163,6 +163,15 @@ public class UserRankIdentityAugmentorTest {
         assertThrows(AuthenticationFailedException.class, () -> this.getAugmentedIdentity(username, password));
     }
 
+    @Test
+    void testAugmentIdentity_returnsOriginalIdentity_whenUserNotFound() {
+        final var identity = this.userIdentityProvider.authenticateUser("admin", "admin");
+        // "ghost-user-does-not-exist" has no DB record → augmentIdentity returns original identity unchanged
+        final var result = this.userRankIdentityAugmentor.augmentIdentity(identity, "ghost-user-does-not-exist");
+        assertNotNull(result);
+        assertEquals(identity, result);
+    }
+
     private Set<String> getRolesByUserRank(final String rankName) {
         final var rank = this.userRankService.findByName(rankName).orElse(null);
         // Convert ResponseDto to Entity for the augmentor method that expects an entity

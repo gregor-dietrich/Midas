@@ -1,5 +1,7 @@
 package de.vptr.midas.api.security;
 
+import java.util.Objects;
+
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 
@@ -10,12 +12,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class HtmlSanitizerService {
 
-    private static final PolicyFactory RICH_CONTENT_POLICY = Sanitizers.FORMATTING.and(Sanitizers.LINKS)
-            .and(Sanitizers.BLOCKS).and(Sanitizers.IMAGES).and(Sanitizers.TABLES);
+    private static final PolicyFactory RICH_CONTENT_POLICY = Objects.requireNonNull(Sanitizers.FORMATTING)
+            .and(Objects.requireNonNull(Sanitizers.LINKS)).and(Objects.requireNonNull(Sanitizers.BLOCKS))
+            .and(Objects.requireNonNull(Sanitizers.IMAGES)).and(Objects.requireNonNull(Sanitizers.TABLES));
 
-    private static final PolicyFactory COMMENT_POLICY = Sanitizers.FORMATTING.and(Sanitizers.BLOCKS);
+    private static final PolicyFactory COMMENT_POLICY =
+            Objects.requireNonNull(Sanitizers.FORMATTING).and(Objects.requireNonNull(Sanitizers.BLOCKS));
 
-    /** Sanitizes rich HTML content (posts, pages) — allows formatting, links, images, and tables. */
+    /**
+     * Sanitizes rich HTML content (posts, pages) — allows formatting, links, images, and tables.
+     */
     @Nullable
     public String sanitizeRichContent(@Nullable final String html) {
         if (html == null) {
@@ -24,7 +30,9 @@ public class HtmlSanitizerService {
         return RICH_CONTENT_POLICY.sanitize(html);
     }
 
-    /** Sanitizes comment content — allows only inline formatting and block elements, no links or images. */
+    /**
+     * Sanitizes comment content — allows only inline formatting and block elements, no links or images.
+     */
     @Nullable
     public String sanitizeComment(@Nullable final String html) {
         if (html == null) {

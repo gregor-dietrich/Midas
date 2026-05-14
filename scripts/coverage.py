@@ -199,7 +199,7 @@ def main() -> None:
     )
 
     md += "## By File (sorted by line coverage)\n\n"
-    md += "> **Note:** Files with full line *and* branch coverage have been omitted.\n\n"
+    md += "> **Note:** Files with full line _and_ branch coverage have been omitted.\n\n"
     file_headers = ["Package", "Class", "Lines Missed",
                     "Lines Covered", "Line %", "Branch %"]
     file_alignments = ["left", "left", "right", "right", "right", "right"]

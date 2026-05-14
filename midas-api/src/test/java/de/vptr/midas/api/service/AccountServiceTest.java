@@ -1,5 +1,6 @@
 package de.vptr.midas.api.service;
 
+import static de.vptr.midas.api.util.ServiceTestDataBuilder.createPaymentDto;
 import static de.vptr.midas.api.util.ServiceTestDataBuilder.createUniqueUserDto;
 import static de.vptr.midas.api.util.ServiceTestUtil.assertServiceNotNull;
 import static de.vptr.midas.api.util.ServiceTestUtil.createUniqueTestName;
@@ -7,8 +8,12 @@ import static de.vptr.midas.api.util.ServiceTestUtil.generateUniqueTestSuffix;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +27,7 @@ import de.vptr.midas.api.util.PaginationUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
 class AccountServiceTest {
@@ -33,6 +39,9 @@ class AccountServiceTest {
 
     @Inject
     AccountAccessService accountAccessService;
+
+    @Inject
+    PaymentService paymentService;
 
     @Test
     void testServiceNotNull() {
@@ -208,6 +217,43 @@ class AccountServiceTest {
         final var results = this.accountService.searchAccounts(token);
 
         assertEquals(PaginationUtil.MAX_SIZE, results.size());
+    }
+
+    @Test
+    @TestTransaction
+    void testPatchAccount_updatesName_whenNameIsNotNull() {
+        final var newAccount = this.createUniqueAccountDto();
+        final var created = this.accountService.createAccount(newAccount);
+        final String publicId = Objects.requireNonNull(created.publicId, "publicId");
+
+        final var patchDto = new AccountDto();
+        patchDto.name = "Patched Name " + generateUniqueTestSuffix();
+
+        final var patched = this.accountService.patchAccount(publicId, patchDto);
+        assertEquals(patchDto.name, patched.name);
+    }
+
+    @Test
+    @TestTransaction
+    void testDeleteAccount_throwsConflict_whenPaymentsExist() {
+        final var source = this.accountService.createAccount(this.createUniqueAccountDto());
+        final var target = this.accountService.createAccount(this.createUniqueAccountDto());
+
+        final var paymentDto = createPaymentDto(source.publicId, target.publicId, "test payment",
+                LocalDate.now(ZoneId.systemDefault()), BigDecimal.ONE);
+        this.paymentService.createPayment(paymentDto, "admin");
+
+        final String sourceId = Objects.requireNonNull(source.publicId, "publicId");
+        final var ex = assertThrows(WebApplicationException.class, () -> this.accountService.deleteAccount(sourceId));
+        assertEquals(409, ex.getResponse().getStatus());
+    }
+
+    @Test
+    @TestTransaction
+    void testUpdateAccount_throwsNotFound_whenAccountDoesNotExist() {
+        final var updateDto = this.createUniqueAccountDto();
+        assertThrows(WebApplicationException.class,
+                () -> this.accountService.updateAccount("nonexistent-public-id", updateDto));
     }
 
     private AccountDto createUniqueAccountDto() {
