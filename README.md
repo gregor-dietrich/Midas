@@ -264,6 +264,31 @@ Before GUI services call paginated API endpoints, they normalize:
 - `recent limit <= 0` → `10`
 - `recent limit > 100` → `100`
 
+### Encryption at Rest & Key Management
+
+The project implements transparent encryption for sensitive data (PII) at rest and in transit.
+
+#### API — Database Encryption (PII)
+
+- **Master Key**: A 256-bit AES key used by `EncryptionService` to encrypt fields (e.g., `UserEntity.email`) before persisting to PostgreSQL.
+- **Key Discovery Order**:
+  1.  System property or environment variable `midas.encryption.key.path`
+  2.  Default value `encryption.key` in the application's current working directory
+- **Generation & Persistence**:
+  - If the key file is absent, a new 256-bit key is automatically generated using `SecureRandom` on first start.
+  - New keys are **Base64-encoded** for easier management and backup.
+  - To prevent data corruption, the key is written using an **atomic move** operation.
+  - On POSIX-compliant filesystems, the file is restricted to **0600 permissions** (read/write only by the owner).
+- **Backward Compatibility**: Existing 32-byte raw binary keys are automatically detected and supported.
+- **Docker Deployment**: In production (Docker Compose), the key is stored in the `midas_keys` volume and mapped to `/etc/midas/keys/encryption.key`.
+- **Warning**: Losing the master key makes all encrypted database content permanently unrecoverable. Ensure the key file is backed up securely.
+
+#### GUI — Session Encryption
+
+- **Key**: A static 256-bit AES key generated in-memory on application startup.
+- **Usage**: Used by `SessionAuthorizationStore` to encrypt the backend Basic Auth header before storing it in the Vaadin session.
+- **Persistence**: This key is NOT persisted and is unique to each application lifecycle.
+
 ## 🚀 Getting Started
 
 1. Clone the repository with submodules

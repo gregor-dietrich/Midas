@@ -15,6 +15,9 @@ services:
       quarkus.datasource.jdbc.url: jdbc:postgresql://db:${SQL_PORT:-5432}/${SQL_DATABASE:-midas}
       quarkus.datasource.jdbc.driver: org.postgresql.Driver
 
+      # Encryption key
+      midas.encryption.key.path: /etc/midas/keys/encryption.key
+
       # General logging
       quarkus.log.level: INFO
       quarkus.log.category."de.vptr.midas".level: INFO
@@ -35,6 +38,8 @@ services:
       quarkus.log.file.rotation.max-backup-index: 3
     ports:
       - "8080:8080/tcp"
+    volumes:
+      - midas_keys:/etc/midas/keys
     depends_on:
       db:
         condition: service_healthy
@@ -128,5 +133,6 @@ services:
         condition: service_healthy
 
 volumes:
+  midas_keys:
   postgres_data:
   pgadmin_data:
