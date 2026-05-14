@@ -188,8 +188,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
     private void updateUiWithData() {
         Objects.requireNonNull(this.grid).setItems(this.allPayments != null ? this.allPayments : List.of());
-        Objects.requireNonNull(this.balanceLabel).setText(
-                "Current Balance: " + (this.accountBalance != null ? this.accountBalance : BigDecimal.ZERO) + " EUR");
+
+        final var balance = this.accountBalance != null ? this.accountBalance : BigDecimal.ZERO;
+        Objects.requireNonNull(this.balanceLabel).setText("Current Balance: " + balance + " EUR");
+        if (balance.compareTo(BigDecimal.ZERO) > 0) {
+            this.balanceLabel.getStyle().set("color", "var(--lumo-success-text-color)");
+        } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
+            this.balanceLabel.getStyle().set("color", "var(--lumo-error-text-color)");
+        } else {
+            this.balanceLabel.getStyle().remove("color");
+        }
 
         final boolean canManage = this.currentAccount != null && this.currentAccount.isCanManage();
         if (this.sendButton != null) {
@@ -245,10 +253,12 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.sendButton = new Button("Send Payment", LineAwesomeIcon.ARROW_UP_SOLID.create(),
                 e -> this.openPaymentDialog(null, false));
         this.sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        this.sendButton.setVisible(false);
 
         this.receiveButton = new Button("Receive Payment", LineAwesomeIcon.ARROW_DOWN_SOLID.create(),
                 e -> this.openPaymentDialog(null, true));
         this.receiveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
+        this.receiveButton.setVisible(false);
 
         final var refreshButton =
                 new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), e -> this.loadPaymentsAndBalance());
@@ -263,13 +273,13 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.grid.setSizeFull();
 
-        this.grid.addColumn(new LocalDateRenderer<>(PaymentResponseDto::getDate)).setHeader("Date").setWidth("120px")
+        this.grid.addColumn(new LocalDateRenderer<>(PaymentResponseDto::getDate)).setHeader("Date").setAutoWidth(true)
                 .setFlexGrow(0);
 
         this.grid.addColumn(payment -> {
             final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             return isSender ? payment.getTargetAccountName() : payment.getSourceAccountName();
-        }).setHeader("Counterparty").setFlexGrow(1);
+        }).setHeader("Counterparty").setAutoWidth(true).setFlexGrow(0);
 
         this.grid.addColumn(new ComponentRenderer<>(payment -> {
             final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
@@ -305,7 +315,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             final var layout = new HorizontalLayout(editButton, deleteButton);
             layout.setSpacing(false);
             return layout;
-        }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
+        }).setHeader("Actions").setAutoWidth(true).setFlexGrow(0);
+        this.actionsColumn.setVisible(false);
     }
 
     private void filterPayments(final String query) {

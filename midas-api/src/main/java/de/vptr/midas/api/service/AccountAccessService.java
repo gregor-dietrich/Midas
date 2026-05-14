@@ -129,14 +129,19 @@ public class AccountAccessService {
     /** Returns the current balance for the given account. */
     @Transactional(Transactional.TxType.SUPPORTS)
     public BigDecimal getAccountBalance(final String accountPublicId) {
-        return PerformanceMonitor.time("getAccountBalance(" + accountPublicId + ")",
-                () -> PaymentEntity.getEntityManager().createQuery("""
-                        SELECT \
-                        COALESCE(SUM(CASE WHEN p.targetAccount.publicId = :publicId THEN p.amount ELSE 0 END), 0) - \
-                        COALESCE(SUM(CASE WHEN p.sourceAccount.publicId = :publicId THEN p.amount ELSE 0 END), 0) \
-                        FROM PaymentEntity p \
-                        WHERE p.targetAccount.publicId = :publicId OR p.sourceAccount.publicId = :publicId""",
-                        BigDecimal.class).setParameter("publicId", accountPublicId).getSingleResult());
+        return PerformanceMonitor.time("getAccountBalance(" + accountPublicId + ")", () -> {
+            final BigDecimal incoming = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    JOIN p.targetAccount t \
+                    WHERE t.publicId = :publicId""", BigDecimal.class)
+                    .setParameter("publicId", accountPublicId).getSingleResult();
+            final BigDecimal outgoing = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
+                    JOIN p.sourceAccount s \
+                    WHERE s.publicId = :publicId""", BigDecimal.class)
+                    .setParameter("publicId", accountPublicId).getSingleResult();
+            return incoming.subtract(outgoing);
+        });
     }
 
     /** Returns balances for the given list of account publicIds. */
