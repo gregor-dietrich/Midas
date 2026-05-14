@@ -3,9 +3,11 @@ package de.vptr.midas.gui.view;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -31,12 +33,11 @@ import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
-import de.vptr.midas.gui.component.button.CreateButton;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
@@ -98,6 +99,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private List<PaymentResponseDto> allPayments; // Store all payments for client-side filtering
     @Nullable
     private List<AccountResponseDto> userAccounts; // Store user's accessible accounts
+    private final Set<String> accessibleAccountIds = new HashSet<>();
 
     @Nullable
     private Dialog paymentDialog;
@@ -105,6 +107,13 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private Binder<PaymentDto> binder;
     @Nullable
     private transient PaymentDto currentPayment;
+
+    @Nullable
+    private Button sendButton;
+    @Nullable
+    private Button receiveButton;
+    @Nullable
+    private Grid.Column<PaymentResponseDto> actionsColumn;
 
     private boolean initialized = false;
 
@@ -156,6 +165,10 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
             this.currentAccount = result.currentAccount();
             this.userAccounts = result.userAccounts();
+            this.accessibleAccountIds.clear();
+            if (this.userAccounts != null) {
+                this.userAccounts.forEach(acc -> this.accessibleAccountIds.add(acc.getPublicId()));
+            }
             this.loadPaymentsAndBalance();
         });
     }
@@ -177,6 +190,17 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         Objects.requireNonNull(this.grid).setItems(this.allPayments != null ? this.allPayments : List.of());
         Objects.requireNonNull(this.balanceLabel).setText(
                 "Current Balance: " + (this.accountBalance != null ? this.accountBalance : BigDecimal.ZERO) + " EUR");
+
+        final boolean canManage = this.currentAccount != null && this.currentAccount.isCanManage();
+        if (this.sendButton != null) {
+            this.sendButton.setVisible(canManage);
+        }
+        if (this.receiveButton != null) {
+            this.receiveButton.setVisible(canManage);
+        }
+        if (this.actionsColumn != null) {
+            this.actionsColumn.setVisible(canManage);
+        }
     }
 
     private void buildUi() {
@@ -218,15 +242,19 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var sendButton = new CreateButton(e -> this.openPaymentDialog(null, false), "Send Payment");
-        final var receiveButton = new CreateButton(e -> this.openPaymentDialog(null, true), "Receive Payment");
-        receiveButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+        this.sendButton = new Button("Send Payment", LineAwesomeIcon.ARROW_UP_SOLID.create(),
+                e -> this.openPaymentDialog(null, false));
+        this.sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+
+        this.receiveButton = new Button("Receive Payment", LineAwesomeIcon.ARROW_DOWN_SOLID.create(),
+                e -> this.openPaymentDialog(null, true));
+        this.receiveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
 
         final var refreshButton =
                 new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), e -> this.loadPaymentsAndBalance());
         refreshButton.setTooltipText("Refresh Data");
 
-        layout.add(sendButton, receiveButton, refreshButton);
+        layout.add(refreshButton, this.sendButton, this.receiveButton);
         return layout;
     }
 
@@ -235,17 +263,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         this.grid.setSizeFull();
 
-        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getPublicId).setHeader("ID")
-                .setWidth("80px").setFlexGrow(0);
-        this.grid.addColumn((ValueProvider<PaymentResponseDto, ?>) PaymentResponseDto::getDate).setHeader("Date")
-                .setWidth("120px").setFlexGrow(0);
-
-        this.grid.addColumn(new ComponentRenderer<>(payment -> {
-            final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
-            final var span = new Span(isSender ? "Sent" : "Received");
-            span.getElement().getThemeList().add(isSender ? "badge error" : "badge success");
-            return span;
-        })).setHeader("Type").setWidth("100px").setFlexGrow(0);
+        this.grid.addColumn(new LocalDateRenderer<>(PaymentResponseDto::getDate)).setHeader("Date").setWidth("120px")
+                .setFlexGrow(0);
 
         this.grid.addColumn(payment -> {
             final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
@@ -263,12 +282,30 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         this.grid.addColumn(PaymentResponseDto::getComment).setHeader("Comment").setFlexGrow(2);
 
-        this.grid.addComponentColumn(payment -> {
+        this.actionsColumn = this.grid.addComponentColumn(payment -> {
             final var editButton = new Button(LineAwesomeIcon.EDIT.create(),
                     e -> this.openPaymentDialog(payment.toPaymentDto(), false));
             editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-            return editButton;
-        }).setHeader("Actions").setWidth("100px").setFlexGrow(0);
+
+            final var deleteButton =
+                    new Button(LineAwesomeIcon.TRASH_ALT_SOLID.create(), e -> this.deletePayment(payment));
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+
+            // Counterparty logic: hide if payment has counterparty and user is not associated with it
+            final boolean hasCounterparty =
+                    payment.getSourceAccountPublicId() != null && payment.getTargetAccountPublicId() != null;
+            final boolean associatedWithBoth =
+                    hasCounterparty && this.accessibleAccountIds.contains(payment.getSourceAccountPublicId())
+                            && this.accessibleAccountIds.contains(payment.getTargetAccountPublicId());
+            final boolean canEditOrDelete = !hasCounterparty || associatedWithBoth;
+
+            editButton.setVisible(canEditOrDelete);
+            deleteButton.setVisible(canEditOrDelete);
+
+            final var layout = new HorizontalLayout(editButton, deleteButton);
+            layout.setSpacing(false);
+            return layout;
+        }).setHeader("Actions").setWidth("120px").setFlexGrow(0);
     }
 
     private void filterPayments(final String query) {
@@ -424,6 +461,39 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             Objects.requireNonNull(this.paymentDialog).close();
             this.loadPaymentsAndBalance();
         } catch (final Exception e) {
+            MidasErrorHandler.handleInUiContext(e);
+        }
+    }
+
+    private void deletePayment(final PaymentResponseDto payment) {
+        final var pid = payment.getPublicId();
+        final var aid = Objects.requireNonNull(this.accountId);
+        if (pid == null) {
+            return;
+        }
+
+        final var dialog = new Dialog();
+        dialog.add(
+                new VerticalLayout(new H3("Confirm Delete"), new Span("Are you sure you want to delete this payment?"),
+                        new HorizontalLayout(new Button("Delete", e -> {
+                            this.executeWithHandling(() -> {
+                                if (this.accountService.deleteMyAccountPayment(aid, pid)) {
+                                    NotificationUtil.showSuccess("Payment deleted successfully");
+                                    this.loadPaymentsAndBalance();
+                                } else {
+                                    NotificationUtil.showError("Failed to delete payment");
+                                }
+                            }, "Failed to delete payment");
+                            dialog.close();
+                        }), new Button("Cancel", e -> dialog.close()))));
+        dialog.open();
+    }
+
+    private void executeWithHandling(final Runnable runnable, final String errorMessage) {
+        try {
+            runnable.run();
+        } catch (final Exception e) {
+            NotificationUtil.showError(errorMessage);
             MidasErrorHandler.handleInUiContext(e);
         }
     }

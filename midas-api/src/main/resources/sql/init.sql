@@ -143,6 +143,7 @@ CREATE TABLE user_accounts_meta (
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_edit TIMESTAMP,
     is_negative BOOLEAN NOT NULL DEFAULT FALSE,
+    can_manage BOOLEAN NOT NULL DEFAULT FALSE,
     UNIQUE(user_id, account_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (account_id) REFERENCES user_accounts(id) ON DELETE CASCADE ON UPDATE CASCADE

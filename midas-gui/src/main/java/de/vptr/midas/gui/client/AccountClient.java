@@ -153,4 +153,9 @@ public interface AccountClient {
     Response updateMyAccountPayment(@PathParam("accountPublicId") String accountPublicId,
             @PathParam("paymentPublicId") String paymentPublicId, PaymentDto payment,
             @HeaderParam("Authorization") String authorization);
+
+    @DELETE
+    @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    Response deleteMyAccountPayment(@PathParam("accountPublicId") String accountPublicId,
+            @PathParam("paymentPublicId") String paymentPublicId, @HeaderParam("Authorization") String authorization);
 }

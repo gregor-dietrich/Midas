@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
@@ -60,10 +61,12 @@ public class AccountAccessService {
         final List<UserAccountMetaEntity> metas =
                 UserAccountMetaEntity.findByAccountId(Objects.requireNonNull(account.id));
         final Map<Long, Boolean> isNegativeByUser = new HashMap<>();
+        final Map<Long, Boolean> canManageByUser = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
             final UserEntity u = m.user;
             if (u != null && u.id != null) {
                 isNegativeByUser.put(u.id, m.isNegative);
+                canManageByUser.put(u.id, m.canManage);
             }
         }
 
@@ -71,6 +74,7 @@ public class AccountAccessService {
             final UserResponseDto dto =
                     new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L));
             dto.isNegative = isNegativeByUser.getOrDefault(u.id, false);
+            dto.canManage = canManageByUser.getOrDefault(u.id, false);
             return dto;
         }).toList();
     }
@@ -264,18 +268,20 @@ public class AccountAccessService {
     }
 
     /**
-     * Updates the isNegative flag for the user-account association.
+     * Updates the meta flags (isNegative, canManage) for the user-account association.
      *
      * @param userPublicId
      *            the user whose association to update
      * @param accountPublicId
      *            the account in the association
      * @param isNegative
-     *            the new flag value
+     *            the new isNegative flag value
+     * @param canManage
+     *            the new canManage flag value
      */
     @Transactional
-    public void updateUserAccountMeta(final String userPublicId, final String accountPublicId,
-            final boolean isNegative) {
+    public void updateUserAccountMeta(final String userPublicId, final String accountPublicId, final boolean isNegative,
+            final boolean canManage) {
         final UserEntity user = UserEntity.find("publicId", userPublicId).firstResult();
         final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
         if (user == null || account == null) {
@@ -288,6 +294,7 @@ public class AccountAccessService {
             throw new WebApplicationException("User-account association not found", Response.Status.NOT_FOUND);
         }
         meta.isNegative = isNegative;
+        meta.canManage = canManage;
         meta.persistAndFlush();
     }
 
@@ -302,6 +309,25 @@ public class AccountAccessService {
      */
     public Map<String, Boolean> getIsNegativeFlagsForUser(final Long userInternalId,
             final List<String> accountPublicIds) {
+        return this.getMetaFlagsForUser(userInternalId, accountPublicIds, m -> m.isNegative);
+    }
+
+    /**
+     * Returns a map of accountPublicId to canManage flag for the given user and account list.
+     *
+     * @param userInternalId
+     *            the internal ID of the user whose flags to look up
+     * @param accountPublicIds
+     *            the account public IDs to query
+     * @return map of accountPublicId to canManage
+     */
+    public Map<String, Boolean> getCanManageFlagsForUser(final Long userInternalId,
+            final List<String> accountPublicIds) {
+        return this.getMetaFlagsForUser(userInternalId, accountPublicIds, m -> m.canManage);
+    }
+
+    private Map<String, Boolean> getMetaFlagsForUser(final Long userInternalId, final List<String> accountPublicIds,
+            final Function<UserAccountMetaEntity, Boolean> flagExtractor) {
         if (accountPublicIds == null || accountPublicIds.isEmpty()) {
             return Map.of();
         }
@@ -311,9 +337,20 @@ public class AccountAccessService {
         for (final UserAccountMetaEntity m : metas) {
             final AccountEntity a = m.account;
             if (a != null && a.publicId != null) {
-                result.put(a.publicId, m.isNegative);
+                result.put(a.publicId, flagExtractor.apply(m));
             }
         }
         return result;
+    }
+
+    /** Returns true if the user can manage (add, edit, delete) payments for this account. */
+    public boolean canUserManage(final String username, final String accountPublicId) {
+        final UserEntity user = UserEntity.find("username", username).firstResult();
+        final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
+        if (user == null || account == null || user.id == null || account.id == null) {
+            return false;
+        }
+        final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(user.id, account.id);
+        return meta != null && meta.canManage;
     }
 }

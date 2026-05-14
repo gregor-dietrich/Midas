@@ -3,6 +3,7 @@ package de.vptr.midas.api.service;
 import static de.vptr.midas.api.util.ServiceTestUtil.assertServiceNotNull;
 import static de.vptr.midas.api.util.ServiceTestUtil.createUniqueTestName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,26 +64,22 @@ class AccountAccessServiceTest {
     void updateUserAccountMeta_setsIsNegativeFlagOnExistingAssociation() {
         final UserEntity user = UserEntity.findById(1L);
         assertNotNull(user);
+        final String accountPublicId = this.createAndAssociateAccount(user);
 
-        final AccountDto dto = new AccountDto();
-        dto.name = createUniqueTestName("Meta Account");
-        final var created = this.accountService.createAccount(dto);
-
-        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
-        final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
-        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
-        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, true);
+        this.accountAccessService.updateUserAccountMeta(Objects.requireNonNull(user.publicId), accountPublicId, true,
+                false);
 
         final UserAccountMetaEntity meta = UserAccountMetaEntity.findByUserAndAccount(Objects.requireNonNull(user.id),
                 this.getAccountIdByPublicId(accountPublicId));
         assertNotNull(meta);
         assertTrue(meta.isNegative);
+        assertFalse(meta.canManage);
     }
 
     @Test
     void updateUserAccountMeta_throwsNotFoundForMissingAssociation() {
         final WebApplicationException ex = assertThrows(WebApplicationException.class,
-                () -> this.accountAccessService.updateUserAccountMeta("user-999", "account-999", true));
+                () -> this.accountAccessService.updateUserAccountMeta("user-999", "account-999", true, false));
         assertEquals(404, ex.getResponse().getStatus());
     }
 
@@ -91,15 +88,10 @@ class AccountAccessServiceTest {
     void getIsNegativeFlagsForUser_returnsCorrectFlagsForAssociatedAccounts() {
         final UserEntity user = UserEntity.findById(1L);
         assertNotNull(user);
+        final String accountPublicId = this.createAndAssociateAccount(user);
 
-        final AccountDto dto = new AccountDto();
-        dto.name = createUniqueTestName("Flags Account");
-        final var created = this.accountService.createAccount(dto);
-
-        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
-        final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
-        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
-        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, true);
+        this.accountAccessService.updateUserAccountMeta(Objects.requireNonNull(user.publicId), accountPublicId, true,
+                false);
 
         final Map<String, Boolean> flags = this.accountAccessService
                 .getIsNegativeFlagsForUser(Objects.requireNonNull(user.id), List.of(accountPublicId));
@@ -107,6 +99,17 @@ class AccountAccessServiceTest {
         assertNotNull(flags);
         assertEquals(1, flags.size());
         assertTrue(Boolean.TRUE.equals(flags.get(accountPublicId)));
+    }
+
+    private String createAndAssociateAccount(final UserEntity user) {
+        final AccountDto dto = new AccountDto();
+        dto.name = createUniqueTestName("Meta Account");
+        final var created = this.accountService.createAccount(dto);
+
+        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
+        final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
+        this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
+        return accountPublicId;
     }
 
     @Test

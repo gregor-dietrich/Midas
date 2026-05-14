@@ -24,6 +24,7 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.Test;
 
@@ -418,6 +419,11 @@ class AccountResourceTest {
         forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).when()
                 .post(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(201);
 
+        // Grant canManage permission so payment tests can proceed
+        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+                .body(createUserAccountMetaJson(false, true)).when()
+                .patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
+
         return accountId;
     }
 
@@ -496,6 +502,38 @@ class AccountResourceTest {
 
         forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(paymentJson).when()
                 .put(ENDPOINT_URL + "/my/" + accountId + "/payments/999999").then().statusCode(404);
+    }
+
+    @Test
+    void testDeleteMyAccountPayment_authorized() {
+        final String clientKey = uniqueClientKey();
+        final String accountId = this.createAdminAccessibleAccount(clientKey);
+
+        final String paymentJson =
+                createPaymentJson(accountId, null, ADMIN_USER_ID, "10.00", "Delete test", "2024-01-01");
+
+        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+                .body(paymentJson).when().post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(201)
+                .extract().path("publicId");
+
+        if (paymentId != null) {
+            forwardedAuthenticatedRequest(clientKey).when()
+                    .delete(ENDPOINT_URL + "/my/" + accountId + "/payments/" + paymentId).then().statusCode(204);
+
+            final var payments =
+                    forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/" + accountId + "/payments")
+                            .then().statusCode(200).extract().jsonPath().getList("publicId");
+            assertFalse(payments.contains(paymentId));
+        }
+    }
+
+    @Test
+    void testDeleteMyAccountPayment_notFound() {
+        final String clientKey = uniqueClientKey();
+        final String accountId = this.createAdminAccessibleAccount(clientKey);
+
+        forwardedAuthenticatedRequest(clientKey).when()
+                .delete(ENDPOINT_URL + "/my/" + accountId + "/payments/non-existent").then().statusCode(404);
     }
 
     @Test

@@ -183,13 +183,15 @@ public class AccountService {
                 "removing user " + userId + " from account " + accountId, response -> response.getStatus() == 204);
     }
 
-    /** Updates the user-account meta (e.g. isNegative flag) for the given association. */
-    public void updateUserAccountMeta(final String accountId, final String userId, final boolean isNegative) {
-        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s", accountId, userId,
-                (Object) isNegative);
+    /** Updates the user-account meta (e.g. isNegative, canManage flags) for the given association. */
+    public void updateUserAccountMeta(final String accountId, final String userId, final boolean isNegative,
+            final boolean canManage) {
+        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s, canManage=%s", accountId,
+                userId, isNegative, canManage);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var dto = new UserAccountMetaDto();
         dto.setIsNegative(isNegative);
+        dto.setCanManage(canManage);
         ServiceHelper.executeWithResponse(
                 () -> this.accountClient.updateUserAccountMeta(accountId, userId, dto, authHeader), this.authService,
                 LOG, "updating user-account meta", response -> {
@@ -198,6 +200,16 @@ public class AccountService {
                     }
                     return null;
                 });
+    }
+
+    /** Deletes the my account payment. */
+    public boolean deleteMyAccountPayment(final String accountId, final String paymentId) {
+        LOG.debugf("Deleting payment %s for my account: %s", paymentId, accountId);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        return ServiceHelper.executeWithResponse(
+                () -> this.accountClient.deleteMyAccountPayment(accountId, paymentId, authHeader), this.authService,
+                LOG, "deleting payment " + paymentId + " for my account " + accountId,
+                response -> response.getStatus() == 204);
     }
 
     /** Returns the account balance. */

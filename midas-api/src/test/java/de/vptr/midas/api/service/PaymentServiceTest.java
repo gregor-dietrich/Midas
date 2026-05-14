@@ -669,6 +669,12 @@ class PaymentServiceTest extends AbstractIntegrationTest {
         this.accountAccessService.associateUserWithAccount(this.testUserPublicId, this.testSourceAccountPublicId);
         this.accountAccessService.associateUserWithAccount(this.testUserPublicId, this.testTargetAccountPublicId);
 
+        // Grant canManage permission
+        this.accountAccessService.updateUserAccountMeta(this.testUserPublicId, this.testSourceAccountPublicId, false,
+                true);
+        this.accountAccessService.updateUserAccountMeta(this.testUserPublicId, this.testTargetAccountPublicId, false,
+                true);
+
         final var created = this.paymentService.createPaymentForUser(dto, username, this.testSourceAccountPublicId);
         assertNotNull(created);
         final String createdId = Objects.requireNonNull(created.publicId);

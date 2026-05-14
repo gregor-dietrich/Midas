@@ -23,6 +23,7 @@ public class AccountResponseDto {
     @Nullable
     public BigDecimal balance;
     public boolean isNegative;
+    public boolean canManage;
     @Nullable
     public LocalDateTime created;
     @Nullable

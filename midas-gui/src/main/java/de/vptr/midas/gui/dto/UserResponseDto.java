@@ -52,6 +52,9 @@ public class UserResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
+    @JsonProperty("canManage")
+    private boolean canManage;
+
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public UserResponseDto() {
         // Default constructor for Jackson
@@ -164,6 +167,16 @@ public class UserResponseDto {
     /** Sets whether this user's account association is flagged as negative. */
     public void setIsNegative(final boolean isNegative) {
         this.isNegative = isNegative;
+    }
+
+    /** Returns whether the user can manage payments for the account in context. */
+    public boolean isCanManage() {
+        return this.canManage;
+    }
+
+    /** Sets whether the user can manage payments for the account in context. */
+    public void setCanManage(final boolean canManage) {
+        this.canManage = canManage;
     }
 
     /** Handles the to user dto operation. */

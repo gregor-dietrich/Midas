@@ -46,6 +46,9 @@ public class UserAccountMetaEntity extends BaseEntity {
     @Column(name = "is_negative", nullable = false)
     public boolean isNegative = false;
 
+    @Column(name = "can_manage", nullable = false)
+    public boolean canManage = false;
+
     // Helper method to find by user and account
     public static UserAccountMetaEntity findByUserAndAccount(final Long userId, final Long accountId) {
         return find("user.id = ?1 AND account.id = ?2", userId, accountId).firstResult();

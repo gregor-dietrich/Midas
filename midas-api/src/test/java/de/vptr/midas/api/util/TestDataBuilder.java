@@ -5,9 +5,12 @@ import java.util.LinkedHashMap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.Nullable;
+
 /**
  * Builder utility for creating test data JSON strings
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public final class TestDataBuilder {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -134,8 +137,9 @@ public final class TestDataBuilder {
     /**
      * Creates a payment JSON for testing with full payment fields.
      */
-    public static String createPaymentJson(final String targetAccountPublicId, final String sourceAccountPublicId,
-            final String userPublicId, final String amount, final String comment, final String date) {
+    public static String createPaymentJson(@Nullable final String targetAccountPublicId,
+            @Nullable final String sourceAccountPublicId, final String userPublicId,
+            final String amount, final String comment, final String date) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("targetAccountPublicId", targetAccountPublicId);
@@ -410,16 +414,26 @@ public final class TestDataBuilder {
      *
      * @param isNegative
      *            the isNegative flag value
+     * @param canManage
+     *            the canManage flag value
      * @return JSON string
      */
-    public static String createUserAccountMetaJson(final boolean isNegative) {
+    public static String createUserAccountMetaJson(final boolean isNegative, final boolean canManage) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("isNegative", isNegative);
+            data.put("canManage", canManage);
             return MAPPER.writeValueAsString(data);
         } catch (final JsonProcessingException e) {
             throw new IllegalArgumentException("Failed to serialize user account meta test data", e);
         }
+    }
+
+    /**
+     * Creates a user-account meta JSON with isNegative only.
+     */
+    public static String createUserAccountMetaJson(final boolean isNegative) {
+        return createUserAccountMetaJson(isNegative, false);
     }
 
     /**

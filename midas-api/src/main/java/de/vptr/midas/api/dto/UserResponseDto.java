@@ -35,6 +35,8 @@ public class UserResponseDto {
     // Populated when user is returned in account context (per-account association flag)
     @Nullable
     public Boolean isNegative;
+    @Nullable
+    public Boolean canManage;
 
     public UserResponseDto() {
     }

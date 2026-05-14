@@ -182,7 +182,9 @@ public class AccountResource {
     @Path("/my")
     public List<AccountResponseDto> getMyAccounts() {
         final String username = this.requireCurrentUsername();
-        return this.accountAccessService.getAccountsForCurrentUser(username);
+        final List<AccountResponseDto> accounts = this.accountAccessService.getAccountsForCurrentUser(username);
+        this.populateAccountMetaFlags(username, accounts);
+        return accounts;
     }
 
     /** Returns all accounts with normalized pagination and balance information. */
@@ -209,17 +211,28 @@ public class AccountResource {
             account.balance = balances.getOrDefault(account.publicId, BigDecimal.ZERO);
         });
 
-        // Set isNegative flag per account for the current user
-        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-        if (currentUser != null && currentUser.id != null) {
-            final Map<String, Boolean> isNegativeFlags =
-                    this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountPublicIds);
-            accounts.forEach(account -> {
-                account.isNegative = isNegativeFlags.getOrDefault(account.publicId, false);
-            });
-        }
+        this.populateAccountMetaFlags(username, accounts);
 
         return accounts;
+    }
+
+    private void populateAccountMetaFlags(final String username, final List<AccountResponseDto> accounts) {
+        if (accounts.isEmpty()) {
+            return;
+        }
+
+        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
+        if (currentUser != null && currentUser.id != null) {
+            final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
+            final Map<String, Boolean> isNegativeFlags =
+                    this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountPublicIds);
+            final Map<String, Boolean> canManageFlags =
+                    this.accountAccessService.getCanManageFlagsForUser(currentUser.id, accountPublicIds);
+            accounts.forEach(account -> {
+                account.isNegative = isNegativeFlags.getOrDefault(account.publicId, false);
+                account.canManage = canManageFlags.getOrDefault(account.publicId, false);
+            });
+        }
     }
 
     /** Checks whether the given user is associated with the given account. */
@@ -319,7 +332,8 @@ public class AccountResource {
     @RolesAllowed({ "user-account:edit" })
     public Response updateUserAccountMeta(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("userPublicId") final String userPublicId, final UserAccountMetaDto metaDto) {
-        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, metaDto.isNegative);
+        this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, metaDto.isNegative,
+                metaDto.canManage);
         return ResponseUtil.noContent();
     }
 
@@ -352,6 +366,19 @@ public class AccountResource {
         final PaymentResponseDto updated =
                 this.paymentService.updatePaymentForUser(paymentPublicId, paymentDto, username, accountPublicId);
         return ResponseUtil.ok(updated);
+    }
+
+    /** Processes the request and returns the result. */
+    @DELETE
+    @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    public Response deleteMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
+            @PathParam("paymentPublicId") final String paymentPublicId) {
+        final String username = this.requireCurrentUsername();
+        final boolean deleted = this.paymentService.deletePaymentForUser(paymentPublicId, username, accountPublicId);
+        if (deleted) {
+            return ResponseUtil.noContent();
+        }
+        return ResponseUtil.notFound();
     }
 
     private String requireCurrentUsername() {

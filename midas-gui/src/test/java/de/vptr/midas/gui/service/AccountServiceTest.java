@@ -1036,7 +1036,7 @@ class AccountServiceTest {
         when(this.accountClient.updateUserAccountMeta(eq(accountId), eq(userId), Mockito.any(UserAccountMetaDto.class),
                 eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(mockResponse);
 
-        this.accountService.updateUserAccountMeta(accountId, userId, true);
+        this.accountService.updateUserAccountMeta(accountId, userId, true, false);
 
         verify(this.accountClient).updateUserAccountMeta(eq(accountId), eq(userId),
                 Mockito.any(UserAccountMetaDto.class), eq(TestUtil.TEST_AUTH_HEADER));
@@ -1047,8 +1047,8 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil
-                .assertThrowsAuthenticationRequired(() -> this.accountService.updateUserAccountMeta("1", "2", true));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                () -> this.accountService.updateUserAccountMeta("1", "2", true, false));
     }
 
     @Test
@@ -1060,7 +1060,7 @@ class AccountServiceTest {
                 eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.createProcessingException());
 
         ExceptionTestUtil.assertThrowsBackendConnectionFailed(
-                () -> this.accountService.updateUserAccountMeta(accountId, userId, true));
+                () -> this.accountService.updateUserAccountMeta(accountId, userId, true, false));
     }
 
     @Test
@@ -1072,6 +1072,6 @@ class AccountServiceTest {
                 eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.create401Exception());
 
         ExceptionTestUtil.assertHandles401WithLogout(
-                () -> this.accountService.updateUserAccountMeta(accountId, userId, true), this.authService);
+                () -> this.accountService.updateUserAccountMeta(accountId, userId, true, false), this.authService);
     }
 }

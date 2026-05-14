@@ -32,6 +32,9 @@ public class AccountResponseDto {
     @JsonProperty("isNegative")
     private boolean isNegative;
 
+    @JsonProperty("canManage")
+    private boolean canManage;
+
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public AccountResponseDto() {
         // Default constructor for Jackson
@@ -69,6 +72,16 @@ public class AccountResponseDto {
     /** Sets whether this account counts negatively toward the user's total. */
     public void setIsNegative(final boolean isNegative) {
         this.isNegative = isNegative;
+    }
+
+    /** Returns whether the user can manage payments for this account. */
+    public boolean isCanManage() {
+        return this.canManage;
+    }
+
+    /** Sets whether the user can manage payments for this account. */
+    public void setCanManage(final boolean canManage) {
+        this.canManage = canManage;
     }
 
     public void setPublicId(final String publicId) {

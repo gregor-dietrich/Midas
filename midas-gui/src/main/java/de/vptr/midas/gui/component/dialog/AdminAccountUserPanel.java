@@ -65,9 +65,17 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
             final var checkbox = new Checkbox();
             checkbox.setValue(user.isNegative());
             checkbox.setLabel("Negative");
-            checkbox.addValueChangeListener(e -> this.updateUserNegativeFlag(user, e.getValue()));
+            checkbox.addValueChangeListener(e -> this.updateUserMetaFlags(user, e.getValue(), user.isCanManage()));
             return checkbox;
         }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
+
+        grid.addComponentColumn(user -> {
+            final var checkbox = new Checkbox();
+            checkbox.setValue(user.isCanManage());
+            checkbox.setLabel("Manage");
+            checkbox.addValueChangeListener(e -> this.updateUserMetaFlags(user, user.isNegative(), e.getValue()));
+            return checkbox;
+        }).setHeader("Manage?").setWidth("120px").setFlexGrow(0);
 
         grid.addComponentColumn(user -> new RemoveUserButton(ignore -> this.removeUserFromAccount(user)))
                 .setHeader("Actions").setWidth("120px").setFlexGrow(0);
@@ -135,12 +143,14 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
         }, "Adding user to account failed. Please try again.");
     }
 
-    private void updateUserNegativeFlag(final UserResponseDto user, final boolean isNegative) {
+    private void updateUserMetaFlags(final UserResponseDto user, final boolean isNegative, final boolean canManage) {
         this.executeWithHandling(() -> {
             this.accountService.updateUserAccountMeta(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    user.getPublicId(), isNegative);
-            NotificationUtil.showSuccess("Updated negative flag for " + user.getUsername());
-        }, "Failed to update negative flag. Please try again.");
+                    user.getPublicId(), isNegative, canManage);
+            user.setIsNegative(isNegative);
+            user.setCanManage(canManage);
+            NotificationUtil.showSuccess("Updated meta flags for " + user.getUsername());
+        }, "Failed to update meta flags. Please try again.");
     }
 
     private void removeUserFromAccount(final UserResponseDto user) {

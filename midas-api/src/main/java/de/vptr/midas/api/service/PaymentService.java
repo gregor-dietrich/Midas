@@ -3,6 +3,7 @@ package de.vptr.midas.api.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import de.vptr.midas.api.dto.PaymentDto;
@@ -215,6 +216,9 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDto createPaymentForUser(final PaymentDto paymentDto, final String username,
             final String accountPublicId) {
+        if (!this.accountAccessService.canUserManage(username, accountPublicId)) {
+            throw new WebApplicationException("Read-only access for this account", Response.Status.FORBIDDEN);
+        }
         this.verifyAccountAccessForPayment(username, accountPublicId, paymentDto);
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
         paymentDto.userPublicId = currentUser != null ? currentUser.publicId : null;
@@ -228,16 +232,11 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDto updatePaymentForUser(final String paymentPublicId, final PaymentDto paymentDto,
             final String username, final String accountPublicId) {
-        if (!this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
-            throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
-        }
-        final PaymentEntity existingPayment = PaymentEntity.find("publicId", paymentPublicId).firstResult();
-        if (existingPayment == null) {
-            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
-        }
-        if (!paymentBelongsToAccount(existingPayment, accountPublicId)) {
-            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
-        }
+        final PaymentEntity existingPayment = this.verifyPaymentWriteAccess(paymentPublicId, username, accountPublicId);
+
+        this.verifyCounterpartyAccess(existingPayment, username, accountPublicId,
+                "Cannot modify payment with inaccessible counterparty");
+
         if (existingPayment.user != null) {
             paymentDto.userPublicId = existingPayment.user.publicId;
         } else {
@@ -253,6 +252,53 @@ public class PaymentService {
             throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
         }
         return this.updatePayment(paymentPublicId, paymentDto, username);
+    }
+
+    /**
+     * Deletes a payment scoped to the given user and account. Validates that the user has access to the account, can
+     * manage it, and that the payment belongs to it.
+     */
+    @Transactional
+    public boolean deletePaymentForUser(final String paymentPublicId, final String username,
+            final String accountPublicId) {
+        final PaymentEntity existingPayment = this.verifyPaymentWriteAccess(paymentPublicId, username, accountPublicId);
+
+        this.verifyCounterpartyAccess(existingPayment, username, accountPublicId,
+                "Cannot delete payment with inaccessible counterparty");
+
+        return this.deletePayment(paymentPublicId, username);
+    }
+
+    private PaymentEntity verifyPaymentWriteAccess(final String paymentPublicId, final String username,
+            final String accountPublicId) {
+        if (!this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
+            throw new WebApplicationException("Access denied to account", Response.Status.FORBIDDEN);
+        }
+        if (!this.accountAccessService.canUserManage(username, accountPublicId)) {
+            throw new WebApplicationException("Read-only access for this account", Response.Status.FORBIDDEN);
+        }
+
+        final PaymentEntity existingPayment = PaymentEntity.find("publicId", paymentPublicId).firstResult();
+        if (existingPayment == null) {
+            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
+        }
+        if (!paymentBelongsToAccount(existingPayment, accountPublicId)) {
+            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
+        }
+        return existingPayment;
+    }
+
+    private void verifyCounterpartyAccess(final PaymentEntity existingPayment, final String username,
+            final String accountPublicId, final String errorMessage) {
+        // Counterparty rule: if payment has source AND target, user must be associated with both
+        if (existingPayment.sourceAccount != null && existingPayment.targetAccount != null) {
+            final String sourceId = Objects.requireNonNull(existingPayment.sourceAccount.publicId);
+            final String targetId = Objects.requireNonNull(existingPayment.targetAccount.publicId);
+            final String counterpartyId = accountPublicId.equals(sourceId) ? targetId : sourceId;
+            if (!this.accountAccessService.hasUserAccessToAccount(username, counterpartyId)) {
+                throw new WebApplicationException(errorMessage, Response.Status.FORBIDDEN);
+            }
+        }
     }
 
     private void verifyAccountAccessForPayment(final String username, final String accountPublicId,
