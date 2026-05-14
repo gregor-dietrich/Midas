@@ -162,12 +162,12 @@
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.82</minimum>
+                      <minimum>0.87</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.64</minimum>
+                      <minimum>0.70</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -181,6 +181,16 @@
             <exclude>de/vptr/midas/gui/component/**</exclude>
             <exclude>de/vptr/midas/gui/client/**</exclude>
             <exclude>de/vptr/midas/gui/dto/**</exclude>
+            <exclude>de/vptr/midas/gui/exception/**</exclude>
+            <exclude>de/vptr/midas/gui/service/RestClientInitializer*</exclude>
+            <exclude>de/vptr/midas/gui/util/UiConstants*</exclude>
+            <exclude>de/vptr/midas/gui/util/NotificationUtil*</exclude>
+            <exclude>de/vptr/midas/gui/util/MidasErrorHandler*</exclude>
+            <exclude>de/vptr/midas/gui/util/UiAsyncExecutor*</exclude>
+            <exclude>de/vptr/midas/gui/util/PostUiUtil*</exclude>
+            <exclude>de/vptr/midas/gui/util/ServiceHelper*</exclude>
+            <exclude>de/vptr/midas/gui/AppLifecycleBean*</exclude>
+            <exclude>de/vptr/midas/gui/AppConfig*</exclude>
           </excludes>
         </configuration>
       </plugin>

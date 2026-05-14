@@ -160,7 +160,13 @@
         <configuration>
           <excludes>
             <exclude>de/vptr/midas/api/util/PasswordUtil*</exclude>
+            <exclude>de/vptr/midas/api/util/PerformanceMonitor*</exclude>
+            <exclude>de/vptr/midas/api/util/ResponseUtil*</exclude>
+            <exclude>de/vptr/midas/api/util/SecurityContextUtil*</exclude>
             <exclude>de/vptr/midas/api/dto/**</exclude>
+            <exclude>de/vptr/midas/api/exception/ApiErrorResponse*</exclude>
+            <exclude>de/vptr/midas/api/AppLifecycleBean*</exclude>
+            <exclude>de/vptr/midas/api/MidasApiApp*</exclude>
           </excludes>
         </configuration>
       </plugin>

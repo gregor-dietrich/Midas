@@ -42,7 +42,7 @@ The project enforces very strict quality gates:
 - **Linting**: Checkstyle, PMD (with CPD for duplicate detection).
 - **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks).
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
-- **Coverage**: JaCoCo enforcement (Minimum **88%** line coverage for API, **84%** for GUI).
+- **Coverage**: JaCoCo enforcement.
 - **Security**: OWASP Dependency Check (fails on CVSS >= 7), License enforcement (blocks commercial/proprietary licenses).
 
 You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
