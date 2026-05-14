@@ -138,8 +138,8 @@ public final class TestDataBuilder {
      * Creates a payment JSON for testing with full payment fields.
      */
     public static String createPaymentJson(@Nullable final String targetAccountPublicId,
-            @Nullable final String sourceAccountPublicId, final String userPublicId,
-            final String amount, final String comment, final String date) {
+            @Nullable final String sourceAccountPublicId, final String userPublicId, final String amount,
+            final String comment, final String date) {
         try {
             final var data = new LinkedHashMap<String, Object>();
             data.put("targetAccountPublicId", targetAccountPublicId);

@@ -59,15 +59,15 @@ class AccountAccessServiceTest {
 
     @Test
     void testIsUserAssociatedWithAccountNonExistent() {
-        final boolean result = this.accountAccessService.isUserAssociatedWithAccount("non-existent-user",
-                "non-existent-account");
+        final boolean result =
+                this.accountAccessService.isUserAssociatedWithAccount("non-existent-user", "non-existent-account");
         assert !result;
     }
 
     @Test
     void testHasUserAccessToAccountNonExistentUser() {
-        final boolean result = this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz",
-                "non-existent-account");
+        final boolean result =
+                this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz", "non-existent-account");
         assert !result;
     }
 

@@ -133,13 +133,13 @@ public class AccountAccessService {
             final BigDecimal incoming = PaymentEntity.getEntityManager().createQuery("""
                     SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
                     JOIN p.targetAccount t \
-                    WHERE t.publicId = :publicId""", BigDecimal.class)
-                    .setParameter("publicId", accountPublicId).getSingleResult();
+                    WHERE t.publicId = :publicId""", BigDecimal.class).setParameter("publicId", accountPublicId)
+                    .getSingleResult();
             final BigDecimal outgoing = PaymentEntity.getEntityManager().createQuery("""
                     SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
                     JOIN p.sourceAccount s \
-                    WHERE s.publicId = :publicId""", BigDecimal.class)
-                    .setParameter("publicId", accountPublicId).getSingleResult();
+                    WHERE s.publicId = :publicId""", BigDecimal.class).setParameter("publicId", accountPublicId)
+                    .getSingleResult();
             return incoming.subtract(outgoing);
         });
     }

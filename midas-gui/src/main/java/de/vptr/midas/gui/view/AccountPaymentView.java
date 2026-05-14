@@ -250,13 +250,12 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        this.sendButton = new Button("Send Payment", LineAwesomeIcon.ARROW_UP_SOLID.create(),
-                e -> this.openPaymentDialog(null, false));
+        this.sendButton = new Button(LineAwesomeIcon.ARROW_UP_SOLID.create(), e -> this.openPaymentDialog(null, false));
         this.sendButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         this.sendButton.setVisible(false);
 
-        this.receiveButton = new Button("Receive Payment", LineAwesomeIcon.ARROW_DOWN_SOLID.create(),
-                e -> this.openPaymentDialog(null, true));
+        this.receiveButton =
+                new Button(LineAwesomeIcon.ARROW_DOWN_SOLID.create(), e -> this.openPaymentDialog(null, true));
         this.receiveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         this.receiveButton.setVisible(false);
 
@@ -301,7 +300,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                     new Button(LineAwesomeIcon.TRASH_ALT_SOLID.create(), e -> this.deletePayment(payment));
             deleteButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
 
-            // Counterparty logic: hide if payment has counterparty and user is not associated with it
+            // Counterparty logic: hide if payment has counterparty and user is not
+            // associated with it
             final boolean hasCounterparty =
                     payment.getSourceAccountPublicId() != null && payment.getTargetAccountPublicId() != null;
             final boolean associatedWithBoth =
