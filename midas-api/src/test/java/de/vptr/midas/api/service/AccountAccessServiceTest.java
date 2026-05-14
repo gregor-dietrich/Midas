@@ -1,5 +1,6 @@
 package de.vptr.midas.api.service;
 
+import static de.vptr.midas.api.util.ServiceTestDataBuilder.createUniqueUserDto;
 import static de.vptr.midas.api.util.ServiceTestUtil.assertServiceNotNull;
 import static de.vptr.midas.api.util.ServiceTestUtil.createUniqueTestName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,6 +19,8 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
+import de.vptr.midas.api.dto.PaymentDto;
+import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.AccountEntity;
 import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.entity.UserEntity;
@@ -30,6 +36,12 @@ class AccountAccessServiceTest {
 
     @Inject
     AccountService accountService;
+
+    @Inject
+    UserService userService;
+
+    @Inject
+    PaymentService paymentService;
 
     @Test
     void testServiceNotNull() {
@@ -47,15 +59,15 @@ class AccountAccessServiceTest {
 
     @Test
     void testIsUserAssociatedWithAccountNonExistent() {
-        final boolean result =
-                this.accountAccessService.isUserAssociatedWithAccount("non-existent-user", "non-existent-account");
+        final boolean result = this.accountAccessService.isUserAssociatedWithAccount("non-existent-user",
+                "non-existent-account");
         assert !result;
     }
 
     @Test
     void testHasUserAccessToAccountNonExistentUser() {
-        final boolean result =
-                this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz", "non-existent-account");
+        final boolean result = this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz",
+                "non-existent-account");
         assert !result;
     }
 
@@ -101,12 +113,49 @@ class AccountAccessServiceTest {
         assertTrue(Boolean.TRUE.equals(flags.get(accountPublicId)));
     }
 
+    @Test
+    @TestTransaction
+    void getAccountBalance_includesPaymentsWithoutCounterparty() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String accountPublicId = this.createAndAssociateAccount(user);
+
+        // Incoming payment with no source (counterparty)
+        final var p1 = new PaymentDto();
+        p1.userPublicId = user.publicId;
+        p1.targetAccountPublicId = accountPublicId;
+        p1.amount = new BigDecimal("100.00");
+        p1.comment = "Incoming no source";
+        p1.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(p1);
+
+        // Outgoing payment with no target (counterparty)
+        final var p2 = new PaymentDto();
+        p2.userPublicId = user.publicId;
+        p2.sourceAccountPublicId = accountPublicId;
+        p2.amount = new BigDecimal("40.00");
+        p2.comment = "Outgoing no target";
+        p2.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(p2);
+
+        final BigDecimal balance = this.accountAccessService.getAccountBalance(accountPublicId);
+        assertEquals(new BigDecimal("60.00"), balance);
+    }
+
+    private String createAndAssociateAccount(final UserResponseDto user) {
+        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
+        return this.createAndAssociateAccount(userPublicId);
+    }
+
     private String createAndAssociateAccount(final UserEntity user) {
+        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
+        return this.createAndAssociateAccount(userPublicId);
+    }
+
+    private String createAndAssociateAccount(final String userPublicId) {
         final AccountDto dto = new AccountDto();
         dto.name = createUniqueTestName("Meta Account");
         final var created = this.accountService.createAccount(dto);
 
-        final String userPublicId = Objects.requireNonNull(user.publicId, "user.publicId");
         final String accountPublicId = Objects.requireNonNull(created.publicId, "created.publicId");
         this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
         return accountPublicId;
