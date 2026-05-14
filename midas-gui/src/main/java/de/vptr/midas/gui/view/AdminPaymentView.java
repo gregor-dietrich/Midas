@@ -92,8 +92,8 @@ public class AdminPaymentView extends AbstractAdminEntityView<PaymentResponseDto
 
     @Override
     protected void initAdditionalComponents() {
-        this.paymentDialog = new AdminPaymentDialog(this.paymentService, this.userService, this::setupLazyDataProvider,
-                this.getAuthFailureRunnable());
+        this.paymentDialog =
+                new AdminPaymentDialog(this.paymentService, this::setupLazyDataProvider, this.getAuthFailureRunnable());
         this.availableAccounts = List.of();
     }
 

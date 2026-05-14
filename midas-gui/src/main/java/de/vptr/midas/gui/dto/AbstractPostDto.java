@@ -12,9 +12,6 @@ public abstract class AbstractPostDto extends AbstractTitleContentDto {
         super();
     }
 
-    @JsonProperty("userPublicId")
-    private String userPublicId;
-
     @JsonProperty("username")
     private String username;
 
@@ -38,14 +35,6 @@ public abstract class AbstractPostDto extends AbstractTitleContentDto {
 
     @JsonProperty("commentsCount")
     private Long commentsCount;
-
-    public String getUserPublicId() {
-        return this.userPublicId;
-    }
-
-    public void setUserPublicId(final String userPublicId) {
-        this.userPublicId = userPublicId;
-    }
 
     public String getUsername() {
         return this.username;

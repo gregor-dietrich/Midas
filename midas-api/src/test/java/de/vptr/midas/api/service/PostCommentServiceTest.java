@@ -55,11 +55,10 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
             this.testCategory = setupTestCategory();
             this.testUser = setupTestUser(this.userService);
 
-            final var testPostDto =
-                    ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId);
+            final var testPostDto = ServiceTestDataBuilder.createUniquePostDto(this.testCategory.publicId);
             testPostDto.published = true;
             testPostDto.commentable = true;
-            final var createdPost = this.postService.createPost(testPostDto);
+            final var createdPost = this.postService.createPost(testPostDto, this.testUser.username);
             this.testPost = PostEntity.find("publicId", createdPost.publicId).firstResult();
         });
     }
@@ -292,8 +291,9 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateCommentOnUnpublishedPost() {
-        final var unpublishedPost = this.postService.createPost(
-                ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId));
+        final var unpublishedPost =
+                this.postService.createPost(ServiceTestDataBuilder.createUniquePostDto(this.testCategory.publicId),
+                        Objects.requireNonNull(this.testUser.username));
 
         final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.publicId);
         assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
@@ -303,8 +303,9 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
     @Test
     @TestTransaction
     void testCreateCommentOnNonCommentablePost() {
-        final var nonCommentablePost = this.postService.createPost(
-                ServiceTestDataBuilder.createUniquePostDto(this.testUser.publicId, this.testCategory.publicId));
+        final var nonCommentablePost =
+                this.postService.createPost(ServiceTestDataBuilder.createUniquePostDto(this.testCategory.publicId),
+                        Objects.requireNonNull(this.testUser.username));
         nonCommentablePost.commentable = false;
 
         final var commentDto =

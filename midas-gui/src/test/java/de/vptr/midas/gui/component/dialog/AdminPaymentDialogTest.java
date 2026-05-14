@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,10 +27,8 @@ import com.vaadin.flow.component.textfield.TextField;
 
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
-import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.PaymentService;
-import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.NotificationUtil;
 
@@ -41,16 +38,13 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
     @Mock
     PaymentService paymentService;
 
-    @Mock
-    UserService userService;
-
     AdminPaymentDialog dialog;
     AccountResponseDto sourceAccount;
     AccountResponseDto targetAccount;
 
     @BeforeEach
     void setUpDialog() {
-        this.dialog = new AdminPaymentDialog(this.paymentService, this.userService, this.onSave, this.onAuthFailure);
+        this.dialog = new AdminPaymentDialog(this.paymentService, this.onSave, this.onAuthFailure);
         this.sourceAccount = MockDataUtil.createAccountResponseDto(1L, "Source Account");
         this.targetAccount = MockDataUtil.createAccountResponseDto(2L, "Target Account");
     }
@@ -59,8 +53,7 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
     void savePayment_shouldCreatePayment_withValidFields() {
         when(this.paymentService.createPayment(any(PaymentDto.class))).thenReturn(new PaymentDto());
 
-        final var currentUser = this.setupAndSubmitPayment(this.dialog, this.sourceAccount, this.targetAccount,
-                "250.00", "Test payment");
+        this.setupAndSubmitPayment(this.dialog, this.sourceAccount, this.targetAccount, "250.00", "Test payment");
 
         final ArgumentCaptor<PaymentDto> captor = ArgumentCaptor.forClass(PaymentDto.class);
         verify(this.paymentService).createPayment(captor.capture());
@@ -68,7 +61,6 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
         assertThat(captor.getValue().getTargetAccountPublicId()).isEqualTo("2");
         assertThat(captor.getValue().getAmount()).isEqualByComparingTo(new BigDecimal("250.00"));
         assertThat(captor.getValue().getComment()).isEqualTo("Test payment");
-        assertThat(captor.getValue().getUserPublicId()).isEqualTo(currentUser.getPublicId());
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("Payment created successfully"));
         verify(this.onSave).run();
     }
@@ -84,12 +76,9 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
         verify(this.onAuthFailure).run();
     }
 
-    private UserResponseDto setupAndSubmitPayment(final AdminPaymentDialog dialog,
-            final AccountResponseDto sourceAccount, final AccountResponseDto targetAccount, final String amount,
-            final String comment) {
+    private void setupAndSubmitPayment(final AdminPaymentDialog dialog, final AccountResponseDto sourceAccount,
+            final AccountResponseDto targetAccount, final String amount, final String comment) {
         final var accounts = List.of(sourceAccount, targetAccount);
-        final var currentUser = MockDataUtil.createUserResponseDto();
-        when(this.userService.getCurrentUser()).thenReturn(Optional.of(currentUser));
 
         dialog.open(null, accounts);
 
@@ -102,20 +91,17 @@ class AdminPaymentDialogTest extends AbstractDialogTest {
         findComponent(dialog, TextField.class, field -> "Comment".equals(field.getLabel())).setValue(comment);
 
         findButton(dialog, "Save").click();
-        return currentUser;
     }
 
     @Test
     void open_shouldPopulateFieldsForEdit() {
-        final var dialog =
-                new AdminPaymentDialog(this.paymentService, this.userService, this.onSave, this.onAuthFailure);
+        final var dialog = new AdminPaymentDialog(this.paymentService, this.onSave, this.onAuthFailure);
         final var sourceAccount = MockDataUtil.createAccountResponseDto(1L, "Source Account");
         final var targetAccount = MockDataUtil.createAccountResponseDto(2L, "Target Account");
         final var accounts = List.of(sourceAccount, targetAccount);
 
         final var existingPayment = new PaymentDto();
         existingPayment.setPublicId("5");
-        existingPayment.setUserPublicId("1");
         existingPayment.setSourceAccountPublicId("1");
         existingPayment.setTargetAccountPublicId("2");
         existingPayment.setAmount(new BigDecimal("500.00"));

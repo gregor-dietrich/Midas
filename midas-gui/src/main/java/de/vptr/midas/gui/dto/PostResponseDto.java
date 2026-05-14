@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -8,9 +10,20 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class PostResponseDto extends AbstractPostDto {
 
+    @JsonProperty("userPublicId")
+    private String userPublicId;
+
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostResponseDto() {
         // Default constructor for Jackson
+    }
+
+    public String getUserPublicId() {
+        return this.userPublicId;
+    }
+
+    public void setUserPublicId(final String userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
     /** Handles the to post dto operation. */
@@ -19,7 +32,6 @@ public class PostResponseDto extends AbstractPostDto {
         dto.setPublicId(this.getPublicId());
         dto.setTitle(this.getTitle());
         dto.setContent(this.getContent());
-        dto.setUserPublicId(this.getUserPublicId());
         dto.setUsername(this.getUsername());
         dto.setCategoryPublicId(this.getCategoryPublicId());
         dto.setCategoryName(this.getCategoryName());

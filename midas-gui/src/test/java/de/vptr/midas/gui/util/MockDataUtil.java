@@ -140,7 +140,6 @@ public final class MockDataUtil {
         post.setPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setTitle(TestConstants.TEST_TITLE);
         post.setContent(TestConstants.TEST_CONTENT);
-        post.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setUsername(TestConstants.TEST_USERNAME);
         post.setCategoryPublicId("1");
         post.setCategoryName("Test Category");
@@ -156,7 +155,6 @@ public final class MockDataUtil {
         post.setPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setTitle(TestConstants.TEST_TITLE);
         post.setContent(TestConstants.TEST_CONTENT);
-        post.setUserPublicId(TestConstants.TEST_PUBLIC_ID);
         post.setUsername(TestConstants.TEST_USERNAME);
         post.setCategoryPublicId("1");
         post.setCategoryName("Test Category");

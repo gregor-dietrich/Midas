@@ -53,7 +53,6 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
             try {
                 final var currentUser = this.userService.getCurrentUser();
                 if (currentUser.isPresent()) {
-                    this.currentBean.setUserPublicId(currentUser.get().getPublicId());
                     this.currentBean.setUsername(currentUser.get().getUsername());
                 } else {
                     LOG.warn("Current user not found when creating new post");

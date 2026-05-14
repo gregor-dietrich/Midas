@@ -111,7 +111,6 @@ public final class TestDataBuilder {
         post.setCreated(LocalDateTime.now(ZoneId.systemDefault()));
         post.setLastEdit(LocalDateTime.now(ZoneId.systemDefault()));
         final var user = createUniqueUser();
-        post.setUserPublicId(user.getPublicId());
         post.setUsername(user.getUsername());
         return post;
     }
@@ -139,7 +138,6 @@ public final class TestDataBuilder {
      */
     public static PaymentDto createUniquePayment() {
         final var suffix = TestUtil.generateUniqueTestSuffix();
-        final var user = createUniqueUser();
         final var fromAccountId = suffix + "1";
         final var toAccountId = suffix + "2";
         final var amount = new BigDecimal("100.00");
@@ -149,7 +147,7 @@ public final class TestDataBuilder {
         final var updated = LocalDateTime.now(ZoneId.systemDefault());
 
         final var payment =
-                new PaymentDto(user.getPublicId(), fromAccountId, toAccountId, amount, date, comment, created, updated);
+                new PaymentDto(fromAccountId, toAccountId, amount, date, comment, created, updated);
         payment.setPublicId(suffix);
         return payment;
     }

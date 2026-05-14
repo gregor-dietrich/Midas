@@ -14,7 +14,6 @@ import com.vaadin.flow.data.binder.Binder;
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.service.PaymentService;
-import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
@@ -28,14 +27,12 @@ import jakarta.annotation.Nullable;
 public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto> {
 
     private final transient PaymentService paymentService;
-    private final transient UserService userService;
 
     /** Initializes AdminPaymentDialog. */
-    public AdminPaymentDialog(final PaymentService paymentService, final UserService userService, final Runnable onSave,
+    public AdminPaymentDialog(final PaymentService paymentService, final Runnable onSave,
             final Runnable onAuthFailure) {
         super(onSave, onAuthFailure);
         this.paymentService = paymentService;
-        this.userService = userService;
     }
 
     /** Opens the dialog for creating or editing a payment. */
@@ -138,15 +135,6 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
             return false;
         }
 
-        if (bean.getUserPublicId() == null) {
-            final var currentUser = this.userService.getCurrentUser();
-            if (currentUser.isPresent()) {
-                bean.setUserPublicId(currentUser.get().getPublicId());
-            } else {
-                NotificationUtil.showError("Unable to determine current user");
-                return false;
-            }
-        }
         return true;
     }
 }

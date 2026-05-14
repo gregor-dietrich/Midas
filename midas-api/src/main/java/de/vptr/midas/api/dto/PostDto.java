@@ -2,7 +2,6 @@ package de.vptr.midas.api.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /** Data transfer object for post data. */
@@ -18,11 +17,6 @@ public class PostDto {
     @Nullable
     public String content;
 
-    @SuppressWarnings("MultipleNullnessAnnotations")
-    @NotNull(message = "User Public ID is required")
-    @Nullable
-    public String userPublicId;
-
     @Nullable
     public String categoryPublicId;
 
@@ -36,12 +30,11 @@ public class PostDto {
     }
 
     /** Creates a new instance. */
-    public PostDto(@Nullable final String title, @Nullable final String content, @Nullable final String userPublicId,
+    public PostDto(@Nullable final String title, @Nullable final String content,
             @Nullable final String categoryPublicId, @Nullable final Boolean published,
             @Nullable final Boolean commentable) {
         this.title = title;
         this.content = content;
-        this.userPublicId = userPublicId;
         this.categoryPublicId = categoryPublicId;
         this.published = published;
         this.commentable = commentable;

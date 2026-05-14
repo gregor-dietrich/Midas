@@ -158,7 +158,6 @@ public class PaymentResponseDto {
         dto.setSourceAccountName(this.sourceAccountName);
         dto.setTargetAccountPublicId(this.targetAccountPublicId);
         dto.setTargetAccountName(this.targetAccountName);
-        dto.setUserPublicId(this.userPublicId);
         dto.setUsername(this.username);
         dto.setComment(this.comment);
         dto.setDate(this.date);

@@ -55,13 +55,11 @@ public final class ServiceTestDataBuilder {
     /**
      * Creates a unique PostDto for testing
      */
-    public static PostDto createUniquePostDto(@Nullable final String userPublicId,
-            @Nullable final String categoryPublicId) {
+    public static PostDto createUniquePostDto(@Nullable final String categoryPublicId) {
         final var suffix = ServiceTestUtil.generateUniqueTestSuffix();
         final var post = new PostDto();
         post.title = "Test Post " + suffix;
         post.content = "Test content " + suffix;
-        post.userPublicId = userPublicId;
         post.categoryPublicId = categoryPublicId;
         post.published = false;
         post.commentable = false;
@@ -169,12 +167,11 @@ public final class ServiceTestDataBuilder {
      * Creates a PaymentDto for update operations
      */
     public static PaymentDto createPaymentUpdateDto(@Nullable final String sourceAccountPublicId,
-            @Nullable final String targetAccountPublicId, @Nullable final String userPublicId, final String comment,
-            final LocalDate date, final BigDecimal amount) {
+            @Nullable final String targetAccountPublicId, final String comment, final LocalDate date,
+            final BigDecimal amount) {
         final var dto = new PaymentDto();
         dto.sourceAccountPublicId = sourceAccountPublicId;
         dto.targetAccountPublicId = targetAccountPublicId;
-        dto.userPublicId = userPublicId;
         dto.comment = comment;
         dto.date = date;
         dto.amount = amount;
@@ -193,12 +190,10 @@ public final class ServiceTestDataBuilder {
     /**
      * Creates a PostDto for update operations with custom title and content
      */
-    public static PostDto createPostUpdateDto(final String title, final String content, final String userPublicId,
-            final String categoryPublicId) {
+    public static PostDto createPostUpdateDto(final String title, final String content, final String categoryPublicId) {
         final var dto = new PostDto();
         dto.title = title;
         dto.content = content;
-        dto.userPublicId = userPublicId;
         dto.categoryPublicId = categoryPublicId;
         return dto;
     }
@@ -223,10 +218,9 @@ public final class ServiceTestDataBuilder {
      * Creates a PaymentDto with all fields set
      */
     public static PaymentDto createPaymentDto(@Nullable final String sourceAccountPublicId,
-            @Nullable final String targetAccountPublicId, @Nullable final String userPublicId, final String comment,
-            final LocalDate date, final BigDecimal amount) {
-        return createPaymentUpdateDto(sourceAccountPublicId, targetAccountPublicId, userPublicId, comment, date,
-                amount);
+            @Nullable final String targetAccountPublicId, final String comment, final LocalDate date,
+            final BigDecimal amount) {
+        return createPaymentUpdateDto(sourceAccountPublicId, targetAccountPublicId, comment, date, amount);
     }
 
     /**
@@ -252,14 +246,12 @@ public final class ServiceTestDataBuilder {
      * Creates a PostDto with all fields set
      */
     public static PostDto createPostDto(@Nullable final String title, @Nullable final String content,
-            final boolean published, final boolean commentable, @Nullable final String userPublicId,
-            @Nullable final String categoryPublicId) {
+            final boolean published, final boolean commentable, @Nullable final String categoryPublicId) {
         final var dto = new PostDto();
         dto.title = title;
         dto.content = content;
         dto.published = published;
         dto.commentable = commentable;
-        dto.userPublicId = userPublicId;
         dto.categoryPublicId = categoryPublicId;
         return dto;
     }

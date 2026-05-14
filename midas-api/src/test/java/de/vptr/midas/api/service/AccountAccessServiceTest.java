@@ -121,21 +121,19 @@ class AccountAccessServiceTest {
 
         // Incoming payment with no source (counterparty)
         final var p1 = new PaymentDto();
-        p1.userPublicId = user.publicId;
         p1.targetAccountPublicId = accountPublicId;
         p1.amount = new BigDecimal("100.00");
         p1.comment = "Incoming no source";
         p1.date = LocalDate.now(ZoneId.systemDefault());
-        this.paymentService.createPayment(p1);
+        this.paymentService.createPayment(p1, Objects.requireNonNull(user.username));
 
         // Outgoing payment with no target (counterparty)
         final var p2 = new PaymentDto();
-        p2.userPublicId = user.publicId;
         p2.sourceAccountPublicId = accountPublicId;
         p2.amount = new BigDecimal("40.00");
         p2.comment = "Outgoing no target";
         p2.date = LocalDate.now(ZoneId.systemDefault());
-        this.paymentService.createPayment(p2);
+        this.paymentService.createPayment(p2, Objects.requireNonNull(user.username));
 
         final BigDecimal balance = this.accountAccessService.getAccountBalance(accountPublicId);
         assertEquals(new BigDecimal("60.00"), balance);

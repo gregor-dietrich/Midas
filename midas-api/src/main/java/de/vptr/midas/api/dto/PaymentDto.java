@@ -19,11 +19,6 @@ public class PaymentDto {
     @Nullable
     public String sourceAccountPublicId;
 
-    @SuppressWarnings("MultipleNullnessAnnotations")
-    @NotNull(message = "User public ID is required")
-    @Nullable
-    public String userPublicId;
-
     @NotBlank(message = "Comment is required")
     @Size(max = 1000, message = "Comment must not exceed 1000 characters")
     @Nullable

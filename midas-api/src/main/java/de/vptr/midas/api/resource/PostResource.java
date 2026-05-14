@@ -133,10 +133,17 @@ public class PostResource {
         return this.postService.findByDateRange(startDate, endDate);
     }
 
+    /**
+     * Creates a new post.
+     *
+     * @param postDto the post data
+     * @return the created post
+     */
     @POST
     @RolesAllowed({ "post:add" })
     public Response createPost(@Valid final PostDto postDto) {
-        final PostResponseDto created = this.postService.createPost(postDto);
+        final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
+        final PostResponseDto created = this.postService.createPost(postDto, currentUsername);
         return ResponseUtil.created(created);
     }
 

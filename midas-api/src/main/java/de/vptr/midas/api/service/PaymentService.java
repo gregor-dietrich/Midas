@@ -151,13 +151,13 @@ public class PaymentService {
 
     /** Creates a new payment. */
     @Transactional
-    public PaymentResponseDto createPayment(final PaymentDto paymentDto) {
+    public PaymentResponseDto createPayment(final PaymentDto paymentDto, final String currentUsername) {
         validatePaymentAccountIds(paymentDto);
 
         final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
         final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
 
-        final UserEntity user = UserEntity.find("publicId", paymentDto.userPublicId).firstResult();
+        final UserEntity user = UserEntity.find("username", currentUsername).firstResult();
         if (user == null) {
             throw new ValidationException("User not found");
         }
@@ -191,15 +191,10 @@ public class PaymentService {
         final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
         final AccountEntity sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
 
-        final UserEntity user = UserEntity.find("publicId", paymentDto.userPublicId).firstResult();
-        if (user == null) {
-            throw new ValidationException("User not found");
-        }
-
         // Complete replacement (PUT semantics)
         existingPayment.targetAccount = targetAccount;
         existingPayment.sourceAccount = sourceAccount;
-        existingPayment.user = user;
+        // User cannot be changed via update
         existingPayment.comment = paymentDto.comment;
         existingPayment.date = paymentDto.date;
         existingPayment.amount = paymentDto.amount;
@@ -220,9 +215,7 @@ public class PaymentService {
             throw new WebApplicationException("Read-only access for this account", Response.Status.FORBIDDEN);
         }
         this.verifyAccountAccessForPayment(username, accountPublicId, paymentDto);
-        final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-        paymentDto.userPublicId = currentUser != null ? currentUser.publicId : null;
-        return this.createPayment(paymentDto);
+        return this.createPayment(paymentDto, username);
     }
 
     /**
@@ -237,12 +230,6 @@ public class PaymentService {
         this.verifyCounterpartyAccess(existingPayment, username, accountPublicId,
                 "Cannot modify payment with inaccessible counterparty");
 
-        if (existingPayment.user != null) {
-            paymentDto.userPublicId = existingPayment.user.publicId;
-        } else {
-            final UserEntity currentUser = UserEntity.find("username", username).firstResult();
-            paymentDto.userPublicId = currentUser != null ? currentUser.publicId : null;
-        }
         if (paymentDto.sourceAccountPublicId != null
                 && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountPublicId)) {
             throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
@@ -343,13 +330,6 @@ public class PaymentService {
         }
         if (paymentDto.sourceAccountPublicId != null) {
             existingPayment.sourceAccount = resolveAccount(paymentDto.sourceAccountPublicId, "Source");
-        }
-        if (paymentDto.userPublicId != null) {
-            // Block re-attribution of payments to a different user
-            final String existingUserPublicId = existingPayment.user != null ? existingPayment.user.publicId : null;
-            if (!paymentDto.userPublicId.equals(existingUserPublicId)) {
-                throw new ValidationException("Payment user re-attribution is not allowed.");
-            }
         }
         if (paymentDto.comment != null) {
             if (paymentDto.comment.trim().isEmpty()) {

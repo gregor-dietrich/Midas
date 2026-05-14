@@ -459,9 +459,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
             final var aid = Objects.requireNonNull(this.accountId);
             if (cp.getPublicId() == null) {
-                if (cp.getUserPublicId() == null) {
-                    this.userService.getCurrentUser().ifPresent(u -> cp.setUserPublicId(u.getPublicId()));
-                }
                 this.accountService.createMyAccountPayment(aid, cp);
                 NotificationUtil.showSuccess("Payment created successfully");
             } else {

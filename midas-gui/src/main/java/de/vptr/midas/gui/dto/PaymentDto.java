@@ -16,10 +16,6 @@ public class PaymentDto {
     @Nullable
     private String publicId;
 
-    @JsonProperty("userPublicId")
-    @Nullable
-    private String userPublicId;
-
     @JsonProperty("sourceAccountPublicId")
     @Nullable
     private String sourceAccountPublicId;
@@ -66,11 +62,9 @@ public class PaymentDto {
     }
 
     /** Creates a new instance. */
-    public PaymentDto(@Nullable final String userPublicId, @Nullable final String sourceAccountPublicId,
-            @Nullable final String targetAccountPublicId, @Nullable final BigDecimal amount,
-            @Nullable final LocalDate date, @Nullable final String comment, @Nullable final LocalDateTime created,
-            @Nullable final LocalDateTime lastEdit) {
-        this.userPublicId = userPublicId;
+    public PaymentDto(@Nullable final String sourceAccountPublicId, @Nullable final String targetAccountPublicId,
+            @Nullable final BigDecimal amount, @Nullable final LocalDate date, @Nullable final String comment,
+            @Nullable final LocalDateTime created, @Nullable final LocalDateTime lastEdit) {
         this.sourceAccountPublicId = sourceAccountPublicId;
         this.targetAccountPublicId = targetAccountPublicId;
         this.amount = amount;
@@ -83,11 +77,6 @@ public class PaymentDto {
     @Nullable
     public String getPublicId() {
         return this.publicId;
-    }
-
-    @Nullable
-    public String getUserPublicId() {
-        return this.userPublicId;
     }
 
     @Nullable
@@ -142,10 +131,6 @@ public class PaymentDto {
 
     public void setPublicId(@Nullable final String publicId) {
         this.publicId = publicId;
-    }
-
-    public void setUserPublicId(@Nullable final String userPublicId) {
-        this.userPublicId = userPublicId;
     }
 
     public void setSourceAccountPublicId(@Nullable final String sourceAccountPublicId) {

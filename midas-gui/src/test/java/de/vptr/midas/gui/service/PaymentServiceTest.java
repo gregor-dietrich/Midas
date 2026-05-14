@@ -198,8 +198,7 @@ class PaymentServiceTest {
 
     @Test
     void createPayment_shouldReturnCreatedPayment_whenValidPayment() {
-        final var user = TestDataBuilder.createUser("testuser", "test@example.com");
-        final var newPayment = new PaymentDto(user.getPublicId(), "1", "2", new BigDecimal("100.00"),
+        final var newPayment = new PaymentDto("1", "2", new BigDecimal("100.00"),
                 LocalDate.now(ZoneId.systemDefault()), "New Payment", null, null);
         final var createdPayment = MockDataUtil.createPaymentResponseDto();
         createdPayment.setPublicId("1");

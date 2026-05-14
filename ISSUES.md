@@ -10,10 +10,10 @@
 
 ### Sub-Task: Authorization & IDOR Prevention
 
-- [ ] **Eliminate Impersonation in Posts/Payments:**
+- [x] **Eliminate Impersonation in Posts/Payments:**
   - Remove `userPublicId` from `PostDto` and `PaymentDto` request bodies.
   - Update `PostService` and `PaymentService` to resolve the owner entity via `SecurityContext.getUserPrincipal().getName()`.
-- [ ] **Granular Ownership Checks:** Ensure all `PUT`, `PATCH`, and `DELETE` operations on user-owned resources (Posts, Comments, Payments) verify that the authenticated user is the actual owner (or an admin).
+- [x] **Granular Ownership Checks:** Ensure all `PUT`, `PATCH`, and `DELETE` operations on user-owned resources (Posts, Comments, Payments) verify that the authenticated user is the actual owner (or an admin).
 
 ### Sub-Task: Content Security (XSS Protection)
 

@@ -116,10 +116,17 @@ public class PaymentResource {
         return ResponseUtil.ok(total);
     }
 
+    /**
+     * Creates a new payment.
+     *
+     * @param paymentDto the payment data
+     * @return the created payment
+     */
     @POST
     @RolesAllowed({ "user-account:add" })
     public Response createPayment(@Valid final PaymentDto paymentDto) {
-        final PaymentResponseDto created = this.paymentService.createPayment(paymentDto);
+        final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
+        final PaymentResponseDto created = this.paymentService.createPayment(paymentDto, currentUsername);
         return ResponseUtil.created(created);
     }
 

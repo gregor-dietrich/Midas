@@ -117,15 +117,15 @@ public class PostService {
 
     /** Creates a new post. */
     @Transactional
-    public PostResponseDto createPost(final PostDto postDto) {
-        final PostEntity post = this.buildPostEntity(postDto);
+    public PostResponseDto createPost(final PostDto postDto, final String currentUsername) {
+        final PostEntity post = this.buildPostEntity(postDto, currentUsername);
         post.persistAndFlush();
         return this.toResponseDto(post);
     }
 
     @SuppressFBWarnings(value = "UC_USELESS_OBJECT", justification = "Entity populated then persisted via Panache;"
             + " SpotBugs cannot see Panache's bytecode-generated persist()")
-    private PostEntity buildPostEntity(final PostDto postDto) {
+    private PostEntity buildPostEntity(final PostDto postDto, final String currentUsername) {
         final PostEntity post = new PostEntity();
         post.title = postDto.title;
         post.content = postDto.content;
@@ -133,9 +133,9 @@ public class PostService {
         post.commentable = postDto.commentable != null ? postDto.commentable : false;
 
         // Set user - required for creation
-        final UserEntity user = UserEntity.find("publicId", postDto.userPublicId).firstResult();
+        final UserEntity user = UserEntity.find("username", currentUsername).firstResult();
         if (user == null) {
-            throw new ValidationException("User with Public ID " + postDto.userPublicId + " not found");
+            throw new ValidationException("Authenticated user " + currentUsername + " not found");
         }
         post.user = user;
 
