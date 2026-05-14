@@ -3,7 +3,7 @@ services:
     image: gregordietrich/midas-api:${REVISION:-1.0.0-SNAPSHOT}
     build:
       context: ./midas-api
-      dockerfile: src/main/docker/Dockerfile.jvm-ubuntu
+      dockerfile: src/main/docker/Dockerfile.jvm-alpine
     restart: unless-stopped
     environment:
       TZ: ${TIMEZONE:-UTC}
@@ -43,7 +43,7 @@ services:
     image: gregordietrich/midas-gui:${REVISION:-1.0.0-SNAPSHOT}
     build:
       context: ./midas-gui
-      dockerfile: src/main/docker/Dockerfile.jvm-ubuntu
+      dockerfile: src/main/docker/Dockerfile.jvm-alpine
     restart: unless-stopped
     environment:
       TZ: ${TIMEZONE:-UTC}
