@@ -17,12 +17,10 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
-import static io.restassured.RestAssured.given;
 
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
 
 @QuarkusTest
 class UserGroupResourceTest {
@@ -116,25 +114,12 @@ class UserGroupResourceTest {
 
     @Test
     void testAddUserToGroup_unauthorized() {
-        // @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-        .when()
-            .post(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8")
-        .then()
-            .statusCode(401);
-        // @formatter:on
+        testUnauthorizedPost(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8", "");
     }
 
     @Test
     void testRemoveUserFromGroup_unauthorized() {
-        // @formatter:off
-        given()
-        .when()
-            .delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8")
-        .then()
-            .statusCode(401);
-        // @formatter:on
+        testUnauthorizedDelete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3/users/01AN4Z07BY79KA1307SR9X4MV8");
     }
 
     @Test

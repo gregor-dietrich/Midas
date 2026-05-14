@@ -1,5 +1,7 @@
 package de.vptr.midas.api.util;
 
+import static org.hamcrest.Matchers.equalTo;
+
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -170,6 +172,43 @@ public final class TestUtil {
     }
 
     /**
+     * Tests authorized request expecting 403 Forbidden (insufficient role)
+     */
+    public static ValidatableResponse testAuthorizedRequestWithInsufficientRole(final String endpoint,
+            final String httpMethod) {
+        return authenticatedGuestRequest().when().request(httpMethod, endpoint).then().statusCode(403);
+    }
+
+    /**
+     * Tests authorized POST request expecting 409 (conflict)
+     */
+    public static ValidatableResponse testAuthorizedPostWithConflict(final String endpoint, final String jsonBody) {
+        return authenticatedJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(409);
+    }
+
+    /**
+     * Tests authorized request expecting 429 Too Many Requests
+     */
+    public static ValidatableResponse testAuthorizedRequestWithRateLimit(final String endpoint,
+            final String httpMethod) {
+        return authenticatedRequest().when().request(httpMethod, endpoint).then().statusCode(429);
+    }
+
+    /**
+     * Tests authorized DELETE request expecting 204 No Content
+     */
+    public static ValidatableResponse testAuthorizedDeleteWithSuccess(final String endpoint) {
+        return authenticatedRequest().when().delete(endpoint).then().statusCode(204);
+    }
+
+    /**
+     * Tests authorized DELETE request expecting 404 Not Found
+     */
+    public static ValidatableResponse testAuthorizedDeleteWithNotFound(final String endpoint) {
+        return authenticatedRequest().when().delete(endpoint).then().statusCode(404);
+    }
+
+    /**
      * Tests authorized POST request expecting 400 (bad request/syntax error)
      */
     public static ValidatableResponse testAuthorizedPostWithSyntaxError(final String endpoint, final String jsonBody) {
@@ -284,5 +323,27 @@ public final class TestUtil {
     public static ValidatableResponse testAuthorizedPatchWithJson(final String endpoint, final String requestBody) {
         return authenticatedRequest().contentType(ContentType.JSON).body(requestBody).when().patch(endpoint).then()
                 .statusCode(200).contentType(ContentType.JSON);
+    }
+
+    /**
+     * Creates a REST-assured request with basic authentication and a forwarded-for header
+     */
+    public static RequestSpecification forwardedAuthenticatedRequest(final String clientKey) {
+        return authenticatedRequest().header("X-Forwarded-For", clientKey);
+    }
+
+    /**
+     * Creates a REST-assured request with basic authentication, JSON content type, and a forwarded-for header
+     */
+    public static RequestSpecification forwardedAuthenticatedJsonRequest(final String clientKey) {
+        return forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON);
+    }
+
+    /**
+     * Asserts that a response is a 429 Too Many Requests with the expected error payload
+     */
+    public static void assertRateLimitResponse(final ValidatableResponse response, final String message) {
+        response.statusCode(429).contentType(ContentType.JSON).header("Retry-After", "60").body("status", equalTo(429))
+                .body("error", equalTo("Too Many Requests")).body("message", equalTo(message));
     }
 }

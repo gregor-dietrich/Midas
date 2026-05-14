@@ -38,7 +38,7 @@ clean:
 	@scripts/clean.sh
 
 coverage:
-	@scripts/coverage.sh -o
+	@scripts/coverage.sh
 
 dev:
 	@echo "Please specify which module to run in dev mode:"

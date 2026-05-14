@@ -1,6 +1,6 @@
 package de.vptr.midas.api.resource;
 
-import static org.hamcrest.Matchers.equalTo;
+import static de.vptr.midas.api.util.TestUtil.assertRateLimitResponse;
 
 import java.util.Map;
 
@@ -10,7 +10,6 @@ import de.vptr.midas.api.util.TestUtil;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
-import io.restassured.http.ContentType;
 import jakarta.annotation.Nullable;
 
 @QuarkusTest
@@ -24,11 +23,10 @@ class RateLimitFilterTest {
     void testReadRequestsRateLimitedByIpAndEndpoint() {
         final String ip = "198.51.100.11";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, ip).when().get("/api/v1/posts/published")
-                    .then().statusCode(200);
+            TestUtil.forwardedAuthenticatedRequest(ip).when().get("/api/v1/posts/published").then().statusCode(200);
         }
 
-        assertRateLimitResponse(ip, "/api/v1/posts/published", "GET", "Read request limit exceeded");
+        assertRateLimit(ip, "/api/v1/posts/published", "GET", "Read request limit exceeded");
     }
 
     @Test
@@ -38,7 +36,7 @@ class RateLimitFilterTest {
             TestUtil.given().header(FORWARDED_FOR_HEADER, ip).when().delete("/api/v1/posts/1").then().statusCode(401);
         }
 
-        assertRateLimitResponse(ip, "/api/v1/posts/1", "DELETE", "Write request limit exceeded");
+        assertRateLimit(ip, "/api/v1/posts/1", "DELETE", "Write request limit exceeded");
     }
 
     @Test
@@ -58,7 +56,7 @@ class RateLimitFilterTest {
             TestUtil.given().header(FORWARDED_FOR_HEADER, ip).when().get("/api/v1/auth");
         }
 
-        assertRateLimitResponse(ip, "/api/v1/auth", "GET", "Authentication request limit exceeded");
+        assertRateLimit(ip, "/api/v1/auth", "GET", "Authentication request limit exceeded");
     }
 
     @Test
@@ -66,25 +64,25 @@ class RateLimitFilterTest {
         final String firstClientChain = "198.51.100.16, 10.0.0.5";
         final String secondClientChain = "198.51.100.17, 10.0.0.5";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, firstClientChain).when()
-                    .get("/api/v1/posts/published").then().statusCode(200);
+            TestUtil.forwardedAuthenticatedRequest(firstClientChain).when().get("/api/v1/posts/published").then()
+                    .statusCode(200);
         }
 
-        assertRateLimitResponse(firstClientChain, "/api/v1/posts/published", "GET", "Read request limit exceeded");
+        assertRateLimit(firstClientChain, "/api/v1/posts/published", "GET", "Read request limit exceeded");
 
-        TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, secondClientChain).when()
-                .get("/api/v1/posts/published").then().statusCode(200);
+        TestUtil.forwardedAuthenticatedRequest(secondClientChain).when().get("/api/v1/posts/published").then()
+                .statusCode(200);
     }
 
     @Test
     void testMalformedForwardedForFallsBackToRemoteAddress() {
         final String malformedForwardedFor = "198.51.100.18:8443";
         for (int i = 0; i < 5; ++i) {
-            TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, malformedForwardedFor).when()
-                    .get("/api/v1/posts/published").then().statusCode(200);
+            TestUtil.forwardedAuthenticatedRequest(malformedForwardedFor).when().get("/api/v1/posts/published").then()
+                    .statusCode(200);
         }
 
-        assertRateLimitResponseWithoutForwardedHeaders("/api/v1/posts/published", "GET", "Read request limit exceeded");
+        assertRateLimitWithoutForwardedHeaders("/api/v1/posts/published", "GET", "Read request limit exceeded");
     }
 
     @Test
@@ -94,7 +92,7 @@ class RateLimitFilterTest {
             TestUtil.given().header(REAL_IP_HEADER, malformedRealIp).when().get("/api/v1/users").then().statusCode(401);
         }
 
-        assertRateLimitResponseWithoutForwardedHeaders("/api/v1/users", "GET", "Read request limit exceeded");
+        assertRateLimitWithoutForwardedHeaders("/api/v1/users", "GET", "Read request limit exceeded");
     }
 
     @Test
@@ -104,20 +102,16 @@ class RateLimitFilterTest {
         final String thirdIp = "198.51.100.23";
 
         for (int i = 0; i < 5; ++i) {
-            TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, firstIp).when().get("/api/v1/posts/published")
-                    .then().statusCode(200);
+            TestUtil.forwardedAuthenticatedRequest(firstIp).when().get("/api/v1/posts/published").then()
+                    .statusCode(200);
         }
-        TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, firstIp).when().get("/api/v1/posts/published")
-                .then().statusCode(429);
+        TestUtil.forwardedAuthenticatedRequest(firstIp).when().get("/api/v1/posts/published").then().statusCode(429);
 
-        TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, secondIp).when().get("/api/v1/posts/published")
-                .then().statusCode(200);
+        TestUtil.forwardedAuthenticatedRequest(secondIp).when().get("/api/v1/posts/published").then().statusCode(200);
 
-        TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, thirdIp).when().get("/api/v1/posts/published")
-                .then().statusCode(200);
+        TestUtil.forwardedAuthenticatedRequest(thirdIp).when().get("/api/v1/posts/published").then().statusCode(200);
 
-        TestUtil.authenticatedRequest().header(FORWARDED_FOR_HEADER, firstIp).when().get("/api/v1/posts/published")
-                .then().statusCode(200);
+        TestUtil.forwardedAuthenticatedRequest(firstIp).when().get("/api/v1/posts/published").then().statusCode(200);
     }
 
     @Test
@@ -128,11 +122,9 @@ class RateLimitFilterTest {
                     .basic("invalid_user", "invalid_password").when().get("/api/v1/users").then().statusCode(401);
         }
 
-        TestUtil.given().header(FORWARDED_FOR_HEADER, ip).auth().preemptive().basic("invalid_user", "invalid_password")
-                .when().get("/api/v1/users").then().statusCode(429).contentType(ContentType.JSON)
-                .header("Retry-After", equalTo("60")).body("status", equalTo(429))
-                .body("error", equalTo("Too Many Requests"))
-                .body("message", equalTo("Too many invalid authentication attempts"));
+        final var response = TestUtil.given().header(FORWARDED_FOR_HEADER, ip).auth().preemptive()
+                .basic("invalid_user", "invalid_password").when().get("/api/v1/users").then();
+        assertRateLimitResponse(response, "Too many invalid authentication attempts");
     }
 
     @Test
@@ -180,17 +172,16 @@ class RateLimitFilterTest {
                 .basic("multi_user", "invalid_password").when().get("/api/v1/users").then().statusCode(429);
     }
 
-    private static void assertRateLimitResponse(@Nullable final String ip, final String path, final String method,
+    private static void assertRateLimit(@Nullable final String ip, final String path, final String method,
             final String message) {
         final var request = (ip != null) ? TestUtil.given().header(FORWARDED_FOR_HEADER, ip) : TestUtil.given();
-        request.when().request(method, path).then().statusCode(429).contentType(ContentType.JSON)
-                .header("Retry-After", equalTo("60")).body("status", equalTo(429))
-                .body("error", equalTo("Too Many Requests")).body("message", equalTo(message));
+        final var response = request.when().request(method, path).then();
+        assertRateLimitResponse(response, message);
     }
 
-    private static void assertRateLimitResponseWithoutForwardedHeaders(final String path, final String method,
+    private static void assertRateLimitWithoutForwardedHeaders(final String path, final String method,
             final String message) {
-        assertRateLimitResponse(null, path, method, message);
+        assertRateLimit(null, path, method, message);
     }
 
     public static class RateLimitTestProfile implements QuarkusTestProfile {

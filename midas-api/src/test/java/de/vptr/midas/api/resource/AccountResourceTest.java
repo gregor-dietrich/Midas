@@ -12,6 +12,8 @@ import static de.vptr.midas.api.util.TestUtil.authenticatedGuestJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedGuestRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
+import static de.vptr.midas.api.util.TestUtil.forwardedAuthenticatedJsonRequest;
+import static de.vptr.midas.api.util.TestUtil.forwardedAuthenticatedRequest;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithExistingResource;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithNonExistentResource;
@@ -30,15 +32,12 @@ import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.TestUtil;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
 
 @QuarkusTest
 @SuppressWarnings("PMD.TooManyMethods")
 class AccountResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/accounts";
     private static final String ADMIN_USER_ID = "01AN4Z07BY79KA1307SR9X4MV7"; // admin user public ID
-    private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
 
     @Test
     void testGetAllUserAccounts_unauthorized() {
@@ -132,12 +131,11 @@ class AccountResourceTest {
     @Test
     void testPatchUserAccount_authorizedWithoutNamePreservesExistingName() {
         final String originalName = "Patch Account " + TestUtil.generateUniqueSuffix();
-        final String accountId =
-                authenticatedRequest().contentType(ContentType.JSON).body(createAccountJson(originalName)).when()
-                        .post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
+        final String accountId = authenticatedJsonRequest().body(createAccountJson(originalName)).when()
+                .post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
 
-        authenticatedRequest().contentType(ContentType.JSON).body(createEmptyJson()).when()
-                .patch(ENDPOINT_URL + "/" + accountId).then().statusCode(200).body("name", equalTo(originalName));
+        authenticatedJsonRequest().body(createEmptyJson()).when().patch(ENDPOINT_URL + "/" + accountId).then()
+                .statusCode(200).body("name", equalTo(originalName));
     }
 
     @Test
@@ -163,7 +161,7 @@ class AccountResourceTest {
         final String sourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final String targetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, "spoofed_user", "100.00", "Spoofed payment",
                         "2024-01-01"))
                 .when().post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments").then().statusCode(201)
@@ -176,13 +174,13 @@ class AccountResourceTest {
         final String sourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final String targetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        final String paymentId = forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, ADMIN_USER_ID, "100.00", "Original payment",
                         "2024-01-01"))
                 .when().post(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments").then().statusCode(201).extract()
                 .path("publicId");
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, "spoofed_user", "150.00", "Updated payment",
                         "2024-01-02"))
                 .when().put(ENDPOINT_URL + "/my/" + sourceAccountId + "/payments/" + paymentId).then().statusCode(200)
@@ -199,7 +197,7 @@ class AccountResourceTest {
 
         // Payment not involving the scoped account is now permitted as long as
         // the user has access to both source and target accounts.
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(targetAccountId, sourceAccountId, ADMIN_USER_ID, "100.00",
                         "Off-account payment", "2024-01-01"))
                 .when().post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments").then().statusCode(201);
@@ -213,14 +211,14 @@ class AccountResourceTest {
         final String replacementSourceAccountId = this.createAdminAccessibleAccount(clientKey);
         final String replacementTargetAccountId = this.createAdminAccessibleAccount(clientKey);
 
-        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        final String paymentId = forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(originalTargetAccountId, scopedAccountId, ADMIN_USER_ID, "100.00",
                         "Original payment", "2024-01-01"))
                 .when().post(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments").then().statusCode(201).extract()
                 .path("publicId");
 
         // Updating to accounts not involving scopedAccountId is now permitted.
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
+        forwardedAuthenticatedJsonRequest(clientKey)
                 .body(createPaymentJson(replacementTargetAccountId, replacementSourceAccountId, ADMIN_USER_ID, "150.00",
                         "Moved payment", "2024-01-02"))
                 .when().put(ENDPOINT_URL + "/my/" + scopedAccountId + "/payments/" + paymentId).then().statusCode(200);
@@ -232,8 +230,8 @@ class AccountResourceTest {
         final String accountId = this.createAdminAccessibleAccount(clientKey);
 
         // Set isNegative = true
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(createUserAccountMetaJson(true))
-                .when().patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
+        forwardedAuthenticatedJsonRequest(clientKey).body(createUserAccountMetaJson(true)).when()
+                .patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
 
         // Verify flag is reflected in GET /accounts/{id}/users
         forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/" + accountId + "/users").then()
@@ -397,10 +395,10 @@ class AccountResourceTest {
 
     @Test
     void testUpdateUserAccount_authorized() {
-        final String accountId = authenticatedRequest().contentType(ContentType.JSON).body(createDefaultAccountJson())
-                .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
-        authenticatedRequest().contentType(ContentType.JSON).body(createDefaultAccountJson()).when()
-                .put(ENDPOINT_URL + "/" + accountId).then().statusCode(200);
+        final String accountId = authenticatedJsonRequest().body(createDefaultAccountJson()).when().post(ENDPOINT_URL)
+                .then().statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body(createDefaultAccountJson()).when().put(ENDPOINT_URL + "/" + accountId).then()
+                .statusCode(200);
     }
 
     @Test
@@ -412,23 +410,17 @@ class AccountResourceTest {
     }
 
     private String createAdminAccessibleAccount(final String clientKey) {
-        final String accountId =
-                forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(createUniqueAccountJson())
-                        .when().post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
+        final String accountId = forwardedAuthenticatedJsonRequest(clientKey).body(createUniqueAccountJson()).when()
+                .post(ENDPOINT_URL).then().statusCode(201).extract().path("publicId");
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).when()
+        forwardedAuthenticatedJsonRequest(clientKey).when()
                 .post(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(201);
 
         // Grant canManage permission so payment tests can proceed
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
-                .body(createUserAccountMetaJson(false, true)).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(createUserAccountMetaJson(false, true)).when()
                 .patch(ENDPOINT_URL + "/" + accountId + "/users/" + ADMIN_USER_ID).then().statusCode(204);
 
         return accountId;
-    }
-
-    private static RequestSpecification forwardedAuthenticatedRequest(final String clientKey) {
-        return authenticatedRequest().header(FORWARDED_FOR_HEADER, clientKey);
     }
 
     private static String uniqueClientKey() {
@@ -444,14 +436,14 @@ class AccountResourceTest {
         final String paymentJson =
                 createPaymentJson(targetAccountId, accountId, ADMIN_USER_ID, "10.00", "My payment", "2024-01-01");
 
-        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
-                .body(paymentJson).when().post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(201)
-                .extract().path("publicId");
+        final String paymentId = forwardedAuthenticatedJsonRequest(clientKey).body(paymentJson).when()
+                .post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(201).extract()
+                .path("publicId");
 
         if (paymentId != null) {
             final String updatedJson = createPaymentJson(targetAccountId, accountId, ADMIN_USER_ID, "20.00",
                     "Updated payment", "2024-01-01");
-            forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(updatedJson).when()
+            forwardedAuthenticatedJsonRequest(clientKey).body(updatedJson).when()
                     .put(ENDPOINT_URL + "/my/" + accountId + "/payments/" + paymentId).then().statusCode(200);
         }
     }
@@ -484,10 +476,10 @@ class AccountResourceTest {
         final String clientKey = uniqueClientKey();
         final String accountId = this.createAdminAccessibleAccount(clientKey);
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(createEmptyJson()).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(createEmptyJson()).when()
                 .post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(422);
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(createEmptyJson()).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(createEmptyJson()).when()
                 .put(ENDPOINT_URL + "/my/" + accountId + "/payments/01AN4Z07BY79KA1307SR9X4MV8").then().statusCode(422);
     }
 
@@ -500,7 +492,7 @@ class AccountResourceTest {
         final String paymentJson =
                 createPaymentJson(targetAccountId, accountId, ADMIN_USER_ID, "10.00", "My payment", "2024-01-01");
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(paymentJson).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(paymentJson).when()
                 .put(ENDPOINT_URL + "/my/" + accountId + "/payments/999999").then().statusCode(404);
     }
 
@@ -512,9 +504,9 @@ class AccountResourceTest {
         final String paymentJson =
                 createPaymentJson(accountId, null, ADMIN_USER_ID, "10.00", "Delete test", "2024-01-01");
 
-        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
-                .body(paymentJson).when().post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(201)
-                .extract().path("publicId");
+        final String paymentId = forwardedAuthenticatedJsonRequest(clientKey).body(paymentJson).when()
+                .post(ENDPOINT_URL + "/my/" + accountId + "/payments").then().statusCode(201).extract()
+                .path("publicId");
 
         if (paymentId != null) {
             forwardedAuthenticatedRequest(clientKey).when()
@@ -546,22 +538,22 @@ class AccountResourceTest {
         final String paymentJson =
                 createPaymentJson(targetAccountIdA, accountIdA, ADMIN_USER_ID, "10.00", "My payment", "2024-01-01");
 
-        final String paymentId = forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON)
-                .body(paymentJson).when().post(ENDPOINT_URL + "/my/" + accountIdA + "/payments").then().statusCode(201)
-                .extract().path("publicId");
+        final String paymentId = forwardedAuthenticatedJsonRequest(clientKey).body(paymentJson).when()
+                .post(ENDPOINT_URL + "/my/" + accountIdA + "/payments").then().statusCode(201).extract()
+                .path("publicId");
 
         // Try updating payment using an account it does not belong to
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(paymentJson).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(paymentJson).when()
                 .put(ENDPOINT_URL + "/my/" + accountIdB + "/payments/" + paymentId).then().statusCode(403);
 
         // Use a source/target account that admin does not have access to
         final String forbiddenPayload = createPaymentJson("01AN4Z07BY79KA1307SR9X4MV9", accountIdA, ADMIN_USER_ID,
                 "10.00", "My payment", "2024-01-01");
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(forbiddenPayload).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(forbiddenPayload).when()
                 .put(ENDPOINT_URL + "/my/" + accountIdA + "/payments/" + paymentId).then().statusCode(403);
 
-        forwardedAuthenticatedRequest(clientKey).contentType(ContentType.JSON).body(forbiddenPayload).when()
+        forwardedAuthenticatedJsonRequest(clientKey).body(forbiddenPayload).when()
                 .post(ENDPOINT_URL + "/my/" + accountIdA + "/payments").then().statusCode(403);
     }
 
