@@ -3,6 +3,7 @@ package de.vptr.midas.api.security;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Set;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -21,6 +22,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -52,8 +54,16 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
     @Inject
     Instance<RoutingContext> routingContextInstance;
 
-    @ConfigProperty(name = "rate-limit.trust-forwarded-for", defaultValue = "false")
-    boolean trustForwardedFor;
+    @ConfigProperty(name = "app.security.trusted-proxy-ips", defaultValue = "127.0.0.1,::1,0:0:0:0:0:0:0:1")
+    @Nullable
+    String trustedProxyIpsConfig;
+
+    private Set<String> trustedProxyIps;
+
+    @PostConstruct
+    void initConfig() {
+        this.trustedProxyIps = IpUtil.parseTrustedProxyIps(this.trustedProxyIpsConfig);
+    }
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
@@ -75,7 +85,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
         if (ip == null || "unknown".equals(ip)) {
             try {
                 if (this.routingContextInstance.isResolvable()) {
-                    ip = IpUtil.resolveIp(this.routingContextInstance.get().request(), this.trustForwardedFor);
+                    ip = IpUtil.resolveIp(this.routingContextInstance.get().request(), this.trustedProxyIps);
                 }
             } catch (final RuntimeException e) {
                 LOG.debug("Could not determine client IP via CDI, using 'unknown'");
@@ -106,33 +116,28 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
 
             final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
 
-            if (user == null) {
+            if (user == null || user.banned || !user.activated || user.password == null) {
                 // Run dummy hash to prevent timing-based username enumeration
                 this.passwordHashingService.verifyPassword("dummy",
                         "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 this.loginAttemptService.recordFailure(username, ip);
-                throw new AuthenticationFailedException("Invalid credentials");
+
+                if (user == null || user.password == null) {
+                    throw new AuthenticationFailedException("Invalid credentials");
+                } else if (user.banned) {
+                    throw new AuthenticationFailedException("User is banned");
+                } else {
+                    throw new AuthenticationFailedException("User is not activated");
+                }
             }
 
             final String passwordStr = password != null ? new String(password) : "";
 
-            if (user.password == null || !this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
+            if (!this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
                 this.authFailureRateLimitService.recordFailure(clientKey);
                 this.loginAttemptService.recordFailure(username, ip);
                 throw new AuthenticationFailedException("Invalid credentials");
-            }
-
-            if (user.banned) {
-                this.authFailureRateLimitService.recordFailure(clientKey);
-                this.loginAttemptService.recordFailure(username, ip);
-                throw new AuthenticationFailedException("User is banned");
-            }
-
-            if (!user.activated) {
-                this.authFailureRateLimitService.recordFailure(clientKey);
-                this.loginAttemptService.recordFailure(username, ip);
-                throw new AuthenticationFailedException("User is not activated");
             }
 
             this.loginAttemptService.recordSuccess(username, ip);

@@ -2,6 +2,7 @@ package de.vptr.midas.api.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -12,6 +13,7 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -36,8 +38,16 @@ public class AuthFailureRateLimitFilter {
     @ConfigProperty(name = "midas.rate-limit.period-seconds", defaultValue = "60")
     long periodSeconds;
 
-    @ConfigProperty(name = "rate-limit.trust-forwarded-for", defaultValue = "false")
-    boolean trustForwardedFor;
+    @ConfigProperty(name = "app.security.trusted-proxy-ips", defaultValue = "127.0.0.1,::1,0:0:0:0:0:0:0:1")
+    @Nullable
+    String trustedProxyIpsConfig;
+
+    private Set<String> trustedProxyIps;
+
+    @PostConstruct
+    void initConfig() {
+        this.trustedProxyIps = IpUtil.parseTrustedProxyIps(this.trustedProxyIpsConfig);
+    }
 
     void init(@Observes final Router router) {
         router.route().order(Integer.MIN_VALUE).handler(this::enforceAuthFailureRateLimit);
@@ -48,7 +58,7 @@ public class AuthFailureRateLimitFilter {
         if (authorizationHeader != null && authorizationHeader.startsWith(BASIC_PREFIX)) {
             final var username = extractUsername(authorizationHeader);
             if (username != null) {
-                final String ip = IpUtil.resolveIp(routingContext.request(), this.trustForwardedFor);
+                final String ip = IpUtil.resolveIp(routingContext.request(), this.trustedProxyIps);
 
                 if (Vertx.currentContext() != null) {
                     Vertx.currentContext().putLocal("midas.client-ip", ip);

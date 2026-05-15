@@ -3,11 +3,13 @@ package de.vptr.midas.api.filter;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import de.vptr.midas.api.exception.ApiErrorResponse;
+import de.vptr.midas.api.util.IpUtil;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.netty.util.NetUtil;
@@ -66,8 +68,11 @@ public class RateLimitFilter implements ContainerRequestFilter {
     @ConfigProperty(name = "midas.rate-limit.bucket.max-entries", defaultValue = "10000")
     int maxBucketEntries;
 
-    @ConfigProperty(name = "rate-limit.trust-forwarded-for", defaultValue = "false")
-    boolean trustForwardedFor;
+    @ConfigProperty(name = "app.security.trusted-proxy-ips", defaultValue = "127.0.0.1,::1,0:0:0:0:0:0:0:1")
+    @Nullable
+    String trustedProxyIpsConfig;
+
+    private Set<String> trustedProxyIps;
 
     @PostConstruct
     void initBucketStores() {
@@ -75,6 +80,8 @@ public class RateLimitFilter implements ContainerRequestFilter {
         this.readBuckets = new BucketStore(maxEntries);
         this.writeBuckets = new BucketStore(maxEntries);
         this.authBuckets = new BucketStore(maxEntries);
+
+        this.trustedProxyIps = IpUtil.parseTrustedProxyIps(this.trustedProxyIpsConfig);
     }
 
     @Override
@@ -149,7 +156,10 @@ public class RateLimitFilter implements ContainerRequestFilter {
     }
 
     String resolveClientKey(final ContainerRequestContext requestContext) {
-        if (this.trustForwardedFor) {
+        final RoutingContext routingContext = resolveRoutingContext();
+        final String remoteClientAddress = resolveRemoteClientAddress(routingContext);
+
+        if (remoteClientAddress != null && this.trustedProxyIps.contains(remoteClientAddress)) {
             final String forwardedClientAddress =
                     resolveTrustedClientAddress(requestContext.getHeaderString(FORWARDED_FOR_HEADER),
                             requestContext.getHeaderString(REAL_IP_HEADER));
@@ -158,8 +168,6 @@ public class RateLimitFilter implements ContainerRequestFilter {
             }
         }
 
-        final RoutingContext routingContext = resolveRoutingContext();
-        final String remoteClientAddress = resolveRemoteClientAddress(routingContext);
         if (remoteClientAddress != null) {
             return remoteClientAddress;
         }

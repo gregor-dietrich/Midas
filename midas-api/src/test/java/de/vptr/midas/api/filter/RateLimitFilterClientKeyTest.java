@@ -39,6 +39,9 @@ class RateLimitFilterClientKeyTest {
     @Test
     void testResolveClientKeyUsesRemoteAddressWhenForwardedHeadersInvalid() {
         final RateLimitFilter filter = new RateLimitFilter();
+        filter.trustedProxyIpsConfig = "203.0.113.70";
+        filter.initBucketStores();
+
         final ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
         final Instance<RoutingContext> routingContextInstance = mock(Instance.class);
         final RoutingContext routingContext = mock(RoutingContext.class);
@@ -61,6 +64,9 @@ class RateLimitFilterClientKeyTest {
     @Test
     void testResolveClientKeyFallsBackToConnectionIdentityWhenRemoteAddressMissing() {
         final RateLimitFilter filter = new RateLimitFilter();
+        filter.trustedProxyIpsConfig = "127.0.0.1";
+        filter.initBucketStores();
+
         final ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
         final Instance<RoutingContext> routingContextInstance = mock(Instance.class);
         final RoutingContext routingContext = mock(RoutingContext.class);
@@ -83,6 +89,9 @@ class RateLimitFilterClientKeyTest {
     @Test
     void testResolveClientKeyFallsBackToRequestIdentityWhenRoutingContextUnavailable() {
         final RateLimitFilter filter = new RateLimitFilter();
+        filter.trustedProxyIpsConfig = "127.0.0.1";
+        filter.initBucketStores();
+
         final ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
         final Instance<RoutingContext> routingContextInstance = mock(Instance.class);
 

@@ -190,8 +190,8 @@ class RateLimitFilterTest {
             return Map.of("midas.rate-limit.read.permits", "5", "midas.rate-limit.write.permits", "3",
                     "midas.rate-limit.auth.permits", "2", "midas.rate-limit.auth-failure.permits", "2",
                     "midas.rate-limit.period-seconds", "60", "midas.rate-limit.bucket.max-entries", "2",
-                    // Tests simulate a trusted reverse-proxy environment
-                    "rate-limit.trust-forwarded-for", "true");
+                    // Tests simulate a trusted reverse-proxy environment from localhost
+                    "app.security.trusted-proxy-ips", "127.0.0.1,::1,0:0:0:0:0:0:0:1");
         }
     }
 }
