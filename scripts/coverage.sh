@@ -22,7 +22,7 @@ set -e
 
 echo "Starting coverage report generation..."
 
-REPORT="COVERAGE.md"
+REPORT=".coverage.md"
 maven_status=0
 
 # Map module names to Maven project list and CSV targets

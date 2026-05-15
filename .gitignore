@@ -1,5 +1,6 @@
 # Coverage reports
 .coverage
+.coverage.md
 .ref
 
 # Binary bundles (GUI)
@@ -64,6 +65,7 @@ nb-configuration.xml
 
 # Vaadin/Frontend files (GUI-specific)
 node_modules/
+midas-gui/src/main/bundles/*.bundle
 midas-gui/src/main/frontend/generated/
 midas-gui/pnpmfile.js
 midas-gui/vite.generated.ts

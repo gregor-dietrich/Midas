@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
@@ -20,7 +20,9 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
+import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
@@ -47,7 +49,13 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private Grid<AccountResponseDto> grid;
     @Nullable
     private Span totalBalanceLabel;
-    private Map<String, BigDecimal> accountBalances = new HashMap<>();
+    @Nullable
+    private DatePicker startDatePicker;
+    @Nullable
+    private DatePicker endDatePicker;
+
+    private final Map<String, BigDecimal> accountBalances = new HashMap<>();
+    private final Map<String, List<PaymentResponseDto>> accountPayments = new HashMap<>();
     private List<AccountResponseDto> accountsList = new ArrayList<>();
     private boolean initialized = false;
 
@@ -72,18 +80,19 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         LOG.info("Starting async account loading for current user");
 
         this.loadDataAsync(() -> {
-            LOG.info("Making optimized REST call to load user accounts with balances");
-            final var accounts = this.accountService.getMyAccountsWithBalances();
-            final Map<String, BigDecimal> balances =
-                    accounts.stream().collect(Collectors.toMap(AccountResponseDto::getPublicId,
-                            account -> account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO));
-            return new AccountsWithBalances(accounts, balances);
+            LOG.info("Loading user accounts and their payments");
+            final var accounts = this.accountService.getMyAccounts();
+            final Map<String, List<PaymentResponseDto>> payments = new HashMap<>();
+            for (final var account : accounts) {
+                payments.put(account.getPublicId(), this.accountService.getMyAccountPayments(account.getPublicId()));
+            }
+            return new AccountsWithPayments(accounts, payments);
         }, result -> {
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());
-            this.accountBalances = result.balances;
+            this.accountPayments.clear();
+            this.accountPayments.putAll(result.payments);
             this.accountsList = result.accounts;
-            Objects.requireNonNull(this.grid).setItems(result.accounts);
-            this.updateTotalBalance();
+            this.recalculateBalances();
             LOG.infof("Grid updated with %s accounts", result.accounts.size());
         }, throwable -> {
             LOG.error("Error in async account loading", throwable);
@@ -112,7 +121,11 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         titleSection.setSpacing(false);
         titleSection.setPadding(false);
 
-        headerLayout.add(titleSection);
+        final DateFilterLayout dateFilterLayout = new DateFilterLayout(e -> this.recalculateBalances());
+        this.startDatePicker = dateFilterLayout.getStartDatePicker();
+        this.endDatePicker = dateFilterLayout.getEndDatePicker();
+
+        headerLayout.add(titleSection, dateFilterLayout);
 
         this.createGrid();
 
@@ -157,6 +170,30 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         return this.accountBalances.getOrDefault(accountId, BigDecimal.ZERO);
     }
 
+    private void recalculateBalances() {
+        final var start = Objects.requireNonNull(this.startDatePicker).getValue();
+        final var end = Objects.requireNonNull(this.endDatePicker).getValue();
+
+        this.accountBalances.clear();
+        for (final var entry : this.accountPayments.entrySet()) {
+            final String accountId = entry.getKey();
+            final List<PaymentResponseDto> payments = entry.getValue();
+
+            final BigDecimal balance = payments.stream()
+                    .filter(p -> p.getDate() != null && !p.getDate().isBefore(start) && !p.getDate().isAfter(end))
+                    .map(p -> {
+                        final var amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+                        final boolean isSender = Objects.equals(p.getSourceAccountPublicId(), accountId);
+                        return isSender ? amount.negate() : amount;
+                    }).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            this.accountBalances.put(accountId, balance);
+        }
+
+        Objects.requireNonNull(this.grid).setItems(this.accountsList);
+        this.updateTotalBalance();
+    }
+
     private void updateTotalBalance() {
         if (this.totalBalanceLabel != null && this.accountBalances != null) {
             // Sum balances, subtracting those flagged as negative for the current user
@@ -181,14 +218,15 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         }
     }
 
-    // Helper class to return both accounts and balances from the async operation
-    private static class AccountsWithBalances {
+    // Helper class to return both accounts and payments from the async operation
+    private static class AccountsWithPayments {
         final List<AccountResponseDto> accounts;
-        final Map<String, BigDecimal> balances;
+        final Map<String, List<PaymentResponseDto>> payments;
 
-        AccountsWithBalances(final List<AccountResponseDto> accounts, final Map<String, BigDecimal> balances) {
+        AccountsWithPayments(final List<AccountResponseDto> accounts,
+                final Map<String, List<PaymentResponseDto>> payments) {
             this.accounts = accounts;
-            this.balances = balances;
+            this.payments = payments;
         }
     }
 }

@@ -65,7 +65,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             List<AccountResponseDto> userAccounts) {
     }
 
-    private record AccountPaymentData(List<PaymentResponseDto> payments, BigDecimal balance) {
+    private record AccountPaymentData(List<PaymentResponseDto> payments) {
     }
 
     @Inject
@@ -177,17 +177,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var aid = Objects.requireNonNull(this.accountId);
         this.loadDataAsync(() -> {
             final var payments = this.paymentService.getPaymentsByAccount(aid);
-            final var balance = this.accountService.getAccountBalance(aid);
-            return new AccountPaymentData(payments, balance);
+            return new AccountPaymentData(payments);
         }, data -> {
             this.allPayments = data.payments();
-            this.accountBalance = data.balance();
             this.updateUiWithData();
         });
     }
 
     private void updateUiWithData() {
-        Objects.requireNonNull(this.grid).setItems(this.allPayments != null ? this.allPayments : List.of());
+        this.recalculateBalance();
+        Objects.requireNonNull(this.grid).setItems(this.getFilteredPayments());
 
         final var balance = this.accountBalance != null ? this.accountBalance : BigDecimal.ZERO;
         Objects.requireNonNull(this.balanceLabel).setText("Current Balance: " + balance + " EUR");
@@ -324,7 +323,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return;
         }
         final var queryLower = query.toLowerCase(Locale.ROOT);
-        final var filtered = this.allPayments.stream()
+        final var filtered = this.getFilteredPayments().stream()
                 .filter(p -> (p.getComment() != null && p.getComment().toLowerCase(Locale.ROOT).contains(queryLower))
                         || (p.getSourceAccountName() != null
                                 && p.getSourceAccountName().toLowerCase(Locale.ROOT).contains(queryLower))
@@ -335,19 +334,31 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void filterByDateRange() {
+        this.updateUiWithData();
+    }
+
+    private List<PaymentResponseDto> getFilteredPayments() {
         if (this.allPayments == null) {
-            return;
+            return List.of();
         }
         final var start = Objects.requireNonNull(this.startDatePicker).getValue();
         final var end = Objects.requireNonNull(this.endDatePicker).getValue();
 
         if (start == null || end == null) {
-            return;
+            return this.allPayments;
         }
 
-        final var filtered = this.allPayments.stream()
+        return this.allPayments.stream()
                 .filter(p -> p.getDate() != null && !p.getDate().isBefore(start) && !p.getDate().isAfter(end)).toList();
-        Objects.requireNonNull(this.grid).setItems(filtered);
+    }
+
+    private void recalculateBalance() {
+        final var payments = this.getFilteredPayments();
+        this.accountBalance = payments.stream().map(p -> {
+            final var amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+            final boolean isSender = Objects.equals(p.getSourceAccountPublicId(), this.accountId);
+            return isSender ? amount.negate() : amount;
+        }).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void openPaymentDialog(@Nullable final PaymentDto payment, final boolean openAsRecipient) {

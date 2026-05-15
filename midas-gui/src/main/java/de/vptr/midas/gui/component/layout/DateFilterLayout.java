@@ -1,5 +1,8 @@
 package de.vptr.midas.gui.component.layout;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
@@ -27,9 +30,11 @@ public class DateFilterLayout extends HorizontalLayout {
 
         this.startDatePicker = new DatePicker("Start Date");
         this.startDatePicker.setWidth(fieldWidth);
+        this.startDatePicker.setValue(LocalDate.of(1970, 1, 1));
 
         this.endDatePicker = new DatePicker("End Date");
         this.endDatePicker.setWidth(fieldWidth);
+        this.endDatePicker.setValue(LocalDate.now(ZoneId.systemDefault()));
 
         this.button = new FilterButton(filterAction, tooltipText);
 
