@@ -53,14 +53,21 @@ public class PostResource {
         return this.postService.getAllPosts(safePage, safeSize);
     }
 
-    /** Returns published posts with normalized pagination parameters. */
+    /**
+     * Returns published posts with normalized pagination, optionally filtered server-side by category, created-date
+     * range and free-text query so the GUI never materializes the full post set.
+     */
     @GET
     @Path("/published")
     public List<PostResponseDto> getPublishedPosts(@QueryParam("page") @DefaultValue("0") final int page,
-            @QueryParam("size") @DefaultValue("20") final int size) {
+            @QueryParam("size") @DefaultValue("20") final int size,
+            @QueryParam("categoryPublicId") @Nullable final String categoryPublicId,
+            @QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate,
+            @QueryParam("query") @Nullable final String query) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.findPublishedPosts(safePage, safeSize);
+        return this.postService.findPublishedPosts(categoryPublicId, startDate, endDate, query, safePage, safeSize);
     }
 
     @GET

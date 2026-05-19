@@ -78,6 +78,54 @@ public class PostService {
         return this.toResponseDtos(posts);
     }
 
+    /**
+     * Returns published posts filtered server-side by optional category, created-date range (inclusive of the whole end
+     * day) and free-text query, with pagination. Mirrors the payments filtering approach so the GUI never loads the
+     * full post set into memory.
+     */
+    public List<PostResponseDto> findPublishedPosts(@Nullable final String categoryPublicId,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final String query,
+            final int page, final int size) {
+        final LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        final LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
+        final String like = SearchQueryUtil.toContainsLikePattern(query);
+
+        final StringBuilder jpql = new StringBuilder("SELECT p FROM PostEntity p "
+                + "LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.published = true");
+        if (categoryPublicId != null) {
+            jpql.append(" AND p.category.publicId = :categoryPublicId");
+        }
+        if (startDateTime != null) {
+            jpql.append(" AND p.created >= :startDateTime");
+        }
+        if (endDateTime != null) {
+            jpql.append(" AND p.created <= :endDateTime");
+        }
+        if (like != null) {
+            jpql.append(" AND (LOWER(p.title) LIKE :like ESCAPE '\\'")
+                    .append(" OR LOWER(p.content) LIKE :like ESCAPE '\\'")
+                    .append(" OR LOWER(p.user.username) LIKE :like ESCAPE '\\')");
+        }
+        jpql.append(" ORDER BY p.created DESC");
+
+        final var jpaQuery = PostEntity.getEntityManager().createQuery(jpql.toString(), PostEntity.class);
+        if (categoryPublicId != null) {
+            jpaQuery.setParameter("categoryPublicId", categoryPublicId);
+        }
+        if (startDateTime != null) {
+            jpaQuery.setParameter("startDateTime", startDateTime);
+        }
+        if (endDateTime != null) {
+            jpaQuery.setParameter("endDateTime", endDateTime);
+        }
+        if (like != null) {
+            jpaQuery.setParameter("like", like);
+        }
+        jpaQuery.setFirstResult(page * size).setMaxResults(size);
+
+        return this.toResponseDtos(jpaQuery.getResultList());
+    }
+
     /** Returns all posts by the given user with default pagination. */
     public List<PostResponseDto> findByUserPublicId(final String userPublicId) {
         return findByUserPublicId(userPublicId, 0, 20);

@@ -12,6 +12,7 @@ import de.vptr.midas.gui.dto.PostDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.UiConstants;
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -43,7 +44,9 @@ public interface PostClient {
     @GET
     @Path("/published")
     List<PostResponseDto> getPublishedPosts(@QueryParam("page") Integer page, @QueryParam("size") Integer size,
-            @HeaderParam("Authorization") String authorization);
+            @QueryParam("categoryPublicId") @Nullable String categoryPublicId,
+            @QueryParam("startDate") @Nullable LocalDate startDate, @QueryParam("endDate") @Nullable LocalDate endDate,
+            @QueryParam("query") @Nullable String query, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/{publicId}")

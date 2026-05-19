@@ -54,12 +54,22 @@ public class PostService {
 
     /** Returns the published posts paginated. */
     public List<PostResponseDto> getPublishedPosts(@Nullable final Integer page, @Nullable final Integer size) {
+        return this.getPublishedPosts(null, null, null, null, page, size);
+    }
+
+    /**
+     * Returns published posts filtered server-side by optional category, created-date range and free-text query, with
+     * pagination. Mirrors the payments approach so the GUI never loads the full post set into memory.
+     */
+    public List<PostResponseDto> getPublishedPosts(@Nullable final String categoryPublicId,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final String query,
+            @Nullable final Integer page, @Nullable final Integer size) {
         LOG.debugf("Fetching published posts page %s size %s", page, size);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(() -> this.postClient.getPublishedPosts(safePage, safeSize, authHeader),
-                this.authService, LOG, "fetching published posts");
+        return ServiceHelper.execute(() -> this.postClient.getPublishedPosts(safePage, safeSize, categoryPublicId,
+                startDate, endDate, query, authHeader), this.authService, LOG, "fetching published posts");
     }
 
     /** Returns the post by id. */

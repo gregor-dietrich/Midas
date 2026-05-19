@@ -96,14 +96,15 @@ class PostServiceTest {
                 Arrays.asList(MockDataUtil.createPostResponseDto(), MockDataUtil.createPostResponseDto());
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.postClient.getPublishedPosts(0, 20, TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedPosts);
+        when(this.postClient.getPublishedPosts(0, 20, null, null, null, null, TestUtil.TEST_AUTH_HEADER))
+                .thenReturn(expectedPosts);
 
         // When
         final var result = this.postService.getPublishedPosts();
 
         // Then
         assertThat(result).isEqualTo(expectedPosts);
-        verify(this.postClient).getPublishedPosts(0, 20, TestUtil.TEST_AUTH_HEADER);
+        verify(this.postClient).getPublishedPosts(0, 20, null, null, null, null, TestUtil.TEST_AUTH_HEADER);
     }
 
     @Test

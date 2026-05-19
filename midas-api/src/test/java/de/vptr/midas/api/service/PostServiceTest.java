@@ -99,6 +99,45 @@ class PostServiceTest extends AbstractIntegrationTest {
 
     @Test
     @TestTransaction
+    void findPublishedPosts_filtersByCategoryQueryDateAndPaginates() {
+        final var username = Objects.requireNonNull(this.testUser.username);
+        this.postService.createPost(ServiceTestDataBuilder.createPostDto("Alpha gardening tips", "content a", true,
+                false, this.testCategoryPublicId), username);
+        this.postService.createPost(ServiceTestDataBuilder.createPostDto("Beta cooking guide", "content b", true, false,
+                this.testCategoryPublicId), username);
+        // Unpublished draft must never be returned.
+        this.postService.createPost(ServiceTestDataBuilder.createPostDto("Draft gardening", "content c", false, false,
+                this.testCategoryPublicId), username);
+
+        // Category filter returns only the two published posts in the test category.
+        final var byCategory = this.postService.findPublishedPosts(this.testCategoryPublicId, null, null, null, 0, 20);
+        assertEquals(2, byCategory.size());
+        for (final var post : byCategory) {
+            assertTrue(Boolean.TRUE.equals(post.published));
+        }
+
+        // Free-text query (scoped to the test category) matches the title.
+        final var gardening =
+                this.postService.findPublishedPosts(this.testCategoryPublicId, null, null, "gardening", 0, 20);
+        assertEquals(1, gardening.size());
+        assertEquals("Alpha gardening tips", gardening.get(0).title);
+
+        // Pagination caps the page size.
+        final var firstPage = this.postService.findPublishedPosts(this.testCategoryPublicId, null, null, null, 0, 1);
+        assertEquals(1, firstPage.size());
+
+        // A date range around today includes the posts; a past-only range excludes them.
+        final var today = LocalDate.now(ZoneOffset.UTC);
+        final var inRange = this.postService.findPublishedPosts(this.testCategoryPublicId, today.minusDays(1),
+                today.plusDays(1), null, 0, 20);
+        assertEquals(2, inRange.size());
+        final var pastRange = this.postService.findPublishedPosts(this.testCategoryPublicId, LocalDate.of(2000, 1, 1),
+                LocalDate.of(2000, 1, 2), null, 0, 20);
+        assertTrue(pastRange.isEmpty());
+    }
+
+    @Test
+    @TestTransaction
     void testCreatePost() {
         final var newPost = ServiceTestDataBuilder.createUniquePostDto(this.testCategoryPublicId);
 
