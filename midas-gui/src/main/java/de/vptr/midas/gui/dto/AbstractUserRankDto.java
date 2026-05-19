@@ -2,20 +2,23 @@ package de.vptr.midas.gui.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.annotation.Nullable;
+
 /** Data transfer object for user rank. */
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public abstract class AbstractUserRankDto {
 
-    // JUSTIFICATION: Constructor is required by NullAway to initialize fields; cannot be omitted.
-    @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
+    @SuppressWarnings("PMD.UnnecessaryConstructor")
     public AbstractUserRankDto() {
-        // Default constructor for Jackson deserialization and NullAway compliance
+        // Default constructor for Jackson deserialization
     }
 
     @JsonProperty("publicId")
+    @Nullable
     private String publicId;
 
     @JsonProperty("name")
+    @Nullable
     private String name;
 
     // View permissions
@@ -103,10 +106,12 @@ public abstract class AbstractUserRankDto {
     private Boolean userRankEdit = false;
 
     // Getter methods
+    @Nullable
     public String getPublicId() {
         return this.publicId;
     }
 
+    @Nullable
     public String getName() {
         return this.name;
     }
@@ -221,11 +226,11 @@ public abstract class AbstractUserRankDto {
     }
 
     // Setter methods
-    public void setPublicId(final String publicId) {
+    public void setPublicId(@Nullable final String publicId) {
         this.publicId = publicId;
     }
 
-    public void setName(final String name) {
+    public void setName(@Nullable final String name) {
         this.name = name;
     }
 

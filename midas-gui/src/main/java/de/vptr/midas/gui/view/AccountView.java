@@ -82,10 +82,8 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.loadDataAsync(() -> {
             LOG.info("Loading user accounts and their payments");
             final var accounts = this.accountService.getMyAccounts();
-            final Map<String, List<PaymentResponseDto>> payments = new HashMap<>();
-            for (final var account : accounts) {
-                payments.put(account.getPublicId(), this.accountService.getMyAccountPayments(account.getPublicId()));
-            }
+            final Map<String, List<PaymentResponseDto>> payments =
+                    accounts.isEmpty() ? new HashMap<>() : new HashMap<>(this.accountService.getMyAccountsPayments());
             return new AccountsWithPayments(accounts, payments);
         }, result -> {
             LOG.infof("Successfully loaded %s accounts", result.accounts.size());

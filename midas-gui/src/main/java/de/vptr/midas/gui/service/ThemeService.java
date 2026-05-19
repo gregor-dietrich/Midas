@@ -4,6 +4,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.theme.lumo.Lumo;
 
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /** Component. */
@@ -11,15 +12,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class ThemeService {
 
     /** Theme component. */
-    @SuppressWarnings("NullAway")
     public enum Theme {
         LIGHT("Light", null), DARK("Dark", Lumo.DARK), SYSTEM("System", null);
 
         private final String displayName;
+        @Nullable
         private final String themeVariant;
 
-        @SuppressWarnings("NullAway")
-        Theme(final String displayName, final String themeVariant) {
+        Theme(final String displayName, @Nullable final String themeVariant) {
             this.displayName = displayName;
             this.themeVariant = themeVariant;
         }
@@ -38,6 +38,7 @@ public class ThemeService {
          *
          * @return the theme variant, or {@code null} for default
          */
+        @Nullable
         public String getThemeVariant() {
             return this.themeVariant;
         }

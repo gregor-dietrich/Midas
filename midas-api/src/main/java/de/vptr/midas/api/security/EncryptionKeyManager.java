@@ -1,6 +1,7 @@
 package de.vptr.midas.api.security;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -96,17 +97,22 @@ public class EncryptionKeyManager {
             final var keyBytes = new byte[KEY_BYTES];
             SECURE_RANDOM.nextBytes(keyBytes);
 
-            final var parent = path.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
+            // Resolve the target so it always has a concrete parent directory. A relative
+            // key path (the default "encryption.key") has a null parent, in which case the
+            // temp file must still be created in the resolved working directory rather than
+            // the system temp dir; otherwise the atomic move below crosses filesystems and
+            // fails with "Invalid cross-device link" on setups like WSL2.
+            final var absolutePath = path.toAbsolutePath();
+            final var parent = absolutePath.getParent();
+            if (parent == null) {
+                throw new IllegalStateException("Cannot resolve parent directory for key path: " + path);
             }
+            Files.createDirectories(parent);
 
             // Write to a temp file in the same directory, set 0600 permissions before
-            // writing,
-            // then atomically move to the target path to avoid a window of world-readable
-            // exposure.
-            final var tmp = parent != null ? Files.createTempFile(parent, ".key-", ".tmp")
-                    : Files.createTempFile(".key-", ".tmp");
+            // writing, then atomically move to the target path to avoid a window of
+            // world-readable exposure.
+            final var tmp = Files.createTempFile(parent, ".key-", ".tmp");
             try {
                 try {
                     Files.setPosixFilePermissions(tmp,
@@ -118,16 +124,28 @@ public class EncryptionKeyManager {
                 Files.write(tmp, Base64.getEncoder().encode(keyBytes));
 
                 try {
-                    Files.move(tmp, path, StandardCopyOption.ATOMIC_MOVE);
+                    Files.move(tmp, absolutePath, StandardCopyOption.ATOMIC_MOVE);
                 } catch (final FileAlreadyExistsException e) {
                     LOG.info("Encryption key file created concurrently; loading existing key");
-                    return loadKey(path);
+                    return loadKey(absolutePath);
+                } catch (final AtomicMoveNotSupportedException e) {
+                    // Filesystem does not support atomic moves even within the same
+                    // directory. Fall back to a regular move; the temp file already
+                    // carries 0600 permissions, and we re-assert them on the target.
+                    LOG.warnf("Atomic move unsupported for %s; using non-atomic move", absolutePath);
+                    Files.move(tmp, absolutePath, StandardCopyOption.REPLACE_EXISTING);
+                    try {
+                        Files.setPosixFilePermissions(absolutePath,
+                                Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+                    } catch (final UnsupportedOperationException ignored) {
+                        LOG.warnf("Cannot set POSIX permissions on %s (non-POSIX filesystem)", absolutePath);
+                    }
                 }
             } finally {
                 Files.deleteIfExists(tmp);
             }
 
-            LOG.infof("Generated new encryption key at: %s", path.toAbsolutePath());
+            LOG.infof("Generated new encryption key at: %s", absolutePath);
             return new SecretKeySpec(keyBytes, "AES");
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to generate and save encryption key at: " + path, e);

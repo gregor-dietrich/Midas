@@ -1,6 +1,7 @@
 package de.vptr.midas.api.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +106,38 @@ public class AccountAccessService {
                     ORDER BY p.date DESC""").setParameter("publicId", accountPublicId).getResultList();
 
             return payments.stream().map(PaymentResponseDto::new).toList();
+        });
+    }
+
+    /** Returns all payments grouped by account publicId for the given accounts. */
+    public Map<String, List<PaymentResponseDto>> getPaymentsByAccount(final List<String> accountPublicIds) {
+        return PerformanceMonitor.time("getPaymentsByAccount(" + accountPublicIds.size() + " accounts)", () -> {
+            final Map<String, List<PaymentResponseDto>> grouped = new HashMap<>();
+            accountPublicIds.forEach(id -> grouped.put(id, new ArrayList<>()));
+            if (accountPublicIds.isEmpty()) {
+                return grouped;
+            }
+
+            @SuppressWarnings("unchecked")
+            final List<PaymentEntity> payments = PaymentEntity.getEntityManager().createQuery("""
+                    SELECT p FROM PaymentEntity p \
+                    LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user \
+                    WHERE p.sourceAccount.publicId IN :publicIds OR p.targetAccount.publicId IN :publicIds \
+                    ORDER BY p.date DESC""").setParameter("publicIds", accountPublicIds).getResultList();
+
+            for (final PaymentEntity p : payments) {
+                final PaymentResponseDto dto = new PaymentResponseDto(p);
+                final AccountEntity source = p.sourceAccount;
+                final AccountEntity target = p.targetAccount;
+                if (source != null && source.publicId != null && grouped.containsKey(source.publicId)) {
+                    grouped.get(source.publicId).add(dto);
+                }
+                if (target != null && target.publicId != null && grouped.containsKey(target.publicId)
+                        && (source == null || !Objects.equals(source.publicId, target.publicId))) {
+                    grouped.get(target.publicId).add(dto);
+                }
+            }
+            return grouped;
         });
     }
 

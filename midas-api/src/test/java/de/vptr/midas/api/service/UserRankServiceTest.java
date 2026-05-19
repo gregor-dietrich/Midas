@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.dto.UserRankDto;
 import de.vptr.midas.api.dto.UserRankResponseDto;
 import de.vptr.midas.api.util.AbstractIntegrationTest;
 import de.vptr.midas.api.util.PaginationUtil;
@@ -119,6 +120,56 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         assertFalse(Boolean.TRUE.equals(updatedRank.userDelete));
         assertFalse(Boolean.TRUE.equals(updatedRank.postEdit));
         assertFalse(Boolean.TRUE.equals(updatedRank.postDelete));
+    }
+
+    @Test
+    @TestTransaction
+    void testPatchRankCoversAllPermissionFields() {
+        final var newRank = ServiceTestDataBuilder.createUserRankDto("Patch Coverage Rank", false, false, false, false,
+                false, false);
+        final var created = this.userRankService.createRank(newRank);
+        final String publicId = Objects.requireNonNull(created.publicId);
+
+        // Patch with every permission flag set -> exercises the "value present"
+        // branch of every field in applyPermissionsFromDto.
+        final var allSet = new UserRankDto();
+        allSet.adminView = true;
+        allSet.pageAdd = true;
+        allSet.pageDelete = true;
+        allSet.pageEdit = true;
+        allSet.postAdd = true;
+        allSet.postDelete = true;
+        allSet.postEdit = true;
+        allSet.postCategoryAdd = true;
+        allSet.postCategoryDelete = true;
+        allSet.postCategoryEdit = true;
+        allSet.postCommentAdd = true;
+        allSet.postCommentDelete = true;
+        allSet.postCommentEdit = true;
+        allSet.userAdd = true;
+        allSet.userDelete = true;
+        allSet.userEdit = true;
+        allSet.userGroupAdd = true;
+        allSet.userGroupDelete = true;
+        allSet.userGroupEdit = true;
+        allSet.userAccountAdd = true;
+        allSet.userAccountDelete = true;
+        allSet.userAccountEdit = true;
+        allSet.userRankAdd = true;
+        allSet.userRankDelete = true;
+        allSet.userRankEdit = true;
+        final var patched = this.userRankService.patchRank(publicId, allSet);
+        assertTrue(Boolean.TRUE.equals(patched.adminView));
+        assertTrue(Boolean.TRUE.equals(patched.userRankEdit));
+
+        // Patch with all permission flags null (name only) -> exercises the
+        // "value absent" branch of every field; prior values must be preserved.
+        final var nameOnly = new UserRankDto();
+        nameOnly.name = "Renamed Only";
+        final var patched2 = this.userRankService.patchRank(publicId, nameOnly);
+        assertEquals("Renamed Only", patched2.name);
+        assertTrue(Boolean.TRUE.equals(patched2.adminView));
+        assertTrue(Boolean.TRUE.equals(patched2.userRankEdit));
     }
 
     @Test

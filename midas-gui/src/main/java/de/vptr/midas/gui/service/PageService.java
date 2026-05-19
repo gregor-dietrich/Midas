@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -70,11 +71,12 @@ public class PageService {
 
     /** Updates the page. */
     public PageDto updatePage(final PageDto page) {
-        LOG.infof("Updating page: %s (%s)", page.getTitle(), page.getPublicId());
+        final String publicId = Objects.requireNonNull(page.getPublicId(), "page.publicId");
+        LOG.infof("Updating page: %s (%s)", page.getTitle(), publicId);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.pageClient.updatePage(page.getPublicId(), page, authHeader);
-        }, this.authService, LOG, "updating page " + page.getPublicId(), "Failed to update page",
+            return this.pageClient.updatePage(publicId, page, authHeader);
+        }, this.authService, LOG, "updating page " + publicId, "Failed to update page",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PageResponseDto.class,
                         PageResponseDto::toPageDto, "updated page response", "Failed to update page"));
     }

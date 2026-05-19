@@ -360,6 +360,18 @@ class AccountResourceTest {
     }
 
     @Test
+    void testGetMyAccountsPayments_authorized() {
+        final String clientKey = uniqueClientKey();
+        this.createAdminAccessibleAccount(clientKey);
+        forwardedAuthenticatedRequest(clientKey).when().get(ENDPOINT_URL + "/my/payments").then().statusCode(200);
+    }
+
+    @Test
+    void testGetMyAccountsPayments_authenticatedGuestNoAccounts() {
+        authenticatedGuestJsonRequest().when().get(ENDPOINT_URL + "/my/payments").then().statusCode(200);
+    }
+
+    @Test
     void testGetMyAccountOutgoingPayments_authorized() {
         final String clientKey = uniqueClientKey();
         final String accountId = this.createAdminAccessibleAccount(clientKey);

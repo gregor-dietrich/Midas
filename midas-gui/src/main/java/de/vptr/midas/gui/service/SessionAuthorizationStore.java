@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.crypto.Cipher;
@@ -16,6 +17,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,6 +38,7 @@ public final class SessionAuthorizationStore {
 
     private final Clock clock;
     private final Cache<String, AuthorizationEntry> cache;
+    @Nullable
     private SecretKey encryptionKey;
 
     /**
@@ -79,8 +82,8 @@ public final class SessionAuthorizationStore {
      *            opaque session id
      * @return authorization header or null
      */
-    @SuppressWarnings("NullAway")
-    public String resolveAuthorization(final String sessionId) {
+    @Nullable
+    public String resolveAuthorization(@Nullable final String sessionId) {
         if (sessionId == null) {
             return null;
         }
@@ -91,7 +94,7 @@ public final class SessionAuthorizationStore {
             return null;
         }
         this.cache.put(sessionId, entry.refresh(now.plus(SESSION_TTL)));
-        return decrypt(entry.authorizationHeader());
+        return this.decrypt(entry.authorizationHeader());
     }
 
     /**
@@ -100,7 +103,7 @@ public final class SessionAuthorizationStore {
      * @param sessionId
      *            opaque session id
      */
-    public void revokeSession(final String sessionId) {
+    public void revokeSession(@Nullable final String sessionId) {
         if (sessionId != null) {
             this.cache.invalidate(sessionId);
         }
@@ -111,16 +114,13 @@ public final class SessionAuthorizationStore {
         return (int) this.cache.estimatedSize();
     }
 
-    @SuppressWarnings("NullAway")
     private String encrypt(final String plaintext) {
-        if (plaintext == null) {
-            return null;
-        }
+        final SecretKey key = Objects.requireNonNull(this.encryptionKey, "encryptionKey not initialized");
         try {
             final var iv = new byte[GCM_IV_LENGTH];
             SECURE_RANDOM.nextBytes(iv);
             final var cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, this.encryptionKey, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
             final var ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             final var combined = new byte[iv.length + ciphertext.length];
             System.arraycopy(iv, 0, combined, 0, iv.length);
@@ -131,11 +131,8 @@ public final class SessionAuthorizationStore {
         }
     }
 
-    @SuppressWarnings("NullAway")
     private String decrypt(final String ciphertext) {
-        if (ciphertext == null) {
-            return null;
-        }
+        final SecretKey key = Objects.requireNonNull(this.encryptionKey, "encryptionKey not initialized");
         try {
             final var combined = Base64.getDecoder().decode(ciphertext);
             final var iv = new byte[GCM_IV_LENGTH];
@@ -143,7 +140,7 @@ public final class SessionAuthorizationStore {
             final var encrypted = new byte[combined.length - GCM_IV_LENGTH];
             System.arraycopy(combined, GCM_IV_LENGTH, encrypted, 0, encrypted.length);
             final var cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, this.encryptionKey, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
             return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
         } catch (final GeneralSecurityException e) {
             throw new IllegalStateException("Failed to decrypt authorization header", e);

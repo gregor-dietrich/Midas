@@ -15,7 +15,6 @@ public class AdminAccessService {
 
     /** Returns true when user exists and has admin view permission. Caches result per request. */
     public boolean hasAdminViewAccess(@Nullable final String username) {
-        this.requestCache.remove();
         if (username == null) {
             return false;
         }

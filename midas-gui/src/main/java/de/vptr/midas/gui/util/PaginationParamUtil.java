@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.util;
 
+import jakarta.annotation.Nullable;
+
 /** Shared pagination parameter normalization for GUI REST clients. */
 public final class PaginationParamUtil {
     public static final int DEFAULT_PAGE = 0;
@@ -11,7 +13,7 @@ public final class PaginationParamUtil {
     }
 
     /** Normalizes page index to a non-negative value. */
-    public static Integer sanitizePage(final Integer page) {
+    public static Integer sanitizePage(@Nullable final Integer page) {
         if (page == null) {
             return DEFAULT_PAGE;
         }
@@ -19,7 +21,7 @@ public final class PaginationParamUtil {
     }
 
     /** Normalizes page size to defaults and enforced max. */
-    public static Integer sanitizeSize(final Integer size) {
+    public static Integer sanitizeSize(@Nullable final Integer size) {
         if (size == null || size <= 0) {
             return DEFAULT_SIZE;
         }

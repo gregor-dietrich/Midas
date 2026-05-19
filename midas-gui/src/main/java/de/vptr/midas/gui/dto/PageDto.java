@@ -3,7 +3,6 @@ package de.vptr.midas.gui.dto;
 /** Data transfer object for page. */
 public class PageDto extends AbstractTitleContentDto {
 
-    @SuppressWarnings("NullAway")
     public PageDto() {
         super();
     }

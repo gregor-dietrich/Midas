@@ -2,6 +2,7 @@ package de.vptr.midas.gui.client;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
@@ -127,6 +128,10 @@ public interface AccountClient {
     @Path("/my/{accountPublicId}/payments")
     List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountPublicId") String accountPublicId,
             @HeaderParam("Authorization") String authorization);
+
+    @GET
+    @Path("/my/payments")
+    Map<String, List<PaymentResponseDto>> getMyAccountsPayments(@HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/my/{accountPublicId}/payments/outgoing")

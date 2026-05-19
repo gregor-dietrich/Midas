@@ -20,7 +20,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /** Dialog panel for managing user group membership. */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<UserGroupResponseDto, UserDto> {
@@ -65,6 +64,7 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
     }
 
     @Override
+    @Nullable
     protected String getUserPublicId(final UserDto item) {
         return item.getPublicId();
     }

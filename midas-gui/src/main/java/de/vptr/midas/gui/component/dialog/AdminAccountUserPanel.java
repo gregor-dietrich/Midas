@@ -23,7 +23,6 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Dialog panel for managing users associated with an account. */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountDto, UserResponseDto> {
@@ -89,8 +88,9 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
     @Override
     protected void loadAssociatedUsers() {
         this.executeWithHandling(() -> {
-            final var users =
-                    this.accountService.getAssociatedUsers(Objects.requireNonNull(this.selectedEntity).getPublicId());
+            final var accountPublicId = Objects.requireNonNull(
+                    Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
+            final var users = this.accountService.getAssociatedUsers(accountPublicId);
             Objects.requireNonNull(this.userGrid).setItems(users);
         }, "Loading account users failed. Please try again.");
     }
@@ -131,8 +131,9 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
         final var combo = Objects.requireNonNull(this.availableUsersCombo);
 
         this.executeWithHandling(() -> {
-            if (this.accountService.associateUserWithAccount(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    selectedUser.getPublicId())) {
+            final var accountPublicId = Objects.requireNonNull(
+                    Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
+            if (this.accountService.associateUserWithAccount(accountPublicId, selectedUser.getPublicId())) {
                 NotificationUtil.showSuccess("User added to account successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();
@@ -145,8 +146,9 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
     private void updateUserMetaFlags(final UserResponseDto user, final boolean isNegative, final boolean canManage) {
         this.executeWithHandling(() -> {
-            this.accountService.updateUserAccountMeta(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    user.getPublicId(), isNegative, canManage);
+            final var accountPublicId = Objects.requireNonNull(
+                    Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
+            this.accountService.updateUserAccountMeta(accountPublicId, user.getPublicId(), isNegative, canManage);
             user.setIsNegative(isNegative);
             user.setCanManage(canManage);
             NotificationUtil.showSuccess("Updated meta flags for " + user.getUsername());
@@ -155,8 +157,9 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
     private void removeUserFromAccount(final UserResponseDto user) {
         this.executeWithHandling(() -> {
-            if (this.accountService.removeUserFromAccount(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    user.getPublicId())) {
+            final var accountPublicId = Objects.requireNonNull(
+                    Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
+            if (this.accountService.removeUserFromAccount(accountPublicId, user.getPublicId())) {
                 NotificationUtil.showSuccess("User removed from account successfully");
                 this.loadAssociatedUsers();
                 this.loadAvailableUsers();

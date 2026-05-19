@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
 import de.vptr.midas.api.dto.PaymentDto;
+import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.AccountEntity;
 import de.vptr.midas.api.entity.UserAccountMetaEntity;
@@ -164,6 +165,66 @@ class AccountAccessServiceTest {
         final Map<String, Boolean> flags = this.accountAccessService.getIsNegativeFlagsForUser(1L, List.of());
         assertNotNull(flags);
         assertTrue(flags.isEmpty());
+    }
+
+    @Test
+    void getPaymentsByAccount_returnsEmptyMapForEmptyAccountList() {
+        final Map<String, List<PaymentResponseDto>> result = this.accountAccessService.getPaymentsByAccount(List.of());
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @TestTransaction
+    void getPaymentsByAccount_groupsPaymentsBySourceAndTarget() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String accountA = this.createAndAssociateAccount(user);
+        final String accountB = this.createAndAssociateAccount(user);
+        final String username = Objects.requireNonNull(user.username);
+
+        // A -> B: appears under both A (source) and B (target)
+        final var transfer = new PaymentDto();
+        transfer.sourceAccountPublicId = accountA;
+        transfer.targetAccountPublicId = accountB;
+        transfer.amount = new BigDecimal("25.00");
+        transfer.comment = "A to B";
+        transfer.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(transfer, username);
+
+        // Outgoing-only from A (no target)
+        final var outgoing = new PaymentDto();
+        outgoing.sourceAccountPublicId = accountA;
+        outgoing.amount = new BigDecimal("10.00");
+        outgoing.comment = "A outgoing";
+        outgoing.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(outgoing, username);
+
+        // Incoming-only to B (no source)
+        final var incoming = new PaymentDto();
+        incoming.targetAccountPublicId = accountB;
+        incoming.amount = new BigDecimal("7.00");
+        incoming.comment = "B incoming";
+        incoming.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(incoming, username);
+
+        // Self transfer on A (source == target): must not be double-counted for A
+        final var self = new PaymentDto();
+        self.sourceAccountPublicId = accountA;
+        self.targetAccountPublicId = accountA;
+        self.amount = new BigDecimal("3.00");
+        self.comment = "A self";
+        self.date = LocalDate.now(ZoneId.systemDefault());
+        this.paymentService.createPayment(self, username);
+
+        final Map<String, List<PaymentResponseDto>> result =
+                this.accountAccessService.getPaymentsByAccount(List.of(accountA, accountB));
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        // A: transfer + outgoing + self (self counted once)
+        assertEquals(3, Objects.requireNonNull(result.get(accountA)).size());
+        // B: transfer + incoming
+        assertEquals(2, Objects.requireNonNull(result.get(accountB)).size());
     }
 
     private Long getAccountIdByPublicId(final String publicId) {

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -112,13 +113,14 @@ public class PostCommentService {
 
     /** Updates the comment. */
     public PostCommentDto updateComment(final PostCommentDto comment) {
-        LOG.infof("Updating comment: %s", comment.getPublicId());
+        final String publicId = Objects.requireNonNull(comment.getPublicId(), "comment.publicId");
+        LOG.infof("Updating comment: %s", publicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
         return ServiceHelper.executeWithResponse(
-                () -> this.commentClient.updateComment(comment.getPublicId(), apiComment, authHeader), this.authService,
-                LOG, "updating comment " + comment.getPublicId(), "Failed to update comment", response -> {
+                () -> this.commentClient.updateComment(publicId, apiComment, authHeader), this.authService,
+                LOG, "updating comment " + publicId, "Failed to update comment", response -> {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                                 "updated comment response");

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -13,6 +14,7 @@ import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -31,13 +33,12 @@ public class PostService {
     AuthService authService;
 
     /** Returns the all posts. */
-    @SuppressWarnings("NullAway")
     public List<PostResponseDto> getAllPosts() {
         return this.getAllPosts(null, null);
     }
 
     /** Returns the all posts paginated. */
-    public List<PostResponseDto> getAllPosts(final Integer page, final Integer size) {
+    public List<PostResponseDto> getAllPosts(@Nullable final Integer page, @Nullable final Integer size) {
         LOG.debugf("Fetching all posts page %s size %s", page, size);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -47,13 +48,12 @@ public class PostService {
     }
 
     /** Returns the published posts. */
-    @SuppressWarnings("NullAway")
     public List<PostResponseDto> getPublishedPosts() {
         return this.getPublishedPosts(null, null);
     }
 
     /** Returns the published posts paginated. */
-    public List<PostResponseDto> getPublishedPosts(final Integer page, final Integer size) {
+    public List<PostResponseDto> getPublishedPosts(@Nullable final Integer page, @Nullable final Integer size) {
         LOG.debugf("Fetching published posts page %s size %s", page, size);
         final var authHeader = this.authService.requireAuthorizationHeader();
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
@@ -99,10 +99,11 @@ public class PostService {
 
     /** Updates the post. */
     public PostDto updatePost(final PostDto post) {
-        LOG.debugf("Updating post: %s", post.getPublicId());
+        final String publicId = Objects.requireNonNull(post.getPublicId(), "post.publicId");
+        LOG.debugf("Updating post: %s", publicId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(post.getPublicId(), post, authHeader),
-                this.authService, LOG, "updating post " + post.getPublicId(), "Failed to update post",
+        return ServiceHelper.executeWithResponse(() -> this.postClient.updatePost(publicId, post, authHeader),
+                this.authService, LOG, "updating post " + publicId, "Failed to update post",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostDto.class, dto -> dto,
                         "updated post response", "Failed to update post"));
     }

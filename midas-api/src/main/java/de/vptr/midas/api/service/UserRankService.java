@@ -96,23 +96,36 @@ public class UserRankService {
     }
 
     /** Full replacement — null defaults to false. Used by create/update. */
-    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
     private void mapPermissions(final UserRankEntity rank, final UserRankDto dto) {
-        applyPermissionsFromDto(rank, dto);
-        try {
-            for (final var dtoField : UserRankDto.class.getDeclaredFields()) {
-                if (dtoField.getType() == Boolean.class) {
-                    dtoField.setAccessible(true);
-                    if (dtoField.get(dto) == null) {
-                        final var entityField = UserRankEntity.class.getDeclaredField(dtoField.getName());
-                        entityField.setAccessible(true);
-                        entityField.set(rank, false);
-                    }
-                }
-            }
-        } catch (final ReflectiveOperationException e) {
-            throw new IllegalStateException("Failed to map default permissions", e);
-        }
+        rank.adminView = booleanOrFalse(dto.adminView);
+        rank.pageAdd = booleanOrFalse(dto.pageAdd);
+        rank.pageDelete = booleanOrFalse(dto.pageDelete);
+        rank.pageEdit = booleanOrFalse(dto.pageEdit);
+        rank.postAdd = booleanOrFalse(dto.postAdd);
+        rank.postDelete = booleanOrFalse(dto.postDelete);
+        rank.postEdit = booleanOrFalse(dto.postEdit);
+        rank.postCategoryAdd = booleanOrFalse(dto.postCategoryAdd);
+        rank.postCategoryDelete = booleanOrFalse(dto.postCategoryDelete);
+        rank.postCategoryEdit = booleanOrFalse(dto.postCategoryEdit);
+        rank.postCommentAdd = booleanOrFalse(dto.postCommentAdd);
+        rank.postCommentDelete = booleanOrFalse(dto.postCommentDelete);
+        rank.postCommentEdit = booleanOrFalse(dto.postCommentEdit);
+        rank.userAdd = booleanOrFalse(dto.userAdd);
+        rank.userDelete = booleanOrFalse(dto.userDelete);
+        rank.userEdit = booleanOrFalse(dto.userEdit);
+        rank.userGroupAdd = booleanOrFalse(dto.userGroupAdd);
+        rank.userGroupDelete = booleanOrFalse(dto.userGroupDelete);
+        rank.userGroupEdit = booleanOrFalse(dto.userGroupEdit);
+        rank.userAccountAdd = booleanOrFalse(dto.userAccountAdd);
+        rank.userAccountDelete = booleanOrFalse(dto.userAccountDelete);
+        rank.userAccountEdit = booleanOrFalse(dto.userAccountEdit);
+        rank.userRankAdd = booleanOrFalse(dto.userRankAdd);
+        rank.userRankDelete = booleanOrFalse(dto.userRankDelete);
+        rank.userRankEdit = booleanOrFalse(dto.userRankEdit);
+    }
+
+    private static Boolean booleanOrFalse(@Nullable final Boolean value) {
+        return value != null ? value : Boolean.FALSE;
     }
 
     /** Partial update — only overwrites non-null fields. Used by patch. */

@@ -6,6 +6,7 @@ import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.service.UserService;
+import de.vptr.midas.api.util.AppConstants;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
@@ -37,9 +38,6 @@ import jakarta.ws.rs.core.SecurityContext;
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
 public class UserResource {
-
-    /** Default rank Public ID assigned to newly registered users ("User" rank). */
-    private static final String DEFAULT_USER_RANK_PUBLIC_ID = "01AN4Z07BY79KA1307SR9X4MV4";
 
     @Inject
     UserService userService;
@@ -101,9 +99,9 @@ public class UserResource {
     @RolesAllowed({ "user:add" })
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        if (userDto.rankPublicId != null && !DEFAULT_USER_RANK_PUBLIC_ID.equals(userDto.rankPublicId)
+        if (userDto.rankPublicId != null && !AppConstants.DEFAULT_USER_RANK_PUBLIC_ID.equals(userDto.rankPublicId)
                 && (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit"))) {
-            userDto.rankPublicId = DEFAULT_USER_RANK_PUBLIC_ID;
+            userDto.rankPublicId = AppConstants.DEFAULT_USER_RANK_PUBLIC_ID;
         }
         final UserResponseDto created = this.userService.createUser(userDto);
         return ResponseUtil.created(created);

@@ -97,7 +97,6 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
                 .runSubscriptionOn(this.executor);
     }
 
-    @Transactional
     SecurityIdentity authenticateUser(final String username, @Nullable final char[] password, final String ip) {
         final var clientKey = username + ":" + ip;
         try {
@@ -108,57 +107,19 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             final var delay = this.loginAttemptService.getDelay(username, ip);
             if (delay > 0) {
                 try {
-                    Thread.sleep(Math.min(delay * 1000, 30000)); // Sleep with cap
+                    // Sleep before opening a DB transaction to avoid holding a pooled connection
+                    Thread.sleep(Math.min(delay * 1000, 30000));
                 } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
 
-            final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
-
-            if (user == null || user.banned || !user.activated || user.password == null) {
-                // Run dummy hash to prevent timing-based username enumeration
-                this.passwordHashingService.verifyPassword("dummy",
-                        "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
-                this.authFailureRateLimitService.recordFailure(clientKey);
-                this.loginAttemptService.recordFailure(username, ip);
-
-                if (user == null || user.password == null) {
-                    throw new AuthenticationFailedException("Invalid credentials");
-                } else if (user.banned) {
-                    throw new AuthenticationFailedException("User is banned");
-                } else {
-                    throw new AuthenticationFailedException("User is not activated");
-                }
-            }
-
-            final String passwordStr = password != null ? new String(password) : "";
-
-            if (!this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
-                this.authFailureRateLimitService.recordFailure(clientKey);
-                this.loginAttemptService.recordFailure(username, ip);
-                throw new AuthenticationFailedException("Invalid credentials");
-            }
-
-            this.loginAttemptService.recordSuccess(username, ip);
-
-            // Update lastLogin - ignore optimistic lock exceptions as they're not critical
-            // for authentication
-            try {
-                this.entityManager.createQuery("UPDATE UserEntity u SET u.lastLogin = :now WHERE u.id = :id")
-                        .setParameter("now", LocalDateTime.now(ZoneOffset.UTC)).setParameter("id", user.id)
-                        .executeUpdate();
-            } catch (final OptimisticLockException e) {
-                LOG.debugf("Failed to update last_login for user %s (concurrent login): %s", user.id, e.getMessage());
-            }
-
-            return QuarkusSecurityIdentity.builder().setPrincipal(new QuarkusPrincipal(username)).build();
+            return this.performAuthentication(username, password, ip, clientKey);
         } finally {
             clearPassword(password);
         }
     }
 
-    @Transactional
     SecurityIdentity authenticateUser(final String username, final String password) {
         final char[] passwordChars = password != null ? password.toCharArray() : null;
         try {
@@ -166,6 +127,49 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
         } finally {
             clearPassword(passwordChars);
         }
+    }
+
+    @Transactional
+    SecurityIdentity performAuthentication(final String username, @Nullable final char[] password, final String ip,
+            final String clientKey) {
+        final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
+
+        if (user == null || user.banned || !user.activated || user.password == null) {
+            // Run dummy hash to prevent timing-based username enumeration
+            this.passwordHashingService.verifyPassword("dummy",
+                    "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
+            this.authFailureRateLimitService.recordFailure(clientKey);
+            this.loginAttemptService.recordFailure(username, ip);
+
+            if (user == null || user.password == null) {
+                throw new AuthenticationFailedException("Invalid credentials");
+            } else if (user.banned) {
+                throw new AuthenticationFailedException("User is banned");
+            } else {
+                throw new AuthenticationFailedException("User is not activated");
+            }
+        }
+
+        final String passwordStr = password != null ? new String(password) : "";
+
+        if (!this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
+            this.authFailureRateLimitService.recordFailure(clientKey);
+            this.loginAttemptService.recordFailure(username, ip);
+            throw new AuthenticationFailedException("Invalid credentials");
+        }
+
+        this.loginAttemptService.recordSuccess(username, ip);
+
+        // Update lastLogin - ignore optimistic lock exceptions as they're not critical
+        // for authentication
+        try {
+            this.entityManager.createQuery("UPDATE UserEntity u SET u.lastLogin = :now WHERE u.id = :id")
+                    .setParameter("now", LocalDateTime.now(ZoneOffset.UTC)).setParameter("id", user.id).executeUpdate();
+        } catch (final OptimisticLockException e) {
+            LOG.debugf("Failed to update last_login for user %s (concurrent login): %s", user.id, e.getMessage());
+        }
+
+        return QuarkusSecurityIdentity.builder().setPrincipal(new QuarkusPrincipal(username)).build();
     }
 
     private static void clearPassword(@Nullable final char[] password) {

@@ -8,6 +8,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
+import jakarta.annotation.Nullable;
 
 /** View for base async data. */
 public abstract class AbstractAsyncDataView extends VerticalLayout {
@@ -46,7 +47,7 @@ public abstract class AbstractAsyncDataView extends VerticalLayout {
     }
 
     /** Creates a styled clickable span for grid cells. */
-    protected Span createClickableSpan(final String text, final Consumer<Span> clickHandler) {
+    protected Span createClickableSpan(@Nullable final String text, final Consumer<Span> clickHandler) {
         final var span = new Span(text != null ? text : "");
         span.getStyle().set("color", "var(--lumo-primary-text-color)");
         span.getStyle().set("cursor", "pointer");

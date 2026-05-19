@@ -153,6 +153,19 @@ public class AccountResource {
         return this.accountAccessService.getAccountPayments(publicId);
     }
 
+    /** Returns payments grouped by account for all accounts of the current user. */
+    @GET
+    @Path("/my/payments")
+    public Map<String, List<PaymentResponseDto>> getMyAccountsPayments() {
+        final String username = this.requireCurrentUsername();
+        final List<AccountResponseDto> accounts = this.accountAccessService.getAccountsForCurrentUser(username);
+        if (accounts.isEmpty()) {
+            return Map.of();
+        }
+        final List<String> publicIds = accounts.stream().map(a -> a.publicId).toList();
+        return this.accountAccessService.getPaymentsByAccount(publicIds);
+    }
+
     /** Returns all outgoing payments for the current user's account. */
     @GET
     @Path("/my/{publicId}/payments/outgoing")

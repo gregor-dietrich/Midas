@@ -11,7 +11,6 @@ import de.vptr.midas.gui.service.PostCommentService;
 import jakarta.annotation.Nullable;
 
 /** Base dialog class for editing or adding post comments. */
-@SuppressWarnings("NullAway")
 public abstract class AbstractPostCommentDialogBase extends AbstractAdminEntityDialogBase<PostCommentDto> {
 
     protected final transient PostCommentService commentService;

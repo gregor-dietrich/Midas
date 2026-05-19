@@ -24,7 +24,6 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.annotation.Nullable;
 
 /** Base class for admin entity dialogs to unify layout, binder handling, and save/cancel flows. */
-@SuppressWarnings("NullAway")
 public abstract class AbstractAdminEntityDialogBase<T> extends FormDialog {
 
     private final Logger log = Logger.getLogger(this.getClass());

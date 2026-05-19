@@ -24,7 +24,6 @@ import jakarta.annotation.Nullable;
 /**
  * Dialog for creating and editing posts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {

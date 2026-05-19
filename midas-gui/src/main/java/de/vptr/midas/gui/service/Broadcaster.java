@@ -1,8 +1,8 @@
 package de.vptr.midas.gui.service;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -18,7 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class Broadcaster implements Serializable {
 
     private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
-    private static final List<Consumer<String>> LISTENERS = new ArrayList<>();
+    private static final List<Consumer<String>> LISTENERS = new CopyOnWriteArrayList<>();
 
     /**
      * Registers a listener.
@@ -27,13 +27,9 @@ public class Broadcaster implements Serializable {
      *            the listener
      * @return a registration to unregister
      */
-    public synchronized Registration register(final Consumer<String> listener) {
+    public Registration register(final Consumer<String> listener) {
         LISTENERS.add(listener);
-        return () -> {
-            synchronized (Broadcaster.class) {
-                LISTENERS.remove(listener);
-            }
-        };
+        return () -> LISTENERS.remove(listener);
     }
 
     /**
@@ -42,7 +38,7 @@ public class Broadcaster implements Serializable {
      * @param message
      *            the message
      */
-    public synchronized void broadcast(final String message) {
+    public void broadcast(final String message) {
         for (final var listener : LISTENERS) {
             EXECUTOR.execute(() -> listener.accept(message));
         }

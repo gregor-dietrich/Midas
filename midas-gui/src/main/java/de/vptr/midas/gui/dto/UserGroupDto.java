@@ -18,23 +18,25 @@ public class UserGroupDto {
     private String publicId;
 
     @JsonProperty("name")
+    @Nullable
     private String name;
 
     @JsonProperty("userCount")
+    @Nullable
     private Long userCount;
 
     @JsonProperty("users")
+    @Nullable
     private List<UserDto> users;
 
     @JsonProperty("created")
+    @Nullable
     private LocalDateTime created;
 
-    @SuppressWarnings("NullAway")
     public UserGroupDto() {
         // Default constructor for Jackson
     }
 
-    @SuppressWarnings("NullAway")
     public UserGroupDto(@Nullable final String publicId, final String name) {
         this.publicId = publicId;
         this.name = name;
@@ -50,14 +52,16 @@ public class UserGroupDto {
         this.publicId = publicId;
     }
 
+    @Nullable
     public String getName() {
         return this.name;
     }
 
-    public void setName(final String name) {
+    public void setName(@Nullable final String name) {
         this.name = name;
     }
 
+    @Nullable
     public Long getUserCount() {
         return this.userCount;
     }
@@ -66,6 +70,7 @@ public class UserGroupDto {
         this.userCount = userCount;
     }
 
+    @Nullable
     public List<UserDto> getUsers() {
         return this.users;
     }
@@ -74,6 +79,7 @@ public class UserGroupDto {
         this.users = users;
     }
 
+    @Nullable
     public LocalDateTime getCreated() {
         return this.created;
     }

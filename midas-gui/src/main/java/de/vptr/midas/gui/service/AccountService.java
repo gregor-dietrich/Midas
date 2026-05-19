@@ -2,6 +2,8 @@ package de.vptr.midas.gui.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -139,11 +141,12 @@ public class AccountService {
 
     /** Updates the account. */
     public AccountDto updateAccount(final AccountDto account) {
+        final String publicId = Objects.requireNonNull(account.getPublicId(), "account.publicId");
         LOG.debugf("Updating account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper
-                .executeWithResponse(() -> this.accountClient.updateAccount(account.getPublicId(), account, authHeader),
-                        this.authService, LOG, "updating account " + account.getPublicId(), "Failed to update account",
+                .executeWithResponse(() -> this.accountClient.updateAccount(publicId, account, authHeader),
+                        this.authService, LOG, "updating account " + publicId, "Failed to update account",
                         response -> ServiceHelper.readExpectedStatusEntity(response, 200, AccountResponseDto.class,
                                 AccountResponseDto::toAccountDto, "updated account response",
                                 "Failed to update account"));
@@ -263,6 +266,14 @@ public class AccountService {
         final var authHeader = this.authService.requireAuthorizationHeader();
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountPayments(accountId, authHeader),
                 this.authService, LOG, "fetching payments for my account " + accountId);
+    }
+
+    /** Returns payments grouped by account publicId for all of the user's accounts. */
+    public Map<String, List<PaymentResponseDto>> getMyAccountsPayments() {
+        LOG.debug("Fetching payments grouped by account for current user");
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        return ServiceHelper.execute(() -> this.accountClient.getMyAccountsPayments(authHeader), this.authService, LOG,
+                "fetching my accounts payments");
     }
 
     // User-facing method that checks account access before returning outgoing

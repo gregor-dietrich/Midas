@@ -11,7 +11,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.Nullable;
 
 /** Dialog for creating and editing pages in the admin view. */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminPageDialog extends AbstractAdminEntityDialogBase<PageDto> {

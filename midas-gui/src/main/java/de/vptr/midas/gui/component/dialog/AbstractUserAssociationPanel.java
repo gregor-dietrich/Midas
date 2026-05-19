@@ -23,7 +23,6 @@ import de.vptr.midas.gui.util.NotificationUtil;
 import jakarta.annotation.Nullable;
 
 /** Base dialog panel for managing user associations (e.g. account users, group members). */
-@SuppressWarnings("NullAway")
 public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
 
     private final Logger log = Logger.getLogger(this.getClass());
@@ -99,9 +98,10 @@ public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
 
     protected abstract void addUser();
 
+    @Nullable
     protected abstract String getUserPublicId(U item);
 
-    protected boolean isUserAssociated(final String userPublicId) {
+    protected boolean isUserAssociated(@Nullable final String userPublicId) {
         return this.userGrid != null && this.userGrid.getDataProvider().fetch(new Query<>())
                 .anyMatch(item -> Objects.equals(this.getUserPublicId(item), userPublicId));
     }

@@ -21,7 +21,6 @@ import jakarta.annotation.Nullable;
 /**
  * Dialog for creating and editing payments in the admin view. Encapsulates form fields, binder, and save/cancel logic.
  */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto> {
@@ -113,7 +112,7 @@ public class AdminPaymentDialog extends AbstractAdminEntityDialogBase<PaymentDto
 
     @Nullable
     private static AccountResponseDto findAccountByPublicId(final List<AccountResponseDto> accounts,
-            final String accountPublicId) {
+            @Nullable final String accountPublicId) {
         if (accountPublicId == null) {
             return null;
         }

@@ -16,7 +16,6 @@ import jakarta.annotation.Nullable;
  * Dialog for creating and editing post categories in the admin view. Encapsulates form fields, binder, parent category
  * filtering, and save/cancel logic.
  */
-@SuppressWarnings("NullAway")
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "Service reference intentionally stored for runtime behavior")
 public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostCategoryDto> {
@@ -48,7 +47,9 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
         if (allCategories != null) {
             final var availableParents = allCategories.stream().map(PostCategoryResponseDto::toPostCategoryDto)
                     .filter(cat -> category == null || !this.isDescendantOf(cat, category, allCategories))
-                    .filter(cat -> category == null || !cat.getPublicId().equals(category.getPublicId())).toList();
+                    .filter(cat -> category == null
+                            || !Objects.equals(cat.getPublicId(), category.getPublicId()))
+                    .toList();
             parentField.setItems(availableParents);
         }
         parentField.setClearButtonVisible(true);
@@ -63,16 +64,17 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
 
     private boolean isDescendantOf(final PostCategoryDto potential, final PostCategoryDto ancestor,
             final List<PostCategoryResponseDto> allCategories) {
-        if (potential.getParent() == null) {
+        final PostCategoryDto parentRef = potential.getParent();
+        if (parentRef == null) {
             return false;
         }
-        if (potential.getParent().getPublicId().equals(ancestor.getPublicId())) {
+        if (Objects.equals(parentRef.getPublicId(), ancestor.getPublicId())) {
             return true;
         }
 
-        final var parent =
-                allCategories.stream().filter(cat -> cat.getPublicId().equals(potential.getParent().getPublicId()))
-                        .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
+        final var parent = allCategories.stream()
+                .filter(cat -> Objects.equals(cat.getPublicId(), parentRef.getPublicId()))
+                .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
 
         return parent != null && this.isDescendantOf(parent, ancestor, allCategories);
     }

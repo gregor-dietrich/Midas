@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -145,11 +146,12 @@ public class UserRankService {
 
     /** Updates the rank. */
     public UserRankDto updateRank(final UserRankDto rank) {
-        LOG.infof("Updating user rank: %s (%s)", rank.getName(), rank.getPublicId());
+        final String publicId = Objects.requireNonNull(rank.getPublicId(), "rank.publicId");
+        LOG.infof("Updating user rank: %s (%s)", rank.getName(), publicId);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.updateRank(rank.getPublicId(), rank, authHeader);
-        }, this.authService, LOG, "updating user rank " + rank.getPublicId(), "Failed to update user rank",
+            return this.userRankClient.updateRank(publicId, rank, authHeader);
+        }, this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank",
                 response -> {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         final var updatedRank =

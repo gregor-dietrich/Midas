@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -84,16 +85,18 @@ public class PostCategoryService {
 
     /** Updates the category. */
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
-        LOG.debugf("Updating category: %s", category.getPublicId());
+        final String publicId = Objects.requireNonNull(category.getPublicId(), "category.publicId");
+        LOG.debugf("Updating category: %s", publicId);
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
 
-            if (category.getParent() != null && category.getParentPublicId() == null) {
-                category.setParentPublicId(category.getParent().getPublicId());
+            final PostCategoryDto parent = category.getParent();
+            if (parent != null && category.getParentPublicId() == null) {
+                category.setParentPublicId(parent.getPublicId());
             }
 
-            return this.categoryClient.updateCategory(category.getPublicId(), category, authHeader);
-        }, this.authService, LOG, "updating category " + category.getPublicId(), "Failed to update category",
+            return this.categoryClient.updateCategory(publicId, category, authHeader);
+        }, this.authService, LOG, "updating category " + publicId, "Failed to update category",
                 response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostCategoryResponseDto.class,
                         this::fromApiResponse, "updated category response", "Failed to update category"));
     }
