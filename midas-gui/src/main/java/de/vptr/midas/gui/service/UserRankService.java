@@ -151,16 +151,14 @@ public class UserRankService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
             return this.userRankClient.updateRank(publicId, rank, authHeader);
-        }, this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank",
-                response -> {
-                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                        final var updatedRank =
-                                ServiceHelper.readEntity(response, UserRankDto.class, "updated user rank");
-                        LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
-                        return updatedRank;
-                    }
-                    throw ServiceHelper.responseFailure("Failed to update user rank", response);
-                });
+        }, this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank", response -> {
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                final var updatedRank = ServiceHelper.readEntity(response, UserRankDto.class, "updated user rank");
+                LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
+                return updatedRank;
+            }
+            throw ServiceHelper.responseFailure("Failed to update user rank", response);
+        });
     }
 
     /** Handles the search ranks operation. */

@@ -7,4 +7,7 @@
     <suppress id="IllegalImport.UlidCreator" files="UlidUtil\.java$" />
     <!-- RestAssured may only be imported by TestUtil itself -->
     <suppress id="IllegalImport.RestAssured" files="TestUtil\.java$" />
+    <!-- @SuppressWarnings("NullAway") is banned in main source; test sources
+         legitimately use it for Mockito/builder setup. -->
+    <suppress id="SuppressWarningsNullAway" files="[/\\]src[/\\]test[/\\]" />
 </suppressions>

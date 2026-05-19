@@ -2,9 +2,7 @@ package de.vptr.midas.gui.view;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import org.jboss.logging.Logger;
@@ -22,10 +20,8 @@ import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
-import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
@@ -42,9 +38,6 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     @Inject
     transient AuthService authService;
 
-    @Inject
-    transient UserService userService;
-
     @Nullable
     private Grid<AccountResponseDto> grid;
     @Nullable
@@ -54,8 +47,6 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     @Nullable
     private DatePicker endDatePicker;
 
-    private final Map<String, BigDecimal> accountBalances = new HashMap<>();
-    private final Map<String, List<PaymentResponseDto>> accountPayments = new HashMap<>();
     private List<AccountResponseDto> accountsList = new ArrayList<>();
     private boolean initialized = false;
 
@@ -76,22 +67,20 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.loadAccountsAsync();
     }
 
+    /**
+     * Loads the current user's accounts with server-computed balances for the selected date range. The balance and its
+     * date-range aggregation are performed entirely server-side; no payment rows are transferred to the GUI.
+     */
     private void loadAccountsAsync() {
-        LOG.info("Starting async account loading for current user");
+        final var start = this.startDatePicker != null ? this.startDatePicker.getValue() : null;
+        final var end = this.endDatePicker != null ? this.endDatePicker.getValue() : null;
+        LOG.infof("Loading accounts with balances for current user (range %s..%s)", start, end);
 
-        this.loadDataAsync(() -> {
-            LOG.info("Loading user accounts and their payments");
-            final var accounts = this.accountService.getMyAccounts();
-            final Map<String, List<PaymentResponseDto>> payments =
-                    accounts.isEmpty() ? new HashMap<>() : new HashMap<>(this.accountService.getMyAccountsPayments());
-            return new AccountsWithPayments(accounts, payments);
-        }, result -> {
-            LOG.infof("Successfully loaded %s accounts", result.accounts.size());
-            this.accountPayments.clear();
-            this.accountPayments.putAll(result.payments);
-            this.accountsList = result.accounts;
-            this.recalculateBalances();
-            LOG.infof("Grid updated with %s accounts", result.accounts.size());
+        this.loadDataAsync(() -> this.accountService.getMyAccountsWithBalances(start, end), accounts -> {
+            LOG.infof("Successfully loaded %s accounts with balances", accounts.size());
+            this.accountsList = accounts;
+            Objects.requireNonNull(this.grid).setItems(this.accountsList);
+            this.updateTotalBalance();
         }, throwable -> {
             LOG.error("Error in async account loading", throwable);
             MidasErrorHandler.handleInUiContext(throwable);
@@ -119,7 +108,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         titleSection.setSpacing(false);
         titleSection.setPadding(false);
 
-        final DateFilterLayout dateFilterLayout = new DateFilterLayout(e -> this.recalculateBalances());
+        final DateFilterLayout dateFilterLayout = new DateFilterLayout(e -> this.loadAccountsAsync());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -139,8 +128,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
         this.grid.addColumn(new ComponentRenderer<>(account -> {
             final Span balanceSpan = new Span();
-            final BigDecimal raw = this.getAccountBalance(account.getPublicId());
-            final BigDecimal effective = account.isNegative() ? raw.negate() : raw;
+            final BigDecimal effective = this.effectiveBalance(account);
             balanceSpan.setText(String.format("€ %.2f", effective));
             if (effective.compareTo(BigDecimal.ZERO) > 0) {
                 balanceSpan.getStyle().set("color", "var(--lumo-success-color)");
@@ -164,67 +152,30 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
         this.grid.setPageSize(20);
     }
 
-    private BigDecimal getAccountBalance(final String accountId) {
-        return this.accountBalances.getOrDefault(accountId, BigDecimal.ZERO);
-    }
-
-    private void recalculateBalances() {
-        final var start = Objects.requireNonNull(this.startDatePicker).getValue();
-        final var end = Objects.requireNonNull(this.endDatePicker).getValue();
-
-        this.accountBalances.clear();
-        for (final var entry : this.accountPayments.entrySet()) {
-            final String accountId = entry.getKey();
-            final List<PaymentResponseDto> payments = entry.getValue();
-
-            final BigDecimal balance = payments.stream()
-                    .filter(p -> p.getDate() != null && !p.getDate().isBefore(start) && !p.getDate().isAfter(end))
-                    .map(p -> {
-                        final var amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
-                        final boolean isSender = Objects.equals(p.getSourceAccountPublicId(), accountId);
-                        return isSender ? amount.negate() : amount;
-                    }).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            this.accountBalances.put(accountId, balance);
-        }
-
-        Objects.requireNonNull(this.grid).setItems(this.accountsList);
-        this.updateTotalBalance();
+    /** Returns the account balance as the current user sees it, applying the per-user negative-account flag. */
+    private BigDecimal effectiveBalance(final AccountResponseDto account) {
+        final BigDecimal raw = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
+        return account.isNegative() ? raw.negate() : raw;
     }
 
     private void updateTotalBalance() {
-        if (this.totalBalanceLabel != null && this.accountBalances != null) {
-            // Sum balances, subtracting those flagged as negative for the current user
-            final BigDecimal totalBalance = this.accountsList.stream().reduce(BigDecimal.ZERO, (sum, account) -> {
-                final BigDecimal bal = this.accountBalances.getOrDefault(account.getPublicId(), BigDecimal.ZERO);
-                return account.isNegative() ? sum.subtract(bal) : sum.add(bal);
-            }, BigDecimal::add);
-
-            final String balanceText = String.format("Total Balance: € %.2f", totalBalance);
-            this.totalBalanceLabel.setText(balanceText);
-
-            // Style the total balance based on positive/negative, but not for zero
-            if (totalBalance.compareTo(BigDecimal.ZERO) > 0) {
-                this.totalBalanceLabel.getStyle().set("color", "var(--lumo-success-color)");
-            } else if (totalBalance.compareTo(BigDecimal.ZERO) < 0) {
-                this.totalBalanceLabel.getStyle().set("color", "var(--lumo-error-color)");
-            } else {
-                this.totalBalanceLabel.getStyle().remove("color");
-            }
-
-            LOG.infof("Updated total balance display: €%s", totalBalance);
+        if (this.totalBalanceLabel == null) {
+            return;
         }
-    }
+        final BigDecimal totalBalance =
+                this.accountsList.stream().map(this::effectiveBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    // Helper class to return both accounts and payments from the async operation
-    private static class AccountsWithPayments {
-        final List<AccountResponseDto> accounts;
-        final Map<String, List<PaymentResponseDto>> payments;
+        this.totalBalanceLabel.setText(String.format("Total Balance: € %.2f", totalBalance));
 
-        AccountsWithPayments(final List<AccountResponseDto> accounts,
-                final Map<String, List<PaymentResponseDto>> payments) {
-            this.accounts = accounts;
-            this.payments = payments;
+        // Style the total balance based on positive/negative, but not for zero
+        if (totalBalance.compareTo(BigDecimal.ZERO) > 0) {
+            this.totalBalanceLabel.getStyle().set("color", "var(--lumo-success-color)");
+        } else if (totalBalance.compareTo(BigDecimal.ZERO) < 0) {
+            this.totalBalanceLabel.getStyle().set("color", "var(--lumo-error-color)");
+        } else {
+            this.totalBalanceLabel.getStyle().remove("color");
         }
+
+        LOG.infof("Updated total balance display: €%s", totalBalance);
     }
 }

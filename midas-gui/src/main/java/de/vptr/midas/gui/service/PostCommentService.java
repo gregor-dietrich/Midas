@@ -119,8 +119,8 @@ public class PostCommentService {
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
         return ServiceHelper.executeWithResponse(
-                () -> this.commentClient.updateComment(publicId, apiComment, authHeader), this.authService,
-                LOG, "updating comment " + publicId, "Failed to update comment", response -> {
+                () -> this.commentClient.updateComment(publicId, apiComment, authHeader), this.authService, LOG,
+                "updating comment " + publicId, "Failed to update comment", response -> {
                     if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         final var responseDto = ServiceHelper.readEntity(response, PostCommentResponseDto.class,
                                 "updated comment response");

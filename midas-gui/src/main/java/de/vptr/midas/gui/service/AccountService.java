@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,6 +24,7 @@ import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -87,12 +89,18 @@ public class AccountService {
     }
 
     // Optimized method to get accounts with balances in a single call
-    /** Returns the my accounts with balances. */
-    public List<AccountResponseDto> getMyAccountsWithBalances() {
+    /**
+     * Returns the current user's accounts with server-computed balances. When both {@code startDate} and
+     * {@code endDate} are provided each balance is restricted to that inclusive date range.
+     */
+    public List<AccountResponseDto> getMyAccountsWithBalances(@Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
         LOG.debug("Fetching accounts with balances for current user");
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.accountClient.getMyAccountsWithBalances(authHeader), this.authService,
-                LOG, "fetching my accounts with balances");
+        return ServiceHelper.execute(
+                () -> this.accountClient.getMyAccountsWithBalances(PaginationParamUtil.DEFAULT_PAGE,
+                        PaginationParamUtil.MAX_SIZE, startDate, endDate, authHeader),
+                this.authService, LOG, "fetching my accounts with balances");
     }
 
     /** Handles the search accounts operation. */
@@ -144,12 +152,10 @@ public class AccountService {
         final String publicId = Objects.requireNonNull(account.getPublicId(), "account.publicId");
         LOG.debugf("Updating account: %s", account);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper
-                .executeWithResponse(() -> this.accountClient.updateAccount(publicId, account, authHeader),
-                        this.authService, LOG, "updating account " + publicId, "Failed to update account",
-                        response -> ServiceHelper.readExpectedStatusEntity(response, 200, AccountResponseDto.class,
-                                AccountResponseDto::toAccountDto, "updated account response",
-                                "Failed to update account"));
+        return ServiceHelper.executeWithResponse(() -> this.accountClient.updateAccount(publicId, account, authHeader),
+                this.authService, LOG, "updating account " + publicId, "Failed to update account",
+                response -> ServiceHelper.readExpectedStatusEntity(response, 200, AccountResponseDto.class,
+                        AccountResponseDto::toAccountDto, "updated account response", "Failed to update account"));
     }
 
     /** Handles the delete account operation. */
@@ -230,11 +236,16 @@ public class AccountService {
     }
 
     // User-facing method that checks account access before returning balance
-    /** Returns the my account balance. */
-    public BigDecimal getMyAccountBalance(final String accountId) {
+    /**
+     * Returns the balance for one of the current user's accounts. When both {@code startDate} and {@code endDate} are
+     * provided the balance is restricted to that inclusive date range, computed server-side.
+     */
+    public BigDecimal getMyAccountBalance(final String accountId, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
         LOG.debugf("Fetching balance for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.executeWithResponse(() -> this.accountClient.getMyAccountBalance(accountId, authHeader),
+        return ServiceHelper.executeWithResponse(
+                () -> this.accountClient.getMyAccountBalance(accountId, startDate, endDate, authHeader),
                 this.authService, LOG, "fetching balance for my account " + accountId, response -> {
                     if (response.getStatus() == 200) {
                         return parseBalancePayload(response);
@@ -260,12 +271,21 @@ public class AccountService {
     }
 
     // User-facing method that checks account access before returning payments
-    /** Returns the my account payments. */
-    public List<PaymentResponseDto> getMyAccountPayments(final String accountId) {
+    /**
+     * Returns a single page of payments for one of the current user's accounts. Date-range and free-text filtering as
+     * well as pagination are applied server-side so the full payment set is never loaded into GUI memory.
+     */
+    public List<PaymentResponseDto> getMyAccountPayments(final String accountId, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate, @Nullable final String query, final Integer page, final Integer size) {
         LOG.debugf("Fetching payments for my account: %s", accountId);
         final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.accountClient.getMyAccountPayments(accountId, authHeader),
-                this.authService, LOG, "fetching payments for my account " + accountId);
+        final Integer safePage = PaginationParamUtil.sanitizePage(page);
+        final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
+        return ServiceHelper
+                .execute(
+                        () -> this.accountClient.getMyAccountPayments(accountId, safePage, safeSize, startDate, endDate,
+                                query, authHeader),
+                        this.authService, LOG, "fetching payments for my account " + accountId);
     }
 
     /** Returns payments grouped by account publicId for all of the user's accounts. */

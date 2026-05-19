@@ -27,6 +27,7 @@ import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
@@ -138,6 +139,85 @@ class AccountAccessServiceTest {
 
         final BigDecimal balance = this.accountAccessService.getAccountBalance(accountPublicId);
         assertEquals(new BigDecimal("60.00"), balance);
+    }
+
+    @Test
+    @TestTransaction
+    void getAccountBalance_restrictsToDateRange() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String username = Objects.requireNonNull(user.username);
+        final String accountPublicId = this.createAndAssociateAccount(user);
+
+        this.createTestPayment(username, accountPublicId, null, "100.00", "in-range incoming",
+                LocalDate.of(2024, 1, 10));
+        this.createTestPayment(username, null, accountPublicId, "30.00", "in-range outgoing",
+                LocalDate.of(2024, 1, 20));
+        this.createTestPayment(username, accountPublicId, null, "999.00", "out-of-range", LocalDate.of(2023, 12, 1));
+
+        final BigDecimal allTime = this.accountAccessService.getAccountBalance(accountPublicId);
+        assertEquals(new BigDecimal("1069.00"), allTime);
+
+        final BigDecimal ranged = this.accountAccessService.getAccountBalance(accountPublicId, LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 1, 31));
+        assertEquals(new BigDecimal("70.00"), ranged);
+    }
+
+    @Test
+    @TestTransaction
+    void getAccountBalances_restrictsToDateRange() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String username = Objects.requireNonNull(user.username);
+        final String accountPublicId = this.createAndAssociateAccount(user);
+
+        this.createTestPayment(username, accountPublicId, null, "200.00", "in range", LocalDate.of(2024, 3, 15));
+        this.createTestPayment(username, accountPublicId, null, "500.00", "out of range", LocalDate.of(2024, 6, 1));
+
+        final Map<String, BigDecimal> ranged = this.accountAccessService.getAccountBalances(List.of(accountPublicId),
+                LocalDate.of(2024, 3, 1), LocalDate.of(2024, 3, 31));
+        assertEquals(new BigDecimal("200.00"), ranged.get(accountPublicId));
+
+        final Map<String, BigDecimal> allTime = this.accountAccessService.getAccountBalances(List.of(accountPublicId));
+        assertEquals(new BigDecimal("700.00"), allTime.get(accountPublicId));
+    }
+
+    @Test
+    @TestTransaction
+    void getAccountPayments_appliesPaginationDateAndQueryFilters() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String username = Objects.requireNonNull(user.username);
+        final String accountPublicId = this.createAndAssociateAccount(user);
+
+        this.createTestPayment(username, accountPublicId, null, "10.00", "groceries", LocalDate.of(2024, 1, 5));
+        this.createTestPayment(username, accountPublicId, null, "20.00", "rent payment", LocalDate.of(2024, 1, 15));
+        this.createTestPayment(username, accountPublicId, null, "30.00", "old groceries", LocalDate.of(2023, 1, 1));
+
+        // Date range restricts to the two 2024 payments; page size caps the result.
+        final List<PaymentResponseDto> firstPage = this.accountAccessService.getAccountPayments(accountPublicId,
+                LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31), null, 0, 1);
+        assertEquals(1, firstPage.size());
+
+        // Free-text query matches against the comment.
+        final List<PaymentResponseDto> rentOnly =
+                this.accountAccessService.getAccountPayments(accountPublicId, null, null, "rent", 0, 20);
+        assertEquals(1, rentOnly.size());
+        assertEquals("rent payment", rentOnly.get(0).comment);
+
+        // No filters returns all payments for the account.
+        final List<PaymentResponseDto> all =
+                this.accountAccessService.getAccountPayments(accountPublicId, null, null, null, 0, 20);
+        assertEquals(3, all.size());
+    }
+
+    private void createTestPayment(final String username, @Nullable final String targetAccountPublicId,
+            @Nullable final String sourceAccountPublicId, final String amount, final String comment,
+            final LocalDate date) {
+        final var dto = new PaymentDto();
+        dto.targetAccountPublicId = targetAccountPublicId;
+        dto.sourceAccountPublicId = sourceAccountPublicId;
+        dto.amount = new BigDecimal(amount);
+        dto.comment = comment;
+        dto.date = date;
+        this.paymentService.createPayment(dto, username);
     }
 
     private String createAndAssociateAccount(final UserResponseDto user) {

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -357,9 +358,10 @@ class AccountServiceTest {
         final var expected = Collections.singletonList(account);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountsWithBalances(TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
+        when(this.accountClient.getMyAccountsWithBalances(any(), any(), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
+                .thenReturn(expected);
 
-        final var result = this.accountService.getMyAccountsWithBalances();
+        final var result = this.accountService.getMyAccountsWithBalances(null, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("My Account");
@@ -370,25 +372,27 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountsWithBalances());
+        ExceptionTestUtil
+                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountsWithBalances(null, null));
     }
 
     @Test
     void getMyAccountsWithBalances_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountsWithBalances(TestUtil.TEST_AUTH_HEADER))
+        when(this.accountClient.getMyAccountsWithBalances(any(), any(), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
-        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.accountService.getMyAccountsWithBalances());
+        ExceptionTestUtil
+                .assertThrowsBackendConnectionFailed(() -> this.accountService.getMyAccountsWithBalances(null, null));
     }
 
     @Test
     void getMyAccountsWithBalances_shouldThrowAuthenticationException_when401Error() {
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountsWithBalances(TestUtil.TEST_AUTH_HEADER))
+        when(this.accountClient.getMyAccountsWithBalances(any(), any(), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenThrow(ExceptionTestUtil.create401Exception());
 
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.accountService.getMyAccountsWithBalances(),
+        ExceptionTestUtil.assertHandles401WithLogout(() -> this.accountService.getMyAccountsWithBalances(null, null),
                 this.authService);
     }
 
@@ -736,9 +740,10 @@ class AccountServiceTest {
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"balance\": 456.78}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
+                .thenReturn(mockResponse);
 
-        final var result = this.accountService.getMyAccountBalance(accountId);
+        final var result = this.accountService.getMyAccountBalance(accountId, null, null);
 
         assertThat(result).isEqualByComparingTo(new BigDecimal("456.78"));
     }
@@ -749,9 +754,11 @@ class AccountServiceTest {
         final var mockResponse = ResponseTestUtil.createOkResponse("{\"otherField\": 1}");
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
+                .thenReturn(mockResponse);
 
-        ExceptionTestUtil.assertThrowsServiceException(() -> this.accountService.getMyAccountBalance(accountId),
+        ExceptionTestUtil.assertThrowsServiceException(
+                () -> this.accountService.getMyAccountBalance(accountId, null, null),
                 "Malformed balance payload: missing balance");
     }
 
@@ -760,28 +767,30 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountBalance("1"));
+        ExceptionTestUtil
+                .assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountBalance("1", null, null));
     }
 
     @Test
     void getMyAccountBalance_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenThrow(ExceptionTestUtil.createProcessingException());
 
-        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.accountService.getMyAccountBalance(accountId));
+        ExceptionTestUtil.assertThrowsBackendConnectionFailed(
+                () -> this.accountService.getMyAccountBalance(accountId, null, null));
     }
 
     @Test
     void getMyAccountBalance_shouldThrowAuthenticationException_when401Error() {
         final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER))
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
                 .thenThrow(ExceptionTestUtil.create401Exception());
 
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.accountService.getMyAccountBalance(accountId),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(
+                () -> this.accountService.getMyAccountBalance(accountId, null, null), this.authService);
     }
 
     @Test
@@ -791,9 +800,10 @@ class AccountServiceTest {
         final var expected = Collections.singletonList(payment);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountPayments(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(expected);
+        when(this.accountClient.getMyAccountPayments(eq(accountId), any(), any(), any(), any(), any(),
+                eq(TestUtil.TEST_AUTH_HEADER))).thenReturn(expected);
 
-        final var result = this.accountService.getMyAccountPayments(accountId);
+        final var result = this.accountService.getMyAccountPayments(accountId, null, null, null, 0, 20);
 
         assertThat(result).hasSize(1);
     }
@@ -803,29 +813,30 @@ class AccountServiceTest {
         when(this.authService.requireAuthorizationHeader())
                 .thenThrow(new AuthenticationException("Authentication required"));
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.accountService.getMyAccountPayments("1"));
+        ExceptionTestUtil.assertThrowsAuthenticationRequired(
+                () -> this.accountService.getMyAccountPayments("1", null, null, null, 0, 20));
     }
 
     @Test
     void getMyAccountPayments_shouldThrowServiceException_whenProcessingExceptionOccurs() {
         final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountPayments(accountId, TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(ExceptionTestUtil.createProcessingException());
+        when(this.accountClient.getMyAccountPayments(eq(accountId), any(), any(), any(), any(), any(),
+                eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.createProcessingException());
 
-        ExceptionTestUtil
-                .assertThrowsBackendConnectionFailed(() -> this.accountService.getMyAccountPayments(accountId));
+        ExceptionTestUtil.assertThrowsBackendConnectionFailed(
+                () -> this.accountService.getMyAccountPayments(accountId, null, null, null, 0, 20));
     }
 
     @Test
     void getMyAccountPayments_shouldThrowAuthenticationException_when401Error() {
         final var accountId = "1";
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountPayments(accountId, TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(ExceptionTestUtil.create401Exception());
+        when(this.accountClient.getMyAccountPayments(eq(accountId), any(), any(), any(), any(), any(),
+                eq(TestUtil.TEST_AUTH_HEADER))).thenThrow(ExceptionTestUtil.create401Exception());
 
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.accountService.getMyAccountPayments(accountId),
-                this.authService);
+        ExceptionTestUtil.assertHandles401WithLogout(
+                () -> this.accountService.getMyAccountPayments(accountId, null, null, null, 0, 20), this.authService);
     }
 
     @Test
@@ -1081,10 +1092,11 @@ class AccountServiceTest {
         final var mockResponse = ResponseTestUtil.createMockResponse(403);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
+                .thenReturn(mockResponse);
 
-        ExceptionTestUtil.assertThrowsServiceException(() -> this.accountService.getMyAccountBalance(accountId),
-                "Access denied to this account");
+        ExceptionTestUtil.assertThrowsServiceException(
+                () -> this.accountService.getMyAccountBalance(accountId, null, null), "Access denied to this account");
     }
 
     @Test
@@ -1093,9 +1105,10 @@ class AccountServiceTest {
         final var mockResponse = ResponseTestUtil.createMockResponse(500);
 
         ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.accountClient.getMyAccountBalance(accountId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
+        when(this.accountClient.getMyAccountBalance(eq(accountId), any(), any(), eq(TestUtil.TEST_AUTH_HEADER)))
+                .thenReturn(mockResponse);
 
-        assertThatThrownBy(() -> this.accountService.getMyAccountBalance(accountId))
+        assertThatThrownBy(() -> this.accountService.getMyAccountBalance(accountId, null, null))
                 .isInstanceOf(ServiceException.class);
     }
 

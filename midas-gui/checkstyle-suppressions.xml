@@ -5,4 +5,13 @@
     <suppress checks="AbbreviationAsWordInName" files=".*IT\.java$" />
     <!-- UlidCreator may only be imported by UlidUtil itself -->
     <suppress id="IllegalImport.UlidCreator" files="UlidUtil\.java$" />
+    <!-- @SuppressWarnings("NullAway") is banned, with two scoped exceptions.
+         (1) Jackson response DTOs: the no-arg deserialization constructor
+         legitimately leaves fields unset until Jackson populates them via
+         setters; marking every field @Nullable would be pessimistic for the
+         hundreds of reliably-populated read sites. -->
+    <suppress id="SuppressWarningsNullAway"
+        files="[/\\]de[/\\]vptr[/\\]midas[/\\]gui[/\\]dto[/\\]" />
+    <!-- (2) Test sources legitimately use it for Mockito/builder setup. -->
+    <suppress id="SuppressWarningsNullAway" files="[/\\]src[/\\]test[/\\]" />
 </suppressions>

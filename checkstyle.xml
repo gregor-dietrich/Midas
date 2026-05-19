@@ -127,6 +127,19 @@
       <property name="message"
         value="@SuppressWarnings(&quot;PMD.DuplicatedCode&quot;) is banned - refactor the code to eliminate duplication properly." />
     </module>
+    <!-- Ban @SuppressWarnings("NullAway") - fix nullability with @Nullable and
+         Objects.requireNonNull guards instead. Scoped exceptions (see each
+         module's checkstyle-suppressions.xml): the Jackson response DTOs whose
+         no-arg deserialization constructors legitimately leave fields unset, and
+         test sources. -->
+    <module name="RegexpSinglelineJava">
+      <property name="id" value="SuppressWarningsNullAway" />
+      <property name="format"
+        value="@SuppressWarnings\s*\(\s*\{?[^)]*&quot;NullAway&quot;" />
+      <property name="ignoreComments" value="false" />
+      <property name="message"
+        value="@SuppressWarnings(&quot;NullAway&quot;) is banned - fix nullability with @Nullable annotations and Objects.requireNonNull guards instead." />
+    </module>
     <!-- Ban // CPD-OFF comments - fix duplication properly instead -->
     <module name="RegexpSinglelineJava">
       <property name="format"

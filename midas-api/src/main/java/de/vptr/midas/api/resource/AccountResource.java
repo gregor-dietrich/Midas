@@ -1,6 +1,7 @@
 package de.vptr.midas.api.resource;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -136,21 +137,36 @@ public class AccountResource {
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
-    /** Returns the balance for the account the current user has access to. */
+    /**
+     * Returns the balance for the account the current user has access to. When both {@code startDate} and
+     * {@code endDate} are provided the balance is restricted to that inclusive date range.
+     */
     @GET
     @Path("/my/{publicId}/balance")
-    public Response getMyAccountBalance(@PathParam("publicId") final String publicId) {
+    public Response getMyAccountBalance(@PathParam("publicId") final String publicId,
+            @QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate) {
         this.requireAccountAccess(publicId, "Access denied");
-        final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId);
+        final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId, startDate, endDate);
         return ResponseUtil.ok(Map.of("balance", balance));
     }
 
-    /** Returns all payments for the current user's account. */
+    /**
+     * Returns a single page of payments for the current user's account, with optional server-side date-range and
+     * free-text filtering. Pagination is mandatory so the full payment set is never materialized client-side.
+     */
     @GET
     @Path("/my/{publicId}/payments")
-    public List<PaymentResponseDto> getMyAccountPayments(@PathParam("publicId") final String publicId) {
+    public List<PaymentResponseDto> getMyAccountPayments(@PathParam("publicId") final String publicId,
+            @QueryParam("page") @DefaultValue("0") final int page,
+            @QueryParam("size") @DefaultValue("20") final int size,
+            @QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate,
+            @QueryParam("query") @Nullable final String query) {
         this.requireAccountAccess(publicId, "Access denied");
-        return this.accountAccessService.getAccountPayments(publicId);
+        final int safePage = PaginationUtil.sanitizePage(page);
+        final int safeSize = PaginationUtil.sanitizeSize(size);
+        return this.accountAccessService.getAccountPayments(publicId, startDate, endDate, query, safePage, safeSize);
     }
 
     /** Returns payments grouped by account for all accounts of the current user. */
@@ -200,11 +216,17 @@ public class AccountResource {
         return accounts;
     }
 
-    /** Returns all accounts with normalized pagination and balance information. */
+    /**
+     * Returns all accounts with normalized pagination and balance information. When both {@code startDate} and
+     * {@code endDate} are provided each account's balance is restricted to that inclusive date range, computed
+     * server-side so the GUI never loads the underlying payments.
+     */
     @GET
     @Path("/my/with-balances")
     public List<AccountResponseDto> getMyAccountsWithBalances(@QueryParam("page") @DefaultValue("0") final int page,
-            @QueryParam("size") @DefaultValue("20") final int size) {
+            @QueryParam("size") @DefaultValue("20") final int size,
+            @QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate) {
         final String username = this.requireCurrentUsername();
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
@@ -217,7 +239,8 @@ public class AccountResource {
 
         final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
 
-        final Map<String, BigDecimal> balances = this.accountAccessService.getAccountBalances(accountPublicIds);
+        final Map<String, BigDecimal> balances =
+                this.accountAccessService.getAccountBalances(accountPublicIds, startDate, endDate);
 
         // Set balance in each account DTO
         accounts.forEach(account -> {

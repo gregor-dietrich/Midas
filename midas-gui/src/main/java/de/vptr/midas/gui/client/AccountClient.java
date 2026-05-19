@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.client;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.UiConstants;
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -117,17 +119,22 @@ public interface AccountClient {
 
     @GET
     @Path("/my/with-balances")
-    List<AccountResponseDto> getMyAccountsWithBalances(@HeaderParam("Authorization") String authorization);
+    List<AccountResponseDto> getMyAccountsWithBalances(@QueryParam("page") Integer page,
+            @QueryParam("size") Integer size, @QueryParam("startDate") @Nullable LocalDate startDate,
+            @QueryParam("endDate") @Nullable LocalDate endDate, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/my/{publicId}/balance")
     Response getMyAccountBalance(@PathParam("publicId") String publicId,
+            @QueryParam("startDate") @Nullable LocalDate startDate, @QueryParam("endDate") @Nullable LocalDate endDate,
             @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/my/{accountPublicId}/payments")
     List<PaymentResponseDto> getMyAccountPayments(@PathParam("accountPublicId") String accountPublicId,
-            @HeaderParam("Authorization") String authorization);
+            @QueryParam("page") Integer page, @QueryParam("size") Integer size,
+            @QueryParam("startDate") @Nullable LocalDate startDate, @QueryParam("endDate") @Nullable LocalDate endDate,
+            @QueryParam("query") @Nullable String query, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/my/payments")

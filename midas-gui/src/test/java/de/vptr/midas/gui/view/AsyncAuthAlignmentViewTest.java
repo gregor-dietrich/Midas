@@ -102,7 +102,8 @@ class AsyncAuthAlignmentViewTest {
 
         view.authService = authService;
         view.accountService = accountService;
-        when(accountService.getMyAccounts()).thenThrow(new AuthenticationException("Authentication required"));
+        when(accountService.getMyAccountsWithBalances(ArgumentMatchers.any(), ArgumentMatchers.any()))
+                .thenThrow(new AuthenticationException("Authentication required"));
         doAnswer(invocation -> {
             latch.countDown();
             return null;

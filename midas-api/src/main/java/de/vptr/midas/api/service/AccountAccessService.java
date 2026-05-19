@@ -1,6 +1,7 @@
 package de.vptr.midas.api.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,8 @@ import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.PerformanceMonitor;
 import de.vptr.midas.api.util.QueryAggregationUtil;
+import de.vptr.midas.api.util.SearchQueryUtil;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -109,6 +112,46 @@ public class AccountAccessService {
         });
     }
 
+    /**
+     * Returns a single page of payments for the given account, optionally restricted to a date range (inclusive) and a
+     * free-text query (matched against comment, source and target account names). Filtering and pagination are applied
+     * server-side so callers never load the full payment set into memory.
+     */
+    public List<PaymentResponseDto> getAccountPayments(final String accountPublicId,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final String query,
+            final int page, final int size) {
+        return PerformanceMonitor.time("getAccountPayments(paged," + accountPublicId + ")", () -> {
+            final boolean hasRange = startDate != null && endDate != null;
+            final String like = SearchQueryUtil.toContainsLikePattern(query);
+
+            final StringBuilder jpql = new StringBuilder("""
+                    SELECT p FROM PaymentEntity p \
+                    LEFT JOIN FETCH p.targetAccount LEFT JOIN FETCH p.sourceAccount LEFT JOIN FETCH p.user \
+                    WHERE (p.sourceAccount.publicId = :publicId OR p.targetAccount.publicId = :publicId)""");
+            if (hasRange) {
+                jpql.append(" AND p.date BETWEEN :startDate AND :endDate");
+            }
+            if (like != null) {
+                jpql.append(" AND (LOWER(p.comment) LIKE :like ESCAPE '\\'")
+                        .append(" OR LOWER(p.sourceAccount.name) LIKE :like ESCAPE '\\'")
+                        .append(" OR LOWER(p.targetAccount.name) LIKE :like ESCAPE '\\')");
+            }
+            jpql.append(" ORDER BY p.date DESC");
+
+            final var jpaQuery = PaymentEntity.getEntityManager().createQuery(jpql.toString(), PaymentEntity.class)
+                    .setParameter("publicId", accountPublicId);
+            if (hasRange) {
+                jpaQuery.setParameter("startDate", startDate).setParameter("endDate", endDate);
+            }
+            if (like != null) {
+                jpaQuery.setParameter("like", like);
+            }
+            jpaQuery.setFirstResult(page * size).setMaxResults(size);
+
+            return jpaQuery.getResultList().stream().map(PaymentResponseDto::new).toList();
+        });
+    }
+
     /** Returns all payments grouped by account publicId for the given accounts. */
     public Map<String, List<PaymentResponseDto>> getPaymentsByAccount(final List<String> accountPublicIds) {
         return PerformanceMonitor.time("getPaymentsByAccount(" + accountPublicIds.size() + " accounts)", () -> {
@@ -159,27 +202,52 @@ public class AccountAccessService {
                 .map(entity -> new PaymentResponseDto((PaymentEntity) entity)).toList();
     }
 
-    /** Returns the current balance for the given account. */
-    @Transactional(Transactional.TxType.SUPPORTS)
+    /** Returns the current all-time balance for the given account. */
     public BigDecimal getAccountBalance(final String accountPublicId) {
+        return this.getAccountBalance(accountPublicId, null, null);
+    }
+
+    /**
+     * Returns the balance for the given account. When both {@code startDate} and {@code endDate} are provided, only
+     * payments whose date falls within that inclusive range are summed; otherwise the all-time balance is returned.
+     */
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public BigDecimal getAccountBalance(final String accountPublicId, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
         return PerformanceMonitor.time("getAccountBalance(" + accountPublicId + ")", () -> {
-            final BigDecimal incoming = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    JOIN p.targetAccount t \
-                    WHERE t.publicId = :publicId""", BigDecimal.class).setParameter("publicId", accountPublicId)
-                    .getSingleResult();
-            final BigDecimal outgoing = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    JOIN p.sourceAccount s \
-                    WHERE s.publicId = :publicId""", BigDecimal.class).setParameter("publicId", accountPublicId)
-                    .getSingleResult();
+            final BigDecimal incoming = this.sumByAccount("targetAccount", accountPublicId, startDate, endDate);
+            final BigDecimal outgoing = this.sumByAccount("sourceAccount", accountPublicId, startDate, endDate);
             return incoming.subtract(outgoing);
         });
     }
 
-    /** Returns balances for the given list of account publicIds. */
-    @Transactional(Transactional.TxType.SUPPORTS)
+    /** Sums payment amounts for a single account on the given association side, optionally restricted by date range. */
+    private BigDecimal sumByAccount(final String joinPath, final String accountPublicId,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        final boolean hasRange = startDate != null && endDate != null;
+        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
+        final var query = PaymentEntity.getEntityManager()
+                .createQuery("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
+                        + " a WHERE a.publicId = :publicId" + dateClause, BigDecimal.class)
+                .setParameter("publicId", accountPublicId);
+        if (hasRange) {
+            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
+        }
+        return query.getSingleResult();
+    }
+
+    /** Returns all-time balances for the given list of account publicIds. */
     public Map<String, BigDecimal> getAccountBalances(final List<String> accountPublicIds) {
+        return this.getAccountBalances(accountPublicIds, null, null);
+    }
+
+    /**
+     * Returns balances for the given account publicIds. When both {@code startDate} and {@code endDate} are provided,
+     * only payments within that inclusive range are summed; otherwise all-time balances are returned.
+     */
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public Map<String, BigDecimal> getAccountBalances(final List<String> accountPublicIds,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
         return PerformanceMonitor.time("getAccountBalances(" + accountPublicIds.size() + " accounts)", () -> {
             if (accountPublicIds == null || accountPublicIds.isEmpty()) {
                 return Map.of();
@@ -188,36 +256,37 @@ public class AccountAccessService {
             final Map<String, BigDecimal> balances = new HashMap<>();
             accountPublicIds.forEach(id -> balances.put(id, BigDecimal.ZERO));
 
-            // Compute incoming payments (target) aggregated by account
-            final List<Object[]> incomingResults = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT p.targetAccount.publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    WHERE p.targetAccount.publicId IN :publicIds GROUP BY p.targetAccount.publicId""", Object[].class)
-                    .setParameter("publicIds", accountPublicIds).getResultList();
-
-            for (final Object[] row : incomingResults) {
-                final String publicId = (String) row[0];
-                final BigDecimal amount = (BigDecimal) row[1];
-                if (publicId != null) {
-                    balances.put(publicId, balances.getOrDefault(publicId, BigDecimal.ZERO).add(amount));
-                }
-            }
-
-            // Compute outgoing payments (source) aggregated by account
-            final List<Object[]> outgoingResults = PaymentEntity.getEntityManager().createQuery("""
-                    SELECT p.sourceAccount.publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p \
-                    WHERE p.sourceAccount.publicId IN :publicIds GROUP BY p.sourceAccount.publicId""", Object[].class)
-                    .setParameter("publicIds", accountPublicIds).getResultList();
-
-            for (final Object[] row : outgoingResults) {
-                final String publicId = (String) row[0];
-                final BigDecimal amount = (BigDecimal) row[1];
-                if (publicId != null) {
-                    balances.put(publicId, balances.getOrDefault(publicId, BigDecimal.ZERO).subtract(amount));
-                }
-            }
+            this.aggregateBalances(balances, "targetAccount", true, accountPublicIds, startDate, endDate);
+            this.aggregateBalances(balances, "sourceAccount", false, accountPublicIds, startDate, endDate);
 
             return balances;
         });
+    }
+
+    /**
+     * Aggregates summed payment amounts grouped by account for one association side and folds them into
+     * {@code balances} ({@code add == true} for incoming/target, {@code false} to subtract outgoing/source).
+     */
+    private void aggregateBalances(final Map<String, BigDecimal> balances, final String joinPath, final boolean add,
+            final List<String> accountPublicIds, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
+        final boolean hasRange = startDate != null && endDate != null;
+        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
+        final var query = PaymentEntity.getEntityManager().createQuery(
+                "SELECT p." + joinPath + ".publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p " + "WHERE p."
+                        + joinPath + ".publicId IN :publicIds" + dateClause + " GROUP BY p." + joinPath + ".publicId",
+                Object[].class).setParameter("publicIds", accountPublicIds);
+        if (hasRange) {
+            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
+        }
+        for (final Object[] row : query.getResultList()) {
+            final String publicId = (String) row[0];
+            final BigDecimal amount = (BigDecimal) row[1];
+            if (publicId != null) {
+                final BigDecimal current = balances.getOrDefault(publicId, BigDecimal.ZERO);
+                balances.put(publicId, add ? current.add(amount) : current.subtract(amount));
+            }
+        }
     }
 
     /** Associates a user with an account. */

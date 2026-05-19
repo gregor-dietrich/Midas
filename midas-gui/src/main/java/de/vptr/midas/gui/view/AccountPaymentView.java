@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
@@ -48,7 +47,6 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
-import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
@@ -64,12 +62,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private record AccountAccessResult(@Nullable AccountResponseDto currentAccount,
             List<AccountResponseDto> userAccounts) {
     }
-
-    private record AccountPaymentData(List<PaymentResponseDto> payments) {
-    }
-
-    @Inject
-    transient PaymentService paymentService;
 
     @Inject
     transient AuthService authService;
@@ -94,9 +86,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     @Nullable
     private transient AccountResponseDto currentAccount;
     @Nullable
-    private BigDecimal accountBalance;
-    @Nullable
-    private List<PaymentResponseDto> allPayments; // Store all payments for client-side filtering
+    private String searchQuery; // Current free-text filter, applied server-side
     @Nullable
     private List<AccountResponseDto> userAccounts; // Store user's accessible accounts
     private final Set<String> accessibleAccountIds = new HashSet<>();
@@ -169,35 +159,14 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             if (this.userAccounts != null) {
                 this.userAccounts.forEach(acc -> this.accessibleAccountIds.add(acc.getPublicId()));
             }
-            this.loadPaymentsAndBalance();
+            this.applyManagePermissions();
+            this.setupLazyDataProvider();
+            this.reloadBalance();
         });
     }
 
-    private void loadPaymentsAndBalance() {
-        final var aid = Objects.requireNonNull(this.accountId);
-        this.loadDataAsync(() -> {
-            final var payments = this.paymentService.getPaymentsByAccount(aid);
-            return new AccountPaymentData(payments);
-        }, data -> {
-            this.allPayments = data.payments();
-            this.updateUiWithData();
-        });
-    }
-
-    private void updateUiWithData() {
-        this.recalculateBalance();
-        Objects.requireNonNull(this.grid).setItems(this.getFilteredPayments());
-
-        final var balance = this.accountBalance != null ? this.accountBalance : BigDecimal.ZERO;
-        Objects.requireNonNull(this.balanceLabel).setText("Current Balance: " + balance + " EUR");
-        if (balance.compareTo(BigDecimal.ZERO) > 0) {
-            this.balanceLabel.getStyle().set("color", "var(--lumo-success-text-color)");
-        } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            this.balanceLabel.getStyle().set("color", "var(--lumo-error-text-color)");
-        } else {
-            this.balanceLabel.getStyle().remove("color");
-        }
-
+    /** Updates the management-only UI affordances based on the current account's manage permission. */
+    private void applyManagePermissions() {
         final boolean canManage = this.currentAccount != null && this.currentAccount.isCanManage();
         if (this.sendButton != null) {
             this.sendButton.setVisible(canManage);
@@ -207,6 +176,61 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
         if (this.actionsColumn != null) {
             this.actionsColumn.setVisible(canManage);
+        }
+    }
+
+    /**
+     * Wires the grid to a lazy, server-paginated data provider. Date-range and free-text filtering are passed to the
+     * API on every page request, so the full payment set is never loaded into the GUI.
+     */
+    private void setupLazyDataProvider() {
+        final var aid = Objects.requireNonNull(this.accountId);
+        Objects.requireNonNull(this.grid)
+                .setItems(query -> this.accountService.getMyAccountPayments(aid, this.selectedStartDate(),
+                        this.selectedEndDate(), this.searchQuery, query.getPage(), query.getPageSize()).stream());
+    }
+
+    /** Re-fetches the date-ranged balance from the server (computed server-side, no payment rows transferred). */
+    private void reloadBalance() {
+        final var aid = Objects.requireNonNull(this.accountId);
+        this.loadDataAsync(
+                () -> this.accountService.getMyAccountBalance(aid, this.selectedStartDate(), this.selectedEndDate()),
+                this::updateBalanceLabel);
+    }
+
+    /** Triggers a server round-trip to reload the current page of payments with the active filters. */
+    private void refreshPayments() {
+        final var g = this.grid;
+        if (g != null) {
+            g.getDataProvider().refreshAll();
+        }
+    }
+
+    /** Reloads both the server-computed balance and the current page of payments. */
+    private void reloadBalanceAndPayments() {
+        this.reloadBalance();
+        this.refreshPayments();
+    }
+
+    @Nullable
+    private LocalDate selectedStartDate() {
+        return this.startDatePicker != null ? this.startDatePicker.getValue() : null;
+    }
+
+    @Nullable
+    private LocalDate selectedEndDate() {
+        return this.endDatePicker != null ? this.endDatePicker.getValue() : null;
+    }
+
+    private void updateBalanceLabel(final BigDecimal balance) {
+        final var label = Objects.requireNonNull(this.balanceLabel);
+        label.setText("Current Balance: " + balance + " EUR");
+        if (balance.compareTo(BigDecimal.ZERO) > 0) {
+            label.getStyle().set("color", "var(--lumo-success-text-color)");
+        } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
+            label.getStyle().set("color", "var(--lumo-error-text-color)");
+        } else {
+            label.getStyle().remove("color");
         }
     }
 
@@ -229,14 +253,11 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
     private HorizontalLayout createSearchLayout() {
         final var searchLayout = new AsyncSearchLayout(query -> {
-            if (query == null || query.trim().isEmpty()) {
-                this.updateUiWithData();
-                return;
-            }
-            this.filterPayments(query.trim());
+            this.searchQuery = (query == null || query.trim().isEmpty()) ? null : query.trim();
+            this.refreshPayments();
         }, "Search by comment or recipient...", "Search Payments");
 
-        final var dateFilterLayout = new DateFilterLayout(e -> this.filterByDateRange());
+        final var dateFilterLayout = new DateFilterLayout(e -> this.reloadBalanceAndPayments());
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
@@ -259,7 +280,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.receiveButton.setVisible(false);
 
         final var refreshButton =
-                new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), e -> this.loadPaymentsAndBalance());
+                new Button(LineAwesomeIcon.SYNC_ALT_SOLID.create(), e -> this.reloadBalanceAndPayments());
         refreshButton.setTooltipText("Refresh Data");
 
         layout.add(refreshButton, this.sendButton, this.receiveButton);
@@ -316,49 +337,6 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return layout;
         }).setHeader("Actions").setAutoWidth(true).setFlexGrow(0);
         this.actionsColumn.setVisible(false);
-    }
-
-    private void filterPayments(final String query) {
-        if (this.allPayments == null) {
-            return;
-        }
-        final var queryLower = query.toLowerCase(Locale.ROOT);
-        final var filtered = this.getFilteredPayments().stream()
-                .filter(p -> (p.getComment() != null && p.getComment().toLowerCase(Locale.ROOT).contains(queryLower))
-                        || (p.getSourceAccountName() != null
-                                && p.getSourceAccountName().toLowerCase(Locale.ROOT).contains(queryLower))
-                        || (p.getTargetAccountName() != null
-                                && p.getTargetAccountName().toLowerCase(Locale.ROOT).contains(queryLower)))
-                .toList();
-        Objects.requireNonNull(this.grid).setItems(filtered);
-    }
-
-    private void filterByDateRange() {
-        this.updateUiWithData();
-    }
-
-    private List<PaymentResponseDto> getFilteredPayments() {
-        if (this.allPayments == null) {
-            return List.of();
-        }
-        final var start = Objects.requireNonNull(this.startDatePicker).getValue();
-        final var end = Objects.requireNonNull(this.endDatePicker).getValue();
-
-        if (start == null || end == null) {
-            return this.allPayments;
-        }
-
-        return this.allPayments.stream()
-                .filter(p -> p.getDate() != null && !p.getDate().isBefore(start) && !p.getDate().isAfter(end)).toList();
-    }
-
-    private void recalculateBalance() {
-        final var payments = this.getFilteredPayments();
-        this.accountBalance = payments.stream().map(p -> {
-            final var amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
-            final boolean isSender = Objects.equals(p.getSourceAccountPublicId(), this.accountId);
-            return isSender ? amount.negate() : amount;
-        }).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void openPaymentDialog(@Nullable final PaymentDto payment, final boolean openAsRecipient) {
@@ -478,7 +456,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
 
             Objects.requireNonNull(this.paymentDialog).close();
-            this.loadPaymentsAndBalance();
+            this.reloadBalanceAndPayments();
         } catch (final Exception e) {
             MidasErrorHandler.handleInUiContext(e);
         }
@@ -498,7 +476,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                             this.executeWithHandling(() -> {
                                 if (this.accountService.deleteMyAccountPayment(aid, pid)) {
                                     NotificationUtil.showSuccess("Payment deleted successfully");
-                                    this.loadPaymentsAndBalance();
+                                    this.reloadBalanceAndPayments();
                                 } else {
                                     NotificationUtil.showError("Failed to delete payment");
                                 }

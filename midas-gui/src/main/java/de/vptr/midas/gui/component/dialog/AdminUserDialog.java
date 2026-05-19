@@ -150,9 +150,8 @@ public class AdminUserDialog extends FormDialog {
         // Rank binding - convert between UserRankResponseDto and rankPublicId
         this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {
             if (u.getRankPublicId() != null && availableRanks != null) {
-                return availableRanks.stream()
-                        .filter(rank -> Objects.equals(rank.getPublicId(), u.getRankPublicId())).findFirst()
-                        .orElse(null);
+                return availableRanks.stream().filter(rank -> Objects.equals(rank.getPublicId(), u.getRankPublicId()))
+                        .findFirst().orElse(null);
             }
             return null;
         }, (u, value) -> {
