@@ -111,7 +111,7 @@
     -->
     <module name="RegexpSinglelineJava">
       <property name="format"
-        value="JOIN\s+FETCH\s+\w+\.(userAccountMetas|userGroupMetas|outgoingPayments|incomingPayments|payments|children|posts|comments|members|metas|tags|replies)\b" />
+        value="(?i)JOIN\s+FETCH\s+\w+\.(userAccountMetas|userGroupMetas|outgoingPayments|incomingPayments|payments|children|posts|comments|members|metas|tags|replies|users)\b" />
       <property name="ignoreComments" value="true" />
       <property name="message"
         value="JOIN FETCH on a collection cannot coexist with pagination (HHH000104, in-memory paging). Use @BatchSize, a second 'WHERE id IN :ids' query, or drop the JOIN FETCH." />
