@@ -37,7 +37,7 @@ public class EncryptionService {
         if (this.encryptionSubKey == null) {
             synchronized (this) {
                 if (this.encryptionSubKey == null) {
-                    this.encryptionSubKey = deriveSubKey(this.keyManager.getKey(), "encryption");
+                    this.encryptionSubKey = deriveSubKey(this.keyManager.getKey(), "encrypt");
                 }
             }
         }
@@ -56,15 +56,22 @@ public class EncryptionService {
     }
 
     /**
-     * Derives a 256-bit AES sub-key from the master key using one step of HKDF-Expand (RFC 5869 §2.3): OKM =
-     * HMAC-SHA256(masterKey, context || 0x01). The master key already has 256 bits of entropy, so the Extract phase is
-     * omitted.
+     * Derives a 256-bit AES sub-key from the master key using the full RFC 5869 HKDF. HKDF-Extract (§2.2) with a
+     * zero-byte salt turns the master key into a pseudo-random key (PRK), then HKDF-Expand (§2.3) produces the sub-key:
+     * OKM = HMAC-SHA256(PRK, context || 0x01). Since the requested length (32) equals the hash length, a single expand
+     * block suffices.
      */
     @SuppressWarnings("PMD.HardCodedCryptoKey")
     private static SecretKey deriveSubKey(final SecretKey masterKey, final String context) {
         try {
             final var mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(masterKey.getEncoded(), "HmacSHA256"));
+            // HKDF-Extract(salt = 32 zero bytes, IKM = master) -> PRK (RFC 5869 §2.2).
+            // RFC 5869: an absent salt is a string of HashLen (32) zero bytes.
+            mac.init(new SecretKeySpec(new byte[32], "HmacSHA256"));
+            final var prk = mac.doFinal(masterKey.getEncoded());
+            // HKDF-Expand(PRK, info = context, L = 32) -> OKM (RFC 5869 §2.3).
+            // L == HashLen, so a single block T(1) = HMAC(PRK, info || 0x01) suffices.
+            mac.init(new SecretKeySpec(prk, "HmacSHA256"));
             final var contextBytes = context.getBytes(StandardCharsets.UTF_8);
             final var input = new byte[contextBytes.length + 1];
             System.arraycopy(contextBytes, 0, input, 0, contextBytes.length);
