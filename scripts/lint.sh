@@ -30,6 +30,6 @@ echo "=== Linting $DISPLAY_NAME ==="
 cd "$PROJECT_ROOT"
 
 # Run Maven from the root using the reactor
-${MVN_CMD} -q compile test-compile checkstyle:check spotbugs:check pmd:check pmd:cpd-check ${PL_ARG} -Drevision="${REVISION}"
+${MVN_CMD} -q compile test-compile spotless:check checkstyle:check spotbugs:check pmd:check pmd:cpd-check ${PL_ARG} -Drevision="${REVISION}"
 
 echo "Lint checks completed."

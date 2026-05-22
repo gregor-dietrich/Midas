@@ -24,8 +24,8 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 - `make install`: Run `mvn clean install -DskipTests` for both modules.
 - `make build`: Verify environment, package applications, and build Docker images.
 - `make clean`: Clean Maven artifacts and build directories.
-- `make format`: Run Spotless to format code for both modules.
-- `make lint`: Run quality gate plugins for both modules.
+- `make format`: Run `spotless:apply` to auto-format code for both modules.
+- `make lint`: Run quality gate plugins (including `spotless:check`) for both modules.
 - `make test`: Run full Maven test suite for both modules (requires Docker for API tests).
 - `make dev-api`: Start the backend API in Quarkus Dev Mode (port 8080).
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
@@ -38,8 +38,8 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 
 The project enforces very strict quality gates:
 
-- **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline).
-- **Linting**: Checkstyle, PMD (with CPD for duplicate detection).
+- **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline). Use `make format` to auto-fix formatting.
+- **Linting**: Spotless (`spotless:check`), Checkstyle, PMD (with CPD for duplicate detection).
 - **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks).
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
 - **Coverage**: JaCoCo enforcement.
