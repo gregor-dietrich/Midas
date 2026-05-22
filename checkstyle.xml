@@ -103,6 +103,19 @@
       <property name="message"
         value="Use LocalDateTime.now(ZoneId.systemDefault()) instead for explicit timezone handling." />
     </module>
+    <!--
+      JOIN FETCH on a @OneToMany / @ManyToMany collection cannot coexist with
+      setMaxResults / Panache .page(): Hibernate logs HHH000104 and paginates in
+      memory, undoing the LIMIT pushdown. The alternation lists the project's
+      collection field names; add new collection fields here when introduced.
+    -->
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+        value="JOIN\s+FETCH\s+\w+\.(userAccountMetas|userGroupMetas|outgoingPayments|incomingPayments|payments|children|posts|comments|members|metas|tags|replies)\b" />
+      <property name="ignoreComments" value="true" />
+      <property name="message"
+        value="JOIN FETCH on a collection cannot coexist with pagination (HHH000104, in-memory paging). Use @BatchSize, a second 'WHERE id IN :ids' query, or drop the JOIN FETCH." />
+    </module>
     <!-- Ban @SuppressWarnings("PMD") -->
     <module name="RegexpSinglelineJava">
       <property name="format"

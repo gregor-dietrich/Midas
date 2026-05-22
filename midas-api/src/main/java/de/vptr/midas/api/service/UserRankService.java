@@ -10,6 +10,8 @@ import de.vptr.midas.api.dto.UserRankResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheResult;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -21,6 +23,7 @@ import jakarta.ws.rs.core.Response;
 public class UserRankService {
 
     /** Returns all ranks. */
+    @CacheResult(cacheName = "user-ranks")
     public List<UserRankResponseDto> getAllRanks() {
         final List<UserRankEntity> ranks = UserRankEntity.listAll();
         return this.toRankResponseDtos(ranks);
@@ -51,6 +54,7 @@ public class UserRankService {
 
     /** Creates a new user rank. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserRankResponseDto createRank(final UserRankDto rankDto) {
         UserRankEntity rank = new UserRankEntity();
         rank.name = rankDto.name;
@@ -63,6 +67,7 @@ public class UserRankService {
 
     /** Processes the request and returns the result. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto) {
         final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
         if (existingRank == null) {
@@ -79,6 +84,7 @@ public class UserRankService {
 
     /** Processes the request and returns the result. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto) {
         final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
         if (existingRank == null) {
@@ -215,6 +221,7 @@ public class UserRankService {
 
     /** Deletes the rank with the given publicId. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public boolean deleteRank(final String publicId) {
         return UserRankEntity.delete("publicId", publicId) > 0;
     }

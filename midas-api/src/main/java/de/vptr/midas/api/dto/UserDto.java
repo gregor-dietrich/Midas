@@ -32,10 +32,6 @@ public class UserDto {
     @Nullable
     public Boolean activated;
 
-    @Size(max = 255, message = "Activation key must not exceed 255 characters")
-    @Nullable
-    public String activationKey;
-
     @Size(max = 45, message = "IP address must not exceed 45 characters")
     @Nullable
     public String lastIp;
@@ -46,14 +42,13 @@ public class UserDto {
     /** Creates a new instance. */
     public UserDto(@Nullable final String username, @Nullable final String password, @Nullable final String email,
             @Nullable final String rankPublicId, @Nullable final Boolean banned, @Nullable final Boolean activated,
-            @Nullable final String activationKey, @Nullable final String lastIp) {
+            @Nullable final String lastIp) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.rankPublicId = rankPublicId;
         this.banned = banned;
         this.activated = activated;
-        this.activationKey = activationKey;
         this.lastIp = lastIp;
     }
 }

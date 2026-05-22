@@ -41,10 +41,6 @@ public class UserDto {
     @Nullable
     private Boolean activated;
 
-    @JsonProperty("activationKey")
-    @Nullable
-    private String activationKey;
-
     @JsonProperty("lastIp")
     @Nullable
     private String lastIp;
@@ -113,11 +109,6 @@ public class UserDto {
     }
 
     @Nullable
-    public String getActivationKey() {
-        return this.activationKey;
-    }
-
-    @Nullable
     public String getLastIp() {
         return this.lastIp;
     }
@@ -172,10 +163,6 @@ public class UserDto {
 
     public void setActivated(@Nullable final Boolean activated) {
         this.activated = activated;
-    }
-
-    public void setActivationKey(@Nullable final String activationKey) {
-        this.activationKey = activationKey;
     }
 
     public void setLastIp(@Nullable final String lastIp) {

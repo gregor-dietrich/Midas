@@ -16,6 +16,7 @@ import de.vptr.midas.api.security.EncryptionService;
 import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.EntityValidator;
 import de.vptr.midas.api.util.SearchQueryUtil;
+import io.quarkus.cache.CacheInvalidateAll;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -87,6 +88,7 @@ public class UserService {
 
     /** Creates a new user. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto createUser(final UserDto userDto) {
         // Check for duplicate username
         EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username,
@@ -110,7 +112,8 @@ public class UserService {
         user.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
         user.banned = Boolean.TRUE.equals(userDto.banned);
         user.activated = Boolean.TRUE.equals(userDto.activated);
-        user.activationKey = userDto.activationKey != null ? userDto.activationKey : UUID.randomUUID().toString();
+        // Always server-generated; never client-settable (see UserDto).
+        user.activationKey = UUID.randomUUID().toString();
         user.lastIp = userDto.lastIp;
 
         this.applyPassword(user, userDto.password);
@@ -121,6 +124,7 @@ public class UserService {
 
     /** Updates the user with the given publicId. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
         final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
         if (existingUser == null) {
@@ -155,6 +159,7 @@ public class UserService {
 
     /** Partially updates the user with the given publicId. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
         final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
         if (existingUser == null) {
@@ -252,6 +257,7 @@ public class UserService {
 
     /** Deletes the user with the given publicId. */
     @Transactional
+    @CacheInvalidateAll(cacheName = "user-ranks")
     public boolean deleteUser(final String publicId) {
         return UserEntity.delete("publicId", publicId) > 0;
     }

@@ -196,7 +196,6 @@ public class UserResource {
 
     /** Strips fields that should never be client-settable from the DTO. */
     private static void stripProtectedFields(final UserDto dto) {
-        dto.activationKey = null;
         dto.lastIp = null;
     }
 

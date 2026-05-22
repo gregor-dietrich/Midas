@@ -24,6 +24,11 @@ case $MODULE in
 esac
 
 echo "Starting Quarkus dev mode for $MODULE..."
-cd "$PROJECT_ROOT/$MODULE_DIR"
+# Run from the project root (like scripts/test.sh and lint.sh) and select the module
+# with -pl, rather than cd-ing into it. Maven only reads .mvn/jvm.config from the
+# directory it is launched in, and the Ubuntu-packaged /usr/bin/mvn does not walk up
+# to find it. Those JVM args carry the jdk.compiler --add-exports that ErrorProne
+# needs to compile in-process; without them dev-mode auto-compile fails.
+cd "$PROJECT_ROOT"
 
-${MVN_CMD} quarkus:dev
+${MVN_CMD} -pl "$MODULE_DIR" quarkus:dev

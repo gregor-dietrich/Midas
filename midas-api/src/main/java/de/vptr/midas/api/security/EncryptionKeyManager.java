@@ -7,9 +7,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.UserPrincipal;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.crypto.SecretKey;
@@ -114,12 +121,7 @@ public class EncryptionKeyManager {
             // world-readable exposure.
             final var tmp = Files.createTempFile(parent, ".key-", ".tmp");
             try {
-                try {
-                    Files.setPosixFilePermissions(tmp,
-                            Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
-                } catch (final UnsupportedOperationException e) {
-                    LOG.warnf("Cannot set POSIX permissions on %s (non-POSIX filesystem)", tmp);
-                }
+                restrictToOwner(tmp);
 
                 Files.write(tmp, Base64.getEncoder().encode(keyBytes));
 
@@ -134,12 +136,7 @@ public class EncryptionKeyManager {
                     // carries 0600 permissions, and we re-assert them on the target.
                     LOG.warnf("Atomic move unsupported for %s; using non-atomic move", absolutePath);
                     Files.move(tmp, absolutePath, StandardCopyOption.REPLACE_EXISTING);
-                    try {
-                        Files.setPosixFilePermissions(absolutePath,
-                                Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
-                    } catch (final UnsupportedOperationException ignored) {
-                        LOG.warnf("Cannot set POSIX permissions on %s (non-POSIX filesystem)", absolutePath);
-                    }
+                    restrictToOwner(absolutePath);
                 }
             } finally {
                 Files.deleteIfExists(tmp);
@@ -150,5 +147,38 @@ public class EncryptionKeyManager {
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to generate and save encryption key at: " + path, e);
         }
+    }
+
+    /**
+     * Restricts a freshly-created file so only the current OS user can read or write it. Tries POSIX 0600 first; on
+     * filesystems that don't support POSIX (e.g. Windows NTFS) it falls back to an ACL granting only the file owner. If
+     * neither mechanism is supported, it refuses to continue — leaving an unprotected AES-256 master key on disk
+     * silently is worse than a startup failure operators can fix.
+     */
+    private static void restrictToOwner(final Path file) throws IOException {
+        try {
+            Files.setPosixFilePermissions(file,
+                    Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+            return;
+        } catch (final UnsupportedOperationException posixUnsupported) {
+            LOG.debugf("POSIX permissions unsupported for %s; trying ACL fallback", file);
+        }
+
+        final AclFileAttributeView aclView = Files.getFileAttributeView(file, AclFileAttributeView.class);
+        if (aclView == null) {
+            throw new IllegalStateException("Cannot restrict permissions on encryption key file " + file
+                    + ". Neither POSIX nor ACL attribute views are supported by this filesystem. "
+                    + "Move the key to a protected location and set midas.encryption.key.path.");
+        }
+
+        final UserPrincipal owner = Files.getOwner(file);
+        final AclEntry entry = AclEntry.newBuilder().setType(AclEntryType.ALLOW).setPrincipal(owner)
+                .setPermissions(EnumSet.of(AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA,
+                        AclEntryPermission.APPEND_DATA, AclEntryPermission.READ_ATTRIBUTES,
+                        AclEntryPermission.WRITE_ATTRIBUTES, AclEntryPermission.READ_ACL,
+                        AclEntryPermission.SYNCHRONIZE, AclEntryPermission.DELETE))
+                .build();
+        aclView.setAcl(List.of(entry));
+        LOG.infof("Applied owner-only ACL to encryption key file %s (POSIX unavailable)", file);
     }
 }

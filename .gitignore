@@ -74,6 +74,7 @@ midas-gui/tsconfig.json
 midas-gui/types.d.ts
 midas-gui/vite.config.ts
 
-# Encryption keys
+# Encryption / session keys
 **/encryption.key
+**/session.key
 
