@@ -17,6 +17,7 @@
 
   <properties>
     <nullaway.annotated.packages>de.vptr.midas.gui</nullaway.annotated.packages>
+
     <assertj.version>3.27.7</assertj.version>
     <line-awesome.version>2.1.0</line-awesome.version>
     <vaadin.version>25.1.6</vaadin.version>
