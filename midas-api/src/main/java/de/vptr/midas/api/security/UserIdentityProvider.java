@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.IpUtil;
+import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.IdentityProvider;
@@ -35,6 +36,14 @@ import jakarta.transaction.Transactional;
 public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
     private static final Logger LOG = Logger.getLogger(UserIdentityProvider.class);
+
+    /**
+     * A real, valid bcrypt hash used as a constant-time decoy when the user does not exist or is disabled. It is
+     * computed once at class load so that {@link PasswordHashingService#verifyPassword} actually runs the bcrypt KDF on
+     * the decoy path, equalising response time with the genuine wrong-password path and preventing timing-based
+     * username enumeration. (A malformed hash would make verifyPassword fail fast and defeat the protection.)
+     */
+    private static final String DUMMY_HASH = BcryptUtil.bcryptHash("midas-timing-protection-decoy");
 
     @Inject
     ManagedExecutor executor;
@@ -135,9 +144,8 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
         final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
 
         if (user == null || user.banned || !user.activated || user.password == null) {
-            // Run dummy hash to prevent timing-based username enumeration
-            this.passwordHashingService.verifyPassword("dummy",
-                    "$2a$10$vptr.midas.dummy.hash.for.enumeration.protection.ZZZ");
+            // Run a real bcrypt verification against a decoy hash to prevent timing-based username enumeration
+            this.passwordHashingService.verifyPassword("dummy", DUMMY_HASH);
             this.authFailureRateLimitService.recordFailure(clientKey);
             this.loginAttemptService.recordFailure(username, ip);
 

@@ -19,6 +19,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /** JPA entity representing a payment. */
 @Entity
@@ -44,6 +45,8 @@ public class PaymentEntity extends BaseEntity {
     public UserEntity user;
 
     @NotBlank
+    @Size(max = 1000)
+    @Column(length = 1000)
     @Nullable
     public String comment;
 

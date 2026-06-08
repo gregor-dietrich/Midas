@@ -178,7 +178,7 @@ CREATE TABLE user_payments (
     target_id BIGINT,
     source_id BIGINT,
     user_id BIGINT,
-    comment VARCHAR(255) NOT NULL,
+    comment VARCHAR(1000) NOT NULL,
     date DATE NOT NULL DEFAULT CURRENT_DATE,
     amount DECIMAL(15,2) NOT NULL DEFAULT 0.00,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

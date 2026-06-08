@@ -3,6 +3,7 @@ package de.vptr.midas.api.dto;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /** Data transfer object for user data. */
@@ -14,7 +15,10 @@ public class UserDto {
     public String username;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$",
+            message = "Password must contain at least one digit, one lowercase, one uppercase letter and one "
+                    + "special character (@#$%^&+=!)")
     @Nullable
     public String password;
 

@@ -21,6 +21,10 @@ WORKDIR /work/
 RUN chown 1001 /work \
     && chmod "g+rwX" /work \
     && chown 1001:root /work
+# Create the key directory writable by the runtime user (mounted as a volume in production)
+RUN mkdir -p /etc/midas/keys \
+    && chown 1001:root /etc/midas/keys \
+    && chmod "g+rwX" /etc/midas/keys
 COPY --chown=1001:root --chmod=0755 target/*-runner /work/application
 
 EXPOSE 8080

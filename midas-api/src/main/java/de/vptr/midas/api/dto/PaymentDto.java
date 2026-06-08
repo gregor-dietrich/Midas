@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,7 @@ public class PaymentDto {
     @SuppressWarnings("MultipleNullnessAnnotations")
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be positive")
+    @Digits(integer = 13, fraction = 2, message = "Amount must have at most 13 integer digits and 2 decimal places")
     @Nullable
     public BigDecimal amount;
 }

@@ -2,11 +2,11 @@ package de.vptr.midas.api.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
+import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,9 +36,15 @@ public class PageEntity extends BaseEntity {
     @Nullable
     public LocalDateTime lastEdit;
 
-    // Helper method to search pages
+    /** Returns pages whose title or content match the given term, with LIKE wildcards escaped and results bounded. */
     public static List<PageEntity> searchPages(final String searchTerm) {
-        final var searchPattern = "%" + searchTerm.toLowerCase(Locale.ROOT) + "%";
-        return find("LOWER(title) LIKE ?1 OR LOWER(content) LIKE ?1", searchPattern).list();
+        final String like = SearchQueryUtil.toContainsLikePattern(searchTerm);
+        if (like == null) {
+            return SearchQueryUtil.applyDefaultSearchLimit(PageEntity.<PageEntity>findAll()).list();
+        }
+        return SearchQueryUtil
+                .applyDefaultSearchLimit(
+                        PageEntity.find("LOWER(title) LIKE ?1 ESCAPE '\\' OR LOWER(content) LIKE ?1 ESCAPE '\\'", like))
+                .list();
     }
 }

@@ -308,6 +308,22 @@ public class PostService {
         return this.toResponseDtos(posts);
     }
 
+    /** Returns all published posts matching the given query. */
+    public List<PostResponseDto> searchPublishedPosts(@Nullable final String query) {
+        final String searchTerm = SearchQueryUtil.toContainsLikePattern(query);
+        if (searchTerm == null) {
+            return this.findPublishedPosts();
+        }
+        final List<PostEntity> posts = SearchQueryUtil.applyDefaultSearchLimit(PostEntity.find("""
+                SELECT p FROM PostEntity p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category \
+                WHERE p.published = true AND ( \
+                LOWER(p.title) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.content) LIKE ?1 ESCAPE '\\' \
+                OR LOWER(p.user.username) LIKE ?1 ESCAPE '\\') \
+                ORDER BY p.created DESC""", searchTerm)).list();
+        return this.toResponseDtos(posts);
+    }
+
     /** Returns posts within the given date range. */
     public List<PostResponseDto> findByDateRange(@Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {

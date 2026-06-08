@@ -39,7 +39,7 @@ public final class TestDataBuilder {
      */
     public static String createUniqueUserJson() {
         final var suffix = TestUtil.generateUniqueSuffix();
-        return createUserJson("testuser_" + suffix, "test_" + suffix + "@example.com", "password123");
+        return createUserJson("testuser_" + suffix, "test_" + suffix + "@example.com", "Password123!");
     }
 
     /**

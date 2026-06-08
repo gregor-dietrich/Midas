@@ -2,6 +2,7 @@ package de.vptr.midas.api.resource;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import de.vptr.midas.api.dto.PostDto;
 import de.vptr.midas.api.dto.PostResponseDto;
@@ -44,13 +45,17 @@ public class PostResource {
     @Nullable
     SecurityContext securityContext;
 
-    /** Returns all posts with normalized pagination parameters. */
+    /**
+     * Returns posts with normalized pagination. Non-privileged callers receive published posts only; callers with
+     * {@code admin:view} receive all posts including drafts.
+     */
     @GET
     public List<PostResponseDto> getAllPosts(@QueryParam("page") @DefaultValue("0") final int page,
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.getAllPosts(safePage, safeSize);
+        return this.isAdminView() ? this.postService.getAllPosts(safePage, safeSize)
+                : this.postService.findPublishedPosts(safePage, safeSize);
     }
 
     /**
@@ -70,10 +75,16 @@ public class PostResource {
         return this.postService.findPublishedPosts(categoryPublicId, startDate, endDate, query, safePage, safeSize);
     }
 
+    /** Returns the post with the given publicId, hiding unpublished drafts from non-privileged callers. */
     @GET
     @Path("/{publicId}")
     public Response getPost(@PathParam("publicId") final String publicId) {
-        return ResponseUtil.okOrNotFound(this.postService.findById(publicId));
+        final Optional<PostResponseDto> post = this.postService.findById(publicId);
+        // Hide unpublished drafts from non-privileged callers (the author and admins may still see them).
+        if (post.isPresent() && !this.mayViewPost(post.get())) {
+            return ResponseUtil.notFound();
+        }
+        return ResponseUtil.okOrNotFound(post);
     }
 
     /** Returns published posts by user with pagination. */
@@ -99,7 +110,10 @@ public class PostResource {
         return this.postService.findByUserPublicId(userPublicId, safePage, safeSize);
     }
 
-    /** Returns published posts by category with pagination. */
+    /**
+     * Returns posts by category with pagination. Non-privileged callers receive published posts only; callers with
+     * {@code admin:view} receive all posts including drafts.
+     */
     @GET
     @Path("/category/{categoryPublicId}")
     public List<PostResponseDto> getPostsByCategory(@PathParam("categoryPublicId") final String categoryPublicId,
@@ -107,17 +121,22 @@ public class PostResource {
             @QueryParam("size") @DefaultValue("20") final int size) {
         final int safePage = PaginationUtil.sanitizePage(page);
         final int safeSize = PaginationUtil.sanitizeSize(size);
-        return this.postService.findByCategoryPublicId(categoryPublicId, safePage, safeSize);
+        return this.isAdminView() ? this.postService.findByCategoryPublicId(categoryPublicId, safePage, safeSize)
+                : this.postService.findPublishedPosts(categoryPublicId, null, null, null, safePage, safeSize);
     }
 
-    /** Returns all posts matching the search query. */
+    /**
+     * Returns posts matching the search query. Non-privileged callers search published posts only; callers with
+     * {@code admin:view} search all posts including drafts.
+     */
     @GET
     @Path("/search")
     public List<PostResponseDto> searchPosts(@QueryParam("query") final String query) {
+        final boolean admin = this.isAdminView();
         if (query == null || query.trim().isEmpty()) {
-            return this.postService.getAllPosts();
+            return admin ? this.postService.getAllPosts() : this.postService.findPublishedPosts();
         }
-        return this.postService.searchPosts(query);
+        return admin ? this.postService.searchPosts(query) : this.postService.searchPublishedPosts(query);
     }
 
     /** Returns posts within the given date range. */
@@ -186,5 +205,28 @@ public class PostResource {
             return ResponseUtil.noContent();
         }
         return ResponseUtil.notFound();
+    }
+
+    /** Returns true when the caller holds the {@code admin:view} role. */
+    private boolean isAdminView() {
+        return this.securityContext != null && this.securityContext.isUserInRole("admin:view");
+    }
+
+    /** A post is viewable when it is published, or the caller is an admin, or the caller is its author. */
+    private boolean mayViewPost(final PostResponseDto post) {
+        if (Boolean.TRUE.equals(post.published) || this.isAdminView()) {
+            return true;
+        }
+        final String username = this.currentUsernameOrNull();
+        return username != null && username.equals(post.username);
+    }
+
+    @Nullable
+    private String currentUsernameOrNull() {
+        if (this.securityContext == null) {
+            return null;
+        }
+        final var principal = this.securityContext.getUserPrincipal();
+        return principal != null ? principal.getName() : null;
     }
 }

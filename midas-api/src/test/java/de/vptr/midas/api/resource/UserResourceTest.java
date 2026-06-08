@@ -246,7 +246,7 @@ class UserResourceTest {
     @Test
     void testGetUserByEmail_authorizedWithExistingEmail() {
         final String email = "findme_" + TestUtil.generateUniqueSuffix() + "@example.com";
-        final String jsonBody = createUserJson("findme_" + TestUtil.generateUniqueSuffix(), email, "validpass123");
+        final String jsonBody = createUserJson("findme_" + TestUtil.generateUniqueSuffix(), email, "ValidPass123!");
         authenticatedJsonRequest().body(jsonBody).when().post(ENDPOINT_URL).then().statusCode(201);
 
         testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/email?email=" + email);

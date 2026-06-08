@@ -86,6 +86,10 @@ ENV LANGUAGE='en_US:en'
 COPY target/lib/* /deployments/lib/
 COPY target/*-runner.jar /deployments/quarkus-run.jar
 
+# Create the session-key directory writable by the runtime user (mounted as a volume in production)
+USER root
+RUN mkdir -p /etc/midas/keys && chown -R 185:185 /etc/midas/keys
+
 EXPOSE 8081
 USER 185
 ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"

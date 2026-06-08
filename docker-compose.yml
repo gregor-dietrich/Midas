@@ -62,6 +62,10 @@ services:
       quarkus.rest-client.midas-api-health.connect-timeout: 2000
       quarkus.rest-client.midas-api-health.read-timeout: 3000
 
+      # Session key — persisted to a volume so sessions survive restarts and are
+      # shareable across replicas (see SessionKeyManager).
+      midas.session.key.path: /etc/midas/keys/session.key
+
       # General logging
       quarkus.log.level: INFO
       quarkus.log.category."de.vptr.midas".level: INFO
@@ -82,6 +86,8 @@ services:
       quarkus.log.file.rotation.max-backup-index: 3
     ports:
       - "8081:8081/tcp"
+    volumes:
+      - midas_session_keys:/etc/midas/keys
     depends_on:
       backend:
         condition: service_healthy
@@ -134,5 +140,6 @@ services:
 
 volumes:
   midas_keys:
+  midas_session_keys:
   postgres_data:
   pgadmin_data:
