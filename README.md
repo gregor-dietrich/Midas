@@ -272,8 +272,8 @@ The project implements transparent encryption for sensitive data (PII) at rest a
 
 - **Master Key**: A 256-bit AES key used by `EncryptionService` to encrypt fields (e.g., `UserEntity.email`) before persisting to PostgreSQL.
 - **Key Discovery Order**:
-  1.  System property or environment variable `midas.encryption.key.path`
-  2.  Default value `encryption.key` in the application's current working directory
+  1. System property or environment variable `midas.encryption.key.path`
+  2. Default value `encryption.key` in the application's current working directory
 - **Generation & Persistence**:
   - If the key file is absent, a new 256-bit key is automatically generated using `SecureRandom` on first start.
   - New keys are **Base64-encoded** for easier management and backup.
