@@ -39,7 +39,7 @@
     <pmd-cpd.minTokens>65</pmd-cpd.minTokens>
 
     <!-- Pin transitive dependencies to fix CVEs -->
-    <netty.version>4.2.14.Final</netty.version>
+    <netty.version>4.2.15.Final</netty.version>
   </properties>
 
   <modules>
