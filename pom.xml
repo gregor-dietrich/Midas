@@ -39,7 +39,7 @@
     <pmd-cpd.minTokens>65</pmd-cpd.minTokens>
 
     <!-- Pin transitive dependencies to fix CVEs -->
-    <netty.version>4.2.15.Final</netty.version>
+    <netty.version>4.1.135.Final</netty.version>
   </properties>
 
   <modules>
@@ -49,7 +49,10 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Pin to fix Netty vulnerabilities -->
+      <!-- Pin to fix Netty CVEs; bumps Quarkus 3.33.2's managed 4.1.133.Final to the 4.1.x fix
+      release:
+            - CVE-2026-44249: IPv6 subnet filter bypass in netty-handler
+            - CVE-2026-44893: memory leak in netty-codec-haproxy -->
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-bom</artifactId>
