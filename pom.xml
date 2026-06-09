@@ -49,10 +49,7 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- Pin to fix Netty vulnerabilities:
-                 - CVE-2026-42587, CVE-2026-42579, CVE-2026-42578: via io.quarkus:quarkus-rest-jackson
-                 - CVE-2026-42583: via io.quarkus:quarkus-smallrye-health
-                 - CVE-2026-41417: via com.vaadin:vaadin-quarkus-extension -->
+      <!-- Pin to fix Netty vulnerabilities -->
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-bom</artifactId>
