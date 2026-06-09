@@ -9,6 +9,7 @@ import de.vptr.midas.api.dto.AccountAccessResponseDto;
 import de.vptr.midas.api.dto.AccountAssociationResponseDto;
 import de.vptr.midas.api.dto.AccountDto;
 import de.vptr.midas.api.dto.AccountResponseDto;
+import de.vptr.midas.api.dto.BalancePointDto;
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserAccountMetaDto;
@@ -149,6 +150,33 @@ public class AccountResource {
         this.requireAccountAccess(publicId, "Access denied");
         final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId, startDate, endDate);
         return ResponseUtil.ok(Map.of("balance", balance));
+    }
+
+    /**
+     * Returns the cumulative balance-over-time series for the account the current user has access to. When both
+     * {@code startDate} and {@code endDate} are provided the series is restricted to that inclusive date range and
+     * starts at zero at the range start.
+     */
+    @GET
+    @Path("/my/{publicId}/balance-history")
+    public List<BalancePointDto> getMyAccountBalanceHistory(@PathParam("publicId") final String publicId,
+            @QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate) {
+        this.requireAccountAccess(publicId, "Access denied");
+        return this.accountAccessService.getAccountBalanceHistory(publicId, startDate, endDate);
+    }
+
+    /**
+     * Returns the cumulative total balance-over-time series across all of the current user's accounts, signed by each
+     * account's per-user {@code isNegative} flag. When both {@code startDate} and {@code endDate} are provided the
+     * series is restricted to that inclusive date range and starts at zero at the range start.
+     */
+    @GET
+    @Path("/my/balance-history")
+    public List<BalancePointDto> getMyTotalBalanceHistory(@QueryParam("startDate") @Nullable final LocalDate startDate,
+            @QueryParam("endDate") @Nullable final LocalDate endDate) {
+        final String username = this.requireCurrentUsername();
+        return this.accountAccessService.getTotalBalanceHistory(username, startDate, endDate);
     }
 
     /**

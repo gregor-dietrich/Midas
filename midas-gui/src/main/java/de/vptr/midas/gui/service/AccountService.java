@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.vptr.midas.gui.client.AccountClient;
 import de.vptr.midas.gui.dto.AccountDto;
 import de.vptr.midas.gui.dto.AccountResponseDto;
+import de.vptr.midas.gui.dto.BalancePointDto;
 import de.vptr.midas.gui.dto.BalanceResponseDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
@@ -255,6 +256,33 @@ public class AccountService {
                         throw ServiceHelper.backendError(response);
                     }
                 });
+    }
+
+    /**
+     * Returns the cumulative balance-over-time series for one of the current user's accounts. When both
+     * {@code startDate} and {@code endDate} are provided the series is restricted to that inclusive date range,
+     * computed server-side.
+     */
+    public List<BalancePointDto> getMyAccountBalanceHistory(final String accountId, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
+        LOG.debugf("Fetching balance history for my account: %s", accountId);
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        return ServiceHelper.execute(
+                () -> this.accountClient.getMyAccountBalanceHistory(accountId, startDate, endDate, authHeader),
+                this.authService, LOG, "fetching balance history for my account " + accountId);
+    }
+
+    /**
+     * Returns the cumulative total balance-over-time series across all of the current user's accounts. When both
+     * {@code startDate} and {@code endDate} are provided the series is restricted to that inclusive date range,
+     * computed server-side.
+     */
+    public List<BalancePointDto> getMyTotalBalanceHistory(@Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
+        LOG.debug("Fetching total balance history for current user");
+        final var authHeader = this.authService.requireAuthorizationHeader();
+        return ServiceHelper.execute(() -> this.accountClient.getMyTotalBalanceHistory(startDate, endDate, authHeader),
+                this.authService, LOG, "fetching total balance history");
     }
 
     private static BigDecimal parseBalancePayload(final Response response) {

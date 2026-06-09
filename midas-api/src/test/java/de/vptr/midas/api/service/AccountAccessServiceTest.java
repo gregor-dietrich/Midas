@@ -19,6 +19,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
+import de.vptr.midas.api.dto.BalancePointDto;
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
@@ -145,14 +146,7 @@ class AccountAccessServiceTest {
     @TestTransaction
     void getAccountBalance_restrictsToDateRange() {
         final var user = this.userService.createUser(createUniqueUserDto());
-        final String username = Objects.requireNonNull(user.username);
-        final String accountPublicId = this.createAndAssociateAccount(user);
-
-        this.createTestPayment(username, accountPublicId, null, "100.00", "in-range incoming",
-                LocalDate.of(2024, 1, 10));
-        this.createTestPayment(username, null, accountPublicId, "30.00", "in-range outgoing",
-                LocalDate.of(2024, 1, 20));
-        this.createTestPayment(username, accountPublicId, null, "999.00", "out-of-range", LocalDate.of(2023, 12, 1));
+        final String accountPublicId = this.createAccountWithDatedTestPayments(user);
 
         final BigDecimal allTime = this.accountAccessService.getAccountBalance(accountPublicId);
         assertEquals(new BigDecimal("1069.00"), allTime);
@@ -206,6 +200,69 @@ class AccountAccessServiceTest {
         final List<PaymentResponseDto> all =
                 this.accountAccessService.getAccountPayments(accountPublicId, null, null, null, 0, 20);
         assertEquals(3, all.size());
+    }
+
+    @Test
+    @TestTransaction
+    void getAccountBalanceHistory_returnsCumulativeZeroStartSeries() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String accountPublicId = this.createAccountWithDatedTestPayments(user);
+
+        // Restricted to the date range: cumulative starts at zero and only counts in-range payments.
+        final List<BalancePointDto> ranged = this.accountAccessService.getAccountBalanceHistory(accountPublicId,
+                LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 31));
+        assertEquals(2, ranged.size());
+        assertEquals(LocalDate.of(2024, 1, 10), ranged.get(0).date);
+        assertEquals(new BigDecimal("100.00"), ranged.get(0).balance);
+        assertEquals(LocalDate.of(2024, 1, 20), ranged.get(1).date);
+        assertEquals(new BigDecimal("70.00"), ranged.get(1).balance);
+
+        // All-time: the out-of-range payment becomes the first cumulative point.
+        final List<BalancePointDto> allTime =
+                this.accountAccessService.getAccountBalanceHistory(accountPublicId, null, null);
+        assertEquals(3, allTime.size());
+        assertEquals(LocalDate.of(2023, 12, 1), allTime.get(0).date);
+        assertEquals(new BigDecimal("999.00"), allTime.get(0).balance);
+        assertEquals(new BigDecimal("1099.00"), allTime.get(1).balance);
+        assertEquals(new BigDecimal("1069.00"), allTime.get(2).balance);
+    }
+
+    @Test
+    @TestTransaction
+    void getTotalBalanceHistory_appliesIsNegativeSignPerAccount() {
+        final var user = this.userService.createUser(createUniqueUserDto());
+        final String username = Objects.requireNonNull(user.username);
+        final String userPublicId = Objects.requireNonNull(user.publicId);
+        final String accountA = this.createAndAssociateAccount(user);
+        final String accountB = this.createAndAssociateAccount(user);
+
+        // Account B is flagged negative for this user, so its balance contributes with a flipped sign.
+        this.accountAccessService.updateUserAccountMeta(userPublicId, accountB, true, false);
+
+        this.createTestPayment(username, accountA, null, "100.00", "A incoming", LocalDate.of(2024, 2, 1));
+        this.createTestPayment(username, accountB, null, "40.00", "B incoming", LocalDate.of(2024, 2, 2));
+
+        final List<BalancePointDto> history = this.accountAccessService.getTotalBalanceHistory(username,
+                LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31));
+
+        assertEquals(2, history.size());
+        assertEquals(LocalDate.of(2024, 2, 1), history.get(0).date);
+        assertEquals(new BigDecimal("100.00"), history.get(0).balance);
+        assertEquals(LocalDate.of(2024, 2, 2), history.get(1).date);
+        // 100.00 (A) - 40.00 (B negated) = 60.00
+        assertEquals(new BigDecimal("60.00"), history.get(1).balance);
+    }
+
+    /** Creates an account associated with the user and seeds it with two in-range and one out-of-range payment. */
+    private String createAccountWithDatedTestPayments(final UserResponseDto user) {
+        final String username = Objects.requireNonNull(user.username);
+        final String accountPublicId = this.createAndAssociateAccount(user);
+        this.createTestPayment(username, accountPublicId, null, "100.00", "in-range incoming",
+                LocalDate.of(2024, 1, 10));
+        this.createTestPayment(username, null, accountPublicId, "30.00", "in-range outgoing",
+                LocalDate.of(2024, 1, 20));
+        this.createTestPayment(username, accountPublicId, null, "999.00", "out-of-range", LocalDate.of(2023, 12, 1));
+        return accountPublicId;
     }
 
     private void createTestPayment(final String username, @Nullable final String targetAccountPublicId,

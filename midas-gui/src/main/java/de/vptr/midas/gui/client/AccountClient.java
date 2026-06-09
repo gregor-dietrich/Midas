@@ -11,6 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import de.vptr.midas.gui.dto.AccountDto;
 import de.vptr.midas.gui.dto.AccountResponseDto;
+import de.vptr.midas.gui.dto.BalancePointDto;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.dto.UserAccountMetaDto;
@@ -128,6 +129,17 @@ public interface AccountClient {
     Response getMyAccountBalance(@PathParam("publicId") String publicId,
             @QueryParam("startDate") @Nullable LocalDate startDate, @QueryParam("endDate") @Nullable LocalDate endDate,
             @HeaderParam("Authorization") String authorization);
+
+    @GET
+    @Path("/my/{publicId}/balance-history")
+    List<BalancePointDto> getMyAccountBalanceHistory(@PathParam("publicId") String publicId,
+            @QueryParam("startDate") @Nullable LocalDate startDate, @QueryParam("endDate") @Nullable LocalDate endDate,
+            @HeaderParam("Authorization") String authorization);
+
+    @GET
+    @Path("/my/balance-history")
+    List<BalancePointDto> getMyTotalBalanceHistory(@QueryParam("startDate") @Nullable LocalDate startDate,
+            @QueryParam("endDate") @Nullable LocalDate endDate, @HeaderParam("Authorization") String authorization);
 
     @GET
     @Path("/my/{accountPublicId}/payments")

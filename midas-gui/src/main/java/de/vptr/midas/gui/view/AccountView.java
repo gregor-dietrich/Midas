@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.view;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +19,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.component.chart.BalanceChart;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.service.AccountService;
@@ -42,6 +44,8 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     private Grid<AccountResponseDto> grid;
     @Nullable
     private Span totalBalanceLabel;
+    @Nullable
+    private BalanceChart totalBalanceChart;
     @Nullable
     private DatePicker startDatePicker;
     @Nullable
@@ -85,6 +89,21 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
             LOG.error("Error in async account loading", throwable);
             MidasErrorHandler.handleInUiContext(throwable);
         });
+
+        this.reloadTotalChart(start, end);
+    }
+
+    /** Loads the cumulative total balance-over-time series for the selected date range and feeds it to the chart. */
+    private void reloadTotalChart(@Nullable final LocalDate start, @Nullable final LocalDate end) {
+        final var chart = this.totalBalanceChart;
+        if (chart == null) {
+            return;
+        }
+        this.loadDataAsync(() -> this.accountService.getMyTotalBalanceHistory(start, end),
+                points -> chart.setPoints(points, "Total Balance"), throwable -> {
+                    LOG.error("Error loading total balance history", throwable);
+                    MidasErrorHandler.handleInUiContext(throwable);
+                });
     }
 
     private void buildUi() {
@@ -114,9 +133,11 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
 
         headerLayout.add(titleSection, dateFilterLayout);
 
+        this.totalBalanceChart = new BalanceChart();
+
         this.createGrid();
 
-        this.add(headerLayout, Objects.requireNonNull(this.grid));
+        this.add(headerLayout, this.totalBalanceChart, Objects.requireNonNull(this.grid));
     }
 
     private void createGrid() {

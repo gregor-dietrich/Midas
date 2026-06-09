@@ -6,10 +6,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Function;
 
 import de.vptr.midas.api.dto.AccountResponseDto;
+import de.vptr.midas.api.dto.BalancePointDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.AccountEntity;
@@ -287,6 +290,105 @@ public class AccountAccessService {
                 balances.put(publicId, add ? current.add(amount) : current.subtract(amount));
             }
         }
+    }
+
+    /**
+     * Returns the cumulative balance over time for a single account, with one point per distinct payment date. The
+     * running balance starts at zero at the beginning of the (optional) date range and only accumulates payments inside
+     * it, mirroring {@link #getAccountBalance(String, LocalDate, LocalDate)}. The per-user {@code isNegative} flag is
+     * not applied (matching the raw single-account balance figure).
+     */
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public List<BalancePointDto> getAccountBalanceHistory(final String accountPublicId,
+            @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        return PerformanceMonitor.time("getAccountBalanceHistory(" + accountPublicId + ")", () -> {
+            final List<String> accountPublicIds = List.of(accountPublicId);
+            final NavigableMap<LocalDate, BigDecimal> dailyDeltas = new TreeMap<>();
+            this.aggregateSignedDailyDeltas(dailyDeltas, "targetAccount", true, accountPublicIds, Map.of(), startDate,
+                    endDate);
+            this.aggregateSignedDailyDeltas(dailyDeltas, "sourceAccount", false, accountPublicIds, Map.of(), startDate,
+                    endDate);
+            return toCumulativeSeries(dailyDeltas);
+        });
+    }
+
+    /**
+     * Returns the cumulative total balance over time across all accounts of the current user, with one point per
+     * distinct payment date. Each account's contribution is signed by its per-user {@code isNegative} flag, so the
+     * series equals the sum of the effective balances shown on the account overview.
+     */
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public List<BalancePointDto> getTotalBalanceHistory(final String username, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
+        return PerformanceMonitor.time("getTotalBalanceHistory(" + username + ")", () -> {
+            final UserEntity user = UserEntity.find("username", username).firstResult();
+            if (user == null) {
+                throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
+            }
+            final List<AccountResponseDto> accounts = this.getAccountsForCurrentUser(username);
+            if (accounts.isEmpty()) {
+                return List.of();
+            }
+            final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
+            final Map<String, Boolean> isNegativeFlags =
+                    this.getIsNegativeFlagsForUser(Objects.requireNonNull(user.id), accountPublicIds);
+
+            final NavigableMap<LocalDate, BigDecimal> dailyDeltas = new TreeMap<>();
+            this.aggregateSignedDailyDeltas(dailyDeltas, "targetAccount", true, accountPublicIds, isNegativeFlags,
+                    startDate, endDate);
+            this.aggregateSignedDailyDeltas(dailyDeltas, "sourceAccount", false, accountPublicIds, isNegativeFlags,
+                    startDate, endDate);
+            return toCumulativeSeries(dailyDeltas);
+        });
+    }
+
+    /**
+     * Aggregates per-date payment sums grouped by account on one association side and folds them into
+     * {@code dailyDeltas}. Each account's amount is signed by its {@code isNegative} flag and by the side
+     * ({@code incoming == true} adds target amounts, {@code false} subtracts source amounts).
+     */
+    private void aggregateSignedDailyDeltas(final NavigableMap<LocalDate, BigDecimal> dailyDeltas,
+            final String joinPath, final boolean incoming, final List<String> accountPublicIds,
+            final Map<String, Boolean> isNegativeFlags, @Nullable final LocalDate startDate,
+            @Nullable final LocalDate endDate) {
+        final boolean hasRange = startDate != null && endDate != null;
+        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
+        final var query = PaymentEntity.getEntityManager()
+                .createQuery(
+                        "SELECT a.publicId, p.date, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
+                                + " a WHERE a.publicId IN :publicIds" + dateClause + " GROUP BY a.publicId, p.date",
+                        Object[].class)
+                .setParameter("publicIds", accountPublicIds);
+        if (hasRange) {
+            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
+        }
+        for (final Object[] row : query.getResultList()) {
+            final String publicId = (String) row[0];
+            final LocalDate date = (LocalDate) row[1];
+            final BigDecimal amount = (BigDecimal) row[2];
+            if (publicId == null || date == null) {
+                continue;
+            }
+            BigDecimal contribution = amount;
+            if (Boolean.TRUE.equals(isNegativeFlags.get(publicId))) {
+                contribution = contribution.negate();
+            }
+            if (!incoming) {
+                contribution = contribution.negate();
+            }
+            dailyDeltas.merge(date, contribution, BigDecimal::add);
+        }
+    }
+
+    /** Folds an ordered map of per-date deltas into a cumulative running-balance series. */
+    private static List<BalancePointDto> toCumulativeSeries(final NavigableMap<LocalDate, BigDecimal> dailyDeltas) {
+        final List<BalancePointDto> series = new ArrayList<>(dailyDeltas.size());
+        BigDecimal running = BigDecimal.ZERO;
+        for (final Map.Entry<LocalDate, BigDecimal> entry : dailyDeltas.entrySet()) {
+            running = running.add(entry.getValue());
+            series.add(new BalancePointDto(entry.getKey(), running));
+        }
+        return series;
     }
 
     /** Associates a user with an account. */

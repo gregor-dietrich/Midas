@@ -37,6 +37,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import de.vptr.midas.gui.component.chart.BalanceChart;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
@@ -80,6 +81,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     private DatePicker endDatePicker;
     @Nullable
     private Span balanceLabel;
+    @Nullable
+    private BalanceChart balanceChart;
 
     @Nullable
     private String accountId;
@@ -196,6 +199,19 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.loadDataAsync(
                 () -> this.accountService.getMyAccountBalance(aid, this.selectedStartDate(), this.selectedEndDate()),
                 this::updateBalanceLabel);
+        this.reloadChart();
+    }
+
+    /** Re-fetches the cumulative balance-over-time series for the active date range and feeds it to the chart. */
+    private void reloadChart() {
+        final var chart = this.balanceChart;
+        if (chart == null) {
+            return;
+        }
+        final var aid = Objects.requireNonNull(this.accountId);
+        final String title = this.currentAccount != null ? this.currentAccount.getName() : "Balance";
+        this.loadDataAsync(() -> this.accountService.getMyAccountBalanceHistory(aid, this.selectedStartDate(),
+                this.selectedEndDate()), points -> chart.setPoints(points, title));
     }
 
     /** Triggers a server round-trip to reload the current page of payments with the active filters. */
@@ -242,13 +258,16 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         this.balanceLabel.getStyle().set("font-weight", "bold");
         this.balanceLabel.getStyle().set("font-size", "var(--lumo-font-size-l)");
 
+        this.balanceChart = new BalanceChart();
+
         final var searchLayout = this.createSearchLayout();
         final var buttonLayout = this.createButtonLayout();
         this.createGrid();
 
         this.paymentDialog = new FormDialog();
 
-        this.add(header, this.balanceLabel, searchLayout, buttonLayout, Objects.requireNonNull(this.grid));
+        this.add(header, this.balanceLabel, this.balanceChart, searchLayout, buttonLayout,
+                Objects.requireNonNull(this.grid));
     }
 
     private HorizontalLayout createSearchLayout() {
