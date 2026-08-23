@@ -12,7 +12,7 @@ public class PageDto {
     public String title;
 
     @NotBlank(message = "Content is required")
-    @Size(max = 50000, message = "Content must not exceed 50000 characters")
+    @Size(max = 50_000, message = "Content must not exceed 50_000 characters")
     @Nullable
     public String content;
 }

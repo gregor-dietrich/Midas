@@ -2,6 +2,7 @@ package de.vptr.midas.api.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -200,20 +201,20 @@ class EntityCoverageTest {
 
     @SuppressWarnings("EqualsNull")
     private void verifyEqualsHashCode(PanacheEntityBase entity, PanacheEntityBase other) {
-        assertTrue(entity.equals(entity));
-        assertFalse(entity == null);
-        assertFalse(entity.equals(new Object()));
+        assertEquals(entity, entity);
+        assertNotNull(entity);
+        assertNotEquals(entity, new Object());
 
         try {
             var idField = entity.getClass().getField("id");
             idField.set(other, idField.get(entity));
-            assertTrue(entity.equals(other));
+            assertEquals(entity, other);
             assertEquals(entity.hashCode(), other.hashCode());
 
             // Test with different ID
             Long originalId = (Long) idField.get(entity);
             idField.set(other, originalId + 1);
-            assertFalse(entity.equals(other));
+            assertNotEquals(entity, other);
         } catch (Exception e) {
             // expected for some cases
         }

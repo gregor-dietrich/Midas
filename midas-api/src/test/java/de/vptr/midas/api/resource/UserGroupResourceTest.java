@@ -18,6 +18,7 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -187,7 +188,7 @@ class UserGroupResourceTest {
 
     @Test
     void testAddUserToGroup_authorized() {
-        createGroupWithUser();
+        assertNotNull(createGroupWithUser());
     }
 
     @Test

@@ -48,6 +48,9 @@ public class MainLayout extends AbstractMainLayoutBase {
     }
 
     @Override
+    // Identity is the question being asked: whether this exact component instance is
+    // already attached to the top bar. Vaadin components do not define value equality.
+    @SuppressWarnings("ReferenceEquality")
     protected void showNavigationTabs() {
         if (this.navigationTabs == null || this.topBar == null
                 || this.topBar.getChildren().anyMatch(component -> component == this.navigationTabs)) {

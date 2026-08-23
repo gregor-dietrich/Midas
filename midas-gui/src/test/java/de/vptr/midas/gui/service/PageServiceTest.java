@@ -26,7 +26,6 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("PMD.LinguisticNaming")
 class PageServiceTest {
 
     @Mock

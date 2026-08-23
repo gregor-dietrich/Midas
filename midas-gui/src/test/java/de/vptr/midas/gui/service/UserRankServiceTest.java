@@ -28,7 +28,7 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 import jakarta.ws.rs.WebApplicationException;
 
-@SuppressWarnings({ "PMD.LinguisticNaming", "NullAway", "PMD.UnitTestShouldIncludeAssert" })
+@SuppressWarnings({ "NullAway", "PMD.UnitTestShouldIncludeAssert" })
 class UserRankServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock

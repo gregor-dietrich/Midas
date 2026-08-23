@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
+// Literal client IPs are the subject under test here, not a hard-coded endpoint.
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 @QuarkusTest
 class LoginAttemptServiceTest {
 

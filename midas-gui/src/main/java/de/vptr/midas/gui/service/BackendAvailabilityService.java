@@ -55,6 +55,9 @@ public class BackendAvailabilityService {
 
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD",
             justification = "Called reflectively by SmallRye Fault Tolerance @Fallback")
+    // Same reason as the SpotBugs suppression above: the only caller is SmallRye Fault
+    // Tolerance, resolving the name in @Fallback(fallbackMethod = ...) reflectively.
+    @SuppressWarnings("UnusedMethod")
     private boolean fallbackAvailability() {
         LOG.error("Backend availability check failed after retries, assuming unavailable");
         return false;

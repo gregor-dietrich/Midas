@@ -64,12 +64,12 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         assertNotNull(createdRank);
         assertNotNull(createdRank.publicId);
         assertEquals(newRank.name, createdRank.name);
-        assertTrue(Boolean.TRUE.equals(createdRank.userAdd));
-        assertTrue(Boolean.TRUE.equals(createdRank.userEdit));
-        assertFalse(Boolean.TRUE.equals(createdRank.userDelete));
-        assertTrue(Boolean.TRUE.equals(createdRank.postAdd));
-        assertFalse(Boolean.TRUE.equals(createdRank.postEdit));
-        assertFalse(Boolean.TRUE.equals(createdRank.postDelete));
+        assertTrue(Objects.requireNonNull(createdRank.userAdd));
+        assertTrue(Objects.requireNonNull(createdRank.userEdit));
+        assertFalse(Objects.requireNonNull(createdRank.userDelete));
+        assertTrue(Objects.requireNonNull(createdRank.postAdd));
+        assertFalse(Objects.requireNonNull(createdRank.postEdit));
+        assertFalse(Objects.requireNonNull(createdRank.postDelete));
     }
 
     @Test
@@ -114,12 +114,12 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
         assertNotNull(updatedRank);
         assertEquals("Updated Rank Name", updatedRank.name);
-        assertTrue(Boolean.TRUE.equals(updatedRank.userAdd));
-        assertTrue(Boolean.TRUE.equals(updatedRank.userEdit));
-        assertTrue(Boolean.TRUE.equals(updatedRank.postAdd));
-        assertFalse(Boolean.TRUE.equals(updatedRank.userDelete));
-        assertFalse(Boolean.TRUE.equals(updatedRank.postEdit));
-        assertFalse(Boolean.TRUE.equals(updatedRank.postDelete));
+        assertTrue(Objects.requireNonNull(updatedRank.userAdd));
+        assertTrue(Objects.requireNonNull(updatedRank.userEdit));
+        assertTrue(Objects.requireNonNull(updatedRank.postAdd));
+        assertFalse(Objects.requireNonNull(updatedRank.userDelete));
+        assertFalse(Objects.requireNonNull(updatedRank.postEdit));
+        assertFalse(Objects.requireNonNull(updatedRank.postDelete));
     }
 
     @Test
@@ -159,8 +159,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         allSet.userRankDelete = true;
         allSet.userRankEdit = true;
         final var patched = this.userRankService.patchRank(publicId, allSet);
-        assertTrue(Boolean.TRUE.equals(patched.adminView));
-        assertTrue(Boolean.TRUE.equals(patched.userRankEdit));
+        assertTrue(Objects.requireNonNull(patched.adminView));
+        assertTrue(Objects.requireNonNull(patched.userRankEdit));
 
         // Patch with all permission flags null (name only) -> exercises the
         // "value absent" branch of every field; prior values must be preserved.
@@ -168,8 +168,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
         nameOnly.name = "Renamed Only";
         final var patched2 = this.userRankService.patchRank(publicId, nameOnly);
         assertEquals("Renamed Only", patched2.name);
-        assertTrue(Boolean.TRUE.equals(patched2.adminView));
-        assertTrue(Boolean.TRUE.equals(patched2.userRankEdit));
+        assertTrue(Objects.requireNonNull(patched2.adminView));
+        assertTrue(Objects.requireNonNull(patched2.userRankEdit));
     }
 
     @Test
@@ -207,7 +207,7 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
         assertTrue(foundRank.isPresent());
         assertEquals("Find By ID Rank", foundRank.get().name);
-        assertTrue(Boolean.TRUE.equals(foundRank.get().userAdd));
+        assertTrue(Objects.requireNonNull(foundRank.get().userAdd));
     }
 
     @Test
@@ -228,8 +228,8 @@ class UserRankServiceTest extends AbstractIntegrationTest {
 
         assertTrue(foundRank.isPresent());
         assertEquals("Find By Name Rank", foundRank.get().name);
-        assertFalse(Boolean.TRUE.equals(foundRank.get().userAdd));
-        assertTrue(Boolean.TRUE.equals(foundRank.get().userEdit));
+        assertFalse(Objects.requireNonNull(foundRank.get().userAdd));
+        assertTrue(Objects.requireNonNull(foundRank.get().userEdit));
     }
 
     @Test

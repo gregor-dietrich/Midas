@@ -21,6 +21,9 @@ public final class IpUtil {
      *            the configuration string
      * @return a set of trusted proxy IP addresses
      */
+    // The loopback defaults are IP literals by definition; this is the one place that
+    // is allowed to name them.
+    @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
     public static Set<String> parseTrustedProxyIps(@Nullable final String config) {
         if (config == null || config.isBlank()) {
             return Set.of("127.0.0.1", "::1", "0:0:0:0:0:0:0:1");

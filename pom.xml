@@ -11,6 +11,13 @@
 
   <properties>
     <revision>1.0.0-SNAPSHOT</revision>
+    <skipITs>true</skipITs>
+    <!-- Deliberately NOT ${skipITs} (which is what the sibling AIMathTutor project uses):
+    that project's coverage minima are calibrated against a run that includes its *IT
+    tests, so the check has to stand down when ITs are skipped. This project has no *IT
+    classes at all, so its minima are unit-test-only and the check must always run.
+    Revisit this the moment integration tests are introduced here. -->
+    <jacoco.check.skip>false</jacoco.check.skip>
     <java.version>25</java.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -132,6 +139,19 @@
           <configuration>
             <parameters>true</parameters>
             <compilerArgs>
+              <!--
+                -Werror: any compiler warning (javac lint or Error Prone) fails the build.
+                -Xlint:all with three deliberate exclusions:
+                  -serial: Vaadin components are Serializable by inheritance; adding
+                           serialVersionUID is unwanted boilerplate (same decision as the
+                           SE_ exclusions in spotbugs-exclude.xml)
+                  -this-escape: flags the standard Vaadin constructor-builds-UI idiom,
+                           not actual bugs
+                  -classfile: noise from third-party jars referencing optional annotations
+                           (e.g. OSGi metadata in microprofile-config); not fixable here
+              -->
+              <arg>-Werror</arg>
+              <arg>-Xlint:all,-serial,-this-escape,-classfile</arg>
               <arg>-XDcompilePolicy=simple</arg>
               <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR
                 -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}
@@ -190,6 +210,10 @@
             </execution>
           </executions>
           <configuration>
+            <!-- Mirrors surefire. @{argLine} carries the JaCoCo agent, which failsafe would
+            otherwise inherit only implicitly via the argLine property, and would lose
+            silently the moment any explicit argLine is added here. -->
+            <argLine>-Xshare:off -XX:+EnableDynamicAgentLoading @{argLine}</argLine>
             <systemPropertyVariables>
               <native.image.path>
                 ${project.build.directory}/${project.build.finalName}-runner</native.image.path>
@@ -286,6 +310,15 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${checkstyle-plugin.version}</version>
+          <dependencies>
+            <!-- Pin the Checkstyle engine itself; the plugin otherwise runs whatever
+                 (much older) version it bundles, and checkstyle.version would be dead. -->
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
           <executions>
             <execution>
               <id>checkstyle</id>
@@ -318,6 +351,13 @@
               <eclipse>
                 <file>${maven.multiModuleProjectDirectory}/eclipse-formatter.xml</file>
                 <version>${eclipse-formatter.version}</version>
+                <!-- download.eclipse.org suffers recurring outages; provision P2 from a mirror -->
+                <p2Mirrors>
+                  <p2Mirror>
+                    <prefix>https://download.eclipse.org/</prefix>
+                    <url>https://ftp.halifax.rwth-aachen.de/eclipse/</url>
+                  </p2Mirror>
+                </p2Mirrors>
               </eclipse>
               <importOrder>
                 <order>java,javax,org,com,#</order>

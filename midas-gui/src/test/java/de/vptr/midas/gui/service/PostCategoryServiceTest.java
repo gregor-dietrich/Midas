@@ -26,7 +26,7 @@ import de.vptr.midas.gui.util.ResponseTestUtil;
 import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 
-@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class PostCategoryServiceTest {
 

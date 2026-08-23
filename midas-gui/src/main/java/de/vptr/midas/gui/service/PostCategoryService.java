@@ -73,8 +73,9 @@ public class PostCategoryService {
         return ServiceHelper.executeWithResponse(() -> {
             final var authHeader = this.authService.requireAuthorizationHeader();
 
-            if (category.getParent() != null && category.getParentPublicId() == null) {
-                category.setParentPublicId(category.getParent().getPublicId());
+            final var parent = category.getParent();
+            if (parent != null && category.getParentPublicId() == null) {
+                category.setParentPublicId(parent.getPublicId());
             }
 
             return this.categoryClient.createCategory(category, authHeader);

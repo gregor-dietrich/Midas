@@ -33,7 +33,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert", "PMD.TooManyMethods" })
+@SuppressWarnings({ "PMD.UnitTestShouldIncludeAssert", "PMD.TooManyMethods" })
 class AccountServiceTest {
 
     @Mock

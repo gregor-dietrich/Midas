@@ -141,13 +141,13 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     }
 
     private void createGrid() {
-        this.grid = new Grid<>(AccountResponseDto.class, false);
-        this.grid.setSizeFull();
+        final var g = new Grid<>(AccountResponseDto.class, false);
+        g.setSizeFull();
 
         // Add columns
-        this.grid.addColumn(AccountResponseDto::getName).setHeader("Account Name").setFlexGrow(2).setSortable(true);
+        g.addColumn(AccountResponseDto::getName).setHeader("Account Name").setFlexGrow(2).setSortable(true);
 
-        this.grid.addColumn(new ComponentRenderer<>(account -> {
+        g.addColumn(new ComponentRenderer<>(account -> {
             final Span balanceSpan = new Span();
             final BigDecimal effective = this.effectiveBalance(account);
             balanceSpan.setText(String.format("€ %.2f", effective));
@@ -160,17 +160,19 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
             return balanceSpan;
         })).setFlexGrow(1).setSortable(false);
 
-        this.grid.addColumn(AccountResponseDto::getUserCount).setHeader("Users").setFlexGrow(0).setWidth("80px")
+        g.addColumn(AccountResponseDto::getUserCount).setHeader("Users").setFlexGrow(0).setWidth("80px")
                 .setSortable(true);
 
         // Add item click listener to navigate to payments view
-        this.grid.addItemClickListener(event -> {
+        g.addItemClickListener(event -> {
             final AccountResponseDto account = event.getItem();
             this.getUI().ifPresent(ui -> ui.navigate("accounts/" + account.getPublicId()));
         });
 
         // Enable pagination for performance
-        this.grid.setPageSize(20);
+        g.setPageSize(20);
+
+        this.grid = g;
     }
 
     /** Returns the account balance as the current user sees it, applying the per-user negative-account flag. */
@@ -180,21 +182,22 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     }
 
     private void updateTotalBalance() {
-        if (this.totalBalanceLabel == null) {
+        final var label = this.totalBalanceLabel;
+        if (label == null) {
             return;
         }
         final BigDecimal totalBalance =
                 this.accountsList.stream().map(this::effectiveBalance).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        this.totalBalanceLabel.setText(String.format("Total Balance: € %.2f", totalBalance));
+        label.setText(String.format("Total Balance: € %.2f", totalBalance));
 
         // Style the total balance based on positive/negative, but not for zero
         if (totalBalance.compareTo(BigDecimal.ZERO) > 0) {
-            this.totalBalanceLabel.getStyle().set("color", "var(--lumo-success-color)");
+            label.getStyle().set("color", "var(--lumo-success-color)");
         } else if (totalBalance.compareTo(BigDecimal.ZERO) < 0) {
-            this.totalBalanceLabel.getStyle().set("color", "var(--lumo-error-color)");
+            label.getStyle().set("color", "var(--lumo-error-color)");
         } else {
-            this.totalBalanceLabel.getStyle().remove("color");
+            label.getStyle().remove("color");
         }
 
         LOG.infof("Updated total balance display: €%s", totalBalance);

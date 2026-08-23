@@ -32,4 +32,10 @@ cd "$PROJECT_ROOT"
 # Run Maven from the root using the reactor
 ${MVN_CMD} -q compile test-compile spotless:check checkstyle:check spotbugs:check pmd:check pmd:cpd-check ${PL_ARG} -Drevision="${REVISION}"
 
+# Skip when linting only the API module: the gate is about the GUI's committed manifest.
+if [ "$MODULE" != "api" ]; then
+    echo "Checking pinned frontend dependencies..."
+    python3 "$PROJECT_ROOT/scripts/check_frontend_deps.py" midas-gui
+fi
+
 echo "Lint checks completed."

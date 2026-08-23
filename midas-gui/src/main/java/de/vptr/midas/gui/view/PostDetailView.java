@@ -206,12 +206,14 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
         headerLayout.setSpacing(true);
         headerLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
 
-        final var username = new Span(comment.getUsername() != null ? comment.getUsername() : "Anonymous");
+        final var commentUsername = comment.getUsername();
+        final var username = new Span(commentUsername != null ? commentUsername : "Anonymous");
         username.getStyle().set("font-weight", "bold");
         headerLayout.add(username);
 
-        if (comment.getCreated() != null) {
-            final var date = new Span(comment.getCreated().format(DATE_FORMATTER));
+        final var commentCreated = comment.getCreated();
+        if (commentCreated != null) {
+            final var date = new Span(commentCreated.format(DATE_FORMATTER));
             date.getStyle().set("color", "var(--lumo-secondary-text-color)");
             headerLayout.add(date);
         }

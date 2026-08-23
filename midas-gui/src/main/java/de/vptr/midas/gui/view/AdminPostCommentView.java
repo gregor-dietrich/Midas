@@ -113,7 +113,8 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
                 .setWidth("120px").setFlexGrow(0);
 
         g.addComponentColumn(comment -> {
-            final var content = comment.getContent() != null ? comment.getContent() : "";
+            final var rawContent = comment.getContent();
+            final var content = rawContent != null ? rawContent : "";
             final var truncated = content.length() > 50 ? content.substring(0, 50) + "..." : content;
             final var span = new Span(truncated);
             span.setTitle(content);

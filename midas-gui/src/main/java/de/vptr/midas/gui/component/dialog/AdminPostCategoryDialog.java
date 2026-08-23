@@ -35,7 +35,8 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
     public void open(@Nullable final PostCategoryDto category, final List<PostCategoryResponseDto> allCategories) {
         this.removeAll();
         this.currentBean = category != null ? category : new PostCategoryDto();
-        this.binder = new Binder<>(PostCategoryDto.class);
+        final var b = new Binder<>(PostCategoryDto.class);
+        this.binder = b;
 
         final var form = this.createResponsiveFormLayout();
         final var nameField = this.createAndBindRequiredNameField(PostCategoryDto::getName, PostCategoryDto::setName);
@@ -53,7 +54,7 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
         }
         parentField.setClearButtonVisible(true);
 
-        this.binder.bind(parentField, PostCategoryDto::getParent, PostCategoryDto::setParent);
+        b.bind(parentField, PostCategoryDto::getParent, PostCategoryDto::setParent);
 
         form.add(nameField, parentField);
 

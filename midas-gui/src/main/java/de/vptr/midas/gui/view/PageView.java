@@ -75,25 +75,26 @@ public class PageView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void createGrid() {
-        this.grid = new Grid<>(PageResponseDto.class, false);
-        this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.grid.setSizeFull();
-        this.grid.setPageSize(20);
+        final var g = new Grid<>(PageResponseDto.class, false);
+        g.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        g.setSizeFull();
+        g.setPageSize(20);
 
         // Clickable title column that navigates to detail view
-        this.grid
-                .addComponentColumn(page -> this.createClickableSpan(page.getTitle(),
-                        ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getPublicId()))))
-                .setHeader("Title").setFlexGrow(1);
+        g.addComponentColumn(page -> this.createClickableSpan(page.getTitle(),
+                ignore -> this.getUI().ifPresent(ui -> ui.navigate("pages/" + page.getPublicId())))).setHeader("Title")
+                .setFlexGrow(1);
 
         // Content preview column (first 100 chars)
-        this.grid.addColumn(page -> {
+        g.addColumn(page -> {
             final var content = page.getContent();
             if (content == null || content.isEmpty()) {
                 return "";
             }
             return content.length() > 100 ? content.substring(0, 100) + "..." : content;
         }).setHeader("Content").setFlexGrow(2);
+
+        this.grid = g;
     }
 
     private void searchPages(final String query) {

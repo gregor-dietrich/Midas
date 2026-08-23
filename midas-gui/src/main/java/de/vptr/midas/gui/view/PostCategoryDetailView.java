@@ -92,23 +92,27 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
     }
 
     private void createPostGrid() {
-        this.postGrid = new Grid<>(PostResponseDto.class, false);
-        this.postGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.postGrid.setSizeFull();
+        final var g = new Grid<>(PostResponseDto.class, false);
+        g.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        g.setSizeFull();
 
-        this.postGrid.addComponentColumn(post -> {
+        g.addComponentColumn(post -> {
             final var titleButton = new Button(post.getTitle(),
                     ignore -> this.getUI().ifPresent(ui -> ui.navigate("posts/" + post.getPublicId())));
             titleButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             return titleButton;
         }).setHeader("Title").setFlexGrow(3);
 
-        this.postGrid.addColumn(PostResponseDto::getUsername).setHeader("Author").setFlexGrow(1);
+        g.addColumn(PostResponseDto::getUsername).setHeader("Author").setFlexGrow(1);
 
-        this.postGrid.addColumn(post -> post.getCreated() != null ? post.getCreated().format(DATE_FORMATTER) : "")
-                .setHeader("Date").setFlexGrow(1);
+        g.addColumn(post -> {
+            final var created = post.getCreated();
+            return created != null ? created.format(DATE_FORMATTER) : "";
+        }).setHeader("Date").setFlexGrow(1);
 
-        this.postGrid.setPageSize(20);
+        g.setPageSize(20);
+
+        this.postGrid = g;
     }
 
     private void loadPostsAsync() {

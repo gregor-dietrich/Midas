@@ -26,7 +26,7 @@ import de.vptr.midas.gui.util.TestUtil;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 
-@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
+@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 

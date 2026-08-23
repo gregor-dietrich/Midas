@@ -12,6 +12,8 @@ import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import jakarta.annotation.Nullable;
 
+// Literal client IPs are the subject under test here, not a hard-coded endpoint.
+@SuppressWarnings("PMD.AvoidUsingHardCodedIP")
 @QuarkusTest
 @TestProfile(RateLimitFilterTest.RateLimitTestProfile.class)
 class RateLimitFilterTest {

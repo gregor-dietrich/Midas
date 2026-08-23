@@ -2,14 +2,33 @@
 <!--
   SpotBugs Exclusion Filter
 
-  This filter excludes false positives and intentional design patterns that SpotBugs flags.
+  Structure, kept parallel across the Midas and AIMathTutor projects so that drift
+  is visible in a plain diff:
+
+    1. SHARED BASELINE  - framework idioms (Panache, Jackson) that hold in every
+                          module. Byte-identical everywhere but for the package name.
+    2. VAADIN UI        - idioms that only hold where Vaadin Flow is on the classpath.
+    3. PROJECT-SPECIFIC - narrowly class-scoped entries, each with its own reason.
+
+  Every entry must carry a reason. A pattern that is merely inconvenient does not
+  belong here; fix the code instead.
+
+  Deliberately NOT excluded: NP_NULL_ON_SOME_PATH and
+  NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE. SpotBugs 4.10 reports every read of a
+  @Nullable-annotated field, including reads already guarded by an explicit null
+  check. That is noisy, but the fix is cheap and improves the code: read the field
+  (or the getter) once into a local and branch on the local. Both projects are clean
+  under these detectors; keep them that way rather than switching them off.
 -->
 <FindBugsFilter xmlns="http://findbugs.sourceforge.net/filter/3.0.0">
+
+  <!-- ============================ 1. SHARED BASELINE ============================ -->
+
   <!--
     PA_PUBLIC_PRIMITIVE_ATTRIBUTE:
-    Entity fields are intentionally public for direct access in Panache Active Record pattern.
-    This is the standard Quarkus Panache design. The publicId field follows the same pattern
-    as the existing id field and other entity fields.
+    Entity fields are intentionally public for direct access in the Panache Active
+    Record pattern. This is the standard Quarkus Panache design; publicId follows the
+    same pattern as id and the other entity fields.
   -->
   <Match>
     <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE" />
@@ -32,27 +51,13 @@
   </Match>
 
   <!--
-    DM_EXIT:
-    PasswordUtil is a CLI utility where System.exit is appropriate.
-  -->
-  <Match>
-    <Bug pattern="DM_EXIT" />
-    <Class name="de.vptr.midas.api.util.PasswordUtil" />
-  </Match>
-
-  <!--
-    UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR:
-    DTO fields are populated by Jackson deserialization, not constructors.
+    UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR / UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD:
+    DTO fields are populated by Jackson deserialization, not by constructors.
   -->
   <Match>
     <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" />
     <Class name="~de\.vptr\.midas\.api\.dto\..*" />
   </Match>
-
-  <!--
-    UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD:
-    Response DTO fields are populated by Jackson deserialization from API responses.
-  -->
   <Match>
     <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" />
     <Class name="~de\.vptr\.midas\.api\.dto\..*" />
@@ -60,16 +65,36 @@
 
   <!--
     THROWS_METHOD_THROWS_RUNTIMEEXCEPTION:
-    Intentional pattern for validation and error handling methods.
+    Intentional pattern for validation and error-handling methods.
   -->
   <Match>
     <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION" />
   </Match>
+
+  <!--
+    DM_EXIT:
+    PasswordUtil is a CLI utility (make password) where System.exit is appropriate.
+  -->
+  <Match>
+    <Bug pattern="DM_EXIT" />
+    <Class name="de.vptr.midas.api.util.PasswordUtil" />
+  </Match>
+
+  <!-- ============================== 2. VAADIN UI =============================== -->
+  <!--
+    Intentionally empty. This module is a headless REST API with no Vaadin Flow on the
+    classpath, so the Vaadin serialization (SE_*), constructor (MC_*, CT_*) and
+    error-dialog (REC_CATCH_EXCEPTION) exclusions carried by the GUI modules would be
+    inert here. They are omitted rather than copied so that a Serializable class added
+    to this module is still checked properly.
+  -->
+
+  <!-- ========================= 3. PROJECT-SPECIFIC ========================== -->
   <!--
     DLS_DEAD_LOCAL_STORE:
-    SpotBugs incorrectly flags `ids` variables used as JPA query parameters.
-    The list IS consumed by the subsequent createQuery().setParameter() call;
-    SpotBugs cannot trace the value through the JPA binding.
+    SpotBugs flags the `ids` locals used as JPA query parameters. The list IS consumed
+    by the following createQuery().setParameter() call; SpotBugs cannot trace the value
+    through the JPA binding.
   -->
   <Match>
     <Bug pattern="DLS_DEAD_LOCAL_STORE" />
@@ -99,4 +124,5 @@
     <Bug pattern="DLS_DEAD_LOCAL_STORE" />
     <Class name="de.vptr.midas.api.service.UserService" />
   </Match>
+
 </FindBugsFilter>

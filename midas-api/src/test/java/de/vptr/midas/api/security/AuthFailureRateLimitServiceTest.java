@@ -31,5 +31,8 @@ class AuthFailureRateLimitServiceTest {
         for (int i = 0; i < 70; i++) {
             this.authFailureRateLimitService.isBlocked("cleanup-probe-" + i);
         }
+
+        // Probing alone must not block anyone; only recorded failures do.
+        assertFalse(this.authFailureRateLimitService.isBlocked("cleanup-probe-0"));
     }
 }

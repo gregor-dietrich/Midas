@@ -108,24 +108,8 @@ public class UserRankIdentityAugmentorTest {
         assertTrue(roles.contains("post-comment:delete"));
         assertTrue(roles.contains("post-comment:edit"));
 
-        // Post roles (none allowed except comments)
-        assertFalse(roles.contains("post:add"));
-        assertFalse(roles.contains("post:delete"));
-        assertFalse(roles.contains("post:edit"));
-        assertFalse(roles.contains("post-category:add"));
-        assertFalse(roles.contains("post-category:delete"));
-        assertFalse(roles.contains("post-category:edit"));
-
-        // User and group roles (none allowed)
-        assertFalse(roles.contains("user:add"));
-        assertFalse(roles.contains("user:delete"));
-        assertFalse(roles.contains("user:edit"));
-        assertFalse(roles.contains("user-group:add"));
-        assertFalse(roles.contains("user-group:delete"));
-        assertFalse(roles.contains("user-group:edit"));
-        assertFalse(roles.contains("user-rank:add"));
-        assertFalse(roles.contains("user-rank:delete"));
-        assertFalse(roles.contains("user-rank:edit"));
+        assertNoPostRoles(roles);
+        assertNoUserAdministrationRoles(roles);
     }
 
     private void assertUserRoles(final Set<String> roles) {
@@ -136,24 +120,31 @@ public class UserRankIdentityAugmentorTest {
         assertFalse(roles.contains("post-comment:delete"));
         assertFalse(roles.contains("post-comment:edit"));
 
-        // Post roles (none allowed except comment:add)
+        assertNoPostRoles(roles);
+        assertNoUserAdministrationRoles(roles);
+    }
+
+    /** Asserts that none of the post or post-category write roles are granted. */
+    private static void assertNoPostRoles(final Set<String> roles) {
         assertFalse(roles.contains("post:add"));
         assertFalse(roles.contains("post:delete"));
         assertFalse(roles.contains("post:edit"));
         assertFalse(roles.contains("post-category:add"));
         assertFalse(roles.contains("post-category:delete"));
         assertFalse(roles.contains("post-category:edit"));
+    }
 
-        // Non-admin roles (none allowed)
-        assertEquals(false, roles.contains("user-rank:edit"));
-        assertEquals(false, roles.contains("user-rank:delete"));
-        assertEquals(false, roles.contains("user-rank:add"));
-        assertFalse(roles.contains("user-group:edit"));
-        assertFalse(roles.contains("user-group:delete"));
-        assertFalse(roles.contains("user-group:add"));
-        assertFalse(roles.contains("user:edit"));
-        assertFalse(roles.contains("user:delete"));
+    /** Asserts that none of the user, user-group or user-rank administration roles are granted. */
+    private static void assertNoUserAdministrationRoles(final Set<String> roles) {
         assertFalse(roles.contains("user:add"));
+        assertFalse(roles.contains("user:delete"));
+        assertFalse(roles.contains("user:edit"));
+        assertFalse(roles.contains("user-group:add"));
+        assertFalse(roles.contains("user-group:delete"));
+        assertFalse(roles.contains("user-group:edit"));
+        assertFalse(roles.contains("user-rank:add"));
+        assertFalse(roles.contains("user-rank:delete"));
+        assertFalse(roles.contains("user-rank:edit"));
     }
 
     @ParameterizedTest

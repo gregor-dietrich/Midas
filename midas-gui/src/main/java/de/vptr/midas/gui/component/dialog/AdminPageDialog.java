@@ -27,7 +27,8 @@ public class AdminPageDialog extends AbstractAdminEntityDialogBase<PageDto> {
     public void open(@Nullable final PageDto page) {
         this.removeAll();
         this.currentBean = page != null ? page : new PageDto();
-        this.binder = new Binder<>(PageDto.class);
+        final var b = new Binder<>(PageDto.class);
+        this.binder = b;
 
         final var form = this.createResponsiveFormLayout();
         final var titleField = this.createAndBindRequiredNameField(PageDto::getTitle, PageDto::setTitle);
@@ -40,8 +41,7 @@ public class AdminPageDialog extends AbstractAdminEntityDialogBase<PageDto> {
         contentField.setMaxLength(50_000);
         contentField.setInvalid(false);
 
-        this.binder.forField(contentField)
-                .withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
+        b.forField(contentField).withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
                 .bind(PageDto::getContent, PageDto::setContent);
 
         form.add(titleField, contentField);

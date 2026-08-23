@@ -32,7 +32,7 @@ import de.vptr.midas.gui.util.TestUtil;
 import jakarta.ws.rs.WebApplicationException;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings({ "PMD.LinguisticNaming", "PMD.UnitTestShouldIncludeAssert", "NullAway" })
+@SuppressWarnings({ "PMD.UnitTestShouldIncludeAssert", "NullAway" })
 class PaymentServiceTest {
 
     @Mock

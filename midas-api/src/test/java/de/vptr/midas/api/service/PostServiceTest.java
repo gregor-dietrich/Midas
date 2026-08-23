@@ -93,7 +93,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertNotNull(publishedPosts);
 
         for (final var post : publishedPosts) {
-            assertTrue(Boolean.TRUE.equals(post.published));
+            assertTrue(Objects.requireNonNull(post.published));
         }
     }
 
@@ -113,7 +113,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var byCategory = this.postService.findPublishedPosts(this.testCategoryPublicId, null, null, null, 0, 20);
         assertEquals(2, byCategory.size());
         for (final var post : byCategory) {
-            assertTrue(Boolean.TRUE.equals(post.published));
+            assertTrue(Objects.requireNonNull(post.published));
         }
 
         // Free-text query (scoped to the test category) matches the title.
@@ -149,8 +149,8 @@ class PostServiceTest extends AbstractIntegrationTest {
         assertEquals(newPost.content, createdPost.content);
         assertNotNull(createdPost.created);
         assertNull(createdPost.lastEdit);
-        assertFalse(Boolean.TRUE.equals(createdPost.published));
-        assertFalse(Boolean.TRUE.equals(createdPost.commentable));
+        assertFalse(Objects.requireNonNull(createdPost.published));
+        assertFalse(Objects.requireNonNull(createdPost.commentable));
     }
 
     @Test
@@ -162,8 +162,8 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var createdPost = this.postService.createPost(newPost, Objects.requireNonNull(this.testUser.username));
 
         assertNotNull(createdPost);
-        assertTrue(Boolean.TRUE.equals(createdPost.published));
-        assertTrue(Boolean.TRUE.equals(createdPost.commentable));
+        assertTrue(Objects.requireNonNull(createdPost.published));
+        assertTrue(Objects.requireNonNull(createdPost.commentable));
     }
 
     @Test
@@ -416,7 +416,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var createDto = ServiceTestDataBuilder.createPostDto("Patch Published", "Content", false, false,
                 this.testCategoryPublicId);
         final var created = this.postService.createPost(createDto, Objects.requireNonNull(this.testUser.username));
-        assertFalse(Boolean.TRUE.equals(created.published));
+        assertFalse(Objects.requireNonNull(created.published));
 
         final var patchDto = new PostDto();
         patchDto.published = true;
@@ -424,7 +424,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         final String postPublicId = Objects.requireNonNull(created.publicId);
         final String username = Objects.requireNonNull(this.testUser.username);
         final var patched = this.postService.patchPost(postPublicId, patchDto, username);
-        assertTrue(Boolean.TRUE.equals(patched.published));
+        assertTrue(Objects.requireNonNull(patched.published));
     }
 
     @Test
@@ -433,7 +433,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         final var createDto = ServiceTestDataBuilder.createPostDto("Patch Commentable", "Content", false, false,
                 this.testCategoryPublicId);
         final var created = this.postService.createPost(createDto, Objects.requireNonNull(this.testUser.username));
-        assertFalse(Boolean.TRUE.equals(created.commentable));
+        assertFalse(Objects.requireNonNull(created.commentable));
 
         final var patchDto = new PostDto();
         patchDto.commentable = true;
@@ -441,7 +441,7 @@ class PostServiceTest extends AbstractIntegrationTest {
         final String postPublicId = Objects.requireNonNull(created.publicId);
         final String username = Objects.requireNonNull(this.testUser.username);
         final var patched = this.postService.patchPost(postPublicId, patchDto, username);
-        assertTrue(Boolean.TRUE.equals(patched.commentable));
+        assertTrue(Objects.requireNonNull(patched.commentable));
     }
 
     @Test

@@ -17,7 +17,8 @@ import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.container.ContainerRequestContext;
 
-@SuppressWarnings("unchecked")
+// Literal client IPs are the subject under test here, not a hard-coded endpoint.
+@SuppressWarnings({ "PMD.AvoidUsingHardCodedIP", "unchecked" })
 class RateLimitFilterClientKeyTest {
 
     @Test

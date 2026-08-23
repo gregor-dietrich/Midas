@@ -39,11 +39,23 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 The project enforces very strict quality gates:
 
 - **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline). Use `make format` to auto-fix formatting.
-- **Linting**: Spotless (`spotless:check`), Checkstyle, PMD (with CPD for duplicate detection).
-- **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks).
+- **Linting**: Spotless (`spotless:check`), Checkstyle (engine pinned via `${checkstyle.version}`), PMD (with CPD for duplicate detection).
+- **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks). The compiler runs with `-Werror` and `-Xlint:all` (minus `serial`, `this-escape`, `classfile`), so any javac or ErrorProne warning fails the build.
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
-- **Coverage**: JaCoCo enforcement.
+- **Coverage**: JaCoCo enforcement. The `report` goal is bound to `post-integration-test` so it includes `*IT` coverage; surefire and failsafe append to the same `target/jacoco.exec`, and a report generated at `test` would silently omit every integration test.
 - **Security**: OWASP Dependency Check (fails on CVSS >= 7), License enforcement (blocks commercial/proprietary licenses).
+- **Frontend pins**: `scripts/check_frontend_deps.py midas-gui` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
+
+### Shared configuration with the AIMathTutor project
+
+The quality gate configuration is deliberately kept **identical** to the sibling
+`aimathtutor` repository, so drift is visible in a plain `diff`. `checkstyle.xml`,
+`pmd-ruleset.xml`, `.gitlab-ci.yml` and `scripts/check_frontend_deps.py` are byte-identical
+across both; `spotbugs-exclude.xml` and `checkstyle-suppressions.xml` share a common
+baseline and carry per-module sections. Deviations are allowed only where they are
+unavoidable (package names, Vaadin present or absent, multi-module path resolution) or
+carry a written reason in the file itself — never as a convenience. When changing a gate
+here, make the same change there.
 
 You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
 If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make test`.

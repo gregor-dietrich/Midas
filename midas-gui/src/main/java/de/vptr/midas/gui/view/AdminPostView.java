@@ -180,14 +180,16 @@ public class AdminPostView extends AbstractAdminEntityView<PostResponseDto> {
 
         g.addComponentColumn(post -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(post.isPublished() != null ? post.isPublished() : false);
+            final var published = post.isPublished();
+            checkbox.setValue(published != null ? published : false);
             checkbox.setReadOnly(true);
             return checkbox;
         }).setHeader("Published").setWidth("100px").setFlexGrow(0);
 
         g.addComponentColumn(post -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(post.isCommentable() != null ? post.isCommentable() : false);
+            final var commentable = post.isCommentable();
+            checkbox.setValue(commentable != null ? commentable : false);
             checkbox.setReadOnly(true);
             return checkbox;
         }).setHeader("Commentable").setWidth("100px").setFlexGrow(0);

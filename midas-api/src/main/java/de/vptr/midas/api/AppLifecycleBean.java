@@ -45,7 +45,7 @@ public class AppLifecycleBean {
      */
     private void failOnDefaultDbPasswordInProduction() {
         if (this.launchMode == LaunchMode.NORMAL && DEFAULT_DB_PASSWORD.equals(this.dbPassword)) {
-            LOG.error("FATAL: the default database password '" + DEFAULT_DB_PASSWORD + "' is in use in production!");
+            LOG.errorf("FATAL: the default database password '%s' is in use in production!", DEFAULT_DB_PASSWORD);
             LOG.error("Set the QUARKUS_DATASOURCE_PASSWORD environment variable to a strong secret before deploying.");
             throw new IllegalStateException("Default database password in use in production");
         }

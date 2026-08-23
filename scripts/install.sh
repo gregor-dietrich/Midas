@@ -28,4 +28,9 @@ esac
 cd "$PROJECT_ROOT"
 ${MVN_CMD} -q clean install ${PL_ARG} -DskipTests -Drevision="${REVISION}"
 
+# The Vaadin jars are resolved by the build above, which is what the gate reads.
+if [ "$MODULE" != "api" ]; then
+    python3 "$PROJECT_ROOT/scripts/check_frontend_deps.py" midas-gui
+fi
+
 echo "Install completed."

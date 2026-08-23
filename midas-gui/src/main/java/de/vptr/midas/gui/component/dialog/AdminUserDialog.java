@@ -66,7 +66,8 @@ public class AdminUserDialog extends FormDialog {
     public void open(@Nullable final UserResponseDto user, @Nullable final List<UserRankResponseDto> availableRanks) {
         this.removeAll();
         this.currentUser = user != null ? user.toUserDto() : new UserDto();
-        this.binder = new Binder<>(UserDto.class);
+        final var b = new Binder<>(UserDto.class);
+        this.binder = b;
 
         final var title = new H3(user != null ? "Edit User" : "Create User");
 
@@ -94,7 +95,7 @@ public class AdminUserDialog extends FormDialog {
             passwordField.setMaxLength(MAX_PASSWORD_LENGTH);
             passwordField.setInvalid(false);
             form.add(passwordField);
-            this.binder.forField(passwordField).asRequired("Password is required")
+            b.forField(passwordField).asRequired("Password is required")
                     .withValidator(this::isValidPassword,
                             "Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
                                     + " chars with at least one letter and one digit")
@@ -133,10 +134,9 @@ public class AdminUserDialog extends FormDialog {
         form.add(rankField, activatedField, bannedField);
 
         // Bind fields with proper validation
-        this.binder.forField(usernameField).asRequired("Username is required").bind(UserDto::getUsername,
-                UserDto::setUsername);
+        b.forField(usernameField).asRequired("Username is required").bind(UserDto::getUsername, UserDto::setUsername);
 
-        this.binder.forField(emailField).withValidator(email -> {
+        b.forField(emailField).withValidator(email -> {
             if (email == null || email.trim().isEmpty()) {
                 return true;
             }
@@ -144,11 +144,11 @@ public class AdminUserDialog extends FormDialog {
         }, "Email must be valid or empty").bind(UserDto::getEmail,
                 (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
 
-        this.binder.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
-        this.binder.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
+        b.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
+        b.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
 
         // Rank binding - convert between UserRankResponseDto and rankPublicId
-        this.binder.forField(rankField).asRequired("Rank is required").bind(u -> {
+        b.forField(rankField).asRequired("Rank is required").bind(u -> {
             if (u.getRankPublicId() != null && availableRanks != null) {
                 return availableRanks.stream().filter(rank -> Objects.equals(rank.getPublicId(), u.getRankPublicId()))
                         .findFirst().orElse(null);
@@ -178,7 +178,7 @@ public class AdminUserDialog extends FormDialog {
         dialogLayout.setPadding(false);
 
         this.add(dialogLayout);
-        this.binder.readBean(this.currentUser);
+        b.readBean(this.currentUser);
         super.open();
     }
 

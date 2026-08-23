@@ -67,21 +67,21 @@ public class AccountAccessService {
 
         final List<UserAccountMetaEntity> metas =
                 UserAccountMetaEntity.findByAccountId(Objects.requireNonNull(account.id));
-        final Map<Long, Boolean> isNegativeByUser = new HashMap<>();
-        final Map<Long, Boolean> canManageByUser = new HashMap<>();
+        final Map<Long, Boolean> negativeFlagsByUser = new HashMap<>();
+        final Map<Long, Boolean> manageFlagsByUser = new HashMap<>();
         for (final UserAccountMetaEntity m : metas) {
             final UserEntity u = m.user;
             if (u != null && u.id != null) {
-                isNegativeByUser.put(u.id, m.isNegative);
-                canManageByUser.put(u.id, m.canManage);
+                negativeFlagsByUser.put(u.id, m.isNegative);
+                manageFlagsByUser.put(u.id, m.canManage);
             }
         }
 
         return users.stream().map(u -> {
             final UserResponseDto dto =
                     new UserResponseDto(u, postCounts.getOrDefault(u.id, 0L), commentCounts.getOrDefault(u.id, 0L));
-            dto.isNegative = isNegativeByUser.getOrDefault(u.id, false);
-            dto.canManage = canManageByUser.getOrDefault(u.id, false);
+            dto.isNegative = negativeFlagsByUser.getOrDefault(u.id, false);
+            dto.canManage = manageFlagsByUser.getOrDefault(u.id, false);
             return dto;
         }).toList();
     }
@@ -330,14 +330,14 @@ public class AccountAccessService {
                 return List.of();
             }
             final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
-            final Map<String, Boolean> isNegativeFlags =
+            final Map<String, Boolean> negativeFlagsByAccount =
                     this.getIsNegativeFlagsForUser(Objects.requireNonNull(user.id), accountPublicIds);
 
             final NavigableMap<LocalDate, BigDecimal> dailyDeltas = new TreeMap<>();
-            this.aggregateSignedDailyDeltas(dailyDeltas, "targetAccount", true, accountPublicIds, isNegativeFlags,
-                    startDate, endDate);
-            this.aggregateSignedDailyDeltas(dailyDeltas, "sourceAccount", false, accountPublicIds, isNegativeFlags,
-                    startDate, endDate);
+            this.aggregateSignedDailyDeltas(dailyDeltas, "targetAccount", true, accountPublicIds,
+                    negativeFlagsByAccount, startDate, endDate);
+            this.aggregateSignedDailyDeltas(dailyDeltas, "sourceAccount", false, accountPublicIds,
+                    negativeFlagsByAccount, startDate, endDate);
             return toCumulativeSeries(dailyDeltas);
         });
     }
@@ -349,7 +349,7 @@ public class AccountAccessService {
      */
     private void aggregateSignedDailyDeltas(final NavigableMap<LocalDate, BigDecimal> dailyDeltas,
             final String joinPath, final boolean incoming, final List<String> accountPublicIds,
-            final Map<String, Boolean> isNegativeFlags, @Nullable final LocalDate startDate,
+            final Map<String, Boolean> negativeFlagsByAccount, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {
         final boolean hasRange = startDate != null && endDate != null;
         final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
@@ -370,7 +370,7 @@ public class AccountAccessService {
                 continue;
             }
             BigDecimal contribution = amount;
-            if (Boolean.TRUE.equals(isNegativeFlags.get(publicId))) {
+            if (Boolean.TRUE.equals(negativeFlagsByAccount.get(publicId))) {
                 contribution = contribution.negate();
             }
             if (!incoming) {

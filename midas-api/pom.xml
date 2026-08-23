@@ -115,9 +115,12 @@
               </excludes>
             </configuration>
           </execution>
+          <!-- Bound to post-integration-test, not test: failsafe runs the *IT tests at
+          integration-test and appends to the same jacoco.exec, so a report generated at
+          test would omit all integration-test coverage. Still runs when ITs are skipped. -->
           <execution>
             <id>report</id>
-            <phase>test</phase>
+            <phase>post-integration-test</phase>
             <goals>
               <goal>report</goal>
             </goals>
@@ -129,6 +132,7 @@
               <goal>check</goal>
             </goals>
             <configuration>
+              <skip>${jacoco.check.skip}</skip>
               <rules>
                 <rule>
                   <element>BUNDLE</element>

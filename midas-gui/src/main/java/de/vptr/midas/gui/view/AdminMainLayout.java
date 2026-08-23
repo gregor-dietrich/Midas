@@ -23,8 +23,6 @@ public class AdminMainLayout extends AbstractMainLayoutBase {
     private boolean cachedUserRankValid = false;
 
     @Nullable
-    private HorizontalLayout mainLayout;
-    @Nullable
     private VerticalLayout sidebar;
     @Nullable
     private VerticalLayout contentArea;
@@ -79,10 +77,10 @@ public class AdminMainLayout extends AbstractMainLayoutBase {
     }
 
     private void createMainLayout() {
-        this.mainLayout = new HorizontalLayout();
-        this.mainLayout.setSizeFull();
-        this.mainLayout.setPadding(false);
-        this.mainLayout.setSpacing(false);
+        final var layout = new HorizontalLayout();
+        layout.setSizeFull();
+        layout.setPadding(false);
+        layout.setSpacing(false);
 
         this.sidebar = new VerticalLayout();
         this.sidebar.setWidth("250px");
@@ -100,14 +98,14 @@ public class AdminMainLayout extends AbstractMainLayoutBase {
         this.contentArea.setPadding(false);
         this.contentArea.setSpacing(false);
 
-        this.mainLayout.add(this.sidebar, this.contentArea);
-        this.mainLayout.setFlexGrow(0, this.sidebar);
-        this.mainLayout.setFlexGrow(1, this.contentArea);
+        layout.add(this.sidebar, this.contentArea);
+        layout.setFlexGrow(0, this.sidebar);
+        layout.setFlexGrow(1, this.contentArea);
 
         this.contentArea.getStyle().set("overflow", "auto");
 
-        this.add(this.mainLayout);
-        this.setFlexGrow(1, this.mainLayout);
+        this.add(layout);
+        this.setFlexGrow(1, layout);
     }
 
     @Override

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN" "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- This file serves the midas-parent aggregator module, which carries no Java
+         sources of its own but still runs the Checkstyle gate over the reactor root.
+         checkstyle.xml sets SuppressionFilter optional=false on purpose, so this file
+         has to exist. Keep it identical to midas-api/checkstyle-suppressions.xml; any
+         module-specific exemption belongs in that module's own file. -->
+    <!-- IT suffix is the standard Maven convention for integration-test classes -->
+    <suppress checks="AbbreviationAsWordInName" files=".*IT\.java$" />
+    <!-- UlidCreator may only be imported by UlidUtil itself -->
+    <suppress id="IllegalImport.UlidCreator" files="UlidUtil\.java$" />
+    <!-- REST Assured may only be imported by TestUtil itself -->
+    <suppress id="IllegalImport.RestAssured" files="TestUtil\.java$" />
+    <!-- @SuppressWarnings("NullAway") is banned in main source; test sources
+         legitimately use it for Mockito/builder setup. -->
+    <suppress id="SuppressWarningsNullAway" files="[/\\]src[/\\]test[/\\]" />
+</suppressions>

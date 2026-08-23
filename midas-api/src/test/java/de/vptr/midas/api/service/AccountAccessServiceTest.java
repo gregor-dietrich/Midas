@@ -64,14 +64,14 @@ class AccountAccessServiceTest {
     void testIsUserAssociatedWithAccountNonExistent() {
         final boolean result =
                 this.accountAccessService.isUserAssociatedWithAccount("non-existent-user", "non-existent-account");
-        assert !result;
+        assertFalse(result);
     }
 
     @Test
     void testHasUserAccessToAccountNonExistentUser() {
         final boolean result =
                 this.accountAccessService.hasUserAccessToAccount("nonexistent_user_xyz", "non-existent-account");
-        assert !result;
+        assertFalse(result);
     }
 
     @Test
@@ -112,8 +112,7 @@ class AccountAccessServiceTest {
                 .getIsNegativeFlagsForUser(Objects.requireNonNull(user.id), List.of(accountPublicId));
 
         assertNotNull(flags);
-        assertEquals(1, flags.size());
-        assertTrue(Boolean.TRUE.equals(flags.get(accountPublicId)));
+        assertEquals(Map.of(accountPublicId, true), flags);
     }
 
     @Test

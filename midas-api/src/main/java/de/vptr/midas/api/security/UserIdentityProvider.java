@@ -117,7 +117,7 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             if (delay > 0) {
                 try {
                     // Sleep before opening a DB transaction to avoid holding a pooled connection
-                    Thread.sleep(Math.min(delay * 1000, 30000));
+                    Thread.sleep(Math.min(delay * 1000, 30_000));
                 } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

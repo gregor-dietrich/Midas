@@ -79,13 +79,13 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private void createGrid() {
-        this.grid = new Grid<>(UserResponseDto.class, false);
-        this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.grid.setSizeFull();
-        this.grid.setPageSize(20);
+        final var g = new Grid<>(UserResponseDto.class, false);
+        g.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        g.setSizeFull();
+        g.setPageSize(20);
 
         // Clickable username column that navigates to detail view
-        this.grid.addComponentColumn(user -> {
+        g.addComponentColumn(user -> {
             final var usernameSpan = new Span(user.getUsername());
             usernameSpan.getStyle().set("color", "var(--lumo-primary-text-color)");
             usernameSpan.getStyle().set("cursor", "pointer");
@@ -96,10 +96,12 @@ public class UserView extends AbstractAsyncDataView implements BeforeEnterObserv
             return usernameSpan;
         }).setHeader("Username").setFlexGrow(1);
 
-        this.grid.addColumn(user -> {
+        g.addColumn(user -> {
             final var created = user.getCreated();
             return created != null ? created.format(DATE_FORMATTER) : "";
         }).setHeader("Member Since").setFlexGrow(1);
+
+        this.grid = g;
     }
 
     private void searchUsers(final String query) {

@@ -97,9 +97,14 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
         this.binder.forField(contentField)
                 .withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
                 .bind(PostDto::getContent, PostDto::setContent);
-        this.binder.bind(publishedField, p -> p.isPublished() != null ? p.isPublished() : false, PostDto::setPublished);
-        this.binder.bind(commentableField, p -> p.isCommentable() != null ? p.isCommentable() : false,
-                PostDto::setCommentable);
+        this.binder.bind(publishedField, p -> {
+            final var published = p.isPublished();
+            return published != null ? published : false;
+        }, PostDto::setPublished);
+        this.binder.bind(commentableField, p -> {
+            final var commentable = p.isCommentable();
+            return commentable != null ? commentable : false;
+        }, PostDto::setCommentable);
 
         this.binder.bind(categoryField, p -> {
             if (p.getCategoryPublicId() != null && availableCategories != null) {

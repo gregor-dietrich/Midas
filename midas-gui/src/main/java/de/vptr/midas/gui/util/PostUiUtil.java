@@ -23,28 +23,33 @@ public final class PostUiUtil {
         metaLayout.getStyle().set("font-size", "var(--lumo-font-size-s)");
         metaLayout.getStyle().set("color", "var(--lumo-secondary-text-color)");
 
-        if (post.getUsername() != null) {
-            metaLayout.add(new Span("By " + post.getUsername()));
+        final var username = post.getUsername();
+        if (username != null) {
+            metaLayout.add(new Span("By " + username));
         }
 
-        if (post.getCreated() != null) {
-            metaLayout.add(new Span(publishedPrefix + post.getCreated().format(formatter)));
+        final var created = post.getCreated();
+        if (created != null) {
+            metaLayout.add(new Span(publishedPrefix + created.format(formatter)));
         }
 
-        if (includeEditTime && post.getLastEdit() != null && !post.getLastEdit().equals(post.getCreated())) {
-            metaLayout.add(new Span("(edited " + post.getLastEdit().format(formatter) + ")"));
+        final var lastEdit = post.getLastEdit();
+        if (includeEditTime && lastEdit != null && !lastEdit.equals(created)) {
+            metaLayout.add(new Span("(edited " + lastEdit.format(formatter) + ")"));
         }
 
-        if (post.getCategoryName() != null) {
-            final var categoryBadge = new Span(post.getCategoryName());
+        final var categoryName = post.getCategoryName();
+        if (categoryName != null) {
+            final var categoryBadge = new Span(categoryName);
             categoryBadge.getStyle().set("background", "var(--lumo-primary-color-10pct)");
             categoryBadge.getStyle().set("border-radius", "var(--lumo-border-radius-s)");
             categoryBadge.getStyle().set("padding", "2px 8px");
             metaLayout.add(categoryBadge);
         }
 
-        if (includeCommentsCount && post.getCommentsCount() != null && post.getCommentsCount() > 0) {
-            metaLayout.add(new Span(post.getCommentsCount() + " comments"));
+        final var commentsCount = post.getCommentsCount();
+        if (includeCommentsCount && commentsCount != null && commentsCount > 0) {
+            metaLayout.add(new Span(commentsCount + " comments"));
         }
 
         return metaLayout;

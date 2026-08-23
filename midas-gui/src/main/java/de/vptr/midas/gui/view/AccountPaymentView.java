@@ -307,19 +307,19 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
     }
 
     private void createGrid() {
-        this.grid = new Grid<>(PaymentResponseDto.class, false);
-        this.grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        this.grid.setSizeFull();
+        final var g = new Grid<>(PaymentResponseDto.class, false);
+        g.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        g.setSizeFull();
 
-        this.grid.addColumn(new LocalDateRenderer<>(PaymentResponseDto::getDate)).setHeader("Date").setAutoWidth(true)
+        g.addColumn(new LocalDateRenderer<>(PaymentResponseDto::getDate)).setHeader("Date").setAutoWidth(true)
                 .setFlexGrow(0);
 
-        this.grid.addColumn(payment -> {
+        g.addColumn(payment -> {
             final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             return isSender ? payment.getTargetAccountName() : payment.getSourceAccountName();
         }).setHeader("Counterparty").setAutoWidth(true).setFlexGrow(0);
 
-        this.grid.addColumn(new ComponentRenderer<>(payment -> {
+        g.addColumn(new ComponentRenderer<>(payment -> {
             final var isSender = Objects.equals(payment.getSourceAccountPublicId(), this.accountId);
             final var amount = payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO;
             final var span = new Span((isSender ? "-" : "+") + amount + " EUR");
@@ -328,9 +328,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return span;
         })).setHeader("Amount").setWidth("150px").setFlexGrow(0);
 
-        this.grid.addColumn(PaymentResponseDto::getComment).setHeader("Comment").setFlexGrow(2);
+        g.addColumn(PaymentResponseDto::getComment).setHeader("Comment").setFlexGrow(2);
 
-        this.actionsColumn = this.grid.addComponentColumn(payment -> {
+        this.actionsColumn = g.addComponentColumn(payment -> {
             final var editButton = new Button(LineAwesomeIcon.EDIT.create(),
                     e -> this.openPaymentDialog(payment.toPaymentDto(), false));
             editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -356,13 +356,15 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             return layout;
         }).setHeader("Actions").setAutoWidth(true).setFlexGrow(0);
         this.actionsColumn.setVisible(false);
+
+        this.grid = g;
     }
 
     private void openPaymentDialog(@Nullable final PaymentDto payment, final boolean openAsRecipient) {
         final var pd = Objects.requireNonNull(this.paymentDialog);
         pd.removeAll();
         this.currentPayment = payment != null ? payment : new PaymentDto();
-        this.binder = new Binder<>(PaymentDto.class);
+        final var b = new Binder<>(PaymentDto.class);
 
         final var title =
                 new H3(payment != null ? "Edit Payment" : (openAsRecipient ? "Receive Payment" : "Send Payment"));
@@ -404,17 +406,17 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
             }
         });
 
-        this.binder.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountPublicId()),
+        b.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountPublicId()),
                 (p, v) -> p.setSourceAccountPublicId(v != null ? v.getPublicId() : null));
-        this.binder.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountPublicId()),
+        b.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountPublicId()),
                 (p, v) -> p.setTargetAccountPublicId(v != null ? v.getPublicId() : null));
 
-        this.binder.forField(amountField)
+        b.forField(amountField)
                 .withValidator(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0, "Amount must be positive")
                 .bind(PaymentDto::getAmount, PaymentDto::setAmount);
-        this.binder.forField(dateField).withValidator(v -> v != null, "Date is required").bind(PaymentDto::getDate,
+        b.forField(dateField).withValidator(v -> v != null, "Date is required").bind(PaymentDto::getDate,
                 PaymentDto::setDate);
-        this.binder.forField(commentField).withValidator(v -> v != null && !v.trim().isEmpty(), "Comment is required")
+        b.forField(commentField).withValidator(v -> v != null && !v.trim().isEmpty(), "Comment is required")
                 .bind(PaymentDto::getComment, PaymentDto::setComment);
 
         form.add(sourceAccountField, targetAccountField, amountField, dateField, commentField);
@@ -428,7 +430,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         pd.add(new VerticalLayout(title, form, buttonLayout));
 
-        this.binder.readBean(this.currentPayment);
+        b.readBean(this.currentPayment);
 
         if (payment == null) {
             if (openAsRecipient) {
@@ -440,6 +442,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         }
 
         pd.open();
+
+        this.binder = b;
     }
 
     @Nullable

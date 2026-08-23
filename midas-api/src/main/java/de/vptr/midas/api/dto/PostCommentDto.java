@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 public class PostCommentDto {
 
     @NotBlank(message = "Content is required")
-    @Size(min = 1, max = 10000, message = "Content must be between 1 and 10000 characters")
+    @Size(min = 1, max = 10_000, message = "Content must be between 1 and 10_000 characters")
     @Nullable
     public String content;
 

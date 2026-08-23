@@ -288,13 +288,13 @@ public class AccountResource {
         final UserEntity currentUser = UserEntity.find("username", username).firstResult();
         if (currentUser != null && currentUser.id != null) {
             final List<String> accountPublicIds = accounts.stream().map(account -> account.publicId).toList();
-            final Map<String, Boolean> isNegativeFlags =
+            final Map<String, Boolean> negativeFlagsByAccount =
                     this.accountAccessService.getIsNegativeFlagsForUser(currentUser.id, accountPublicIds);
-            final Map<String, Boolean> canManageFlags =
+            final Map<String, Boolean> manageFlagsByAccount =
                     this.accountAccessService.getCanManageFlagsForUser(currentUser.id, accountPublicIds);
             accounts.forEach(account -> {
-                account.isNegative = isNegativeFlags.getOrDefault(account.publicId, false);
-                account.canManage = canManageFlags.getOrDefault(account.publicId, false);
+                account.isNegative = negativeFlagsByAccount.getOrDefault(account.publicId, false);
+                account.canManage = manageFlagsByAccount.getOrDefault(account.publicId, false);
             });
         }
     }

@@ -28,7 +28,7 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming" })
+@SuppressWarnings("NullAway")
 class AuthServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock

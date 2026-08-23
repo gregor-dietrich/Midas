@@ -51,8 +51,6 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     @Nullable
     private Grid<PostResponseDto> grid;
     @Nullable
-    private AsyncSearchLayout searchLayout;
-    @Nullable
     private ComboBox<PostCategoryResponseDto> categoryFilter;
     @Nullable
     private DatePicker startDatePicker;
@@ -93,7 +91,7 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
     }
 
     private HorizontalLayout createFilterLayout() {
-        this.searchLayout = new AsyncSearchLayout(query -> {
+        final var search = new AsyncSearchLayout(query -> {
             this.searchQuery = (query == null || query.trim().isEmpty()) ? null : query.trim();
             this.refreshPosts();
         }, () -> {
@@ -114,26 +112,25 @@ public class PostView extends AbstractAsyncDataView implements BeforeEnterObserv
         this.startDatePicker = dateFilterLayout.getStartDatePicker();
         this.endDatePicker = dateFilterLayout.getEndDatePicker();
 
-        this.searchLayout.add(this.categoryFilter, dateFilterLayout);
-        return this.searchLayout;
+        search.add(this.categoryFilter, dateFilterLayout);
+
+        return search;
     }
 
     private void createGrid() {
-        this.grid = new Grid<>(PostResponseDto.class, false);
-        this.grid.setSizeFull();
-        this.grid.setPageSize(20);
+        final var g = new Grid<>(PostResponseDto.class, false);
+        g.setSizeFull();
+        g.setPageSize(20);
 
         // Single component column rendering each row as a card
-        this.grid.addComponentColumn(this::createPostCard).setHeader("").setFlexGrow(1);
+        g.addComponentColumn(this::createPostCard).setHeader("").setFlexGrow(1);
 
         // Lazy, server-paginated data provider: category, date range and free-text
         // filtering are all applied server-side, so the full post set is never loaded.
-        this.grid
-                .setItems(
-                        query -> this.postService
-                                .getPublishedPosts(this.selectedCategoryId(), this.selectedStartDate(),
-                                        this.selectedEndDate(), this.searchQuery, query.getPage(), query.getPageSize())
-                                .stream());
+        g.setItems(query -> this.postService.getPublishedPosts(this.selectedCategoryId(), this.selectedStartDate(),
+                this.selectedEndDate(), this.searchQuery, query.getPage(), query.getPageSize()).stream());
+
+        this.grid = g;
     }
 
     /** Triggers a server round-trip to reload the current page of posts with the active filters. */

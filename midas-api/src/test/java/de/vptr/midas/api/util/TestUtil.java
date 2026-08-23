@@ -235,7 +235,7 @@ public final class TestUtil {
      */
     public static String generateUniqueSuffix() {
         return String.valueOf(System.currentTimeMillis()) + "_"
-                + String.valueOf(ThreadLocalRandom.current().nextInt(100000));
+                + String.valueOf(ThreadLocalRandom.current().nextInt(100_000));
     }
 
     /**

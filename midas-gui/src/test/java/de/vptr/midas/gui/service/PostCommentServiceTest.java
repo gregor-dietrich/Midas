@@ -31,7 +31,7 @@ import de.vptr.midas.gui.util.ServiceTestUtil;
 import de.vptr.midas.gui.util.TestUtil;
 import jakarta.enterprise.event.Event;
 
-@SuppressWarnings({ "NullAway", "PMD.LinguisticNaming", "microprofile-restclient" })
+@SuppressWarnings({ "NullAway", "microprofile-restclient" })
 @ExtendWith(MockitoExtension.class)
 class PostCommentServiceTest {
 

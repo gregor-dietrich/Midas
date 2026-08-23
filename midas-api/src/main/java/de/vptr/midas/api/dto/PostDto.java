@@ -13,7 +13,7 @@ public class PostDto {
     public String title;
 
     @NotBlank(message = "Content is required")
-    @Size(min = 1, max = 50000, message = "Content must be between 1 and 50000 characters")
+    @Size(min = 1, max = 50_000, message = "Content must be between 1 and 50_000 characters")
     @Nullable
     public String content;
 
