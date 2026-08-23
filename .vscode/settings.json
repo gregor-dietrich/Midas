@@ -24,7 +24,7 @@
     "source.organizeImports": "explicit"
   },
   "editor.formatOnSave": true,
-  "java.autobuild.enabled": false,
+  "java.autobuild.enabled": true,
   "java.cleanup.actions": [
     // Specifies a list of cleanup actions applied automatically to improve code quality.
     "addDeprecated", // Marks methods as @Deprecated if they override or implement deprecated methods.
@@ -78,5 +78,6 @@
   "python.testing.pytestEnabled": true,
   "quarkus.tools.alwaysShowWelcomePage": false,
   "redhat.telemetry.enabled": false,
-  "workbench.startupEditor": "none"
+  "workbench.startupEditor": "none",
+  "java.debug.settings.hotCodeReplace": "auto"
 }

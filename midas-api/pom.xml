@@ -21,20 +21,7 @@
     <bucket4j.version>1.0.7</bucket4j.version>
     <html-sanitizer.version>20260313.1</html-sanitizer.version>
     <ulid-creator.version>5.2.4</ulid-creator.version>
-    <postgresql.version>42.7.11</postgresql.version>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- Pin to fix CVE-2026-42198 (CPU exhaustion DoS via unbounded PBKDF2 iterations in
-           SCRAM auth); transitive via io.quarkus:quarkus-jdbc-postgresql -->
-      <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>${postgresql.version}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <!-- Quarkus Core (module-specific) -->
