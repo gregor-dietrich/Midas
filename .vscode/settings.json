@@ -17,14 +17,14 @@
       "source.fixAll.ruff": "explicit",
       "source.organizeImports.ruff": "explicit"
     },
-    "editor.defaultFormatter": "ms-python.autopep8",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true
   },
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
   "editor.formatOnSave": true,
-  "java.autobuild.enabled": true,
+  "java.autobuild.enabled": false,
   "java.cleanup.actions": [
     // Specifies a list of cleanup actions applied automatically to improve code quality.
     "addDeprecated", // Marks methods as @Deprecated if they override or implement deprecated methods.
