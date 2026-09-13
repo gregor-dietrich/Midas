@@ -55,7 +55,8 @@ across both; `spotbugs-exclude.xml` and `checkstyle-suppressions.xml` share a co
 baseline and carry per-module sections. Deviations are allowed only where they are
 unavoidable (package names, Vaadin present or absent, multi-module path resolution) or
 carry a written reason in the file itself — never as a convenience. When changing a gate
-here, make the same change there.
+here, point out that `aimathtutor` needs the same change, but never edit that repository
+unless explicitly asked to.
 
 You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
 If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make test`.
