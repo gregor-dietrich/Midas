@@ -20,7 +20,7 @@
 
     <assertj.version>3.27.7</assertj.version>
     <line-awesome.version>2.1.0</line-awesome.version>
-    <vaadin.version>25.2.6</vaadin.version>
+    <vaadin.version>25.2.7</vaadin.version>
   </properties>
 
   <dependencyManagement>
