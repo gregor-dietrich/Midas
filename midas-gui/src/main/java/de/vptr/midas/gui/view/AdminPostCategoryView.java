@@ -174,7 +174,7 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
                 .toList();
 
         final var tg = Objects.requireNonNull(this.treeGrid);
-        tg.setItems(topLevelCategories, category -> searchResults.stream().filter(
+        this.setTreeItems(topLevelCategories, category -> searchResults.stream().filter(
                 cat -> cat.getParentPublicId() != null && cat.getParentPublicId().equals(category.getPublicId()))
                 .toList());
 

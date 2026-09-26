@@ -65,7 +65,7 @@ public class AsyncSearchLayout extends HorizontalLayout {
 
         this.searchButton = new SearchButton(e -> this.executeSearch(), tooltip);
 
-        this.clearButton = new Button(VaadinIcon.CLOSE_SMALL.create(), e -> this.executeClear());
+        this.clearButton = new Button(VaadinIcon.CLOSE.create(), e -> this.executeClear());
         this.clearButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         this.clearButton.setTooltipText("Clear search");
 

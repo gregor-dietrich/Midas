@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.view;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -7,6 +8,10 @@ import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider.HierarchyFormat;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 
@@ -82,8 +87,15 @@ public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView
         final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
 
         final var tg = Objects.requireNonNull(this.treeGrid);
-        tg.setItems(rootCategories, this::getChildrenOfCategory);
+        this.setTreeItems(rootCategories, this::getChildrenOfCategory);
         tg.expandRecursively(rootCategories, this.getDefaultExpansionDepth());
+    }
+
+    /** Populate the tree grid while retaining Vaadin's nested hierarchy behavior. */
+    protected void setTreeItems(final List<PostCategoryResponseDto> roots,
+            final ValueProvider<PostCategoryResponseDto, Collection<PostCategoryResponseDto>> childProvider) {
+        Objects.requireNonNull(this.treeGrid).setDataProvider(new TreeDataProvider<>(
+                new TreeData<PostCategoryResponseDto>().addItems(roots, childProvider), HierarchyFormat.NESTED));
     }
 
     protected int getDefaultExpansionDepth() {
