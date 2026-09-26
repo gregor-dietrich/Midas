@@ -19,7 +19,7 @@
     <nullaway.annotated.packages>de.vptr.midas.api</nullaway.annotated.packages>
 
     <bucket4j.version>1.0.7</bucket4j.version>
-    <html-sanitizer.version>20260313.1</html-sanitizer.version>
+    <html-sanitizer.version>20260924.2</html-sanitizer.version>
     <ulid-creator.version>5.2.4</ulid-creator.version>
   </properties>
 
