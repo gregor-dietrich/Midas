@@ -282,7 +282,7 @@
             <failBuildOnCVSS>7</failBuildOnCVSS>
             <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
             <suppressionFiles>
-              <suppressionFile>${project.basedir}/dependency-check-suppression.xml</suppressionFile>
+              <suppressionFile>${maven.multiModuleProjectDirectory}/dependency-check-suppression.xml</suppressionFile>
             </suppressionFiles>
           </configuration>
         </plugin>
@@ -314,7 +314,7 @@
             <includeTests>true</includeTests>
             <linkXRef>false</linkXRef>
             <rulesets>
-              <ruleset>${project.basedir}/pmd-ruleset.xml</ruleset>
+              <ruleset>${maven.multiModuleProjectDirectory}/pmd-ruleset.xml</ruleset>
             </rulesets>
             <failOnViolation>true</failOnViolation>
           </configuration>
