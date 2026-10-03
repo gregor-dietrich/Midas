@@ -3,8 +3,15 @@ package de.vptr.midas.api.resource;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PostCommentDto;
 import de.vptr.midas.api.dto.PostCommentResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.PostCommentService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -36,6 +43,7 @@ import jakarta.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "PostComment")
 public class PostCommentResource {
 
     @Context
@@ -57,6 +65,9 @@ public class PostCommentResource {
 
     @GET
     @Path("/{publicId}")
+    @APIResponseSchema(value = PostCommentResponseDto.class, responseDescription = "Comment found")
+    @APIResponse(responseCode = "404", description = "Comment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getComment(@PathParam("publicId") final String publicId) {
         return ResponseUtil.okOrNotFound(this.commentService.findById(publicId));
     }
@@ -118,6 +129,12 @@ public class PostCommentResource {
     /** Processes the request and returns the result. */
     @POST
     @RolesAllowed({ "post-comment:add" })
+    @APIResponseSchema(value = PostCommentResponseDto.class, responseCode = "201",
+            responseDescription = "Comment created")
+    @APIResponse(responseCode = "400", description = "Comments not allowed on this post",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createComment(@Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostCommentResponseDto created = this.commentService.createComment(commentDto, currentUsername);
@@ -128,6 +145,11 @@ public class PostCommentResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "post-comment:edit" })
+    @APIResponseSchema(value = PostCommentResponseDto.class, responseDescription = "Comment replaced")
+    @APIResponse(responseCode = "404", description = "Comment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateComment(@PathParam("publicId") final String publicId,
             @Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
@@ -139,6 +161,9 @@ public class PostCommentResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "post-comment:edit" })
+    @APIResponseSchema(value = PostCommentResponseDto.class, responseDescription = "Comment updated")
+    @APIResponse(responseCode = "404", description = "Comment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchComment(@PathParam("publicId") final String publicId, final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostCommentResponseDto updated = this.commentService.patchComment(publicId, commentDto, currentUsername);
@@ -149,6 +174,9 @@ public class PostCommentResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "post-comment:delete" })
+    @APIResponse(responseCode = "204", description = "Comment deleted")
+    @APIResponse(responseCode = "404", description = "Comment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteComment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final boolean deleted = this.commentService.deleteComment(publicId, currentUsername);

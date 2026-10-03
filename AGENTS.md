@@ -30,6 +30,7 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 - `make dev-api`: Start the backend API in Quarkus Dev Mode (port 8080).
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
 - `make kill`: Terminate all Quarkus/Maven processes and clean up Docker containers.
+- `make openapi`: Regenerate the committed OpenAPI contract snapshot (`midas-api/openapi.yaml`).
 - `make password`: Generate a salt+hash for the API `init.sql`.
 
 ## Development Conventions
@@ -64,6 +65,11 @@ If any quality gates or tests fail, work on them until all problems are resolved
 ### Design Patterns & Logic
 
 - **API Response**: Standardized JSON error payloads with `status`, `error`, and `message`.
+- **API Contract**: The API surface is described by OpenAPI, generated from the JAX-RS and
+  `@APIResponse` annotations. `midas-api/openapi.yaml` is a committed snapshot of that contract and
+  `OpenApiContractTest` fails the build when the two diverge. After any change to a resource
+  signature, response status, or DTO, run `make openapi` and commit the diff. The contract is also
+  served live at `/q/openapi`, with Swagger UI at `/q/swagger-ui` in dev mode.
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at both GUI and API levels.
 - **Security**: Basic Auth with BCrypt. The GUI stores backend credentials behind an opaque session ID.
 - **Architecture**: Prefer composition and clear abstraction. Use MicroProfile Fault Tolerance in the GUI for resilient API communication.

@@ -4,8 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PostDto;
 import de.vptr.midas.api.dto.PostResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.PostService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -36,6 +43,7 @@ import jakarta.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "Post")
 public class PostResource {
 
     @Inject
@@ -78,6 +86,9 @@ public class PostResource {
     /** Returns the post with the given publicId, hiding unpublished drafts from non-privileged callers. */
     @GET
     @Path("/{publicId}")
+    @APIResponseSchema(value = PostResponseDto.class, responseDescription = "Post found")
+    @APIResponse(responseCode = "404", description = "Post not found, or draft hidden from this caller",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getPost(@PathParam("publicId") final String publicId) {
         final Optional<PostResponseDto> post = this.postService.findById(publicId);
         // Hide unpublished drafts from non-privileged callers (the author and admins may still see them).
@@ -168,6 +179,9 @@ public class PostResource {
      */
     @POST
     @RolesAllowed({ "post:add" })
+    @APIResponseSchema(value = PostResponseDto.class, responseCode = "201", responseDescription = "Post created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createPost(@Valid final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostResponseDto created = this.postService.createPost(postDto, currentUsername);
@@ -178,6 +192,11 @@ public class PostResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "post:edit" })
+    @APIResponseSchema(value = PostResponseDto.class, responseDescription = "Post replaced")
+    @APIResponse(responseCode = "404", description = "Post not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updatePost(@PathParam("publicId") final String publicId, @Valid final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostResponseDto updated = this.postService.updatePost(publicId, postDto, currentUsername);
@@ -188,6 +207,9 @@ public class PostResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "post:edit" })
+    @APIResponseSchema(value = PostResponseDto.class, responseDescription = "Post updated")
+    @APIResponse(responseCode = "404", description = "Post not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchPost(@PathParam("publicId") final String publicId, final PostDto postDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PostResponseDto updated = this.postService.patchPost(publicId, postDto, currentUsername);
@@ -198,6 +220,9 @@ public class PostResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "post:delete" })
+    @APIResponse(responseCode = "204", description = "Post deleted")
+    @APIResponse(responseCode = "404", description = "Post not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deletePost(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final boolean deleted = this.postService.deletePost(publicId, currentUsername);

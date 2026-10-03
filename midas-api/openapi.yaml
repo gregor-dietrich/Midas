@@ -1,0 +1,4449 @@
+---
+openapi: 3.1.0
+tags:
+- name: Account
+- name: Page
+- name: Payment
+- name: Post
+- name: PostCategory
+- name: PostComment
+- name: User
+- name: UserGroup
+- name: UserRank
+components:
+  schemas:
+    AccountAccessResponseDto:
+      type: object
+      properties:
+        hasAccess:
+          type: boolean
+    AccountAssociationResponseDto:
+      type: object
+      properties:
+        associated:
+          type: boolean
+    AccountDto:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 255
+    AccountResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        userCount:
+          type: integer
+          format: int64
+        associatedUserPublicIds:
+          type: array
+          items:
+            type: string
+        balance:
+          type: number
+        isNegative:
+          type: boolean
+        canManage:
+          type: boolean
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    ApiErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        error:
+          type: string
+        message:
+          type: string
+    BalancePointDto:
+      type: object
+      properties:
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        balance:
+          type: number
+    BalanceResponseDto:
+      type: object
+      properties:
+        balance:
+          type: number
+    LocalDate:
+      type: string
+      format: date
+      examples:
+      - 2022-03-10
+    LocalDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50
+    PageDto:
+      type: object
+      required:
+      - title
+      - content
+      properties:
+        title:
+          type: string
+          pattern: \S
+          maxLength: 255
+        content:
+          type: string
+          pattern: \S
+          maxLength: 50000
+    PageResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    PasswordChangeDto:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          pattern: \S
+        newPassword:
+          type: string
+          pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$"
+          minLength: 8
+          maxLength: 100
+    PaymentDto:
+      type: object
+      properties:
+        targetAccountPublicId:
+          type: string
+        sourceAccountPublicId:
+          type: string
+        comment:
+          type: string
+          pattern: \S
+          maxLength: 1000
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        amount:
+          type: number
+          exclusiveMinimum: 0.00
+          multipleOf: 0.01
+      required:
+      - comment
+      - date
+      - amount
+    PaymentResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        targetAccountPublicId:
+          type: string
+        targetAccountName:
+          type: string
+        sourceAccountPublicId:
+          type: string
+        sourceAccountName:
+          type: string
+        userPublicId:
+          type: string
+        username:
+          type: string
+        comment:
+          type: string
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        amount:
+          type: number
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    PostCategoryDto:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 255
+        parentPublicId:
+          type: string
+    PostCategoryResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        parentPublicId:
+          type: string
+        parentName:
+          type: string
+        isRootCategory:
+          type: boolean
+        childrenCount:
+          type: integer
+          format: int32
+        postsCount:
+          type: integer
+          format: int32
+        childrenPublicIds:
+          type: array
+          items:
+            type: string
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    PostCommentDto:
+      type: object
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 10000
+        postPublicId:
+          type: string
+    PostCommentResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        content:
+          type: string
+        postPublicId:
+          type: string
+        postTitle:
+          type: string
+        userPublicId:
+          type: string
+        username:
+          type: string
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    PostDto:
+      type: object
+      required:
+      - title
+      - content
+      properties:
+        title:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 255
+        content:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 50000
+        categoryPublicId:
+          type: string
+        published:
+          type: boolean
+        commentable:
+          type: boolean
+    PostResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        userPublicId:
+          type: string
+        username:
+          type: string
+        categoryPublicId:
+          type: string
+        categoryName:
+          type: string
+        published:
+          type: boolean
+        commentable:
+          type: boolean
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+        commentsCount:
+          type: integer
+          format: int64
+    UserAccountMetaDto:
+      type: object
+      properties:
+        isNegative:
+          type: boolean
+        canManage:
+          type: boolean
+    UserDto:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+          pattern: \S
+          minLength: 3
+          maxLength: 50
+        password:
+          type: string
+          pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$"
+          minLength: 8
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 255
+        rankPublicId:
+          type: string
+        banned:
+          type: boolean
+        activated:
+          type: boolean
+        lastIp:
+          type: string
+          maxLength: 45
+    UserGroupDto:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          pattern: \S
+    UserGroupResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        name:
+          type: string
+        userCount:
+          type: integer
+          format: int64
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    UserRankDto:
+      type: object
+      properties:
+        adminView:
+          type: boolean
+        pageAdd:
+          type: boolean
+        pageDelete:
+          type: boolean
+        pageEdit:
+          type: boolean
+        postAdd:
+          type: boolean
+        postDelete:
+          type: boolean
+        postEdit:
+          type: boolean
+        postCategoryAdd:
+          type: boolean
+        postCategoryDelete:
+          type: boolean
+        postCategoryEdit:
+          type: boolean
+        postCommentAdd:
+          type: boolean
+        postCommentDelete:
+          type: boolean
+        postCommentEdit:
+          type: boolean
+        userAdd:
+          type: boolean
+        userDelete:
+          type: boolean
+        userEdit:
+          type: boolean
+        userGroupAdd:
+          type: boolean
+        userGroupDelete:
+          type: boolean
+        userGroupEdit:
+          type: boolean
+        userAccountAdd:
+          type: boolean
+        userAccountDelete:
+          type: boolean
+        userAccountEdit:
+          type: boolean
+        userRankAdd:
+          type: boolean
+        userRankDelete:
+          type: boolean
+        userRankEdit:
+          type: boolean
+        name:
+          type: string
+          pattern: \S
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+    UserRankResponseDto:
+      type: object
+      properties:
+        adminView:
+          type: boolean
+        pageAdd:
+          type: boolean
+        pageDelete:
+          type: boolean
+        pageEdit:
+          type: boolean
+        postAdd:
+          type: boolean
+        postDelete:
+          type: boolean
+        postEdit:
+          type: boolean
+        postCategoryAdd:
+          type: boolean
+        postCategoryDelete:
+          type: boolean
+        postCategoryEdit:
+          type: boolean
+        postCommentAdd:
+          type: boolean
+        postCommentDelete:
+          type: boolean
+        postCommentEdit:
+          type: boolean
+        userAdd:
+          type: boolean
+        userDelete:
+          type: boolean
+        userEdit:
+          type: boolean
+        userGroupAdd:
+          type: boolean
+        userGroupDelete:
+          type: boolean
+        userGroupEdit:
+          type: boolean
+        userAccountAdd:
+          type: boolean
+        userAccountDelete:
+          type: boolean
+        userAccountEdit:
+          type: boolean
+        userRankAdd:
+          type: boolean
+        userRankDelete:
+          type: boolean
+        userRankEdit:
+          type: boolean
+        publicId:
+          type: string
+        name:
+          type: string
+        usersCount:
+          type: integer
+          format: int64
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastEdit:
+          $ref: "#/components/schemas/LocalDateTime"
+    UserResponseDto:
+      type: object
+      properties:
+        publicId:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        rankPublicId:
+          type: string
+        rankName:
+          type: string
+        banned:
+          type: boolean
+        activated:
+          type: boolean
+        created:
+          $ref: "#/components/schemas/LocalDateTime"
+        lastLogin:
+          $ref: "#/components/schemas/LocalDateTime"
+        postsCount:
+          type: integer
+          format: int64
+        commentsCount:
+          type: integer
+          format: int64
+        isNegative:
+          type: boolean
+        canManage:
+          type: boolean
+  securitySchemes:
+    basicAuth:
+      description: Authentication
+      type: http
+      scheme: basic
+paths:
+  /api/v1/accounts:
+    get:
+      operationId: getAllAccounts
+      tags:
+      - Account
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Accounts
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+    post:
+      operationId: createAccount
+      tags:
+      - Account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Account
+      security:
+      - basicAuth:
+        - user-account:add
+  /api/v1/accounts/my:
+    get:
+      operationId: getMyAccounts
+      tags:
+      - Account
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Accounts
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/balance-history:
+    get:
+      operationId: getMyTotalBalanceHistory
+      tags:
+      - Account
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BalancePointDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Total Balance History
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/payments:
+    get:
+      operationId: getMyAccountsPayments
+      tags:
+      - Account
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Accounts Payments
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/with-balances:
+    get:
+      operationId: getMyAccountsWithBalances
+      tags:
+      - Account
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Accounts With Balances
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{accountPublicId}/payments:
+    post:
+      operationId: createMyAccountPayment
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDto"
+        required: true
+      responses:
+        "403":
+          description: Caller has no access to this account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "400":
+          description: Bad Request
+      summary: Create My Account Payment
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{accountPublicId}/payments/{paymentPublicId}:
+    put:
+      operationId: updateMyAccountPayment
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: paymentPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDto"
+        required: true
+      responses:
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: Caller has no access to this account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Payment replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "400":
+          description: Bad Request
+      summary: Update My Account Payment
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deleteMyAccountPayment
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: paymentPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Payment deleted
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: Caller has no access to this account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+      summary: Delete My Account Payment
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/balance:
+    get:
+      operationId: getMyAccountBalance
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "403":
+          description: Caller has no access to this account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Account balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceResponseDto"
+        "401":
+          description: Not Authorized
+      summary: Get My Account Balance
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/balance-history:
+    get:
+      operationId: getMyAccountBalanceHistory
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BalancePointDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Account Balance History
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/check:
+    get:
+      operationId: checkMyAccountAccess
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountAccessResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Check My Account Access
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/payments:
+    get:
+      operationId: getMyAccountPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Account Payments
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/payments/incoming:
+    get:
+      operationId: getMyAccountIncomingPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Account Incoming Payments
+      security:
+      - basicAuth: []
+  /api/v1/accounts/my/{publicId}/payments/outgoing:
+    get:
+      operationId: getMyAccountOutgoingPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get My Account Outgoing Payments
+      security:
+      - basicAuth: []
+  /api/v1/accounts/name/{name}:
+    get:
+      operationId: getAccountByName
+      tags:
+      - Account
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Account By Name
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/search:
+    get:
+      operationId: searchAccounts
+      tags:
+      - Account
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Matching accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Accounts
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/user/{userPublicId}:
+    get:
+      operationId: getAccountsByUser
+      tags:
+      - Account
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Accounts By User
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/user/{userPublicId}/account/{accountPublicId}/check:
+    get:
+      operationId: checkUserAccountAssociation
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Association status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountAssociationResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Check User Account Association
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/{accountPublicId}/users/{userPublicId}:
+    patch:
+      operationId: updateUserAccountMeta
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserAccountMetaDto"
+        required: true
+      responses:
+        "204":
+          description: Association meta updated
+        "404":
+          description: Association not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Update User Account Meta
+      security:
+      - basicAuth:
+        - user-account:edit
+    delete:
+      operationId: removeUserFromAccount
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Association removed
+        "404":
+          description: Association not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Remove User From Account
+      security:
+      - basicAuth:
+        - user-account:edit
+    post:
+      operationId: associateUserWithAccount
+      tags:
+      - Account
+      parameters:
+      - name: accountPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: User associated with account
+        "404":
+          description: User or account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: User is already associated with this account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Associate User With Account
+      security:
+      - basicAuth:
+        - user-account:edit
+  /api/v1/accounts/{publicId}:
+    put:
+      operationId: updateAccount
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDto"
+        required: true
+      responses:
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Account replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Account
+      security:
+      - basicAuth:
+        - user-account:edit
+    patch:
+      operationId: patchAccount
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountDto"
+        required: true
+      responses:
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Account
+      security:
+      - basicAuth:
+        - user-account:edit
+    get:
+      operationId: getAccount
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Account
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+    delete:
+      operationId: deleteAccount
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Account deleted
+        "404":
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: Account still has payments
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Account
+      security:
+      - basicAuth:
+        - user-account:delete
+  /api/v1/accounts/{publicId}/balance:
+    get:
+      operationId: getAccountBalance
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Account balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Account Balance
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/{publicId}/payments:
+    get:
+      operationId: getAccountPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Account Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/{publicId}/payments/incoming:
+    get:
+      operationId: getIncomingPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Incoming Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/{publicId}/payments/outgoing:
+    get:
+      operationId: getOutgoingPayments
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Outgoing Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/accounts/{publicId}/users:
+    get:
+      operationId: getAssociatedUsers
+      tags:
+      - Account
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Associated Users
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/auth:
+    head:
+      operationId: validateAuth
+      responses:
+        "200":
+          description: Credentials are valid
+          content: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Validate Auth
+      tags:
+      - Auth Resource
+      security:
+      - basicAuth: []
+  /api/v1/categories:
+    get:
+      operationId: getAllCategories
+      tags:
+      - PostCategory
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Categories
+      security:
+      - basicAuth: []
+    post:
+      operationId: createCategory
+      tags:
+      - PostCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCategoryDto"
+        required: true
+      responses:
+        "400":
+          description: Invalid parent category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Create Category
+      security:
+      - basicAuth:
+        - post-category:add
+  /api/v1/categories/parent/{parentPublicId}:
+    get:
+      operationId: getCategoriesByParent
+      tags:
+      - PostCategory
+      parameters:
+      - name: parentPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Categories By Parent
+      security:
+      - basicAuth: []
+  /api/v1/categories/root:
+    get:
+      operationId: getRootCategories
+      tags:
+      - PostCategory
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Root Categories
+      security:
+      - basicAuth: []
+  /api/v1/categories/search:
+    get:
+      operationId: searchCategories
+      tags:
+      - PostCategory
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Categories
+      security:
+      - basicAuth:
+        - post-category:add
+        - post-category:edit
+        - post-category:delete
+  /api/v1/categories/{publicId}:
+    put:
+      operationId: updateCategory
+      tags:
+      - PostCategory
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCategoryDto"
+        required: true
+      responses:
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: Invalid parent category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Category replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Update Category
+      security:
+      - basicAuth:
+        - post-category:edit
+    patch:
+      operationId: patchCategory
+      tags:
+      - PostCategory
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCategoryDto"
+        required: true
+      responses:
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "400":
+          description: Invalid parent category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Category
+      security:
+      - basicAuth:
+        - post-category:edit
+    get:
+      operationId: getCategory
+      tags:
+      - PostCategory
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Category found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCategoryResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Category
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deleteCategory
+      tags:
+      - PostCategory
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Category deleted
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Category
+      security:
+      - basicAuth:
+        - post-category:delete
+  /api/v1/comments:
+    get:
+      operationId: getAllComments
+      tags:
+      - PostComment
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Comments
+      security:
+      - basicAuth:
+        - post-comment:edit
+        - post-comment:delete
+    post:
+      operationId: createComment
+      tags:
+      - PostComment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCommentDto"
+        required: true
+      responses:
+        "400":
+          description: Comments not allowed on this post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Create Comment
+      security:
+      - basicAuth:
+        - post-comment:add
+  /api/v1/comments/date-range:
+    get:
+      operationId: getCommentsByDateRange
+      tags:
+      - PostComment
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Comments By Date Range
+      security:
+      - basicAuth: []
+  /api/v1/comments/post/{postPublicId}:
+    get:
+      operationId: getCommentsByPost
+      tags:
+      - PostComment
+      parameters:
+      - name: postPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Comments By Post
+      security:
+      - basicAuth: []
+  /api/v1/comments/recent:
+    get:
+      operationId: getRecentComments
+      tags:
+      - PostComment
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Recent Comments
+      security:
+      - basicAuth: []
+  /api/v1/comments/search:
+    get:
+      operationId: searchComments
+      tags:
+      - PostComment
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Comments
+      security:
+      - basicAuth: []
+  /api/v1/comments/user/{userPublicId}:
+    get:
+      operationId: getCommentsByUser
+      tags:
+      - PostComment
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Comments By User
+      security:
+      - basicAuth: []
+  /api/v1/comments/{publicId}:
+    put:
+      operationId: updateComment
+      tags:
+      - PostComment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCommentDto"
+        required: true
+      responses:
+        "404":
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Comment replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Comment
+      security:
+      - basicAuth:
+        - post-comment:edit
+    patch:
+      operationId: patchComment
+      tags:
+      - PostComment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostCommentDto"
+        required: true
+      responses:
+        "404":
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Comment
+      security:
+      - basicAuth:
+        - post-comment:edit
+    get:
+      operationId: getComment
+      tags:
+      - PostComment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Comment found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostCommentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Comment
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deleteComment
+      tags:
+      - PostComment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Comment deleted
+        "404":
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Comment
+      security:
+      - basicAuth:
+        - post-comment:delete
+  /api/v1/pages:
+    get:
+      operationId: getAllPages
+      tags:
+      - Page
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Pages
+      security:
+      - basicAuth: []
+    post:
+      operationId: createPage
+      tags:
+      - Page
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Page created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Page
+      security:
+      - basicAuth:
+        - page:add
+  /api/v1/pages/search:
+    get:
+      operationId: searchPages
+      tags:
+      - Page
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Pages
+      security:
+      - basicAuth: []
+  /api/v1/pages/{publicId}:
+    put:
+      operationId: updatePage
+      tags:
+      - Page
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageDto"
+        required: true
+      responses:
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Page replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Page
+      security:
+      - basicAuth:
+        - page:edit
+    patch:
+      operationId: patchPage
+      tags:
+      - Page
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PageDto"
+        required: true
+      responses:
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Page updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Page
+      security:
+      - basicAuth:
+        - page:edit
+    get:
+      operationId: getPage
+      tags:
+      - Page
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Page found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Page
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deletePage
+      tags:
+      - Page
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Page deleted
+        "404":
+          description: Page not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Page
+      security:
+      - basicAuth:
+        - page:delete
+  /api/v1/payments:
+    get:
+      operationId: getAllPayments
+      tags:
+      - Payment
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+    post:
+      operationId: createPayment
+      tags:
+      - Payment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Payment
+      security:
+      - basicAuth:
+        - user-account:add
+  /api/v1/payments/date-range:
+    get:
+      operationId: getPaymentsByDateRange
+      tags:
+      - Payment
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Payments By Date Range
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/recent:
+    get:
+      operationId: getRecentPayments
+      tags:
+      - Payment
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Recent Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/search:
+    get:
+      operationId: searchPayments
+      tags:
+      - Payment
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Payments
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/source/{sourcePublicId}:
+    get:
+      operationId: getPaymentsBySourceAccount
+      tags:
+      - Payment
+      parameters:
+      - name: sourcePublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Payments By Source Account
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/target/{targetPublicId}:
+    get:
+      operationId: getPaymentsByTargetAccount
+      tags:
+      - Payment
+      parameters:
+      - name: targetPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Payments By Target Account
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/user/{userPublicId}:
+    get:
+      operationId: getPaymentsByUser
+      tags:
+      - Payment
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Payments By User
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/user/{userPublicId}/total:
+    get:
+      operationId: getTotalAmountByUser
+      tags:
+      - Payment
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Total payment amount for the user
+          content:
+            application/json:
+              schema:
+                type: number
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Total Amount By User
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+  /api/v1/payments/{publicId}:
+    put:
+      operationId: updatePayment
+      tags:
+      - Payment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDto"
+        required: true
+      responses:
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Payment replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Payment
+      security:
+      - basicAuth:
+        - user-account:edit
+    patch:
+      operationId: patchPayment
+      tags:
+      - Payment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentDto"
+        required: true
+      responses:
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Payment
+      security:
+      - basicAuth:
+        - user-account:edit
+    get:
+      operationId: getPayment
+      tags:
+      - Payment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Payment found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Payment
+      security:
+      - basicAuth:
+        - user-account:edit
+        - user-account:delete
+    delete:
+      operationId: deletePayment
+      tags:
+      - Payment
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Payment deleted
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Payment
+      security:
+      - basicAuth:
+        - user-account:delete
+  /api/v1/posts:
+    get:
+      operationId: getAllPosts
+      tags:
+      - Post
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Posts
+      security:
+      - basicAuth: []
+    post:
+      operationId: createPost
+      tags:
+      - Post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Post
+      security:
+      - basicAuth:
+        - post:add
+  /api/v1/posts/category/{categoryPublicId}:
+    get:
+      operationId: getPostsByCategory
+      tags:
+      - Post
+      parameters:
+      - name: categoryPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Posts By Category
+      security:
+      - basicAuth: []
+  /api/v1/posts/date-range:
+    get:
+      operationId: getPostsByDateRange
+      tags:
+      - Post
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Posts By Date Range
+      security:
+      - basicAuth: []
+  /api/v1/posts/date-range/admin:
+    get:
+      operationId: getAllPostsByDateRange
+      tags:
+      - Post
+      parameters:
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Posts By Date Range
+      security:
+      - basicAuth:
+        - admin:view
+  /api/v1/posts/published:
+    get:
+      operationId: getPublishedPosts
+      tags:
+      - Post
+      parameters:
+      - name: categoryPublicId
+        in: query
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: startDate
+        in: query
+        schema:
+          $ref: "#/components/schemas/LocalDate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Published Posts
+      security:
+      - basicAuth: []
+  /api/v1/posts/search:
+    get:
+      operationId: searchPosts
+      tags:
+      - Post
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Posts
+      security:
+      - basicAuth: []
+  /api/v1/posts/user/{userPublicId}:
+    get:
+      operationId: getPostsByUser
+      tags:
+      - Post
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Posts By User
+      security:
+      - basicAuth: []
+  /api/v1/posts/user/{userPublicId}/admin:
+    get:
+      operationId: getAllPostsByUser
+      tags:
+      - Post
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Posts By User
+      security:
+      - basicAuth:
+        - admin:view
+  /api/v1/posts/{publicId}:
+    put:
+      operationId: updatePost
+      tags:
+      - Post
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDto"
+        required: true
+      responses:
+        "404":
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Post replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Post
+      security:
+      - basicAuth:
+        - post:edit
+    patch:
+      operationId: patchPost
+      tags:
+      - Post
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDto"
+        required: true
+      responses:
+        "404":
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Post
+      security:
+      - basicAuth:
+        - post:edit
+    get:
+      operationId: getPost
+      tags:
+      - Post
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: "Post not found, or draft hidden from this caller"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Post found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Post
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deletePost
+      tags:
+      - Post
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Post deleted
+        "404":
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Post
+      security:
+      - basicAuth:
+        - post:delete
+  /api/v1/user-groups:
+    get:
+      operationId: getAllGroups
+      tags:
+      - UserGroup
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Groups
+      security:
+      - basicAuth:
+        - user-group:edit
+        - user-group:delete
+    post:
+      operationId: createGroup
+      tags:
+      - UserGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserGroupDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Group
+      security:
+      - basicAuth:
+        - user-group:add
+  /api/v1/user-groups/name/{name}:
+    get:
+      operationId: getGroupByName
+      tags:
+      - UserGroup
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 255
+      responses:
+        "404":
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Name longer than 255 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Group found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Group By Name
+      security:
+      - basicAuth: []
+  /api/v1/user-groups/search:
+    get:
+      operationId: searchGroups
+      tags:
+      - UserGroup
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Groups
+      security:
+      - basicAuth: []
+  /api/v1/user-groups/user/{userPublicId}:
+    get:
+      operationId: getGroupsForUser
+      tags:
+      - UserGroup
+      parameters:
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Groups For User
+      security:
+      - basicAuth:
+        - user-group:edit
+        - user-group:delete
+  /api/v1/user-groups/user/{userPublicId}/group/{groupPublicId}/check:
+    get:
+      operationId: checkUserInGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: groupPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: True when the user belongs to the group
+          content:
+            application/json:
+              schema:
+                type: boolean
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Check User In Group
+      security:
+      - basicAuth:
+        - user-group:edit
+        - user-group:delete
+  /api/v1/user-groups/{groupPublicId}/users/{userPublicId}:
+    delete:
+      operationId: removeUserFromGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: groupPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: User removed from group
+        "404":
+          description: Membership not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Remove User From Group
+      security:
+      - basicAuth:
+        - user-group:edit
+    post:
+      operationId: addUserToGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: groupPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userPublicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: User added to group
+        "404":
+          description: User or group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: User is already in this group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Add User To Group
+      security:
+      - basicAuth:
+        - user-group:edit
+  /api/v1/user-groups/{publicId}:
+    put:
+      operationId: updateGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserGroupDto"
+        required: true
+      responses:
+        "404":
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Group replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Group
+      security:
+      - basicAuth:
+        - user-group:edit
+    patch:
+      operationId: patchGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserGroupDto"
+        required: true
+      responses:
+        "404":
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Group
+      security:
+      - basicAuth:
+        - user-group:edit
+    get:
+      operationId: getGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Group found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserGroupResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Group
+      security:
+      - basicAuth: []
+    delete:
+      operationId: deleteGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Group deleted
+        "404":
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Group
+      security:
+      - basicAuth:
+        - user-group:delete
+  /api/v1/user-groups/{publicId}/users:
+    get:
+      operationId: getUsersInGroup
+      tags:
+      - UserGroup
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Users In Group
+      security:
+      - basicAuth:
+        - user-group:edit
+        - user-group:delete
+  /api/v1/user-ranks:
+    get:
+      operationId: getAllRanks
+      tags:
+      - UserRank
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Ranks
+      security:
+      - basicAuth:
+        - user-rank:edit
+        - user-rank:delete
+    post:
+      operationId: createRank
+      tags:
+      - UserRank
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRankDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: Rank created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Rank
+      security:
+      - basicAuth:
+        - user-rank:add
+  /api/v1/user-ranks/name/{name}:
+    get:
+      operationId: getRankByName
+      tags:
+      - UserRank
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 255
+      responses:
+        "404":
+          description: Rank not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Name longer than 255 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Rank found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Rank By Name
+      security:
+      - basicAuth:
+        - user-rank:edit
+        - user-rank:delete
+  /api/v1/user-ranks/search:
+    get:
+      operationId: searchRanks
+      tags:
+      - UserRank
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Ranks
+      security:
+      - basicAuth:
+        - user-rank:edit
+        - user-rank:delete
+  /api/v1/user-ranks/{publicId}:
+    put:
+      operationId: updateRank
+      tags:
+      - UserRank
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRankDto"
+        required: true
+      responses:
+        "404":
+          description: Rank not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Rank replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update Rank
+      security:
+      - basicAuth:
+        - user-rank:edit
+    patch:
+      operationId: patchRank
+      tags:
+      - UserRank
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRankDto"
+        required: true
+      responses:
+        "404":
+          description: Rank not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Rank updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch Rank
+      security:
+      - basicAuth:
+        - user-rank:edit
+    get:
+      operationId: getRank
+      tags:
+      - UserRank
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Rank not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Rank found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRankResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Rank
+      security:
+      - basicAuth:
+        - user-rank:edit
+        - user-rank:delete
+    delete:
+      operationId: deleteRank
+      tags:
+      - UserRank
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Rank deleted
+        "404":
+          description: Rank not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Rank
+      security:
+      - basicAuth:
+        - user-rank:delete
+  /api/v1/users:
+    get:
+      operationId: getAllUsers
+      tags:
+      - User
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get All Users
+      security:
+      - basicAuth:
+        - user:delete
+        - user:edit
+    post:
+      operationId: createUser
+      tags:
+      - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDto"
+        required: true
+      responses:
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create User
+      security:
+      - basicAuth:
+        - user:add
+  /api/v1/users/email:
+    get:
+      operationId: getUserByEmail
+      tags:
+      - User
+      parameters:
+      - name: email
+        in: query
+        schema:
+          type: string
+          maxLength: 255
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Email longer than 255 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get User By Email
+      security:
+      - basicAuth:
+        - user:delete
+        - user:edit
+  /api/v1/users/me:
+    get:
+      operationId: getCurrentUser
+      tags:
+      - User
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Current User
+      security:
+      - basicAuth: []
+  /api/v1/users/me/password:
+    post:
+      operationId: changePassword
+      tags:
+      - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeDto"
+        required: true
+      responses:
+        "200":
+          description: Password changed
+          content: {}
+        "403":
+          description: User is banned or not activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Current password incorrect or new password invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "400":
+          description: Bad Request
+      summary: Change Password
+      security:
+      - basicAuth: []
+  /api/v1/users/search:
+    get:
+      operationId: searchUsers
+      tags:
+      - User
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Search Users
+      security:
+      - basicAuth:
+        - user:delete
+        - user:edit
+  /api/v1/users/username/{username}:
+    get:
+      operationId: getUserByUsername
+      tags:
+      - User
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 255
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Username longer than 255 characters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get User By Username
+      security:
+      - basicAuth:
+        - user:delete
+        - user:edit
+  /api/v1/users/{publicId}:
+    put:
+      operationId: updateUser
+      tags:
+      - User
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDto"
+        required: true
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: User replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Update User
+      security:
+      - basicAuth:
+        - user:edit
+    patch:
+      operationId: patchUser
+      tags:
+      - User
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDto"
+        required: true
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Patch User
+      security:
+      - basicAuth:
+        - user:edit
+    get:
+      operationId: getUser
+      tags:
+      - User
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get User
+      security:
+      - basicAuth:
+        - user:delete
+        - user:edit
+    delete:
+      operationId: deleteUser
+      tags:
+      - User
+      parameters:
+      - name: publicId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete User
+      security:
+      - basicAuth:
+        - user:delete
+info:
+  title: Midas API
+  version: 1.0.0-SNAPSHOT
+  description: REST API backing the Midas GUI.
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value

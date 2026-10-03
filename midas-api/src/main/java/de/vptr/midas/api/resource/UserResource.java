@@ -2,9 +2,16 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.UserService;
 import de.vptr.midas.api.util.AppConstants;
 import de.vptr.midas.api.util.PaginationUtil;
@@ -37,6 +44,7 @@ import jakarta.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "User")
 public class UserResource {
 
     @Inject
@@ -68,6 +76,9 @@ public class UserResource {
      */
     @GET
     @Path("/me")
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "Current user")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getCurrentUser() {
         final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         return ResponseUtil.okOrNotFound(this.userService.findByUsername(username));
@@ -82,6 +93,13 @@ public class UserResource {
      */
     @POST
     @Path("/me/password")
+    @APIResponse(responseCode = "200", description = "Password changed", content = {})
+    @APIResponse(responseCode = "403", description = "User is banned or not activated",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Current password incorrect or new password invalid",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response changePassword(@Valid final PasswordChangeDto passwordChangeDto) {
         final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         this.userService.changePassword(username, passwordChangeDto);
@@ -97,6 +115,9 @@ public class UserResource {
      */
     @POST
     @RolesAllowed({ "user:add" })
+    @APIResponseSchema(value = UserResponseDto.class, responseCode = "201", responseDescription = "User created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
         if (userDto.rankPublicId != null && !AppConstants.DEFAULT_USER_RANK_PUBLIC_ID.equals(userDto.rankPublicId)
@@ -110,6 +131,11 @@ public class UserResource {
     @GET
     @Path("/username/{username}")
     @RolesAllowed({ "user:delete", "user:edit" })
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User found")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Username longer than 255 characters",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getUserByUsername(@PathParam("username") @Size(max = 255) final String username) {
         return ResponseUtil.okOrNotFound(this.userService.findByUsername(username));
     }
@@ -117,6 +143,11 @@ public class UserResource {
     @GET
     @Path("/email")
     @RolesAllowed({ "user:delete", "user:edit" })
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User found")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Email longer than 255 characters",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getUserByEmail(@QueryParam("email") @Size(max = 255) final String email) {
         return ResponseUtil.okOrNotFound(this.userService.findByEmail(email));
     }
@@ -131,6 +162,9 @@ public class UserResource {
     @GET
     @Path("/{publicId}")
     @RolesAllowed({ "user:delete", "user:edit" })
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User found")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getUser(@PathParam("publicId") final String publicId) {
         return ResponseUtil.okOrNotFound(this.userService.findById(publicId));
     }
@@ -147,6 +181,11 @@ public class UserResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user:edit" })
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User replaced")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateUser(@PathParam("publicId") final String publicId, @Valid final UserDto userDto) {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
@@ -167,6 +206,9 @@ public class UserResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user:edit" })
+    @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User updated")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
@@ -179,6 +221,9 @@ public class UserResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "user:delete" })
+    @APIResponse(responseCode = "204", description = "User deleted")
+    @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteUser(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.userService.deleteUser(publicId);
         if (deleted) {

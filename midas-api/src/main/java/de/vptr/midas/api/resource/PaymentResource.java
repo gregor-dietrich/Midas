@@ -4,8 +4,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.PaymentService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -37,6 +44,7 @@ import jakarta.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "Payment")
 public class PaymentResource {
 
     @Inject
@@ -60,6 +68,9 @@ public class PaymentResource {
     @GET
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = PaymentResponseDto.class, responseDescription = "Payment found")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getPayment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         return ResponseUtil.okOrNotFound(this.paymentService.findById(publicId, currentUsername));
@@ -111,6 +122,7 @@ public class PaymentResource {
     @GET
     @Path("/user/{userPublicId}/total")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = BigDecimal.class, responseDescription = "Total payment amount for the user")
     public Response getTotalAmountByUser(@PathParam("userPublicId") final String userPublicId) {
         final BigDecimal total = this.paymentService.getTotalAmountByUserPublicId(userPublicId);
         return ResponseUtil.ok(total);
@@ -125,6 +137,9 @@ public class PaymentResource {
      */
     @POST
     @RolesAllowed({ "user-account:add" })
+    @APIResponseSchema(value = PaymentResponseDto.class, responseCode = "201", responseDescription = "Payment created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createPayment(@Valid final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PaymentResponseDto created = this.paymentService.createPayment(paymentDto, currentUsername);
@@ -135,6 +150,11 @@ public class PaymentResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponseSchema(value = PaymentResponseDto.class, responseDescription = "Payment replaced")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updatePayment(@PathParam("publicId") final String publicId, @Valid final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PaymentResponseDto updated = this.paymentService.updatePayment(publicId, paymentDto, currentUsername);
@@ -145,6 +165,9 @@ public class PaymentResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponseSchema(value = PaymentResponseDto.class, responseDescription = "Payment updated")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchPayment(@PathParam("publicId") final String publicId, final PaymentDto paymentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final PaymentResponseDto updated = this.paymentService.patchPayment(publicId, paymentDto, currentUsername);
@@ -155,6 +178,9 @@ public class PaymentResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:delete" })
+    @APIResponse(responseCode = "204", description = "Payment deleted")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deletePayment(@PathParam("publicId") final String publicId) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);
         final boolean deleted = this.paymentService.deletePayment(publicId, currentUsername);

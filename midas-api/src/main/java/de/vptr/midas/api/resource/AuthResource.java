@@ -1,5 +1,6 @@
 package de.vptr.midas.api.resource;
 
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.api.util.ResponseUtil;
@@ -16,6 +17,7 @@ public class AuthResource {
 
     @HEAD
     @Authenticated
+    @APIResponse(responseCode = "200", description = "Credentials are valid", content = {})
     public Response validateAuth() {
         LOG.trace("validateCredentials() method called");
         return ResponseUtil.ok();

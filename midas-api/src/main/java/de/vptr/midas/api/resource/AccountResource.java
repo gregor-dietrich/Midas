@@ -5,16 +5,24 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.AccountAccessResponseDto;
 import de.vptr.midas.api.dto.AccountAssociationResponseDto;
 import de.vptr.midas.api.dto.AccountDto;
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.BalancePointDto;
+import de.vptr.midas.api.dto.BalanceResponseDto;
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
 import de.vptr.midas.api.dto.UserAccountMetaDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.AccountAccessService;
 import de.vptr.midas.api.service.AccountService;
 import de.vptr.midas.api.service.PaymentService;
@@ -48,6 +56,7 @@ import jakarta.ws.rs.core.SecurityContext;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "Account")
 public class AccountResource {
 
     @Inject
@@ -77,6 +86,9 @@ public class AccountResource {
     @GET
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = AccountResponseDto.class, responseDescription = "Account found")
+    @APIResponse(responseCode = "404", description = "Account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getAccount(@PathParam("publicId") final String publicId) {
         final var account = this.accountService.findById(publicId);
         if (account.isPresent()) {
@@ -89,6 +101,9 @@ public class AccountResource {
     @GET
     @Path("/name/{name}")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = AccountResponseDto.class, responseDescription = "Account found")
+    @APIResponse(responseCode = "404", description = "Account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getAccountByName(@PathParam("name") final String name) {
         final var account = this.accountService.findByName(name);
         if (account.isPresent()) {
@@ -133,9 +148,10 @@ public class AccountResource {
     @GET
     @Path("/{publicId}/balance")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = BalanceResponseDto.class, responseDescription = "Account balance")
     public Response getAccountBalance(@PathParam("publicId") final String publicId) {
         final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId);
-        return ResponseUtil.ok(Map.of("balance", balance));
+        return ResponseUtil.ok(new BalanceResponseDto(balance));
     }
 
     /**
@@ -144,12 +160,15 @@ public class AccountResource {
      */
     @GET
     @Path("/my/{publicId}/balance")
+    @APIResponseSchema(value = BalanceResponseDto.class, responseDescription = "Account balance")
+    @APIResponse(responseCode = "403", description = "Caller has no access to this account",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getMyAccountBalance(@PathParam("publicId") final String publicId,
             @QueryParam("startDate") @Nullable final LocalDate startDate,
             @QueryParam("endDate") @Nullable final LocalDate endDate) {
         this.requireAccountAccess(publicId, "Access denied");
         final BigDecimal balance = this.accountAccessService.getAccountBalance(publicId, startDate, endDate);
-        return ResponseUtil.ok(Map.of("balance", balance));
+        return ResponseUtil.ok(new BalanceResponseDto(balance));
     }
 
     /**
@@ -303,6 +322,7 @@ public class AccountResource {
     @GET
     @Path("/user/{userPublicId}/account/{accountPublicId}/check")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = AccountAssociationResponseDto.class, responseDescription = "Association status")
     public Response checkUserAccountAssociation(@PathParam("userPublicId") final String userPublicId,
             @PathParam("accountPublicId") final String accountPublicId) {
         final boolean isAssociated =
@@ -313,6 +333,7 @@ public class AccountResource {
     /** Checks whether the current user has access to the given account. */
     @GET
     @Path("/my/{publicId}/check")
+    @APIResponseSchema(value = AccountAccessResponseDto.class, responseDescription = "Access status")
     public Response checkMyAccountAccess(@PathParam("publicId") final String publicId) {
         final String username = this.requireCurrentUsername();
         final boolean hasAccess = this.accountAccessService.hasUserAccessToAccount(username, publicId);
@@ -322,6 +343,9 @@ public class AccountResource {
     /** Processes the request and returns the result. */
     @POST
     @RolesAllowed({ "user-account:add" })
+    @APIResponseSchema(value = AccountResponseDto.class, responseCode = "201", responseDescription = "Account created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createAccount(@Valid final AccountDto accountDto) {
         final var created = this.accountService.createAccount(accountDto);
         return ResponseUtil.created(created);
@@ -331,6 +355,11 @@ public class AccountResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponseSchema(value = AccountResponseDto.class, responseDescription = "Account replaced")
+    @APIResponse(responseCode = "404", description = "Account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateAccount(@PathParam("publicId") final String publicId, @Valid final AccountDto accountDto) {
         final var updated = this.accountService.updateAccount(publicId, accountDto);
         return ResponseUtil.ok(updated);
@@ -340,6 +369,9 @@ public class AccountResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponseSchema(value = AccountResponseDto.class, responseDescription = "Account updated")
+    @APIResponse(responseCode = "404", description = "Account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchAccount(@PathParam("publicId") final String publicId, final AccountDto accountDto) {
         final var updated = this.accountService.patchAccount(publicId, accountDto);
         return ResponseUtil.ok(updated);
@@ -349,6 +381,11 @@ public class AccountResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "user-account:delete" })
+    @APIResponse(responseCode = "204", description = "Account deleted")
+    @APIResponse(responseCode = "404", description = "Account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "409", description = "Account still has payments",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteAccount(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.accountService.deleteAccount(publicId);
         if (deleted) {
@@ -361,6 +398,11 @@ public class AccountResource {
     @POST
     @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponse(responseCode = "201", description = "User associated with account")
+    @APIResponse(responseCode = "404", description = "User or account not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "409", description = "User is already associated with this account",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response associateUserWithAccount(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("userPublicId") final String userPublicId) {
         this.accountAccessService.associateUserWithAccount(userPublicId, accountPublicId);
@@ -371,6 +413,9 @@ public class AccountResource {
     @DELETE
     @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponse(responseCode = "204", description = "Association removed")
+    @APIResponse(responseCode = "404", description = "Association not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response removeUserFromAccount(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("userPublicId") final String userPublicId) {
         final boolean removed = this.accountAccessService.removeUserFromAccount(userPublicId, accountPublicId);
@@ -394,6 +439,9 @@ public class AccountResource {
     @PATCH
     @Path("/{accountPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-account:edit" })
+    @APIResponse(responseCode = "204", description = "Association meta updated")
+    @APIResponse(responseCode = "404", description = "Association not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateUserAccountMeta(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("userPublicId") final String userPublicId, final UserAccountMetaDto metaDto) {
         this.accountAccessService.updateUserAccountMeta(userPublicId, accountPublicId, metaDto.isNegative,
@@ -405,6 +453,7 @@ public class AccountResource {
     @GET
     @Path("/search")
     @RolesAllowed({ "user-account:edit", "user-account:delete" })
+    @APIResponseSchema(value = AccountResponseDto[].class, responseDescription = "Matching accounts")
     public Response searchAccounts(@QueryParam("query") final String query) {
         final var results = this.accountService.searchAccounts(query);
         return ResponseUtil.ok(results);
@@ -413,6 +462,11 @@ public class AccountResource {
     /** Processes the request and returns the result. */
     @POST
     @Path("/my/{accountPublicId}/payments")
+    @APIResponseSchema(value = PaymentResponseDto.class, responseCode = "201", responseDescription = "Payment created")
+    @APIResponse(responseCode = "403", description = "Caller has no access to this account",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
             @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
@@ -424,6 +478,13 @@ public class AccountResource {
     /** Processes the request and returns the result. */
     @PUT
     @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    @APIResponseSchema(value = PaymentResponseDto.class, responseDescription = "Payment replaced")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "403", description = "Caller has no access to this account",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("paymentPublicId") final String paymentPublicId, @Valid final PaymentDto paymentDto) {
         final String username = this.requireCurrentUsername();
@@ -435,6 +496,11 @@ public class AccountResource {
     /** Processes the request and returns the result. */
     @DELETE
     @Path("/my/{accountPublicId}/payments/{paymentPublicId}")
+    @APIResponse(responseCode = "204", description = "Payment deleted")
+    @APIResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "403", description = "Caller has no access to this account",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteMyAccountPayment(@PathParam("accountPublicId") final String accountPublicId,
             @PathParam("paymentPublicId") final String paymentPublicId) {
         final String username = this.requireCurrentUsername();

@@ -266,6 +266,20 @@ class UserResourceTest {
     }
 
     @Test
+    void testChangePassword_wrongCurrentPassword_isNotAuthFailure() {
+        final String username = generateUniqueUsername("pwwrong");
+        final String password = "ValidPass123!";
+        authenticatedJsonRequest().body(
+                createUserJson(username, generateUniqueEmail("pwwrong"), password).replace("}", ",\"activated\":true}"))
+                .when().post(ENDPOINT_URL).then().statusCode(201);
+
+        final String jsonBody = "{\"currentPassword\":\"WrongPass789!\",\"newPassword\":\"NewPass456!\"}";
+        TestUtil.given().auth().preemptive().basic(username, password).contentType("application/json").body(jsonBody)
+                .when().post(ENDPOINT_URL + "/me/password").then().statusCode(422)
+                .body("message", equalTo("Invalid current password"));
+    }
+
+    @Test
     void testChangePassword_unauthorized() {
         testUnauthorizedPost(ENDPOINT_URL + "/me/password", "{}");
     }

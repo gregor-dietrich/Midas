@@ -221,7 +221,8 @@ public class UserService {
 
         // Verify current password
         if (!this.passwordHashingService.verifyPassword(passwordChangeDto.currentPassword, user.password)) {
-            throw new WebApplicationException("Invalid current password", Response.Status.UNAUTHORIZED);
+            // Not 401: the request itself is authenticated, and clients treat 401 as an expired session.
+            throw new WebApplicationException("Invalid current password", 422);
         }
 
         // Apply new password

@@ -2,8 +2,15 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.UserRankDto;
 import de.vptr.midas.api.dto.UserRankResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.UserRankService;
 import de.vptr.midas.api.util.ResponseUtil;
 import io.quarkus.security.Authenticated;
@@ -29,6 +36,7 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "UserRank")
 public class UserRankResource {
 
     @Inject
@@ -45,6 +53,9 @@ public class UserRankResource {
     @GET
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
+    @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank found")
+    @APIResponse(responseCode = "404", description = "Rank not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getRank(@PathParam("publicId") final String publicId) {
         return ResponseUtil.okOrNotFound(this.rankService.findById(publicId));
     }
@@ -52,6 +63,11 @@ public class UserRankResource {
     @GET
     @Path("/name/{name}")
     @RolesAllowed({ "user-rank:edit", "user-rank:delete" })
+    @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank found")
+    @APIResponse(responseCode = "404", description = "Rank not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Name longer than 255 characters",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getRankByName(@PathParam("name") @Size(max = 255) final String name) {
         return ResponseUtil.okOrNotFound(this.rankService.findByName(name));
     }
@@ -69,6 +85,9 @@ public class UserRankResource {
 
     @POST
     @RolesAllowed({ "user-rank:add" })
+    @APIResponseSchema(value = UserRankResponseDto.class, responseCode = "201", responseDescription = "Rank created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createRank(@Valid final UserRankDto rankDto) {
         final UserRankResponseDto created = this.rankService.createRank(rankDto);
         return ResponseUtil.created(created);
@@ -77,6 +96,11 @@ public class UserRankResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
+    @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank replaced")
+    @APIResponse(responseCode = "404", description = "Rank not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateRank(@PathParam("publicId") final String publicId, @Valid final UserRankDto rankDto) {
         final UserRankResponseDto updated = this.rankService.updateRank(publicId, rankDto);
         return ResponseUtil.ok(updated);
@@ -85,6 +109,9 @@ public class UserRankResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
+    @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank updated")
+    @APIResponse(responseCode = "404", description = "Rank not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchRank(@PathParam("publicId") final String publicId, final UserRankDto rankDto) {
         final UserRankResponseDto updated = this.rankService.patchRank(publicId, rankDto);
         return ResponseUtil.ok(updated);
@@ -94,6 +121,9 @@ public class UserRankResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:delete" })
+    @APIResponse(responseCode = "204", description = "Rank deleted")
+    @APIResponse(responseCode = "404", description = "Rank not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteRank(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.rankService.deleteRank(publicId);
         if (deleted) {

@@ -2,8 +2,15 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PageDto;
 import de.vptr.midas.api.dto.PageResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.PageService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -30,6 +37,7 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "Page")
 public class PageResource {
 
     @Inject
@@ -46,6 +54,9 @@ public class PageResource {
 
     @GET
     @Path("/{publicId}")
+    @APIResponseSchema(value = PageResponseDto.class, responseDescription = "Page found")
+    @APIResponse(responseCode = "404", description = "Page not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getPage(@PathParam("publicId") final String publicId) {
         return ResponseUtil.okOrNotFound(this.pageService.findById(publicId));
     }
@@ -62,6 +73,9 @@ public class PageResource {
 
     @POST
     @RolesAllowed({ "page:add" })
+    @APIResponseSchema(value = PageResponseDto.class, responseCode = "201", responseDescription = "Page created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createPage(@Valid final PageDto pageDto) {
         final PageResponseDto created = this.pageService.createPage(pageDto);
         return ResponseUtil.created(created);
@@ -70,6 +84,11 @@ public class PageResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "page:edit" })
+    @APIResponseSchema(value = PageResponseDto.class, responseDescription = "Page replaced")
+    @APIResponse(responseCode = "404", description = "Page not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updatePage(@PathParam("publicId") final String publicId, @Valid final PageDto pageDto) {
         final PageResponseDto updated = this.pageService.updatePage(publicId, pageDto);
         return ResponseUtil.ok(updated);
@@ -78,6 +97,9 @@ public class PageResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "page:edit" })
+    @APIResponseSchema(value = PageResponseDto.class, responseDescription = "Page updated")
+    @APIResponse(responseCode = "404", description = "Page not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchPage(@PathParam("publicId") final String publicId, final PageDto pageDto) {
         final PageResponseDto updated = this.pageService.patchPage(publicId, pageDto);
         return ResponseUtil.ok(updated);
@@ -87,6 +109,9 @@ public class PageResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "page:delete" })
+    @APIResponse(responseCode = "204", description = "Page deleted")
+    @APIResponse(responseCode = "404", description = "Page not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deletePage(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.pageService.deletePage(publicId);
         if (deleted) {

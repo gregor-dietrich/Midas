@@ -1,4 +1,4 @@
-.PHONY: help branch build check clean coverage dev dev-api dev-gui format install kill lint password rebase release tag test untag
+.PHONY: help branch build check clean coverage dev dev-api dev-gui format install kill lint openapi password rebase release tag test untag
 
 MAKEFLAGS += --no-print-directory
 
@@ -14,6 +14,7 @@ help:
 	@echo "  make install          - make check, mvn clean install -DskipTests (both modules)"
 	@echo "  make kill             - stop/kill Quarkus and Maven processes and remove Docker containers"
 	@echo "  make lint             - run quality gate plugins (both modules)"
+	@echo "  make openapi          - regenerate the committed OpenAPI contract snapshot"
 	@echo "  make password         - generate a salt+hash for a password (for API init.sql)"
 	@echo "  make rebase           - interactive git rebase against a target (defaults to origin/main)"
 	@echo "  make release          - pull from origin/main, make build, make tag, and push Docker images"
@@ -62,6 +63,9 @@ kill:
 
 lint:
 	@scripts/lint.sh
+
+openapi:
+	@scripts/openapi.sh
 
 password:
 	@scripts/password.sh api

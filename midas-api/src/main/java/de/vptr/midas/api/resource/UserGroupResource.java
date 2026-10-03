@@ -2,9 +2,16 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.UserGroupDto;
 import de.vptr.midas.api.dto.UserGroupResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.UserGroupService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -32,6 +39,7 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "UserGroup")
 public class UserGroupResource {
 
     @Inject
@@ -49,12 +57,20 @@ public class UserGroupResource {
 
     @GET
     @Path("/{publicId}")
+    @APIResponseSchema(value = UserGroupResponseDto.class, responseDescription = "Group found")
+    @APIResponse(responseCode = "404", description = "Group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getGroup(@PathParam("publicId") final String publicId) {
         return ResponseUtil.okOrNotFound(this.groupService.findById(publicId));
     }
 
     @GET
     @Path("/name/{name}")
+    @APIResponseSchema(value = UserGroupResponseDto.class, responseDescription = "Group found")
+    @APIResponse(responseCode = "404", description = "Group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Name longer than 255 characters",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getGroupByName(@PathParam("name") @Size(max = 255) final String name) {
         return ResponseUtil.okOrNotFound(this.groupService.findByName(name));
     }
@@ -76,6 +92,7 @@ public class UserGroupResource {
     @GET
     @Path("/user/{userPublicId}/group/{groupPublicId}/check")
     @RolesAllowed({ "user-group:edit", "user-group:delete" })
+    @APIResponseSchema(value = Boolean.class, responseDescription = "True when the user belongs to the group")
     public Response checkUserInGroup(@PathParam("userPublicId") final String userPublicId,
             @PathParam("groupPublicId") final String groupPublicId) {
         final boolean isInGroup = this.groupService.isUserInGroup(userPublicId, groupPublicId);
@@ -94,6 +111,9 @@ public class UserGroupResource {
 
     @POST
     @RolesAllowed({ "user-group:add" })
+    @APIResponseSchema(value = UserGroupResponseDto.class, responseCode = "201", responseDescription = "Group created")
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createGroup(@Valid final UserGroupDto groupDto) {
         final UserGroupResponseDto created = this.groupService.createGroup(groupDto);
         return ResponseUtil.created(created);
@@ -102,6 +122,11 @@ public class UserGroupResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user-group:edit" })
+    @APIResponseSchema(value = UserGroupResponseDto.class, responseDescription = "Group replaced")
+    @APIResponse(responseCode = "404", description = "Group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateGroup(@PathParam("publicId") final String publicId, @Valid final UserGroupDto groupDto) {
         final UserGroupResponseDto updated = this.groupService.updateGroup(publicId, groupDto);
         return ResponseUtil.ok(updated);
@@ -110,6 +135,9 @@ public class UserGroupResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user-group:edit" })
+    @APIResponseSchema(value = UserGroupResponseDto.class, responseDescription = "Group updated")
+    @APIResponse(responseCode = "404", description = "Group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchGroup(@PathParam("publicId") final String publicId, final UserGroupDto groupDto) {
         final UserGroupResponseDto updated = this.groupService.patchGroup(publicId, groupDto);
         return ResponseUtil.ok(updated);
@@ -119,6 +147,9 @@ public class UserGroupResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "user-group:delete" })
+    @APIResponse(responseCode = "204", description = "Group deleted")
+    @APIResponse(responseCode = "404", description = "Group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteGroup(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.groupService.deleteGroup(publicId);
         if (deleted) {
@@ -130,6 +161,11 @@ public class UserGroupResource {
     @POST
     @Path("/{groupPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-group:edit" })
+    @APIResponse(responseCode = "201", description = "User added to group")
+    @APIResponse(responseCode = "404", description = "User or group not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "409", description = "User is already in this group",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response addUserToGroup(@PathParam("groupPublicId") final String groupPublicId,
             @PathParam("userPublicId") final String userPublicId) {
         this.groupService.addUserToGroup(userPublicId, groupPublicId);
@@ -140,6 +176,9 @@ public class UserGroupResource {
     @DELETE
     @Path("/{groupPublicId}/users/{userPublicId}")
     @RolesAllowed({ "user-group:edit" })
+    @APIResponse(responseCode = "204", description = "User removed from group")
+    @APIResponse(responseCode = "404", description = "Membership not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response removeUserFromGroup(@PathParam("groupPublicId") final String groupPublicId,
             @PathParam("userPublicId") final String userPublicId) {
         final boolean removed = this.groupService.removeUserFromGroup(userPublicId, groupPublicId);

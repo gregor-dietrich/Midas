@@ -2,8 +2,15 @@ package de.vptr.midas.api.resource;
 
 import java.util.List;
 
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 import de.vptr.midas.api.dto.PostCategoryDto;
 import de.vptr.midas.api.dto.PostCategoryResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.PostCategoryService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
@@ -30,6 +37,7 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
+@Tag(name = "PostCategory")
 public class PostCategoryResource {
 
     @Inject
@@ -56,6 +64,9 @@ public class PostCategoryResource {
     @GET
     @Path("/{publicId}")
     @Authenticated
+    @APIResponseSchema(value = PostCategoryResponseDto.class, responseDescription = "Category found")
+    @APIResponse(responseCode = "404", description = "Category not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getCategory(@PathParam("publicId") final String publicId) {
         return this.categoryService.findById(publicId).map(ResponseUtil::ok).orElse(ResponseUtil.notFound());
     }
@@ -71,6 +82,12 @@ public class PostCategoryResource {
     /** Creates a new post category. */
     @POST
     @RolesAllowed({ "post-category:add" })
+    @APIResponseSchema(value = PostCategoryResponseDto.class, responseCode = "201",
+            responseDescription = "Category created")
+    @APIResponse(responseCode = "400", description = "Invalid parent category",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createCategory(@Valid final PostCategoryDto categoryDto) {
         final var responseDto = this.categoryService.createCategory(categoryDto);
         return ResponseUtil.created(responseDto);
@@ -80,6 +97,13 @@ public class PostCategoryResource {
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "post-category:edit" })
+    @APIResponseSchema(value = PostCategoryResponseDto.class, responseDescription = "Category replaced")
+    @APIResponse(responseCode = "404", description = "Category not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "400", description = "Invalid parent category",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateCategory(@PathParam("publicId") final String publicId,
             @Valid final PostCategoryDto categoryDto) {
         final var responseDto = this.categoryService.updateCategory(publicId, categoryDto);
@@ -90,6 +114,11 @@ public class PostCategoryResource {
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "post-category:edit" })
+    @APIResponseSchema(value = PostCategoryResponseDto.class, responseDescription = "Category updated")
+    @APIResponse(responseCode = "404", description = "Category not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "400", description = "Invalid parent category",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchCategory(@PathParam("publicId") final String publicId, final PostCategoryDto categoryDto) {
         final var responseDto = this.categoryService.patchCategory(publicId, categoryDto);
         return ResponseUtil.ok(responseDto);
@@ -99,6 +128,9 @@ public class PostCategoryResource {
     @DELETE
     @Path("/{publicId}")
     @RolesAllowed({ "post-category:delete" })
+    @APIResponse(responseCode = "204", description = "Category deleted")
+    @APIResponse(responseCode = "404", description = "Category not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteCategory(@PathParam("publicId") final String publicId) {
         final var deleted = this.categoryService.deleteCategory(publicId);
         if (deleted) {
