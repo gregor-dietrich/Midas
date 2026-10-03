@@ -21,6 +21,8 @@
     <assertj.version>3.27.7</assertj.version>
     <line-awesome.version>2.1.0</line-awesome.version>
     <vaadin.version>25.3.0</vaadin.version>
+    <!-- Jackson 3 security pin (transitive via Vaadin). See dependencyManagement. -->
+    <jackson3.version>3.1.7</jackson3.version>
   </properties>
 
   <dependencyManagement>
@@ -29,6 +31,29 @@
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-bom</artifactId>
         <version>${vaadin.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- Pin Jackson 3 to fix CVEs. Neither the Quarkus nor the Vaadin BOM manages
+      tools.jackson.*, so this BOM is declared last: it only fills in those unmanaged versions and
+      cannot override the Quarkus-managed com.fasterxml.jackson.core:jackson-annotations (which
+      this BOM also lists, and which Jackson 2 shares).
+        3.1.5 -> 3.1.7, transitive via Vaadin (flow-server), fixes:
+          - CVE-2026-68497 (high): unbounded number parse DoS via Duration / XMLGregorianCalendar
+          - CVE-2026-19032: java.nio.file.Path deserialization has no URI scheme allowlist
+          - CVE-2026-83557: Comparable missing from the default polymorphic base-type denylist
+          - CVE-2026-91776: unbounded type id cache growth
+          - CVE-2026-91777: quadratic forward-reference resolution
+          Stays on the 3.1.x line Vaadin 25.3 is built against rather than moving to 3.2.x, which
+          needs com.fasterxml.jackson.core:jackson-annotations 2.22 (Quarkus manages 2.21).
+          Jackson 2 (via Quarkus) is already patched at 2.21.7.
+      Vaadin cannot resolve this by version bump: 25.3.0 is the newest release and ships 3.1.5.
+      Remove this pin once Vaadin manages tools.jackson.core >= 3.1.7. -->
+      <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson3.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
