@@ -52,7 +52,7 @@ The project enforces very strict quality gates:
 
 The quality gate configuration is deliberately kept **identical** to the sibling
 `aimathtutor` repository, so drift is visible in a plain `diff`. `checkstyle.xml`,
-`pmd-ruleset.xml`, `.gitlab-ci.yml` and `scripts/check_frontend_deps.py` are byte-identical
+`pmd-ruleset.xml` and `scripts/check_frontend_deps.py` are byte-identical
 across both; `spotbugs-exclude.xml` and `checkstyle-suppressions.xml` share a common
 baseline and carry per-module sections. Deviations are allowed only where they are
 unavoidable (package names, Vaadin present or absent, multi-module path resolution) or
