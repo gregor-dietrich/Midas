@@ -82,6 +82,10 @@ cd "$PROJECT_ROOT"
 GUI_PROFILE=""
 if [[ "$MODULE" == "gui" || "$MODULE" == "both" ]]; then
     GUI_PROFILE="-Pproduction"
+    # Build the frontend from the committed lockfile (#15): Vaadin reuses a "compatible" bundle and
+    # skips npm install when package.json is unchanged, ignoring the lockfile in both checks, so a
+    # lockfile-only bump would otherwise ship the old dependency.
+    rm -rf midas-gui/src/main/bundles/prod.bundle midas-gui/node_modules
 fi
 
 ${MVN_CMD} -q clean package ${PL_ARG} -DskipTests ${GUI_PROFILE} -Drevision=${REVISION}
