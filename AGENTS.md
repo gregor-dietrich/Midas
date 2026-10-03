@@ -11,7 +11,7 @@ This project is a modern web application consisting of a REST API backend and a 
 
 ## Building and Running
 
-The project uses a `Makefile` at the root and in each module to simplify common tasks.
+The project uses a `Makefile` at the root to simplify common tasks; module-specific targets select a module via the scripts in `scripts/`.
 
 ### Prerequisites
 
@@ -21,6 +21,7 @@ The project uses a `Makefile` at the root and in each module to simplify common 
 
 ### Common Commands
 
+- `make audit`: Run OWASP dependency-check (needs `NVD_API_KEY`, see Security below).
 - `make install`: Run `mvn clean install -DskipTests` for both modules.
 - `make build`: Verify environment, package applications, and build Docker images.
 - `make clean`: Clean Maven artifacts and build directories.
@@ -44,7 +45,7 @@ The project enforces very strict quality gates:
 - **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks). The compiler runs with `-Werror` and `-Xlint:all` (minus `serial`, `this-escape`, `classfile`), so any javac or ErrorProne warning fails the build.
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
 - **Coverage**: JaCoCo enforcement. The `report` goal is bound to `post-integration-test` so it includes `*IT` coverage; surefire and failsafe append to the same `target/jacoco.exec`, and a report generated at `test` would silently omit every integration test.
-- **Security**: OWASP Dependency Check (fails on CVSS >= 7), License enforcement (blocks commercial/proprietary licenses).
+- **Security**: OWASP Dependency Check via `make audit` (fails on CVSS >= 7; false positives go in the root `dependency-check-suppression.xml`, pinned to the exact package version). It is deliberately not bound to a lifecycle phase, so `make test` does not depend on the network, an NVD API key or a clean CVE feed; CI is meant to run it as its own step (#5). It needs `NVD_API_KEY` from the environment or the gitignored `.env.build` (not `.env`, which docker-compose reads); without a key the NVD download is rate-limited to a crawl. License enforcement blocks commercial/proprietary licenses.
 - **Frontend pins**: `scripts/check_frontend_deps.py midas-gui` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
 
 ### Shared configuration with the AIMathTutor project
