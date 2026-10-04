@@ -33,6 +33,7 @@ The project uses a `Makefile` at the root to simplify common tasks. Its shared t
 - `make kill`: Terminate all Quarkus/Maven processes and stop and remove **every** Docker container on the host.
 - `make openapi`: Regenerate the committed OpenAPI contract snapshot (`midas-api/openapi.yaml`).
 - `make password`: Generate a salt+hash for the API `init.sql`.
+- `make regen-lockfile`: Update `midas-gui/package-lock.json` to `package.json` with the pinned Node.js, once `npm ci` rejects the pair (see Frontend toolchain).
 
 ## Development Conventions
 
@@ -47,6 +48,8 @@ The project enforces very strict quality gates:
 - **Coverage**: JaCoCo enforcement. The `report` goal is bound to `post-integration-test` so it includes `*IT` coverage; surefire and failsafe append to the same `target/jacoco.exec`, and a report generated at `test` would silently omit every integration test.
 - **Security**: OWASP Dependency Check via `make audit` (fails on CVSS >= 7; false positives go in the root `dependency-check-suppression.xml`, pinned to the exact package version). It is deliberately not bound to a lifecycle phase, so `make test` does not depend on the network, an NVD API key or a clean CVE feed; CI is meant to run it as its own step (#5). It needs `NVD_API_KEY` from the environment or the gitignored `.env.build` (not `.env`, which docker-compose reads); without a key the NVD download is rate-limited to a crawl. License enforcement blocks commercial/proprietary licenses.
 - **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
+- **Frontend toolchain**: `vaadin.node.version` in `midas-gui/pom.xml` (Vaadin's default for the pinned `${vaadin.version}`) is the Node.js every frontend build uses: the production profile, the Quarkus build step behind `make install`/`make test`, and dev mode. Vaadin downloads it to `~/.vaadin` and ignores any `node` on `PATH`, so `package-lock.json` comes out the same on every machine. Bump it with `vaadin.version`.
+- **Frontend installs use `npm ci`** (`vaadin.ci.build` in `midas-gui/pom.xml`): builds install exactly what `package-lock.json` records and fail when `package.json` disagrees with it, e.g. after a Vaadin bump or an `@NpmPackage` change. Fix that with `make regen-lockfile` and commit both files. It keeps the lockfile and lets npm change only the entries `package.json` no longer matches; deleting the lockfile instead re-seeds it from Vaadin's bundled one and moves unrelated packages, some to older versions. Dev mode's runtime dev server has no `npm ci` option and runs `npm install`, which leaves an in-sync lockfile unchanged.
 
 ### Shared configuration from devkit
 

@@ -80,6 +80,7 @@ make kill            # Kill Quarkus/Maven processes; stop and remove ALL Docker 
 make lint            # Run the quality-gate plugins and the frontend pin check
 make openapi         # regenerate the committed OpenAPI contract snapshot
 make password        # generate a salt+hash for a password (for API init.sql)
+make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make rebase          # interactive git rebase against a target (defaults to origin/main)
 make release         # pull from origin/main, make build, make tag, and push Docker images
 make tag             # create, sign and push a new git tag (auto-increments latest tag suggestion)

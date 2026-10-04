@@ -9,7 +9,7 @@ endif
 include .devkit/make/common.mk
 include .devkit/make/java-maven.mk
 
-.PHONY: build dev-api dev-gui openapi password release
+.PHONY: build dev-api dev-gui openapi password regen-lockfile release
 
 build: check ## mvn package, docker buildx (ONLY=<module> limits it to one)
 	@scripts/build.sh
@@ -25,6 +25,9 @@ openapi: ## regenerate the committed OpenAPI contract snapshot
 
 password: ## generate a salt+hash for a password (for API init.sql)
 	@scripts/password.sh api
+
+regen-lockfile: ## update the frontend lockfile to package.json once npm ci rejects it
+	@scripts/regen-lockfile.sh
 
 release: ## pull from origin/main, make build, make tag, and push Docker images
 	@scripts/release.sh
