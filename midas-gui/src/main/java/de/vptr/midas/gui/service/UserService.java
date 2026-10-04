@@ -8,6 +8,13 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.UserClient;
+import de.vptr.midas.gui.client.UserClient.DeleteUserRequest;
+import de.vptr.midas.gui.client.UserClient.GetAllUsersRequest;
+import de.vptr.midas.gui.client.UserClient.GetUserByUsernameRequest;
+import de.vptr.midas.gui.client.UserClient.GetUserRequest;
+import de.vptr.midas.gui.client.UserClient.PatchUserRequest;
+import de.vptr.midas.gui.client.UserClient.SearchUsersRequest;
+import de.vptr.midas.gui.client.UserClient.UpdateUserRequest;
 import de.vptr.midas.gui.dto.PasswordChangeDto;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
@@ -34,8 +41,9 @@ public class UserService {
         LOG.debug("Fetching all users");
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(() -> this.userClient.getAllUsers(safePage, safeSize), this.authService, LOG,
-                "fetching users");
+        return ServiceHelper.execute(
+                () -> this.userClient.getAllUsers(GetAllUsersRequest.newInstance().page(safePage).size(safeSize)),
+                this.authService, LOG, "fetching users");
     }
 
     /** Returns the current user, or empty if the backend does not find it. */
@@ -48,15 +56,16 @@ public class UserService {
     /** Returns the user by id, or empty if it does not exist. */
     public Optional<UserResponseDto> getUserById(final String id) {
         LOG.debugf("Fetching user with ID: %s", id);
-        return ServiceHelper.executeOptional(() -> this.userClient.getUser(id), this.authService, LOG,
-                "fetching user " + id);
+        return ServiceHelper.executeOptional(() -> this.userClient.getUser(GetUserRequest.newInstance().publicId(id)),
+                this.authService, LOG, "fetching user " + id);
     }
 
     /** Returns the user by username, or empty if it does not exist. */
     public Optional<UserResponseDto> getUserByUsername(final String username) {
         LOG.debugf("Fetching user with username: %s", username);
-        return ServiceHelper.executeOptional(() -> this.userClient.getUserByUsername(username), this.authService, LOG,
-                "fetching user by username " + username);
+        return ServiceHelper.executeOptional(
+                () -> this.userClient.getUserByUsername(GetUserByUsernameRequest.newInstance().username(username)),
+                this.authService, LOG, "fetching user by username " + username);
     }
 
     /** Creates a new user. */
@@ -70,29 +79,33 @@ public class UserService {
     public UserResponseDto updateUser(final UserDto user) {
         LOG.debugf("Updating user: %s", user.getPublicId());
         final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for update");
-        return ServiceHelper.execute(() -> this.userClient.updateUser(userId, user), this.authService, LOG,
-                "updating user " + user.getPublicId(), "Failed to update user");
+        return ServiceHelper.execute(
+                () -> this.userClient.updateUser(UpdateUserRequest.newInstance().publicId(userId), user),
+                this.authService, LOG, "updating user " + user.getPublicId(), "Failed to update user");
     }
 
     /** Updates the user password. */
     public UserResponseDto updateUserPassword(final UserDto user) {
         LOG.debugf("Updating password for user: %s", user.getPublicId());
         final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for password update");
-        return ServiceHelper.execute(() -> this.userClient.patchUser(userId, user), this.authService, LOG,
-                "updating user password " + user.getPublicId(), "Failed to update user password");
+        return ServiceHelper.execute(
+                () -> this.userClient.patchUser(PatchUserRequest.newInstance().publicId(userId), user),
+                this.authService, LOG, "updating user password " + user.getPublicId(),
+                "Failed to update user password");
     }
 
     /** Handles the delete user operation. */
     public void deleteUser(final String id) {
         LOG.debugf("Deleting user: %s", id);
-        ServiceHelper.executeVoid(() -> this.userClient.deleteUser(id), this.authService, LOG, "deleting user " + id);
+        ServiceHelper.executeVoid(() -> this.userClient.deleteUser(DeleteUserRequest.newInstance().publicId(id)),
+                this.authService, LOG, "deleting user " + id);
     }
 
     /** Handles the search users operation. */
     public List<UserResponseDto> searchUsers(final String query) {
         LOG.debugf("Searching users with query: %s", query);
-        return ServiceHelper.execute(() -> this.userClient.searchUsers(query), this.authService, LOG,
-                "searching users");
+        return ServiceHelper.execute(() -> this.userClient.searchUsers(SearchUsersRequest.newInstance().query(query)),
+                this.authService, LOG, "searching users");
     }
 
     /** Changes the password for the current user. */

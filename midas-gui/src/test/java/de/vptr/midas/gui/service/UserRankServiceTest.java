@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.UserRankClient;
+import de.vptr.midas.gui.client.UserRankClient.GetRankRequest;
 import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
 import de.vptr.midas.gui.util.MockDataUtil;
@@ -78,7 +80,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
         when(this.vaadinSession.getAttribute(RANK)).thenReturn(MockDataUtil.createUserRankDto());
         when(this.vaadinSession.getAttribute(RANK_TIMESTAMP)).thenReturn(System.currentTimeMillis() - 10 * 60 * 1000L);
         givenCurrentUserWithRank("fresh-rank");
-        when(this.userRankClient.getRank("fresh-rank"))
+        when(this.userRankClient.getRank(any(GetRankRequest.class)))
                 .thenReturn(MockDataUtil.createUserRankResponseDto().publicId("fresh-rank").adminView(true));
 
         final var result = this.userRankService.getCurrentUserRank();
@@ -95,7 +97,8 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getCurrentUserRank_cachesFreshRank_whenCacheIsEmpty() {
         givenCurrentUserWithRank("1");
-        when(this.userRankClient.getRank("1")).thenReturn(MockDataUtil.createUserRankResponseDto());
+        when(this.userRankClient.getRank(any(GetRankRequest.class)))
+                .thenReturn(MockDataUtil.createUserRankResponseDto());
 
         final var result = this.userRankService.getCurrentUserRank();
 
@@ -117,7 +120,8 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     void getCurrentUserRank_fetchesWithoutCaching_whenThereIsNoSession() {
         this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(null);
         givenCurrentUserWithRank("1");
-        when(this.userRankClient.getRank("1")).thenReturn(MockDataUtil.createUserRankResponseDto());
+        when(this.userRankClient.getRank(any(GetRankRequest.class)))
+                .thenReturn(MockDataUtil.createUserRankResponseDto());
 
         assertThat(this.userRankService.getCurrentUserRank().canAddUser()).isTrue();
     }
@@ -135,7 +139,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @Test
     void getCurrentUserRank_returnsEmptyRank_whenRankLookupFails() {
         givenCurrentUserWithRank("1");
-        when(this.userRankClient.getRank("1")).thenThrow(new WebApplicationException(500));
+        when(this.userRankClient.getRank(any(GetRankRequest.class))).thenThrow(new WebApplicationException(500));
 
         assertThat(this.userRankService.getCurrentUserRank().hasAnyPermission()).isFalse();
     }

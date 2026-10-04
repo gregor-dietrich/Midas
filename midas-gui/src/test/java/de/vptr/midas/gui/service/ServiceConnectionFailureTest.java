@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.function.Consumer;
@@ -18,13 +19,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.AccountClient;
 import de.vptr.midas.gui.client.PageClient;
+import de.vptr.midas.gui.client.PageClient.GetPageRequest;
 import de.vptr.midas.gui.client.PaymentClient;
+import de.vptr.midas.gui.client.PaymentClient.GetPaymentRequest;
 import de.vptr.midas.gui.client.PostCategoryClient;
 import de.vptr.midas.gui.client.PostClient;
+import de.vptr.midas.gui.client.PostClient.GetPostRequest;
 import de.vptr.midas.gui.client.PostCommentClient;
+import de.vptr.midas.gui.client.PostCommentClient.GetCommentRequest;
 import de.vptr.midas.gui.client.UserClient;
 import de.vptr.midas.gui.client.UserGroupClient;
+import de.vptr.midas.gui.client.UserGroupClient.GetGroupRequest;
 import de.vptr.midas.gui.client.UserRankClient;
+import de.vptr.midas.gui.client.UserRankClient.GetRankRequest;
 import de.vptr.midas.gui.exception.ServiceException;
 import jakarta.ws.rs.ProcessingException;
 
@@ -110,28 +117,28 @@ class ServiceConnectionFailureTest {
             when(t.accountClient.getMyAccounts()).thenThrow(t.refused);
             t.accountService.getMyAccounts();
         }), call("pages", t -> {
-            when(t.pageClient.getPage("1")).thenThrow(t.refused);
+            when(t.pageClient.getPage(any(GetPageRequest.class))).thenThrow(t.refused);
             t.pageService.getPageById("1");
         }), call("payments", t -> {
-            when(t.paymentClient.getPayment("1")).thenThrow(t.refused);
+            when(t.paymentClient.getPayment(any(GetPaymentRequest.class))).thenThrow(t.refused);
             t.paymentService.getPaymentById("1");
         }), call("posts", t -> {
-            when(t.postClient.getPost("1")).thenThrow(t.refused);
+            when(t.postClient.getPost(any(GetPostRequest.class))).thenThrow(t.refused);
             t.postService.getPostById("1");
         }), call("categories", t -> {
             when(t.categoryClient.getRootCategories()).thenThrow(t.refused);
             t.categoryService.getRootCategories();
         }), call("comments", t -> {
-            when(t.commentClient.getComment("1")).thenThrow(t.refused);
+            when(t.commentClient.getComment(any(GetCommentRequest.class))).thenThrow(t.refused);
             t.commentService.getCommentById("1");
         }), call("users", t -> {
             when(t.userClient.getCurrentUser()).thenThrow(t.refused);
             t.userService.getCurrentUser();
         }), call("groups", t -> {
-            when(t.groupClient.getGroup("1")).thenThrow(t.refused);
+            when(t.groupClient.getGroup(any(GetGroupRequest.class))).thenThrow(t.refused);
             t.groupService.getGroupById("1");
         }), call("ranks", t -> {
-            when(t.userRankClient.getRank("1")).thenThrow(t.refused);
+            when(t.userRankClient.getRank(any(GetRankRequest.class))).thenThrow(t.refused);
             t.userRankService.getRankById("1");
         }));
     }

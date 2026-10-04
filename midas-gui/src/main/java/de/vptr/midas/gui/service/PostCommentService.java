@@ -8,6 +8,14 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PostCommentClient;
+import de.vptr.midas.gui.client.PostCommentClient.DeleteCommentRequest;
+import de.vptr.midas.gui.client.PostCommentClient.GetAllCommentsRequest;
+import de.vptr.midas.gui.client.PostCommentClient.GetCommentRequest;
+import de.vptr.midas.gui.client.PostCommentClient.GetCommentsByDateRangeRequest;
+import de.vptr.midas.gui.client.PostCommentClient.GetCommentsByPostRequest;
+import de.vptr.midas.gui.client.PostCommentClient.GetCommentsByUserRequest;
+import de.vptr.midas.gui.client.PostCommentClient.SearchCommentsRequest;
+import de.vptr.midas.gui.client.PostCommentClient.UpdateCommentRequest;
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
 import de.vptr.midas.gui.exception.ServiceException;
@@ -38,15 +46,18 @@ public class PostCommentService {
         LOG.debug("Fetching all comments");
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(() -> this.commentClient.getAllComments(safePage, safeSize), this.authService, LOG,
-                "fetching comments");
+        return ServiceHelper.execute(
+                () -> this.commentClient
+                        .getAllComments(GetAllCommentsRequest.newInstance().page(safePage).size(safeSize)),
+                this.authService, LOG, "fetching comments");
     }
 
     /** Returns the comments by post. */
     public List<PostCommentResponseDto> getCommentsByPost(final String postId) {
         LOG.infof("Getting comments for post: %s", postId);
         return ServiceHelper.execute(() -> {
-            final var response = this.commentClient.getCommentsByPost(postId, null, null);
+            final var response = this.commentClient.getCommentsByPost(
+                    GetCommentsByPostRequest.newInstance().postPublicId(postId).page(null).size(null));
             LOG.infof("Successfully retrieved %s comments for post %s", response.size(), postId);
             return response;
         }, this.authService, LOG, "getting comments for post " + postId);
@@ -55,15 +66,18 @@ public class PostCommentService {
     /** Returns the comments by user. */
     public List<PostCommentResponseDto> getCommentsByUser(final String userId) {
         LOG.debugf("Fetching comments for user: %s", userId);
-        return ServiceHelper.execute(() -> this.commentClient.getCommentsByUser(userId, null, null), this.authService,
-                LOG, "fetching comments for user " + userId);
+        return ServiceHelper.execute(
+                () -> this.commentClient.getCommentsByUser(
+                        GetCommentsByUserRequest.newInstance().userPublicId(userId).page(null).size(null)),
+                this.authService, LOG, "fetching comments for user " + userId);
     }
 
     /** Handles the search comments operation. */
     public List<PostCommentResponseDto> searchComments(final String query) {
         LOG.debugf("Searching comments with query: %s", query);
-        return ServiceHelper.execute(() -> this.commentClient.searchComments(query), this.authService, LOG,
-                "searching comments");
+        return ServiceHelper.execute(
+                () -> this.commentClient.searchComments(SearchCommentsRequest.newInstance().query(query)),
+                this.authService, LOG, "searching comments");
     }
 
     /** Returns the comment by id. */
@@ -72,8 +86,10 @@ public class PostCommentService {
         final var comment =
                 PostCommentDto
                         .from(ServiceHelper
-                                .executeOptional(() -> this.commentClient.getComment(id), this.authService, LOG,
-                                        "getting comment " + id)
+                                .executeOptional(
+                                        () -> this.commentClient
+                                                .getComment(GetCommentRequest.newInstance().publicId(id)),
+                                        this.authService, LOG, "getting comment " + id)
                                 .orElseThrow(() -> new ServiceException("Comment not found")));
         LOG.infof("Successfully retrieved comment: %s", id);
         return comment;
@@ -100,9 +116,10 @@ public class PostCommentService {
         LOG.infof("Updating comment: %s", publicId);
         final var apiComment = new PostCommentDto();
         apiComment.setContent(comment.getContent());
-        final var updatedComment =
-                PostCommentDto.from(ServiceHelper.execute(() -> this.commentClient.updateComment(publicId, apiComment),
-                        this.authService, LOG, "updating comment " + publicId, "Failed to update comment"));
+        final var updatedComment = PostCommentDto.from(ServiceHelper.execute(
+                () -> this.commentClient.updateComment(UpdateCommentRequest.newInstance().publicId(publicId),
+                        apiComment),
+                this.authService, LOG, "updating comment " + publicId, "Failed to update comment"));
         LOG.infof("Successfully updated comment: %s", updatedComment.getPublicId());
         return updatedComment;
     }
@@ -110,15 +127,18 @@ public class PostCommentService {
     /** Handles the delete comment operation. */
     public void deleteComment(final String id) {
         LOG.infof("Deleting comment: %s", id);
-        ServiceHelper.executeVoid(() -> this.commentClient.deleteComment(id), this.authService, LOG,
-                "deleting comment " + id, "Comment not found");
+        ServiceHelper.executeVoid(
+                () -> this.commentClient.deleteComment(DeleteCommentRequest.newInstance().publicId(id)),
+                this.authService, LOG, "deleting comment " + id, "Comment not found");
         LOG.infof("Successfully deleted comment: %s", id);
     }
 
     /** Returns the comments by date range. */
     public List<PostCommentResponseDto> getCommentsByDateRange(final LocalDate startDate, final LocalDate endDate) {
         LOG.debugf("Fetching comments by date range: %s to %s", startDate, endDate);
-        return ServiceHelper.execute(() -> this.commentClient.getCommentsByDateRange(endDate, startDate),
+        return ServiceHelper.execute(
+                () -> this.commentClient.getCommentsByDateRange(
+                        GetCommentsByDateRangeRequest.newInstance().startDate(startDate).endDate(endDate)),
                 this.authService, LOG, "fetching comments by date range");
     }
 }

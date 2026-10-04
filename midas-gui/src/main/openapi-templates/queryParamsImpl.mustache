@@ -1,0 +1,1 @@
+{{! The setter side of queryParams.mustache (useSingleRequestParameter): optional parameters stay @Nullable for NullAway. }}{{#isQueryParam}}{{^required}}@jakarta.annotation.Nullable {{/required}}{{{dataType}}} {{paramName}}{{/isQueryParam}}

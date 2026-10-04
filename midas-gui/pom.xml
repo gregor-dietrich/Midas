@@ -191,6 +191,10 @@
                 <!-- ApiException is checked and cannot pass through the ServiceHelper lambdas;
                 without the mapper, errors arrive as WebApplicationException instead. -->
                 <microprofileRegisterExceptionMapper>false</microprofileRegisterExceptionMapper>
+                <!-- One XxxRequest builder per operation with parameters, set by name: the generator
+                orders query parameters alphabetically, so positional LocalDates read (endDate,
+                startDate) and a swapped call compiles. @BeanParam sends the same request. -->
+                <useSingleRequestParameter>true</useSingleRequestParameter>
               </configOptions>
             </configuration>
           </execution>

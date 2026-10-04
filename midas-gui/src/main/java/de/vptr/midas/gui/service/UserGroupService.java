@@ -8,6 +8,15 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.UserGroupClient;
+import de.vptr.midas.gui.client.UserGroupClient.AddUserToGroupRequest;
+import de.vptr.midas.gui.client.UserGroupClient.DeleteGroupRequest;
+import de.vptr.midas.gui.client.UserGroupClient.GetAllGroupsRequest;
+import de.vptr.midas.gui.client.UserGroupClient.GetGroupRequest;
+import de.vptr.midas.gui.client.UserGroupClient.GetGroupsForUserRequest;
+import de.vptr.midas.gui.client.UserGroupClient.GetUsersInGroupRequest;
+import de.vptr.midas.gui.client.UserGroupClient.RemoveUserFromGroupRequest;
+import de.vptr.midas.gui.client.UserGroupClient.SearchGroupsRequest;
+import de.vptr.midas.gui.client.UserGroupClient.UpdateGroupRequest;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupDto;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
@@ -36,29 +45,36 @@ public class UserGroupService {
         LOG.debug("Fetching all groups");
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
-        return ServiceHelper.execute(() -> this.groupClient.getAllGroups(safePage, safeSize), this.authService, LOG,
-                "fetching groups");
+        return ServiceHelper.execute(
+                () -> this.groupClient.getAllGroups(GetAllGroupsRequest.newInstance().page(safePage).size(safeSize)),
+                this.authService, LOG, "fetching groups");
     }
 
     /** Returns the group by publicId, or empty if it does not exist. */
     public Optional<UserGroupResponseDto> getGroupById(final String publicId) {
         LOG.debugf("Fetching group with publicID: %s", publicId);
-        return ServiceHelper.executeOptional(() -> this.groupClient.getGroup(publicId), this.authService, LOG,
-                "fetching group " + publicId);
+        return ServiceHelper.executeOptional(
+                () -> this.groupClient.getGroup(GetGroupRequest.newInstance().publicId(publicId)), this.authService,
+                LOG, "fetching group " + publicId);
     }
 
     /** Returns the users in group. */
     public List<UserDto> getUsersInGroup(final String groupPublicId) {
         LOG.debugf("Fetching users in group: %s", groupPublicId);
-        return ServiceHelper.execute(() -> this.groupClient.getUsersInGroup(groupPublicId), this.authService, LOG,
-                "fetching users in group " + groupPublicId).stream().map(UserDto::from).toList();
+        return ServiceHelper
+                .execute(
+                        () -> this.groupClient
+                                .getUsersInGroup(GetUsersInGroupRequest.newInstance().publicId(groupPublicId)),
+                        this.authService, LOG, "fetching users in group " + groupPublicId)
+                .stream().map(UserDto::from).toList();
     }
 
     /** Handles the search groups operation. */
     public List<UserGroupResponseDto> searchGroups(final String query) {
         LOG.debugf("Searching groups with query: %s", query);
-        return ServiceHelper.execute(() -> this.groupClient.searchGroups(query), this.authService, LOG,
-                "searching groups");
+        return ServiceHelper.execute(
+                () -> this.groupClient.searchGroups(SearchGroupsRequest.newInstance().query(query)), this.authService,
+                LOG, "searching groups");
     }
 
     /** Creates a new group. */
@@ -72,15 +88,17 @@ public class UserGroupService {
     public UserGroupDto updateGroup(final UserGroupDto group) {
         LOG.debugf("Updating group: %s", group.getPublicId());
         return UserGroupDto.from(ServiceHelper.execute(
-                () -> this.groupClient.updateGroup(Objects.requireNonNull(group.getPublicId()), group),
+                () -> this.groupClient.updateGroup(
+                        UpdateGroupRequest.newInstance().publicId(Objects.requireNonNull(group.getPublicId())), group),
                 this.authService, LOG, "updating group " + group.getPublicId(), "Failed to update group"));
     }
 
     /** Handles the delete group operation. */
     public void deleteGroup(final String publicId) {
         LOG.debugf("Deleting group: %s", publicId);
-        ServiceHelper.executeVoid(() -> this.groupClient.deleteGroup(publicId), this.authService, LOG,
-                "deleting group " + publicId);
+        ServiceHelper.executeVoid(
+                () -> this.groupClient.deleteGroup(DeleteGroupRequest.newInstance().publicId(publicId)),
+                this.authService, LOG, "deleting group " + publicId);
     }
 
     /** Adds the user to group. */
@@ -88,7 +106,8 @@ public class UserGroupService {
         LOG.debugf("Adding user %s to group %s", userPublicId, groupPublicId);
         ServiceHelper.executeVoid(() -> {
             try {
-                this.groupClient.addUserToGroup(groupPublicId, userPublicId);
+                this.groupClient.addUserToGroup(
+                        AddUserToGroupRequest.newInstance().groupPublicId(groupPublicId).userPublicId(userPublicId));
             } catch (final WebApplicationException e) {
                 if (e.getResponse().getStatus() == 409) {
                     e.getResponse().close();
@@ -102,14 +121,18 @@ public class UserGroupService {
     /** Removes the user from group. */
     public void removeUserFromGroup(final String groupPublicId, final String userPublicId) {
         LOG.debugf("Removing user %s from group %s", userPublicId, groupPublicId);
-        ServiceHelper.executeVoid(() -> this.groupClient.removeUserFromGroup(groupPublicId, userPublicId),
+        ServiceHelper.executeVoid(
+                () -> this.groupClient.removeUserFromGroup(RemoveUserFromGroupRequest.newInstance()
+                        .groupPublicId(groupPublicId).userPublicId(userPublicId)),
                 this.authService, LOG, "removing user " + userPublicId + " from group " + groupPublicId);
     }
 
     /** Returns the groups by user. */
     public List<UserGroupResponseDto> getGroupsByUser(final String userPublicId) {
         LOG.debugf("Fetching groups for user: %s", userPublicId);
-        return ServiceHelper.execute(() -> this.groupClient.getGroupsForUser(userPublicId), this.authService, LOG,
-                "fetching groups for user " + userPublicId);
+        return ServiceHelper.execute(
+                () -> this.groupClient
+                        .getGroupsForUser(GetGroupsForUserRequest.newInstance().userPublicId(userPublicId)),
+                this.authService, LOG, "fetching groups for user " + userPublicId);
     }
 }

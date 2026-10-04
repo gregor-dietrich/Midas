@@ -9,6 +9,10 @@ import org.jboss.logging.Logger;
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.UserRankClient;
+import de.vptr.midas.gui.client.UserRankClient.DeleteRankRequest;
+import de.vptr.midas.gui.client.UserRankClient.GetRankRequest;
+import de.vptr.midas.gui.client.UserRankClient.SearchRanksRequest;
+import de.vptr.midas.gui.client.UserRankClient.UpdateRankRequest;
 import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
@@ -111,11 +115,10 @@ public class UserRankService {
     /** Returns the rank by id. */
     public UserRankResponseDto getRankById(final String id) {
         LOG.infof("Getting user rank by id: %s", id);
-        final var rank =
-                ServiceHelper
-                        .executeOptional(() -> this.userRankClient.getRank(id), this.authService, LOG,
-                                "getting user rank " + id)
-                        .orElseThrow(() -> new ServiceException("User rank not found"));
+        final var rank = ServiceHelper
+                .executeOptional(() -> this.userRankClient.getRank(GetRankRequest.newInstance().publicId(id)),
+                        this.authService, LOG, "getting user rank " + id)
+                .orElseThrow(() -> new ServiceException("User rank not found"));
         LOG.infof("Successfully retrieved user rank: %s", rank.getName());
         return rank;
     }
@@ -133,9 +136,9 @@ public class UserRankService {
     public UserRankDto updateRank(final UserRankDto rank) {
         final String publicId = Objects.requireNonNull(rank.getPublicId(), "rank.publicId");
         LOG.infof("Updating user rank: %s (%s)", rank.getName(), publicId);
-        final var updatedRank =
-                UserRankDto.from(ServiceHelper.execute(() -> this.userRankClient.updateRank(publicId, rank),
-                        this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank"));
+        final var updatedRank = UserRankDto.from(ServiceHelper.execute(
+                () -> this.userRankClient.updateRank(UpdateRankRequest.newInstance().publicId(publicId), rank),
+                this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank"));
         LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
         return updatedRank;
     }
@@ -143,15 +146,16 @@ public class UserRankService {
     /** Handles the search ranks operation. */
     public List<UserRankResponseDto> searchRanks(final String query) {
         LOG.debugf("Searching ranks with query: %s", query);
-        return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query), this.authService, LOG,
-                "searching ranks");
+        return ServiceHelper.execute(
+                () -> this.userRankClient.searchRanks(SearchRanksRequest.newInstance().query(query)), this.authService,
+                LOG, "searching ranks");
     }
 
     /** Handles the delete rank operation. */
     public void deleteRank(final String id) {
         LOG.infof("Deleting user rank: %s", id);
-        ServiceHelper.executeVoid(() -> this.userRankClient.deleteRank(id), this.authService, LOG,
-                "deleting user rank " + id, "User rank not found");
+        ServiceHelper.executeVoid(() -> this.userRankClient.deleteRank(DeleteRankRequest.newInstance().publicId(id)),
+                this.authService, LOG, "deleting user rank " + id, "User rank not found");
         LOG.infof("Successfully deleted user rank: %s", id);
     }
 }

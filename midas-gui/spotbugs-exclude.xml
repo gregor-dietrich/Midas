@@ -138,12 +138,22 @@
     The generator's model template keeps list-valued properties by reference, which raises
     EI_EXPOSE_REP/EI_EXPOSE_REP2. Overriding that template next to the customised client
     template (src/main/openapi-templates/api.mustache) could copy them; this repository does not.
-    The generated clients are interfaces and raise nothing. The hand-written request DTOs share
-    the dto package but none of these names.
+    The hand-written request DTOs share the dto package but none of these names.
   -->
   <Match>
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
     <Class name="~de\.vptr\.midas\.gui\.dto\.(AccountAccessResponseDto|AccountAssociationResponseDto|AccountResponseDto|ApiErrorResponse|BalancePointDto|BalanceResponseDto|PageResponseDto|PaymentResponseDto|PostCategoryResponseDto|PostCommentResponseDto|PostResponseDto|UserGroupResponseDto|UserRankResponseDto|UserResponseDto)" />
+  </Match>
+
+  <!--
+    URF_UNREAD_FIELD on the generated XxxClient.XxxRequest builders:
+    useSingleRequestParameter (pom.xml) nests one request class per operation in each generated
+    client. Its private fields carry the @PathParam/@QueryParam annotations and are read only by
+    the REST client through @BeanParam, outside the bytecode SpotBugs analyses.
+  -->
+  <Match>
+    <Bug pattern="URF_UNREAD_FIELD" />
+    <Class name="~de\.vptr\.midas\.gui\.client\.[A-Za-z]+Client\$[A-Za-z]+Request" />
   </Match>
 
 </FindBugsFilter>

@@ -2,6 +2,7 @@ package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -19,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.PaymentClient;
+import de.vptr.midas.gui.client.PaymentClient.GetPaymentsBySourceAccountRequest;
+import de.vptr.midas.gui.client.PaymentClient.GetPaymentsByTargetAccountRequest;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 
 /** Covers the merge in {@link PaymentService#getPaymentsByAccount}; HTTP behaviour is pinned elsewhere. */
@@ -50,9 +53,9 @@ class PaymentServiceTest {
         final var undated = new PaymentResponseDto().publicId(undatedId);
         final var older = new PaymentResponseDto().publicId("older").date(LocalDate.of(2026, 1, 1));
         final var newer = new PaymentResponseDto().publicId("newer").date(LocalDate.of(2026, 2, 1));
-        when(this.paymentClient.getPaymentsBySourceAccount("a1"))
+        when(this.paymentClient.getPaymentsBySourceAccount(any(GetPaymentsBySourceAccountRequest.class)))
                 .thenReturn(undatedIsSource ? List.of(undated, older) : List.of(older));
-        when(this.paymentClient.getPaymentsByTargetAccount("a1"))
+        when(this.paymentClient.getPaymentsByTargetAccount(any(GetPaymentsByTargetAccountRequest.class)))
                 .thenReturn(undatedIsSource ? List.of(newer) : List.of(newer, undated));
 
         assertThat(this.paymentService.getPaymentsByAccount("a1")).extracting(PaymentResponseDto::getPublicId)
