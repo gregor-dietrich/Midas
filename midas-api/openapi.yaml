@@ -527,12 +527,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -674,12 +677,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       - name: startDate
         in: query
         schema:
@@ -950,6 +956,7 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: query
         in: query
         schema:
@@ -960,6 +967,8 @@ paths:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       - name: startDate
         in: query
         schema:
@@ -1584,12 +1593,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -1882,12 +1894,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -1990,12 +2005,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2024,6 +2042,8 @@ paths:
           type: integer
           format: int32
           default: 10
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2083,12 +2103,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2257,12 +2280,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2490,12 +2516,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2591,6 +2620,8 @@ paths:
           type: integer
           format: int32
           default: 10
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2905,12 +2936,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -2977,12 +3011,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -3080,6 +3117,7 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: query
         in: query
         schema:
@@ -3090,6 +3128,8 @@ paths:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       - name: startDate
         in: query
         schema:
@@ -3153,12 +3193,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -3192,12 +3235,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -3367,12 +3413,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK
@@ -4067,12 +4116,15 @@ paths:
           type: integer
           format: int32
           default: 0
+          minimum: 0
       - name: size
         in: query
         schema:
           type: integer
           format: int32
           default: 20
+          minimum: 1
+          maximum: 100
       responses:
         "200":
           description: OK

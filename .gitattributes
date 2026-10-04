@@ -1,4 +1,6 @@
 * text=auto eol=lf
+# cmd.exe can misparse goto/call labels in LF-only batch files (mvnw.cmd relies on them).
+*.cmd text eol=crlf
 .github/** linguist-vendored
 midas-*/.mvn/** linguist-vendored
 midas-*/mvnw linguist-vendored
