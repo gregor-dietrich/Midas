@@ -1,10 +1,13 @@
 #!/bin/bash
 
-. "$(dirname "$0")"/lib/get_dir.sh
-. "$DIR/lib/get_maven.sh"
+# Run through make, which exports PROJECT_ROOT and DEVKIT (devkit's make/common.mk).
+cd "${PROJECT_ROOT:?run this through make}" || exit
+. "${DEVKIT:?run this through make}/scripts/lib/get_maven.sh"
 
 PLATFORMS="linux/amd64,linux/arm64"
-MODULE=${1:-"both"}
+# ONLY=<module>[,<module>...] narrows the build like devkit's targets; unset, every module.
+SELECTED=${ONLY:-$MODULES}
+MODULES_TO_DOCKER=${SELECTED//,/ }
 
 # Detect native platform
 NATIVE_ARCH_RAW="$(uname -m)"
@@ -17,9 +20,6 @@ else
 fi
 
 set -e
-
-# Run environment check first
-"$DIR/check.sh" "$MODULE"
 
 # Register QEMU binfmt handlers only for non-native target platforms
 if docker buildx version >/dev/null 2>&1; then
@@ -59,41 +59,23 @@ if [[ -z "$REVISION" ]]; then
     REVISION=${REVISION:-1.0.0-SNAPSHOT}
 fi
 
-# Map module names to Maven project list
-case $MODULE in
-    "api")
-        PL_ARG="-pl midas-api"
-        MODULES_TO_DOCKER="midas-api"
-        ;;
-    "gui")
-        PL_ARG="-pl midas-gui"
-        MODULES_TO_DOCKER="midas-gui"
-        ;;
-    "both"|*)
-        PL_ARG=""
-        MODULES_TO_DOCKER="midas-api midas-gui"
-        ;;
-esac
-
 echo "=== Packaging Application ==="
-cd "$PROJECT_ROOT"
 
 # Determine production profile for GUI
 GUI_PROFILE=""
-if [[ "$MODULE" == "gui" || "$MODULE" == "both" ]]; then
+if [[ " $MODULES_TO_DOCKER " == *" $FRONTEND_DIR "* ]]; then
     GUI_PROFILE="-Pproduction"
     # Build the frontend from the committed lockfile (#15): Vaadin reuses a "compatible" bundle and
     # skips npm install when package.json is unchanged, ignoring the lockfile in both checks, so a
     # lockfile-only bump would otherwise ship the old dependency.
-    rm -rf midas-gui/src/main/bundles/prod.bundle midas-gui/node_modules
+    rm -rf "$FRONTEND_DIR/src/main/bundles/prod.bundle" "$FRONTEND_DIR/node_modules"
 fi
 
-${MVN_CMD} -q clean package ${PL_ARG} -DskipTests ${GUI_PROFILE} -Drevision=${REVISION}
+${MVN_CMD} -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${GUI_PROFILE} -Drevision=${REVISION}
 
 # Function to build Docker image for a specific module
 build_docker() {
     local module_dir="$1"
-    local module_name="${module_dir#midas-}"
     local image_name="gregordietrich/${module_dir}"
     local dockerfile="src/main/docker/Dockerfile.jvm-alpine"
     local tag="${image_name}:${REVISION}"

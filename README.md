@@ -13,7 +13,7 @@ This is a multi-module project containing:
 midas/
 ├── midas-api/            # Backend REST API (separate Git repo)
 ├── midas-gui/            # Frontend web application (separate Git repo)
-├── scripts/              # Repository management scripts (pull, push)
+├── scripts/              # Project-only scripts (build, dev, openapi, password, release)
 ├── docker-compose.yml    # Full-stack Docker Compose
 └── Makefile              # Orchestrates both subprojects
 ```
@@ -32,10 +32,10 @@ Start both applications in development mode:
 
 ```shell
 # Terminal 1 — Start the API (port 8080)
-cd midas-api && make dev
+make dev-api
 
 # Terminal 2 — Start the GUI (port 8081)
-cd midas-gui && make dev
+make dev-gui
 ```
 
 The applications will be available at:
@@ -58,25 +58,33 @@ pgAdmin will be available at <http://localhost:42069>.
 
 ### Makefile Targets
 
-The root `Makefile` delegates to both subprojects:
+The root `Makefile` runs every target on both modules; `make <target> ONLY=midas-api` (or
+`midas-gui`) limits it to one. The shared targets come from devkit, pinned in `devkit.toml`;
+`make help` prints this list:
 
 ```shell
-make branch       # create or reset a git branch from a source (prompts for names and pushes)
-make build        # make check, mvn package, docker buildx (both modules)
-make check        # verify local environment (both modules)
-make clean        # run mvn clean, and remove build artifacts (both modules)
-make coverage     # run tests with JaCoCo and generate combined coverage report
-make dev          # start Quarkus in dev mode (specify: make dev-api or make dev-gui)
-make format       # run spotless to format code (both modules)
-make install      # make check, mvn clean install -DskipTests (both modules)
-make kill         # stop/kill Quarkus and Maven processes and remove Docker containers
-make lint         # run quality gate plugins (both modules)
-make password     # generate a salt+hash for a password (for API init.sql)
-make rebase       # interactive git rebase against a target (defaults to origin/main)
-make release      # pull from origin/main, make build, make tag, and push Docker images
-make tag          # create, sign and push a new git tag (auto-increments latest tag suggestion)
-make test         # run full Maven test suite (both modules)
-make untag        # delete a local and remote git tag (prompts for tag to delete)
+make audit           # Run OWASP dependency-check (NVD_API_KEY or .env.build)
+make branch          # create or reset a git branch from a source (prompts for names and pushes)
+make build           # mvn package, docker buildx (ONLY=<module> limits it to one)
+make check           # verify the local environment
+make check-devkit    # verify .devkit links to the pin (warns on a stale devkitw)
+make check-java      # Verify the JDK, Maven >= 3.9.9 and the pom's version pins
+make clean           # mvn clean, plus logs and frontend build output
+make coverage        # Run all tests incl. ITs with JaCoCo; write .coverage.md
+make dev-api         # start Midas API in Quarkus dev mode (port 8080)
+make dev-gui         # start Midas GUI in Quarkus dev mode (port 8081)
+make format          # Format Java sources with spotless
+make help            # list the available targets
+make install         # make check, then mvn clean install -DskipTests
+make kill            # Kill Quarkus/Maven processes; stop and remove ALL Docker containers
+make lint            # Run the quality-gate plugins and the frontend pin check
+make openapi         # regenerate the committed OpenAPI contract snapshot
+make password        # generate a salt+hash for a password (for API init.sql)
+make rebase          # interactive git rebase against a target (defaults to origin/main)
+make release         # pull from origin/main, make build, make tag, and push Docker images
+make tag             # create, sign and push a new git tag (auto-increments latest tag suggestion)
+make test            # Run the Maven test suite (mvn verify)
+make untag           # delete a local and remote git tag (prompts for tag to delete)
 ```
 
 ### Building the Projects
@@ -86,8 +94,8 @@ make untag        # delete a local and remote git tag (prompts for tag to delete
 make install
 
 # Or individually:
-cd midas-api && make install
-cd midas-gui && make install
+make install ONLY=midas-api
+make install ONLY=midas-gui
 ```
 
 ### Running Tests
@@ -97,8 +105,8 @@ cd midas-gui && make install
 make test
 
 # Or individually:
-cd midas-api && make test
-cd midas-gui && make test
+make test ONLY=midas-api
+make test ONLY=midas-gui
 ```
 
 Docker must be running for API tests (Testcontainers starts a PostgreSQL container automatically).
@@ -121,7 +129,7 @@ cd midas-api && ./mvnw package
 cd midas-gui && ./mvnw package -Pproduction
 ```
 
-Or use `make build` in each subproject (runs check + package + Docker buildx).
+Or use `make build` (runs check + package + Docker buildx; `ONLY=<module>` limits it to one).
 
 ### Create Docker Images
 
@@ -295,8 +303,8 @@ The project implements transparent encryption for sensitive data (PII) at rest a
 2. Ensure you have JDK 25, Maven, and Docker installed
 3. Run `make pull` to sync submodules
 4. Run `make install` to compile both projects
-5. Start the API: `cd midas-api && make dev`
-6. Start the GUI: `cd midas-gui && make dev`
+5. Start the API: `make dev-api`
+6. Start the GUI: `make dev-gui`
 7. Access the frontend at <http://localhost:8081>
 8. Access the API at <http://localhost:8080>
 
@@ -306,7 +314,7 @@ For production deployment, use `docker compose up -d --build`.
 
 1. `make pull` — Sync all repositories with latest changes
 2. Make your changes in the respective projects
-   - Use `make dev` in each subproject for hot-reload development
+   - Use `make dev-api` and `make dev-gui` for hot-reload development
 3. `make test` — Run tests for both projects
 4. `make push` — Commit and push changes to all repositories
 

@@ -11,7 +11,7 @@ This project is a modern web application consisting of a REST API backend and a 
 
 ## Building and Running
 
-The project uses a `Makefile` at the root to simplify common tasks; module-specific targets select a module via the scripts in `scripts/`.
+The project uses a `Makefile` at the root to simplify common tasks. Its shared targets come from devkit (see Shared configuration below); `make <target> ONLY=<module>` limits a target to one module, and `make help` lists every target.
 
 ### Prerequisites
 
@@ -22,15 +22,15 @@ The project uses a `Makefile` at the root to simplify common tasks; module-speci
 ### Common Commands
 
 - `make audit`: Run OWASP dependency-check (needs `NVD_API_KEY`, see Security below).
-- `make install`: Run `mvn clean install -DskipTests` for both modules.
+- `make install`: Run `make check`, then `mvn clean install -DskipTests` for both modules.
 - `make build`: Verify environment, package applications, and build Docker images.
-- `make clean`: Clean Maven artifacts and build directories.
+- `make clean`: Clean Maven artifacts, logs, `midas-gui/node_modules` and the generated frontend sources.
 - `make format`: Run `spotless:apply` to auto-format code for both modules.
 - `make lint`: Run quality gate plugins (including `spotless:check`) for both modules.
 - `make test`: Run full Maven test suite for both modules (requires Docker for API tests).
 - `make dev-api`: Start the backend API in Quarkus Dev Mode (port 8080).
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
-- `make kill`: Terminate all Quarkus/Maven processes and clean up Docker containers.
+- `make kill`: Terminate all Quarkus/Maven processes and stop and remove **every** Docker container on the host.
 - `make openapi`: Regenerate the committed OpenAPI contract snapshot (`midas-api/openapi.yaml`).
 - `make password`: Generate a salt+hash for the API `init.sql`.
 
@@ -46,19 +46,26 @@ The project enforces very strict quality gates:
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
 - **Coverage**: JaCoCo enforcement. The `report` goal is bound to `post-integration-test` so it includes `*IT` coverage; surefire and failsafe append to the same `target/jacoco.exec`, and a report generated at `test` would silently omit every integration test.
 - **Security**: OWASP Dependency Check via `make audit` (fails on CVSS >= 7; false positives go in the root `dependency-check-suppression.xml`, pinned to the exact package version). It is deliberately not bound to a lifecycle phase, so `make test` does not depend on the network, an NVD API key or a clean CVE feed; CI is meant to run it as its own step (#5). It needs `NVD_API_KEY` from the environment or the gitignored `.env.build` (not `.env`, which docker-compose reads); without a key the NVD download is rate-limited to a crawl. License enforcement blocks commercial/proprietary licenses.
-- **Frontend pins**: `scripts/check_frontend_deps.py midas-gui` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
+- **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
 
-### Shared configuration with the AIMathTutor project
+### Shared configuration from devkit
 
-The quality gate configuration is deliberately kept **identical** to the sibling
-`aimathtutor` repository, so drift is visible in a plain `diff`. `checkstyle.xml`,
-`pmd-ruleset.xml` and `scripts/check_frontend_deps.py` are byte-identical
-across both; `spotbugs-exclude.xml` and `checkstyle-suppressions.xml` share a common
-baseline and carry per-module sections. Deviations are allowed only where they are
-unavoidable (package names, Vaadin present or absent, multi-module path resolution) or
-carry a written reason in the file itself — never as a convenience. When changing a gate
-here, point out that `aimathtutor` needs the same change, but never edit that repository
-unless explicitly asked to.
+`checkstyle.xml`, `pmd-ruleset.xml`, `eclipse-formatter.xml`, the shared Make targets and
+the scripts behind them come from devkit, pinned in `devkit.toml` and linked into the
+checkout as `.devkit` by `./devkitw`. Any `make` target creates the link; a bare
+`./mvnw verify` (or any other gate goal) fails on a fresh clone until it exists. They are
+not hand-kept copies: a shared gate changes in devkit, is released there, and is adopted
+here by bumping `version` and `commit` in `devkit.toml`. Never edit `.devkit/` or `devkitw`.
+
+The project-specific gate files stay here: `dependency-check-suppression.xml`,
+`spotbugs-exclude.xml` and `checkstyle-suppressions.xml`. The last two share a common
+baseline with the `aimathtutor` repository and carry per-module sections, and until
+devkit ships a parent POM the gate plugin configuration in the root `pom.xml` is kept in
+step with it by hand. Deviations are allowed only where they are unavoidable (package
+names, Vaadin present or absent, multi-module path resolution) or carry a written reason
+in the file itself — never as a convenience. When changing one of these, point out that
+`aimathtutor` needs the same change, but never edit that repository unless explicitly
+asked to.
 
 You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
 If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make test`.
@@ -79,7 +86,8 @@ If any quality gates or tests fail, work on them until all problems are resolved
 
 - `midas-api/`: Backend service source and configuration.
 - `midas-gui/`: Frontend application source and configuration.
-- `scripts/`: Shared shell scripts for build and lifecycle management.
+- `scripts/`: Project-only shell scripts (build, dev mode, OpenAPI snapshot, password, release).
+- `devkitw`, `devkit.toml`: The devkit wrapper and its pin; `.devkit` is the gitignored link it creates.
 - `docker-compose.yml`: Orchestration for local production-like environments.
 - `Makefile`: Entry point for all development tasks.
 - `README.md`: General project documentation.

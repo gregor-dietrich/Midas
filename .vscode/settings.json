@@ -56,8 +56,8 @@
   // does not bound total RSS.
   "java.jdt.ls.vmargs": "-XX:+UseG1GC -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -XX:G1PeriodicGCInterval=60000 -XX:MaxMetaspaceSize=768m -Dsun.zip.disableMemoryMapping=true -Xmx1500m -Xms100m -Xlog:disable",
   "java.edit.validateAllOpenBuffersOnChanges": true, // Validates all open Java files when changes occur, ensuring real-time error detection.
-  "java.format.settings.url": "midas-api/eclipse-formatter.xml",
-  "java.format.settings.profile": "Midas",
+  "java.format.settings.url": ".devkit/java/config/eclipse-formatter.xml",
+  "java.format.settings.profile": "devkit",
   "java.sources.organizeImports.starThreshold": 9999,
   "java.sources.organizeImports.staticStarThreshold": 9999,
   "json.schemaDownload.enable": false,
@@ -70,7 +70,6 @@
   "python.analysis.autoIndent": true,
   "python.analysis.diagnosticMode": "workspace",
   "python.analysis.enablePytestSupport": true,
-  "python.analysis.extraPaths": ["${workspaceFolder}/midas-test/src"],
   "python.analysis.generateWithTypeAnnotation": true,
   "python.analysis.indexing": true,
   "python.analysis.typeCheckingMode": "strict",

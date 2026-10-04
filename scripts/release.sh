@@ -1,7 +1,8 @@
 #!/bin/bash
 
-. "$(dirname "$0")"/lib/get_dir.sh
-. "$DIR/lib/get_maven.sh"
+# Run through make, which exports PROJECT_ROOT and DEVKIT (devkit's make/common.mk).
+cd "${PROJECT_ROOT:?run this through make}" || exit
+. "${DEVKIT:?run this through make}/scripts/lib/get_maven.sh"
 
 set -e
 
@@ -12,8 +13,6 @@ if [[ -z "$REVISION" ]]; then
     REVISION=${REVISION:-1.0.0-SNAPSHOT}
 fi
 export REVISION
-
-cd "$PROJECT_ROOT"
 
 git fetch origin
 git switch main
@@ -26,11 +25,11 @@ make test
 make build
 make tag
 
-# Docker push
+# Docker push: the images `make build` built, so ONLY narrows the push as it narrowed the build
 if command -v docker &> /dev/null; then
-    IMAGE_PREFIX="gregordietrich/midas"
-    for module in api gui; do
-        IMAGE_NAME="${IMAGE_PREFIX}-${module}"
+    SELECTED=${ONLY:-$MODULES}
+    for module in ${SELECTED//,/ }; do
+        IMAGE_NAME="gregordietrich/${module}"
         TAG="${IMAGE_NAME}:${REVISION}"
         
         echo "Pushing Docker images for $module..."
@@ -43,5 +42,3 @@ if command -v docker &> /dev/null; then
 fi
 
 echo "Release completed."
-
-cd - > /dev/null

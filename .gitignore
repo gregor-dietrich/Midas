@@ -13,6 +13,9 @@ midas-gui/src/main/bundles
 .venv
 __pycache__
 
+# devkit (the link devkitw creates)
+/.devkit
+
 # Maven
 target/
 pom.xml.tag

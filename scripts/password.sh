@@ -1,7 +1,8 @@
 #!/bin/bash
 
-. "$(dirname "$0")"/lib/get_dir.sh
-. "$DIR/lib/get_maven.sh"
+# Run through make, which exports PROJECT_ROOT and DEVKIT (devkit's make/common.mk).
+cd "${PROJECT_ROOT:?run this through make}" || exit
+. "${DEVKIT:?run this through make}/scripts/lib/get_maven.sh"
 
 MODULE=${1:-"api"}
 
@@ -12,7 +13,6 @@ echo "Starting password hash generation..."
 case $MODULE in
     "api")
         echo "=== Generating password hash for Midas API ==="
-        cd "$PROJECT_ROOT"
 
         # Usage: ./password.sh [password]
         # If a password is provided as the first argument, use it non-interactively.
@@ -23,10 +23,10 @@ case $MODULE in
         else
             # Prompt for password (hidden)
             echo -n "Enter password to generate salt+hash: "
-            read -s PASS1
+            read -r -s PASS1
             echo
             echo -n "Confirm password: "
-            read -s PASS2
+            read -r -s PASS2
             echo
 
             if [ "$PASS1" != "$PASS2" ]; then

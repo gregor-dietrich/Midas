@@ -314,7 +314,7 @@
             <includeTests>true</includeTests>
             <linkXRef>false</linkXRef>
             <rulesets>
-              <ruleset>${maven.multiModuleProjectDirectory}/pmd-ruleset.xml</ruleset>
+              <ruleset>${maven.multiModuleProjectDirectory}/.devkit/java/config/pmd-ruleset.xml</ruleset>
             </rulesets>
             <failOnViolation>true</failOnViolation>
           </configuration>
@@ -358,7 +358,7 @@
             </execution>
           </executions>
           <configuration>
-            <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+            <configLocation>${maven.multiModuleProjectDirectory}/.devkit/java/config/checkstyle.xml</configLocation>
             <propertyExpansion>
               org.checkstyle.google.suppressionfilter.config=${project.basedir}/checkstyle-suppressions.xml</propertyExpansion>
             <consoleOutput>true</consoleOutput>
@@ -378,7 +378,7 @@
           <configuration>
             <java>
               <eclipse>
-                <file>${maven.multiModuleProjectDirectory}/eclipse-formatter.xml</file>
+                <file>${maven.multiModuleProjectDirectory}/.devkit/java/config/eclipse-formatter.xml</file>
                 <version>${eclipse-formatter.version}</version>
                 <!-- download.eclipse.org suffers recurring outages; provision P2 from a mirror -->
                 <p2Mirrors>
