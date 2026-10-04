@@ -124,6 +124,8 @@ Flyway refuses a database built from an earlier V1 (checksum mismatch) or from t
 
 For production, the `docker-compose.yml` at the project root includes a PostgreSQL service. Production seeds no account. On any start that finds the `users` table empty, the API creates an admin from `APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72 characters and at most 72 bytes, with a digit, a lowercase and an uppercase letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once any account exists, both settings are ignored and can be removed.
 
+A production build also refuses to start under the `dev` or `test` profile (e.g. a stray `QUARKUS_PROFILE=dev`), before Flyway or Hibernate touch the database: those profiles clean the schema at start and relax logging and rate limits. Unset `QUARKUS_PROFILE` (and any `quarkus.config.profile.parent`) or set it to `prod`. This guards against a wrong profile, not against the individual settings: anyone who controls the environment can still set those directly.
+
 ## 📦 Building for Production
 
 ### Package Applications

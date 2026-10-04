@@ -87,7 +87,8 @@ If any quality gates or tests fail, work on them until all problems are resolved
   hand-written; the generated clients use a request DTO by its schema name, so it must keep that name,
   and only the `*HttpContractTest`s check its fields, or catch two same-typed parameters trading places. Client-wide annotations (`@Retry`, `@Timeout`,
   `@RegisterClientHeaders`) live in the template `midas-gui/src/main/openapi-templates/api.mustache`.
-- **Database**: Flyway owns the schema in every profile and Hibernate only validates it. Migrations live in
+- **Database**: Flyway owns the schema in every profile and Hibernate only validates it. A production launch
+  never cleans and refuses a dev or test profile (`FlywayCleanGuard`, keyed on LaunchMode, #31). Migrations live in
   `midas-api/src/main/resources/db/migration`; a released migration is never edited, a new one is added
   instead (V1 may still change until the first release). Flyway refuses a database built from an earlier V1
   (checksum mismatch) or the pre-Flyway `init.sql` (no schema history): recreate it with
