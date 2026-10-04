@@ -101,11 +101,10 @@ public class PostCommentService {
                     Response.Status.BAD_REQUEST);
         }
         if (existingPost.published == null || !existingPost.published) {
-            throw new WebApplicationException("Cannot add comment to an unpublished post.",
-                    Response.Status.BAD_REQUEST);
+            throw new ValidationException("Cannot add comment to an unpublished post.");
         }
         if (existingPost.commentable == null || !existingPost.commentable) {
-            throw new WebApplicationException("Comments are not allowed on this post.", Response.Status.BAD_REQUEST);
+            throw new ValidationException("Comments are not allowed on this post.");
         }
         final PostCommentEntity comment = new PostCommentEntity();
         comment.content = this.htmlSanitizer.sanitizeComment(dto.content);

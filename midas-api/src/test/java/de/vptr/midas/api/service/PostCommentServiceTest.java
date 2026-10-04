@@ -296,22 +296,24 @@ class PostCommentServiceTest extends AbstractIntegrationTest {
                         Objects.requireNonNull(this.testUser.username));
 
         final var commentDto = ServiceTestDataBuilder.createUniquePostCommentDto("Comment", unpublishedPost.publicId);
-        assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
-                Objects.requireNonNull(this.testUser.username)));
+        final var refusal = assertThrows(ValidationException.class, () -> this.postCommentService
+                .createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+        assertEquals("Cannot add comment to an unpublished post.", refusal.getMessage());
     }
 
     @Test
     @TestTransaction
     void testCreateCommentOnNonCommentablePost() {
+        final var postDto = ServiceTestDataBuilder.createUniquePostDto(this.testCategory.publicId);
+        postDto.published = true;
         final var nonCommentablePost =
-                this.postService.createPost(ServiceTestDataBuilder.createUniquePostDto(this.testCategory.publicId),
-                        Objects.requireNonNull(this.testUser.username));
-        nonCommentablePost.commentable = false;
+                this.postService.createPost(postDto, Objects.requireNonNull(this.testUser.username));
 
         final var commentDto =
                 ServiceTestDataBuilder.createUniquePostCommentDto("Comment", nonCommentablePost.publicId);
-        assertThrows(WebApplicationException.class, () -> this.postCommentService.createComment(commentDto,
-                Objects.requireNonNull(this.testUser.username)));
+        final var refusal = assertThrows(ValidationException.class, () -> this.postCommentService
+                .createComment(commentDto, Objects.requireNonNull(this.testUser.username)));
+        assertEquals("Comments are not allowed on this post.", refusal.getMessage());
     }
 
     @Test

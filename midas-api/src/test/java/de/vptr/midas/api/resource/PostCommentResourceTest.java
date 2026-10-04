@@ -3,7 +3,9 @@ package de.vptr.midas.api.resource;
 import static de.vptr.midas.api.util.TestDataBuilder.createEmptyJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createInvalidJson;
 import static de.vptr.midas.api.util.TestDataBuilder.createMalformedJson;
+import static de.vptr.midas.api.util.TestUtil.authenticatedJsonRequest;
 import static de.vptr.midas.api.util.TestUtil.authenticatedRequest;
+import static de.vptr.midas.api.util.TestUtil.createTestCategory;
 import static de.vptr.midas.api.util.TestUtil.createTestComment;
 import static de.vptr.midas.api.util.TestUtil.createTestPost;
 import static de.vptr.midas.api.util.TestUtil.testAuthorizedGetWithJson;
@@ -19,10 +21,13 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedAccess;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import de.vptr.midas.api.util.TestDataBuilder;
 import io.quarkus.test.TestTransaction;
@@ -83,6 +88,19 @@ class PostCommentResourceTest {
         final String postId = createTestPost();
         final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
         testAuthorizedPostWithCreation(ENDPOINT_URL, commentJson);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "false,true,Cannot add comment to an unpublished post.",
+            "true,false,Comments are not allowed on this post." })
+    void testCreateComment_refusedWith422(final boolean published, final boolean commentable, final String message) {
+        final String postJson = TestDataBuilder.createPostJson("Test Post", "Test content", published, commentable,
+                "01AN4Z07BY79KA1307SR9X4MV7", Objects.requireNonNull(createTestCategory()));
+        final String postId = authenticatedJsonRequest().body(postJson).when().post("/api/v1/posts").then()
+                .statusCode(201).extract().path("publicId");
+        final String commentJson = TestDataBuilder.createDefaultPostCommentJson(Objects.requireNonNull(postId));
+        authenticatedJsonRequest().body(commentJson).when().post(ENDPOINT_URL).then().statusCode(422)
+                .body("status", equalTo(422)).body("message", equalTo(message));
     }
 
     @Test

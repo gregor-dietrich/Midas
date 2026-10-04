@@ -55,11 +55,12 @@ public class AdminPostCommentPanel extends AbstractPostCommentDialogBase {
         NotificationUtil.showSuccess("Comment added successfully");
     }
 
+    /** Shows the service's message, which carries the backend's reason when it refuses the comment (422). */
     @Override
     protected void handleServiceException(final ServiceException e, final String entityName) {
         final String errorMessage = e.getMessage();
-        if (errorMessage != null && errorMessage.contains("Bad Request")) {
-            NotificationUtil.showError("Post is not commentable");
+        if (errorMessage != null) {
+            NotificationUtil.showError(e, errorMessage);
         } else {
             super.handleServiceException(e, entityName);
         }

@@ -131,9 +131,9 @@ public class PostCommentResource {
     @RolesAllowed({ "post-comment:add" })
     @APIResponseSchema(value = PostCommentResponseDto.class, responseCode = "201",
             responseDescription = "Comment created")
-    @APIResponse(responseCode = "400", description = "Comments not allowed on this post",
+    @APIResponse(responseCode = "400", description = "Post does not exist",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @APIResponse(responseCode = "422", description = "Validation failed",
+    @APIResponse(responseCode = "422", description = "Validation failed, or the post is unpublished or not commentable",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createComment(@Valid final PostCommentDto commentDto) {
         final String currentUsername = SecurityContextUtil.requireCurrentUsername(this.securityContext);

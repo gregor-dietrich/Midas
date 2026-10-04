@@ -1933,13 +1933,13 @@ paths:
         required: true
       responses:
         "400":
-          description: Comments not allowed on this post
+          description: Post does not exist
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
         "422":
-          description: Validation failed
+          description: "Validation failed, or the post is unpublished or not commentable"
           content:
             application/json:
               schema:

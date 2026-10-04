@@ -47,6 +47,9 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
     private static final String COMMENT_VALIDATION_JSON = """
             {"status":422,"error":"Unprocessable Entity","message":"content must not be blank"}""";
 
+    private static final String COMMENT_REFUSAL_JSON = """
+            {"status":422,"error":"Validation failed","message":"Comments are not allowed on this post."}""";
+
     @Inject
     PostCommentService commentService;
 
@@ -171,11 +174,13 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
         return Stream.of(
                 failedCommentWrite("POST", "/comments", 422, COMMENT_VALIDATION_JSON, s -> s.createComment(fromView()),
                         "Failed to create comment: content must not be blank"),
+                failedCommentWrite("POST", "/comments", 422, COMMENT_REFUSAL_JSON, s -> s.createComment(fromView()),
+                        "Failed to create comment: Comments are not allowed on this post."),
                 failedCommentWrite("PUT", COMMENT_PATH, 422, COMMENT_VALIDATION_JSON, s -> s.updateComment(fromView()),
                         "Failed to update comment: content must not be blank"));
     }
 
-    /** 422 validation errors surface the operation's failure prefix. */
+    /** 422 validation errors and business-rule refusals surface the operation's failure prefix. */
     @ParameterizedTest(name = "{0} {2}")
     @MethodSource("failedCommentWrites")
     void commentWrites_failWithPrefixedMessage(final String method, final String suffix, final int status,
