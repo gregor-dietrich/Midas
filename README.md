@@ -4,15 +4,15 @@ A modern web application built with Quarkus, consisting of a REST API backend an
 
 ## 🏗️ Project Structure
 
-This is a multi-module project containing:
+This is a single Git repository with two Maven modules:
 
 - **midas-api**: Backend REST API service (Quarkus)
 - **midas-gui**: Frontend web application (Quarkus + Vaadin)
 
 ```txt
 midas/
-├── midas-api/            # Backend REST API (separate Git repo)
-├── midas-gui/            # Frontend web application (separate Git repo)
+├── midas-api/            # Backend REST API (Maven module)
+├── midas-gui/            # Frontend web application (Maven module)
 ├── scripts/              # Project-only scripts (build, dev, openapi, password, release)
 ├── docker-compose.yml    # Full-stack Docker Compose
 └── Makefile              # Orchestrates both subprojects
@@ -51,9 +51,9 @@ Start the full stack (backend + frontend + PostgreSQL + pgAdmin):
 docker compose up -d --build
 ```
 
-Set `SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` (e.g. in `.env`, see [Environment Variables](#environment-variables)) before the first `docker compose up`.
+Set `SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` (e.g. in `.env`, see [Environment Variables](#environment-variables)) before the first `docker compose up`. `SQL_PASSWORD` set later does not reach an existing database; see [Changing the Database Password](#changing-the-database-password).
 
-The frontend will be available at <http://localhost> (port 80).
+The frontend will be available at <http://localhost:8081>.
 pgAdmin will be available at <http://localhost:42069>.
 
 ## 🔧 Development
@@ -130,10 +130,10 @@ For production, the `docker-compose.yml` at the project root includes a PostgreS
 
 ```shell
 # Package API
-cd midas-api && ./mvnw package
+./mvnw package -pl midas-api
 
 # Package GUI (with production profile)
-cd midas-gui && ./mvnw package -Pproduction
+./mvnw package -pl midas-gui -Pproduction
 ```
 
 Or use `make build` (runs check + package + Docker buildx; `ONLY=<module>` limits it to one).
@@ -142,20 +142,20 @@ Or use `make build` (runs check + package + Docker buildx; `ONLY=<module>` limit
 
 ```shell
 # Build API image
-cd midas-api && docker build . -f src/main/docker/Dockerfile.jvm-alpine -t midas-api:1.0.0-SNAPSHOT
+docker build midas-api -f midas-api/src/main/docker/Dockerfile.jvm-alpine -t midas-api:1.0.0-SNAPSHOT
 
 # Build GUI image (requires -Pproduction package first)
-cd midas-gui && docker build . -f src/main/docker/Dockerfile.jvm-alpine -t midas-gui:1.0.0-SNAPSHOT
+docker build midas-gui -f midas-gui/src/main/docker/Dockerfile.jvm-alpine -t midas-gui:1.0.0-SNAPSHOT
 ```
 
 ### Native Executables
 
 ```shell
 # API
-cd midas-api && ./mvnw package -Dnative
+./mvnw package -pl midas-api -Dnative
 
 # GUI
-cd midas-gui && ./mvnw package -Dnative -Pproduction
+./mvnw package -pl midas-gui -Dnative -Pproduction
 ```
 
 To build in a container (no GraalVM required):
@@ -201,6 +201,27 @@ Key variables (see `docker-compose.yml` for all):
 
 In `.env`, single-quote values containing `$`, since Compose interpolates unquoted values.
 
+### Changing the Database Password
+
+The `db` service passes `SQL_PASSWORD` to PostgreSQL as `POSTGRES_PASSWORD`, which takes effect only when the `postgres_data` volume is first initialised. Changing it afterwards, for example after the API refused to start with the default `changeit`, changes only the password the API sends, and it then fails to authenticate against the database.
+
+On a fresh install with nothing to keep, recreate the volumes, which also removes the encryption key in `midas_keys`:
+
+```shell
+docker compose down -v
+docker compose up -d --build
+```
+
+Otherwise, set the new password in the database (with your `SQL_USERNAME` and `SQL_DATABASE` if you changed them):
+
+```shell
+docker compose exec db psql -U midas -d midas
+```
+
+```sql
+ALTER USER midas WITH PASSWORD '<new SQL_PASSWORD>';
+```
+
 ## 📖 Architecture
 
 ### Backend (midas-api)
@@ -229,7 +250,7 @@ In `.env`, single-quote values containing `$`, since Compose interpolates unquot
 - Hot reload in development mode
 - Automatic database setup with Dev Services
 - Production-ready Docker images (Eclipse Temurin JRE on Alpine)
-- Git hooks for lint-guard (pre-commit) and test-guard (pre-push)
+- Git hooks (lint before commit, test before push) are planned in [gregor/devkit#3](https://git.vptr.de/gregor/devkit/issues/3)
 - License enforcement (blocks commercial/proprietary licenses)
 
 ## 🔐 Contracts & Specifications
@@ -312,32 +333,28 @@ The project implements transparent encryption for sensitive data (PII) at rest a
 
 ## 🚀 Getting Started
 
-1. Clone the repository with submodules
+1. Clone the repository
 2. Ensure you have JDK 25, Maven, and Docker installed
-3. Run `make pull` to sync submodules
-4. Run `make install` to compile both projects
-5. Start the API: `make dev-api`
-6. Start the GUI: `make dev-gui`
-7. Access the frontend at <http://localhost:8081>
-8. Access the API at <http://localhost:8080>
+3. Run `make install` to compile both modules
+4. Start the API: `make dev-api`
+5. Start the GUI: `make dev-gui`
+6. Access the frontend at <http://localhost:8081>
+7. Access the API at <http://localhost:8080>
 
 For production deployment, use `docker compose up -d --build`.
 
 ## 🔄 Development Workflow
 
-1. `make pull` — Sync all repositories with latest changes
-2. Make your changes in the respective projects
+1. Make your changes in the respective modules
    - Use `make dev-api` and `make dev-gui` for hot-reload development
-3. `make test` — Run tests for both projects
-4. `make push` — Commit and push changes to all repositories
+2. `make test` — Run tests for both modules
 
 ### Repository Structure
 
-This project uses a multi-repository approach where:
+This project is a single Git repository where:
 
-- Main repository contains `docker-compose.yml`, orchestration scripts, and the root `Makefile`
-- `midas-api` and `midas-gui` are separate Git repositories (submodules)
-- Use `make pull` and `make push` to manage all repositories together
+- The root holds `docker-compose.yml`, the scripts, the root `Makefile` and the root `pom.xml`
+- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and carries their shared quality-gate configuration
 
 ## 📖 Related Guides
 
