@@ -16,7 +16,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -26,7 +25,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a user. */
 @Entity
-@Table(name = "users", indexes = { @Index(name = "idx_user_rank_id", columnList = "rank_id") })
+@Table(name = "users")
 public class UserEntity extends BaseEntity {
 
     @NotBlank

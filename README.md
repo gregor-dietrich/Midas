@@ -51,6 +51,8 @@ Start the full stack (backend + frontend + PostgreSQL + pgAdmin):
 docker compose up -d --build
 ```
 
+Set `SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` (e.g. in `.env`, see [Environment Variables](#environment-variables)) before the first `docker compose up`.
+
 The frontend will be available at <http://localhost> (port 80).
 pgAdmin will be available at <http://localhost:42069>.
 
@@ -79,7 +81,7 @@ make install         # make check, then mvn clean install -DskipTests
 make kill            # Kill Quarkus/Maven processes; stop and remove ALL Docker containers
 make lint            # Run the quality-gate plugins and the frontend pin check
 make openapi         # regenerate the committed OpenAPI contract snapshot
-make password        # generate a salt+hash for a password (for API init.sql)
+make password        # bcrypt-hash a password, read from a prompt or stdin (e.g. for API demo data)
 make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make rebase          # interactive git rebase against a target (defaults to origin/main)
 make release         # pull from origin/main, make build, make tag, and push Docker images
@@ -116,7 +118,11 @@ Docker must be running for API tests (Testcontainers starts a PostgreSQL contain
 
 The API uses PostgreSQL. In dev/test mode, Quarkus Dev Services automatically starts a PostgreSQL container (port 55432) — no manual setup needed.
 
-For production, the `docker-compose.yml` at the project root includes a PostgreSQL service.
+Flyway creates and upgrades the schema on startup in every profile (`midas-api/src/main/resources/db/migration`); Hibernate only validates it. Dev and test also load demo accounts from `db/demo/R__demo_data.sql`, whose password is the username (e.g. `admin`/`admin`).
+
+Flyway refuses a database built from an earlier V1 (checksum mismatch) or from the pre-Flyway `init.sql` (no schema history): recreate it with `docker compose down -v`, and never enable `baselineOnMigrate`, which would keep its old seeded accounts.
+
+For production, the `docker-compose.yml` at the project root includes a PostgreSQL service. Production seeds no account. On any start that finds the `users` table empty, the API creates an admin from `APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72 characters and at most 72 bytes, with a digit, a lowercase and an uppercase letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once any account exists, both settings are ignored and can be removed.
 
 ## 📦 Building for Production
 
@@ -168,6 +174,8 @@ Deploy the complete application stack with PostgreSQL:
 docker compose up -d --build
 ```
 
+`SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` must be set (e.g. in `.env`) before the first `docker compose up`; see the table below.
+
 ### Environment Variables
 
 Customize the deployment using environment variables:
@@ -178,16 +186,20 @@ REVISION=1.0.0 docker compose up -d --build
 
 Key variables (see `docker-compose.yml` for all):
 
-| Variable           | Default             | Description            |
-| ------------------ | ------------------- | ---------------------- |
-| `REVISION`         | `1.0.0-SNAPSHOT`    | Image tag              |
-| `TIMEZONE`         | `UTC`               | Container timezone     |
-| `SQL_USERNAME`     | `midas`             | PostgreSQL username    |
-| `SQL_PASSWORD`     | `changeit`          | PostgreSQL password    |
-| `SQL_DATABASE`     | `midas`             | PostgreSQL database    |
-| `SQL_PORT`         | `5432`              | PostgreSQL port        |
-| `PGADMIN_EMAIL`    | `admin@example.com` | pgAdmin login email    |
-| `PGADMIN_PASSWORD` | `changeit`          | pgAdmin login password |
+| Variable                       | Default             | Description                                          |
+| ------------------------------ | ------------------- | ---------------------------------------------------- |
+| `REVISION`                     | `1.0.0-SNAPSHOT`    | Image tag                                            |
+| `TIMEZONE`                     | `UTC`               | Container timezone                                   |
+| `SQL_USERNAME`                 | `midas`             | PostgreSQL username                                  |
+| `SQL_PASSWORD`                 | `changeit`          | PostgreSQL password                                  |
+| `SQL_DATABASE`                 | `midas`             | PostgreSQL database                                  |
+| `SQL_PORT`                     | `5432`              | PostgreSQL port                                      |
+| `APP_BOOTSTRAP_ADMIN_USERNAME` | `admin`             | Initial admin username (used while `users` is empty) |
+| `APP_BOOTSTRAP_ADMIN_PASSWORD` | none                | Initial admin password (needed if `users` is empty)  |
+| `PGADMIN_EMAIL`                | `admin@example.com` | pgAdmin login email                                  |
+| `PGADMIN_PASSWORD`             | `changeit`          | pgAdmin login password                               |
+
+In `.env`, single-quote values containing `$`, since Compose interpolates unquoted values.
 
 ## 📖 Architecture
 
@@ -339,6 +351,7 @@ This project uses a multi-repository approach where:
 ### Database
 
 - Datasource ([guide](https://quarkus.io/guides/datasource)): A Quarkus extension for connecting to databases using JDBC, JPA, Hibernate ORM, and more.
+- Flyway ([guide](https://quarkus.io/guides/flyway)): A Quarkus extension that runs versioned database schema migrations, here at application startup.
 - Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): A Quarkus extension that simplifies the use of Hibernate ORM with a focus on ease of use and productivity.
 - Hibernate Validator ([guide](https://quarkus.io/guides/hibernate-validator)): A Quarkus extension that integrates Hibernate Validator for bean validation, allowing you to validate your data models easily.
 

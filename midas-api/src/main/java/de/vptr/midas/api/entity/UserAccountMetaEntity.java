@@ -10,18 +10,13 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 /** JPA entity representing the association between a user and an account. */
 @Entity
-@Table(name = "user_accounts_meta",
-        uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "account_id" }) },
-        indexes = { @Index(name = "idx_user_account_meta_user_id", columnList = "user_id"),
-                @Index(name = "idx_user_account_meta_account_id", columnList = "account_id") })
+@Table(name = "user_accounts_meta")
 public class UserAccountMetaEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

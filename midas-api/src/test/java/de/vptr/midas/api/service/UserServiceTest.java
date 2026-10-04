@@ -24,6 +24,7 @@ import de.vptr.midas.api.util.ServiceTestUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 
@@ -443,5 +444,45 @@ class UserServiceTest {
     void testGetAllUsersWithPagination() {
         final var users = this.userService.getAllUsers(0, 5);
         assertNotNull(users);
+    }
+
+    @Test
+    void testCreateInitialAdminWhileUsersExist() {
+        assertTrue(this.userService.hasUsers());
+        assertFalse(this.userService.createInitialAdmin("bootstrapAdmin", "B00tstr@p!"));
+        assertTrue(this.userService.findByUsername("bootstrapAdmin").isEmpty());
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateInitialAdminOnEmptyTable() {
+        UserEntity.deleteAll();
+        assertFalse(this.userService.hasUsers());
+
+        assertTrue(this.userService.createInitialAdmin("bootstrapAdmin", "B00tstr@p!"));
+
+        final UserEntity admin = UserEntity.find("username", "bootstrapAdmin").firstResult();
+        assertNotNull(admin);
+        assertEquals("Administrator", admin.rank.name);
+        assertTrue(admin.activated);
+        assertFalse(admin.banned);
+        assertTrue(this.passwordHashingService.verifyPassword("B00tstr@p!", admin.password));
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateInitialAdminRejectsWeakPassword() {
+        UserEntity.deleteAll();
+        assertThrows(ConstraintViolationException.class,
+                () -> this.userService.createInitialAdmin("bootstrapAdmin", "password1"));
+        assertFalse(this.userService.hasUsers());
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateInitialAdminRejectsShortUsername() {
+        UserEntity.deleteAll();
+        assertThrows(ConstraintViolationException.class, () -> this.userService.createInitialAdmin("ad", "B00tstr@p!"));
+        assertFalse(this.userService.hasUsers());
     }
 }

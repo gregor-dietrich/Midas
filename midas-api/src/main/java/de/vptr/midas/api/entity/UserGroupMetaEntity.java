@@ -10,17 +10,13 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 /** JPA entity representing the association between a user and a group. */
 @Entity
-@Table(name = "user_groups_meta", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "group_id" }) },
-        indexes = { @Index(name = "idx_user_group_meta_user_id", columnList = "user_id"),
-                @Index(name = "idx_user_group_meta_group_id", columnList = "group_id") })
+@Table(name = "user_groups_meta")
 public class UserGroupMetaEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

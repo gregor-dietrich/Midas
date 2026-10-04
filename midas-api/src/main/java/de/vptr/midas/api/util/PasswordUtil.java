@@ -1,12 +1,17 @@
 package de.vptr.midas.api.util;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import de.vptr.midas.api.security.PasswordHashingService;
+import jakarta.validation.ValidationException;
 
 /**
- * Standalone CLI utility for generating password hashes during initialization. Invoked by {@code scripts/password.sh}
- * to generate credentials for {@code sql/init.sql}.
- *
- * Usage: generate &lt;password&gt; Outputs: hash suitable for insertion into init.sql.
+ * Standalone CLI utility that prints the bcrypt hash of a password, e.g. for {@code db/demo/R__demo_data.sql}. Invoked
+ * by {@code scripts/password.sh}. The password is read as the first line of stdin, never from the command line, so
+ * {@code ps} does not show it and whitespace inside it survives.
  */
 public final class PasswordUtil {
 
@@ -17,17 +22,20 @@ public final class PasswordUtil {
      * CLI entrypoint for password hash generation.
      *
      * @param args
-     *            CLI arguments; expected: {@code generate <password>}
+     *            unused; the password comes from stdin
      */
-    public static void main(final String[] args) {
-        if (args.length < 2 || !"generate".equals(args[0])) {
-            System.err.println("Usage: generate <password>");
+    public static void main(final String[] args) throws IOException {
+        final String password = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8)).readLine();
+        if (password == null || password.isEmpty()) {
+            System.err.println("Usage: pass the password as the first line of stdin");
             System.exit(1);
         }
 
-        final String password = args[1];
-        final String hash = BcryptUtil.bcryptHash(password);
-
-        System.out.println("Password: " + hash);
+        try {
+            System.out.println("Password: " + new PasswordHashingService().hashPassword(password));
+        } catch (final ValidationException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 }

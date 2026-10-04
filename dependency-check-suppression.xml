@@ -17,4 +17,11 @@
         <packageUrl>pkg:maven/org.parttio/line-awesome@2.1.0</packageUrl>
         <cpe>cpe:/a:line:line</cpe>
     </suppress>
+    <suppress>
+        <notes>False positive: cpe:/a:postgresql:postgresql is the PostgreSQL server, not the
+        io.quarkus:quarkus-flyway-postgresql extension (matched only on the name and the Quarkus
+        version). Its cpe:/a:quarkus:quarkus match stays active.</notes>
+        <packageUrl>pkg:maven/io.quarkus/quarkus-flyway-postgresql@3.40.1</packageUrl>
+        <cpe>cpe:/a:postgresql:postgresql</cpe>
+    </suppress>
 </suppressions>

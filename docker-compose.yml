@@ -15,6 +15,10 @@ services:
       quarkus.datasource.jdbc.url: jdbc:postgresql://db:${SQL_PORT:-5432}/${SQL_DATABASE:-midas}
       quarkus.datasource.jdbc.driver: org.postgresql.Driver
 
+      # Initial admin, created on any start that finds the users table empty
+      app.bootstrap.admin-username: ${APP_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      app.bootstrap.admin-password: ${APP_BOOTSTRAP_ADMIN_PASSWORD:-}
+
       # Encryption key
       midas.encryption.key.path: /etc/midas/keys/encryption.key
 
@@ -107,7 +111,6 @@ services:
       - "5432:${SQL_PORT:-5432}/tcp"
     volumes:
       - postgres_data:/var/lib/postgresql/18/docker
-      - ./midas-api/src/main/resources/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test:
         [

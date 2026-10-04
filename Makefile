@@ -23,7 +23,7 @@ dev-gui: ## start Midas GUI in Quarkus dev mode (port 8081)
 openapi: ## regenerate the committed OpenAPI contract snapshot
 	@scripts/openapi.sh
 
-password: ## generate a salt+hash for a password (for API init.sql)
+password: ## bcrypt-hash a password, read from a prompt or stdin (e.g. for API demo data)
 	@scripts/password.sh api
 
 regen-lockfile: ## update the frontend lockfile to package.json once npm ci rejects it

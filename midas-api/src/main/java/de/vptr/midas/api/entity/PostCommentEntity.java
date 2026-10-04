@@ -10,7 +10,6 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,8 +17,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a post comment. */
 @Entity
-@Table(name = "post_comments", indexes = { @Index(name = "idx_post_comment_post_id", columnList = "post_id"),
-        @Index(name = "idx_post_comment_user_id", columnList = "user_id") })
+@Table(name = "post_comments")
 public class PostCommentEntity extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")

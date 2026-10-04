@@ -1,17 +1,6 @@
-SET timezone = 'UTC';
-
--- Drop Tables
-DROP TABLE IF EXISTS pages CASCADE;
-DROP TABLE IF EXISTS post_categories CASCADE;
-DROP TABLE IF EXISTS post_comments CASCADE;
-DROP TABLE IF EXISTS posts CASCADE;
-DROP TABLE IF EXISTS user_accounts CASCADE;
-DROP TABLE IF EXISTS user_accounts_meta CASCADE;
-DROP TABLE IF EXISTS user_groups CASCADE;
-DROP TABLE IF EXISTS user_groups_meta CASCADE;
-DROP TABLE IF EXISTS user_payments CASCADE;
-DROP TABLE IF EXISTS user_ranks CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- V1: schema and reference data (user ranks). Demo accounts live in
+-- db/demo/R__demo_data.sql, which only the dev and test profiles load.
+-- Once released, a migration is never edited; add a new one instead.
 
 -- Table: pages
 CREATE TABLE pages (
@@ -195,18 +184,8 @@ INSERT INTO user_ranks (id, public_id, name, admin_view, page_add, page_delete, 
 (3, '01AN4Z07BY79KA1307SR9X4MV5', 'Guest', FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE),
 (4, '01AN4Z07BY79KA1307SR9X4MV6', 'Moderator', TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE);
 
--- Insert initial data for users
-INSERT INTO users (id, public_id, username, password, rank_id, activated, banned, activation_key) VALUES
-(1, '01AN4Z07BY79KA1307SR9X4MV7', 'admin', '$2a$10$RfPCTCppilPN9dR.aYkYr.nFWs2SiujkCXNRAiZtjClKkJqSMqJwW', 1, TRUE, FALSE, NULL),
-(2, '01AN4Z07BY79KA1307SR9X4MV8', 'user', '$2a$10$0kzodxfrJWo27njgGaCEEO8SQZryAL1Cn6X1kQ1UbLbnUdmuQ0kkC', 2, TRUE, FALSE, NULL),
-(3, '01AN4Z07BY79KA1307SR9X4MV9', 'guest', '$2a$10$wpRNBD1wYDcKraH8aAqvi.lgzDCq183EQ2/J131P5toJoCOVZvkIe', 3, TRUE, FALSE, NULL),
-(4, '01AN4Z07BY79KA1307SR9X4MVA', 'moderator', '$2a$10$hIKFIOu0kaXeUx.o..D/d.FadO1ez7J4HV.mQjtxW3kU5zO.IdhV2', 4, TRUE, FALSE, NULL),
-(5, '01AN4Z07BY79KA1307SR9X4MVB', 'bannedUser', '$2a$10$f3D8iQlSEvWRgZY49vV3se2yLlFxxIytj5c/kZfINGIBPV2YyXvti', 3, TRUE, TRUE, NULL),
-(6, '01AN4Z07BY79KA1307SR9X4MVC', 'notActivatedUser', '$2a$10$4mLZfGWvIE1/x/AHyy2lLOqaWeL9mzpQ.vnNjxfsNUue4hkbPDIbC', 3, FALSE, FALSE, '21b8efb5-8eb0-4530-9d9a-cdbc33ba7164');
-
--- Update sequences to continue from current max values
+-- Continue the sequence after the fixed ids
 SELECT setval('user_ranks_id_seq', 4);
-SELECT setval('users_id_seq', 6);
 
 -- Trigger function for automatic last_edit management
 CREATE OR REPLACE FUNCTION update_last_edit() RETURNS TRIGGER LANGUAGE plpgsql AS 'BEGIN NEW.last_edit = clock_timestamp(); RETURN NEW; END';
@@ -267,41 +246,46 @@ CREATE OR REPLACE TRIGGER user_groups_meta_set_last_edit
     EXECUTE FUNCTION update_last_edit();
 
 -- --------------------------------------------------------
+-- Foreign-key indexes
+-- --------------------------------------------------------
+
+-- PostgreSQL does not index foreign keys itself. Covered elsewhere: user_accounts_meta.user_id
+-- and user_groups_meta.user_id by their UNIQUE constraints, user_payments.source_id and
+-- target_id by the balance indexes below.
+CREATE INDEX idx_user_rank_id ON users (rank_id);
+CREATE INDEX idx_post_category_parent_id ON post_categories (parent_id);
+CREATE INDEX idx_post_user_id ON posts (user_id);
+CREATE INDEX idx_post_category_id ON posts (category_id);
+CREATE INDEX idx_post_comment_post_id ON post_comments (post_id);
+CREATE INDEX idx_post_comment_user_id ON post_comments (user_id);
+CREATE INDEX idx_user_accounts_meta_account_id ON user_accounts_meta (account_id);
+CREATE INDEX idx_user_groups_meta_group_id ON user_groups_meta (group_id);
+CREATE INDEX idx_payment_user_id ON user_payments (user_id);
+
+-- --------------------------------------------------------
 -- Performance optimization indexes
 -- --------------------------------------------------------
 
--- Basic indexes for user account metadata queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_accounts_meta_user_id ON user_accounts_meta (user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_accounts_meta_account_id ON user_accounts_meta (account_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_accounts_meta_user_account ON user_accounts_meta (user_id, account_id);
-
 -- Indexes for payment queries (most critical for performance)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_source_account ON user_payments (source_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_target_account ON user_payments (target_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_created ON user_payments (created DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_date ON user_payments (date DESC);
+CREATE INDEX idx_user_payments_created ON user_payments (created DESC);
+CREATE INDEX idx_user_payments_date ON user_payments (date DESC);
 
 -- PostgreSQL-specific composite indexes for optimized balance calculations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_source_amount ON user_payments (source_id, amount);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_target_amount ON user_payments (target_id, amount);
+CREATE INDEX idx_user_payments_source_amount ON user_payments (source_id, amount);
+CREATE INDEX idx_user_payments_target_amount ON user_payments (target_id, amount);
 
 -- PostgreSQL covering index with INCLUDE clause for non-key columns
 -- This is a PostgreSQL-specific feature that's very efficient for balance calculations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_payments_balance_calc 
-ON user_payments (target_id, source_id) 
+CREATE INDEX idx_user_payments_balance_calc
+ON user_payments (target_id, source_id)
 INCLUDE (amount, created, date);
 
--- User authentication indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_username ON users (username);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_accounts_name ON user_accounts (name);
-
--- User group metadata indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_groups_meta_user_id ON user_groups_meta (user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_groups_meta_group_id ON user_groups_meta (group_id);
+-- Account name lookups
+CREATE INDEX idx_user_accounts_name ON user_accounts (name);
 
 -- PostgreSQL partial index for active users (very efficient)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_active 
-ON users (id) 
+CREATE INDEX idx_users_active
+ON users (id)
 WHERE activated = true AND banned = false;
 
 -- --------------------------------------------------------
@@ -312,31 +296,31 @@ WHERE activated = true AND banned = false;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Post search indexes (title, content, username)
-CREATE INDEX IF NOT EXISTS idx_post_title_trgm ON posts USING gin (LOWER(title) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_post_content_trgm ON posts USING gin (LOWER(content) gin_trgm_ops);
+CREATE INDEX idx_post_title_trgm ON posts USING gin (LOWER(title) gin_trgm_ops);
+CREATE INDEX idx_post_content_trgm ON posts USING gin (LOWER(content) gin_trgm_ops);
 
 -- Post comment search indexes
-CREATE INDEX IF NOT EXISTS idx_post_comment_content_trgm ON post_comments USING gin (LOWER(content) gin_trgm_ops);
+CREATE INDEX idx_post_comment_content_trgm ON post_comments USING gin (LOWER(content) gin_trgm_ops);
 
 -- Post category search index
-CREATE INDEX IF NOT EXISTS idx_post_category_name_trgm ON post_categories USING gin (LOWER(name) gin_trgm_ops);
+CREATE INDEX idx_post_category_name_trgm ON post_categories USING gin (LOWER(name) gin_trgm_ops);
 
 -- User search indexes
-CREATE INDEX IF NOT EXISTS idx_user_username_trgm ON users USING gin (LOWER(username) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_user_email_trgm ON users USING gin (LOWER(email) gin_trgm_ops);
+CREATE INDEX idx_user_username_trgm ON users USING gin (LOWER(username) gin_trgm_ops);
+CREATE INDEX idx_user_email_trgm ON users USING gin (LOWER(email) gin_trgm_ops);
 
 -- User group search index
-CREATE INDEX IF NOT EXISTS idx_user_group_name_trgm ON user_groups USING gin (LOWER(name) gin_trgm_ops);
+CREATE INDEX idx_user_group_name_trgm ON user_groups USING gin (LOWER(name) gin_trgm_ops);
 
 -- User rank search index
-CREATE INDEX IF NOT EXISTS idx_user_rank_name_trgm ON user_ranks USING gin (LOWER(name) gin_trgm_ops);
+CREATE INDEX idx_user_rank_name_trgm ON user_ranks USING gin (LOWER(name) gin_trgm_ops);
 
 -- Account search index
-CREATE INDEX IF NOT EXISTS idx_account_name_trgm ON user_accounts USING gin (LOWER(name) gin_trgm_ops);
+CREATE INDEX idx_account_name_trgm ON user_accounts USING gin (LOWER(name) gin_trgm_ops);
 
 -- Payment search indexes (comment, account names joined)
-CREATE INDEX IF NOT EXISTS idx_payment_comment_trgm ON user_payments USING gin (LOWER(comment) gin_trgm_ops);
+CREATE INDEX idx_payment_comment_trgm ON user_payments USING gin (LOWER(comment) gin_trgm_ops);
 
 -- Page search indexes
-CREATE INDEX IF NOT EXISTS idx_page_title_trgm ON pages USING gin (LOWER(title) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_page_content_trgm ON pages USING gin (LOWER(content) gin_trgm_ops);
+CREATE INDEX idx_page_title_trgm ON pages USING gin (LOWER(title) gin_trgm_ops);
+CREATE INDEX idx_page_content_trgm ON pages USING gin (LOWER(content) gin_trgm_ops);

@@ -14,37 +14,32 @@ case $MODULE in
     "api")
         echo "=== Generating password hash for Midas API ==="
 
-        # Usage: ./password.sh [password]
-        # If a password is provided as the first argument, use it non-interactively.
-        # Otherwise prompt the user (hidden input) and ask for confirmation.
-
-        if [ "$#" -ge 2 ] && [ -n "$2" ]; then
-            PASSWORD="$2"
-        else
-            # Prompt for password (hidden)
-            echo -n "Enter password to generate salt+hash: "
-            read -r -s PASS1
+        # Interactive: prompt twice with hidden input. Otherwise read the first line of stdin.
+        # IFS= keeps leading and trailing whitespace as part of the password.
+        if [ -t 0 ]; then
+            echo -n "Enter password to hash: "
+            IFS= read -r -s PASSWORD
             echo
             echo -n "Confirm password: "
-            read -r -s PASS2
+            IFS= read -r -s CONFIRM
             echo
 
-            if [ "$PASS1" != "$PASS2" ]; then
+            if [ "$PASSWORD" != "$CONFIRM" ]; then
                 echo "Passwords do not match. Aborting." >&2
                 exit 1
             fi
-
-            PASSWORD="$PASS1"
+        else
+            IFS= read -r PASSWORD || true
         fi
+        [ -n "$PASSWORD" ] || { echo "Password must not be empty. Aborting." >&2; exit 1; }
 
-        # Run from root using exec:java targeting the api module
-        ${MVN_CMD} -q -pl midas-api -Dexec.mainClass="de.vptr.midas.api.util.PasswordUtil" -Dexec.args="generate ${PASSWORD}" exec:java
+        # The password reaches PasswordUtil on stdin (printf is a builtin), never on a command line.
+        printf '%s\n' "$PASSWORD" | ${MVN_CMD} -q -pl midas-api -Dexec.mainClass="de.vptr.midas.api.util.PasswordUtil" exec:java
 
         ;;
     *)
-        echo "Usage: $0 api [password]"
-        echo "  api - Generate password hash for Midas API"
-        echo "  password - Optional password (will prompt if not provided)"
+        echo "Usage: $0 api"
+        echo "  api - Generate password hash for Midas API (prompts, or reads the password from stdin)"
         exit 1
         ;;
 esac

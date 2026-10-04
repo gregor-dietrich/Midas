@@ -21,13 +21,18 @@ import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 /** Service for user business logic. */
 @ApplicationScoped
 public class UserService {
+
+    /** The Administrator rank seeded by V1. */
+    private static final String ADMIN_RANK_PUBLIC_ID = "01AN4Z07BY79KA1307SR9X4MV3";
 
     @Inject
     UserResponseAssembler userResponseAssembler;
@@ -37,6 +42,9 @@ public class UserService {
 
     @Inject
     EncryptionService encryptionService;
+
+    @Inject
+    Validator validator;
 
     @ConfigProperty(name = "midas.default-rank-public-id")
     @Nullable
@@ -103,6 +111,33 @@ public class UserService {
         final UserEntity user = this.buildUserEntity(userDto, normalizedEmail);
         user.persistAndFlush();
         return this.userResponseAssembler.toResponseDto(user);
+    }
+
+    /** Tells whether any user account exists. */
+    public boolean hasUsers() {
+        return UserEntity.count() > 0;
+    }
+
+    /**
+     * Creates the initial admin account, but only while no user exists. Once any account exists, it does nothing, so it
+     * cannot be used to escalate privileges.
+     *
+     * @return true if the admin was created, false if users already exist
+     * @throws ConstraintViolationException
+     *             if the username or password violates the regular {@link UserDto} rules
+     */
+    @Transactional
+    public boolean createInitialAdmin(final String username, final String password) {
+        if (this.hasUsers()) {
+            return false;
+        }
+        final var admin = new UserDto(username, password, null, ADMIN_RANK_PUBLIC_ID, false, true, null);
+        final var violations = this.validator.validate(admin);
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
+        }
+        this.createUser(admin);
+        return true;
     }
 
     private UserEntity buildUserEntity(final UserDto userDto, @Nullable final String normalizedEmail) {

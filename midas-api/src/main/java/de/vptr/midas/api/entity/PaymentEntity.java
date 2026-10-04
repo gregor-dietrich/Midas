@@ -12,7 +12,6 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -23,10 +22,7 @@ import jakarta.validation.constraints.Size;
 
 /** JPA entity representing a payment. */
 @Entity
-@Table(name = "user_payments",
-        indexes = { @Index(name = "idx_payment_target_id", columnList = "target_id"),
-                @Index(name = "idx_payment_source_id", columnList = "source_id"),
-                @Index(name = "idx_payment_user_id", columnList = "user_id") })
+@Table(name = "user_payments")
 public class PaymentEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -13,7 +13,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -22,8 +21,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /** JPA entity representing a blog post. */
 @Entity
-@Table(name = "posts", indexes = { @Index(name = "idx_post_user_id", columnList = "user_id"),
-        @Index(name = "idx_post_category_id", columnList = "category_id") })
+@Table(name = "posts")
 public class PostEntity extends BaseEntity {
 
     @NotBlank
