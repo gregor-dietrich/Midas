@@ -47,14 +47,14 @@ class AdminUserDialogTest extends AbstractDialogTest {
 
         findComponent(dialog, TextField.class, field -> "Username".equals(field.getLabel())).setValue("newuser");
         findComponent(dialog, EmailField.class, field -> "Email".equals(field.getLabel())).setValue("new@example.com");
-        findComponent(dialog, PasswordField.class, field -> "Password".equals(field.getLabel())).setValue("secret123");
+        findComponent(dialog, PasswordField.class, field -> "Password".equals(field.getLabel())).setValue("Secret123!");
         this.findRankComboBox(dialog).setValue(rank);
 
         findButton(dialog, "Save").click();
 
         final ArgumentCaptor<UserDto> userCaptor = ArgumentCaptor.forClass(UserDto.class);
         verify(this.userService).createUser(userCaptor.capture());
-        assertThat(userCaptor.getValue().getPassword()).isEqualTo("secret123");
+        assertThat(userCaptor.getValue().getPassword()).isEqualTo("Secret123!");
         this.notificationMock.verify(() -> NotificationUtil.showSuccess("User created successfully"));
         verify(this.onSave).run();
     }

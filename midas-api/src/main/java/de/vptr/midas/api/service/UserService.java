@@ -196,6 +196,13 @@ public class UserService {
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
+        // A patch omits fields, so the DTO as a whole is not validated; a new password still is.
+        if (userDto.password != null) {
+            final var violations = this.validator.validateProperty(userDto, "password");
+            if (!violations.isEmpty()) {
+                throw new ConstraintViolationException(violations);
+            }
+        }
         final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
         if (existingUser == null) {
             throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);

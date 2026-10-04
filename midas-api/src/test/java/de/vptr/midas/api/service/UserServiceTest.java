@@ -378,7 +378,7 @@ class UserServiceTest {
         final var created = this.userService.createUser(dto);
 
         final var patchDto = new UserDto();
-        patchDto.password = "newPassword123";
+        patchDto.password = "NewPassword123!";
 
         final var patched = this.userService.patchUser(created.publicId, patchDto);
         assertNotNull(patched);

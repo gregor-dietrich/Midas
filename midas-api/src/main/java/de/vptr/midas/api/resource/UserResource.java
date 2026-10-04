@@ -209,6 +209,8 @@ public class UserResource {
     @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User updated")
     @APIResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "New password invalid",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(publicId).orElse(null);

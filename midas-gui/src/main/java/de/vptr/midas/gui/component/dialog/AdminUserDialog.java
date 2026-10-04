@@ -2,6 +2,7 @@ package de.vptr.midas.gui.component.dialog;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.jboss.logging.Logger;
 import org.vaadin.lineawesome.LineAwesomeIcon;
@@ -41,7 +42,12 @@ public class AdminUserDialog extends FormDialog {
 
     private static final Logger LOG = Logger.getLogger(AdminUserDialog.class);
     private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final int MAX_PASSWORD_LENGTH = 100;
+    private static final int MAX_PASSWORD_LENGTH = 72;
+    /** The API's password pattern (UserDto): a digit, a lowercase and an uppercase letter, and a special character. */
+    private static final Pattern PASSWORD_PATTERN =
+            Pattern.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$");
+    private static final String PASSWORD_RULES = "Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
+            + " characters with a digit, a lowercase and an uppercase letter, and one of @#$%^&+=!";
 
     private final transient UserService userService;
     private final Runnable onSave;
@@ -96,9 +102,7 @@ public class AdminUserDialog extends FormDialog {
             passwordField.setInvalid(false);
             form.add(passwordField);
             b.forField(passwordField).asRequired("Password is required")
-                    .withValidator(this::isValidPassword,
-                            "Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
-                                    + " chars with at least one letter and one digit")
+                    .withValidator(this::isValidPassword, PASSWORD_RULES)
                     .bind(UserDto::getPassword, UserDto::setPassword);
         } else {
             final var passwordLayout = new VerticalLayout();
@@ -215,8 +219,7 @@ public class AdminUserDialog extends FormDialog {
             }
 
             if (!this.isValidPassword(newPassword)) {
-                NotificationUtil.showError("Password must be " + MIN_PASSWORD_LENGTH + "-" + MAX_PASSWORD_LENGTH
-                        + " chars with at least one letter and one digit");
+                NotificationUtil.showError(PASSWORD_RULES);
                 return;
             }
 
@@ -295,22 +298,7 @@ public class AdminUserDialog extends FormDialog {
     }
 
     private boolean isValidPassword(@Nullable final String password) {
-        if (password == null || password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
-            return false;
-        }
-        boolean hasLetter = false;
-        boolean hasDigit = false;
-        for (int i = 0; i < password.length(); i++) {
-            final char c = password.charAt(i);
-            if (Character.isLetter(c)) {
-                hasLetter = true;
-            } else if (Character.isDigit(c)) {
-                hasDigit = true;
-            }
-            if (hasLetter && hasDigit) {
-                return true;
-            }
-        }
-        return false;
+        return password != null && password.length() >= MIN_PASSWORD_LENGTH && password.length() <= MAX_PASSWORD_LENGTH
+                && PASSWORD_PATTERN.matcher(password).matches();
     }
 }

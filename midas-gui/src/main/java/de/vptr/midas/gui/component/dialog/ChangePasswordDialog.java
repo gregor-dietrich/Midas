@@ -47,12 +47,14 @@ public class ChangePasswordDialog extends FormDialog {
         this.currentPasswordField.setRequired(true);
         this.newPasswordField.setRequired(true);
         this.confirmPasswordField.setRequired(true);
+        this.newPasswordField.setMaxLength(72);
+        this.confirmPasswordField.setMaxLength(72);
 
         this.binder.forField(this.currentPasswordField).asRequired("Current password is required")
                 .bind(PasswordChangeDto::getCurrentPassword, PasswordChangeDto::setCurrentPassword);
 
         this.binder.forField(this.newPasswordField).asRequired("New password is required")
-                .withValidator(new StringLengthValidator("Password must be at least 8 characters long", 8, 100))
+                .withValidator(new StringLengthValidator("Password must be between 8 and 72 characters", 8, 72))
                 .withValidator(value -> value.matches(".*[0-9].*"), "Must contain at least one digit")
                 .withValidator(value -> value.matches(".*[a-z].*"), "Must contain at least one lowercase letter")
                 .withValidator(value -> value.matches(".*[A-Z].*"), "Must contain at least one uppercase letter")

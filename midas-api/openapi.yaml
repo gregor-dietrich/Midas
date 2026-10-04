@@ -128,7 +128,7 @@ components:
           type: string
           pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$"
           minLength: 8
-          maxLength: 100
+          maxLength: 72
     PaymentDto:
       type: object
       properties:
@@ -319,7 +319,7 @@ components:
           type: string
           pattern: "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$"
           minLength: 8
-          maxLength: 100
+          maxLength: 72
         email:
           type: string
           maxLength: 255
@@ -4413,6 +4413,12 @@ paths:
       responses:
         "404":
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: New password invalid
           content:
             application/json:
               schema:

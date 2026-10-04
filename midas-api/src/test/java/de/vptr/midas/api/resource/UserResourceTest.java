@@ -25,6 +25,7 @@ import static de.vptr.midas.api.util.TestUtil.testUnauthorizedDelete;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPatch;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPost;
 import static de.vptr.midas.api.util.TestUtil.testUnauthorizedPut;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -101,6 +102,14 @@ class UserResourceTest {
     void testCreateUser_authorizedWithShortPassword() {
         testAuthorizedPostWithValidationError(ENDPOINT_URL,
                 createUserJson("shortpassworduser", "shortpassword@example.com", "12345"));
+    }
+
+    /** bcrypt uses only 72 bytes, so bean validation must reject a longer password before hashing does (#33). */
+    @Test
+    void testCreateUser_authorizedWithPasswordOver72Characters() {
+        testAuthorizedPostWithValidationError(ENDPOINT_URL,
+                createUserJson("longpassworduser", "longpassword@example.com", "Aa1!" + "x".repeat(69)))
+                .body("message", containsString("between 8 and 72 characters"));
     }
 
     @Test
@@ -250,6 +259,22 @@ class UserResourceTest {
         authenticatedJsonRequest().body(jsonBody).when().post(ENDPOINT_URL).then().statusCode(201);
 
         testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/email?email=" + email);
+    }
+
+    @Test
+    void testChangePassword_rejectsNewPasswordOver72Characters() {
+        final String jsonBody = "{\"currentPassword\":\"irrelevant\",\"newPassword\":\"Aa1!" + "x".repeat(69) + "\"}";
+        authenticatedJsonRequest().body(jsonBody).when().post(ENDPOINT_URL + "/me/password").then().statusCode(422)
+                .body("message", containsString("between 8 and 72 characters"));
+    }
+
+    /** A patch is not validated as a whole, but a password in it must still meet the rules. */
+    @Test
+    void testPatchUser_validatesPassword() {
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body("{\"password\":\"a\"}").when().patch(ENDPOINT_URL + "/" + userId).then()
+                .statusCode(422).body("message", containsString("between 8 and 72 characters"));
     }
 
     @Test
