@@ -82,8 +82,11 @@ If any quality gates or tests fail, work on them until all problems are resolved
   signature, response status, or DTO, run `make openapi` and commit the diff. The contract is also
   served live at `/q/openapi`, with Swagger UI at `/q/swagger-ui` in dev mode.
   The GUI's REST clients and response DTOs are generated from that snapshot at build time
-  (openapi-generator in `midas-gui/pom.xml`), so a contract change that breaks the GUI fails its
-  compile. Request DTOs, `AuthClient` and `BackendHealthClient` stay hand-written.
+  (openapi-generator in `midas-gui/pom.xml`), so a change to a path, parameter or response schema that
+  breaks the GUI fails its compile. Request DTOs, `AuthClient` and `BackendHealthClient` stay
+  hand-written; the generated clients use a request DTO by its schema name, so it must keep that name,
+  and only the `*HttpContractTest`s check its fields, or catch two same-typed parameters trading places. Client-wide annotations (`@Retry`, `@Timeout`,
+  `@RegisterClientHeaders`) live in the template `midas-gui/src/main/openapi-templates/api.mustache`.
 - **Database**: Flyway owns the schema in every profile and Hibernate only validates it. Migrations live in
   `midas-api/src/main/resources/db/migration`; a released migration is never edited, a new one is added
   instead (V1 may still change until the first release). Flyway refuses a database built from an earlier V1

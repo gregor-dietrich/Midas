@@ -1,6 +1,7 @@
 package de.vptr.midas.gui.service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -98,7 +99,8 @@ public class PaymentService {
         final Set<PaymentResponseDto> allPayments = new HashSet<>(sourcePayments);
         allPayments.addAll(targetPayments);
 
-        return allPayments.stream().sorted((p1, p2) -> p2.getDate() != null ? p2.getDate().compareTo(p1.getDate()) : 0)
+        return allPayments.stream().sorted(
+                Comparator.comparing(PaymentResponseDto::getDate, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
     }
 

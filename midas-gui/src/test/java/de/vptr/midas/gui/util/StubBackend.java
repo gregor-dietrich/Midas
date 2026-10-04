@@ -30,10 +30,13 @@ import jakarta.annotation.Nullable;
  * when the client interfaces themselves are replaced.
  *
  * <p>
- * Routes are matched on HTTP method plus a path <em>suffix</em>, so a stub survives a change to the base path (for
- * example a client that moves from {@code /pages} to {@code /api/v1/pages}).
+ * Routes are matched on HTTP method plus a path <em>suffix</em>, which keeps the stubs short; the prefix is asserted
+ * separately against {@link #API_PREFIX}, by {@link AbstractHttpContractTest} for every request it records.
  */
 public class StubBackend implements QuarkusTestResourceLifecycleManager {
+
+    /** The path prefix of every Midas API endpoint the GUI calls. */
+    public static final String API_PREFIX = "/api/v1/";
 
     /** A request the stub received. */
     public record Recorded(String method, String path, @Nullable String query, @Nullable String authorization,

@@ -56,7 +56,8 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
         final var users = this.userService.getAllUsers(page, size);
 
         assertThat(users).singleElement().satisfies(user -> assertThat(user.getUsername()).isEqualTo("alice"));
-        assertThat(sent("GET", "/users").query()).contains("page=" + expectedPage).contains("size=" + expectedSize);
+        assertThat(sent("GET", "/users").query().split("&")).containsExactlyInAnyOrder("page=" + expectedPage,
+                "size=" + expectedSize);
     }
 
     static Stream<Arguments> lookups() {

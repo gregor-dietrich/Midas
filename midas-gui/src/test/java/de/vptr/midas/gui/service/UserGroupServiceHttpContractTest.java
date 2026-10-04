@@ -62,7 +62,8 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
             assertThat(group.getName()).isEqualTo("Editors");
             assertThat(group.getUserCount()).isEqualTo(5L);
         });
-        assertThat(onlyRequestTo("GET", "/user-groups").query()).contains(expectedPage, expectedSize);
+        assertThat(onlyRequestTo("GET", "/user-groups").query().split("&")).containsExactlyInAnyOrder(expectedPage,
+                expectedSize);
     }
 
     @Test

@@ -9,9 +9,6 @@ public final class UiConstants {
         // utility class
     }
 
-    /** Default async operation timeout in seconds. */
-    public static final int DEFAULT_TIMEOUT_SECONDS = 30;
-
     /** Max retries for REST client calls via MicroProfile Fault Tolerance. */
     public static final int MAX_RETRIES = 2;
 

@@ -93,7 +93,8 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
             final var accountPublicId = Objects.requireNonNull(
                     Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
             final var users = this.accountService.getAssociatedUsers(accountPublicId);
-            Objects.requireNonNull(this.userGrid).setItems(users);
+            // The generated DTO compares by value, and updateUserMetaFlags mutates rows in place, so key rows by id.
+            Objects.requireNonNull(this.userGrid).setItems(users).setIdentifierProvider(UserResponseDto::getPublicId);
         }, "Loading account users failed. Please try again.");
     }
 

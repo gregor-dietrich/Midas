@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -70,29 +71,29 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
         return post;
     }
 
-    private static Arguments lookup(final String suffix, final List<String> query,
+    private static Arguments lookup(final String suffix, final Map<String, String> query,
             final Function<PostService, List<?>> call) {
         return Arguments.of(suffix, query, call);
     }
 
     static Stream<Arguments> lookups() {
-        return Stream.of(lookup("/posts", List.of("page=0", "size=20"), s -> s.getAllPosts()),
-                lookup("/posts/published", List.of("page=0", "size=20"), s -> s.getPublishedPosts()),
-                lookup("/posts/published", List.of("page=3", "size=20"), s -> s.getPublishedPosts(3, 0)),
+        return Stream.of(lookup("/posts", Map.of("page", "0", "size", "20"), s -> s.getAllPosts()),
+                lookup("/posts/published", Map.of("page", "0", "size", "20"), s -> s.getPublishedPosts()),
+                lookup("/posts/published", Map.of("page", "3", "size", "20"), s -> s.getPublishedPosts(3, 0)),
                 lookup("/posts/published",
-                        List.of("categoryPublicId=" + CATEGORY_ID, "startDate=2026-01-01", "endDate=2026-01-31",
-                                "query=release", "page=2", "size=10"),
+                        Map.of("categoryPublicId", CATEGORY_ID, "startDate", "2026-01-01", "endDate", "2026-01-31",
+                                "query", "release", "page", "2", "size", "10"),
                         s -> s.getPublishedPosts(CATEGORY_ID, JANUARY_FIRST, JANUARY_LAST, "release", 2, 10)),
-                lookup("/posts/user/" + USER_ID, List.of(), s -> s.getPostsByUser(USER_ID)),
-                lookup("/posts/category/" + CATEGORY_ID, List.of(), s -> s.getPostsByCategory(CATEGORY_ID)),
-                lookup("/posts/search", List.of("query=release"), s -> s.searchPosts("release")),
-                lookup("/posts/date-range", List.of("startDate=2026-01-01", "endDate=2026-01-31"),
+                lookup("/posts/user/" + USER_ID, Map.of(), s -> s.getPostsByUser(USER_ID)),
+                lookup("/posts/category/" + CATEGORY_ID, Map.of(), s -> s.getPostsByCategory(CATEGORY_ID)),
+                lookup("/posts/search", Map.of("query", "release"), s -> s.searchPosts("release")),
+                lookup("/posts/date-range", Map.of("startDate", "2026-01-01", "endDate", "2026-01-31"),
                         s -> s.getPostsByDateRange(JANUARY_FIRST, JANUARY_LAST)));
     }
 
     @ParameterizedTest(name = "{0} {1}")
     @MethodSource("lookups")
-    void listLookups_mapPayloadAndSendComputedQuery(final String suffix, final List<String> query,
+    void listLookups_mapPayloadAndSendComputedQuery(final String suffix, final Map<String, String> query,
             final Function<PostService, List<?>> call) {
         StubBackend.stub("GET", suffix, 200, "[" + POST_JSON + "]");
 
@@ -101,7 +102,7 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
 
         final var request = StubBackend.onlyRequest();
         assertThat(request.path()).endsWith(suffix);
-        assertThat(query).allSatisfy(param -> assertThat(request.query()).contains(param));
+        assertThat(request.queryParams()).isEqualTo(query);
     }
 
     @ParameterizedTest(name = "page={0} size={1}")
@@ -112,7 +113,8 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThat(this.postService.getAllPosts(page, size)).isEmpty();
 
-        assertThat(StubBackend.onlyRequest().query()).contains("page=" + expectedPage, "size=" + expectedSize);
+        assertThat(StubBackend.onlyRequest().queryParams())
+                .isEqualTo(Map.of("page", String.valueOf(expectedPage), "size", String.valueOf(expectedSize)));
     }
 
     @Test

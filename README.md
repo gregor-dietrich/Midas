@@ -240,7 +240,7 @@ ALTER USER midas WITH PASSWORD '<new SQL_PASSWORD>';
 - **Framework**: Quarkus 3 + Vaadin Flow 25
 - **Language**: Java 25
 - **UI Components**: Vaadin
-- **API Communication**: MicroProfile REST Client with backend Basic Auth stored server-side behind opaque session IDs
+- **API Communication**: MicroProfile REST Clients and response DTOs generated from `midas-api/openapi.yaml` at build time, with backend Basic Auth stored server-side behind opaque session IDs
 - **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP dependency-check
 
 ### Key Features
@@ -289,7 +289,7 @@ List and recent endpoints normalize pagination inputs before service calls:
 
 - `AuthService` validates credentials against the API, then stores the backend `Authorization` header only in `SessionAuthorizationStore`.
 - Vaadin session stores an opaque `authenticated.session-id`, not the raw Basic header.
-- GUI REST services must read headers through `AuthService.getAuthorizationHeader()`.
+- The generated REST clients get the header from `MidasClientHeadersFactory`, which reads it through `AuthService` and throws `AuthenticationException` before a request is sent when the session has none. Only `AuthClient` passes credentials explicitly, at login.
 - Re-authentication and logout revoke the previous session mapping.
 
 ### GUI — Backend Error Parsing

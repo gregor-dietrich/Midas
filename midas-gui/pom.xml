@@ -219,7 +219,8 @@
         </configuration>
       </plugin>
       <!-- Generated sources are excluded from the gates (see also -XepExcludedPaths in the root
-      pom, spotbugs-exclude.xml, and JaCoCo, whose client/dto excludes already cover them). -->
+      pom, spotbugs-exclude.xml, and JaCoCo's dto exclude). The generated clients are interfaces
+      without executable code, so JaCoCo has nothing to count in them. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -296,7 +297,8 @@
           <excludes>
             <exclude>de/vptr/midas/gui/view/**</exclude>
             <exclude>de/vptr/midas/gui/component/**</exclude>
-            <exclude>de/vptr/midas/gui/client/**</exclude>
+            <!-- Generated response DTOs and hand-written forms. The hand-written from() mappers are
+            covered by DtoFromTest rather than held to the gate. -->
             <exclude>de/vptr/midas/gui/dto/**</exclude>
             <exclude>de/vptr/midas/gui/exception/**</exclude>
             <exclude>de/vptr/midas/gui/service/RestClientInitializer*</exclude>

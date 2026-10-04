@@ -48,7 +48,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
         this.pageService.getAllPages();
 
-        assertThat(StubBackend.onlyRequest().query()).contains("page=0").contains("size=100");
+        assertThat(StubBackend.onlyRequest().query().split("&")).containsExactlyInAnyOrder("page=0", "size=100");
     }
 
     @Test
@@ -88,7 +88,8 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThat(this.pageService.getAllPages(page, size)).extracting(PageResponseDto::getTitle)
                 .containsExactly("Impressum");
-        assertThat(StubBackend.onlyRequest().query()).contains("page=" + sentPage, "size=" + sentSize);
+        assertThat(StubBackend.onlyRequest().query().split("&")).containsExactlyInAnyOrder("page=" + sentPage,
+                "size=" + sentSize);
     }
 
     @Test

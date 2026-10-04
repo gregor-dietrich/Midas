@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -59,24 +60,24 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
         return comment;
     }
 
-    private static Arguments commentQuery(final String suffix, final List<String> query,
+    private static Arguments commentQuery(final String suffix, final Map<String, String> query,
             final Function<PostCommentService, List<?>> call) {
         return Arguments.of(suffix, query, call);
     }
 
     static Stream<Arguments> commentQueries() {
         return Stream.of(
-                commentQuery("/comments/post/" + COMMENTED_POST_ID, List.of(),
+                commentQuery("/comments/post/" + COMMENTED_POST_ID, Map.of(),
                         s -> s.getCommentsByPost(COMMENTED_POST_ID)),
-                commentQuery("/comments/user/" + COMMENTER_ID, List.of(), s -> s.getCommentsByUser(COMMENTER_ID)),
-                commentQuery("/comments/search", List.of("query=thanks"), s -> s.searchComments("thanks")),
-                commentQuery("/comments/date-range", List.of("startDate=2026-02-01", "endDate=2026-02-28"),
+                commentQuery("/comments/user/" + COMMENTER_ID, Map.of(), s -> s.getCommentsByUser(COMMENTER_ID)),
+                commentQuery("/comments/search", Map.of("query", "thanks"), s -> s.searchComments("thanks")),
+                commentQuery("/comments/date-range", Map.of("startDate", "2026-02-01", "endDate", "2026-02-28"),
                         s -> s.getCommentsByDateRange(LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28))));
     }
 
     @ParameterizedTest(name = "{0} {1}")
     @MethodSource("commentQueries")
-    void commentQueries_mapPayloadAndSendQuery(final String suffix, final List<String> query,
+    void commentQueries_mapPayloadAndSendQuery(final String suffix, final Map<String, String> query,
             final Function<PostCommentService, List<?>> call) {
         StubBackend.stub("GET", suffix, 200, "[" + COMMENT_JSON + "]");
 
@@ -85,7 +86,7 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
 
         final var seen = StubBackend.onlyRequest();
         assertThat(seen.path()).endsWith(suffix);
-        assertThat(query).allSatisfy(fragment -> assertThat(seen.query()).contains(fragment));
+        assertThat(seen.queryParams()).isEqualTo(query);
     }
 
     @ParameterizedTest(name = "page={0} size={1}")
@@ -98,7 +99,8 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThat(comments).hasSize(1);
         assertThat(comments.get(0).getUsername()).isEqualTo("reader");
-        assertThat(StubBackend.onlyRequest().query()).contains("page=" + sentPage).contains("size=" + sentSize);
+        assertThat(StubBackend.onlyRequest().queryParams())
+                .isEqualTo(Map.of("page", String.valueOf(sentPage), "size", String.valueOf(sentSize)));
     }
 
     @Test

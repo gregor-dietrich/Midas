@@ -5,7 +5,7 @@ public class PostCommentDto extends AbstractPostCommentDto {
 
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostCommentDto() {
-        // Default constructor for Jackson
+        // Fields are filled by from(), the form Binder or a service
     }
 
     /** Creates the editable form of a comment the backend returned. */

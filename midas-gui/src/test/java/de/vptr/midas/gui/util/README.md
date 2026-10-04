@@ -14,8 +14,10 @@ GUI services are tested in two layers:
 
 ## Utilities
 
-- `AbstractHttpContractTest` / `StubBackend`: base and stub for the contract tests; every request must carry the
-  Authorization header.
+- `AbstractHttpContractTest` / `StubBackend`: base and stub for the contract tests; every request must go to
+  `/api/v1/` and carry the Authorization header. `AuthServiceHttpContractTest` runs the real `AuthService` instead of
+  the base's mock, for the login check and the header a generated client sends from a worker thread.
 - `AbstractSessionServiceTestBase`: mocks `VaadinSession.getCurrent()` for services that cache in the session.
-- `MockDataUtil`: DTOs with default values for dialog and view tests.
+- `MockDataUtil`: DTOs with default values for dialog and view tests, and for mock-based service tests
+  (`UserRankServiceTest`, `PostCommentServiceTest`).
 - `UiTestUtil`: helpers for Vaadin component tests.

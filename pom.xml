@@ -178,6 +178,8 @@
                            not actual bugs
                   -classfile: noise from third-party jars referencing optional annotations
                            (e.g. OSGi metadata in microprofile-config); not fixable here
+                -XepExcludedPaths: generated sources (midas-gui's openapi-generator output) are not
+                           ours to fix; a no-op in a module that generates none
               -->
               <arg>-Werror</arg>
               <arg>-Xlint:all,-serial,-this-escape,-classfile</arg>

@@ -10,9 +10,9 @@
     <!-- @SuppressWarnings("NullAway") is banned in main source; test sources
          legitimately use it for Mockito/builder setup. -->
     <suppress id="SuppressWarningsNullAway" files="[/\\]src[/\\]test[/\\]" />
-    <!-- Jackson response DTOs: the no-arg deserialization constructor legitimately
-         leaves fields unset until Jackson populates them via setters; marking every
-         field @Nullable would be pessimistic for the hundreds of reliably-populated
+    <!-- Hand-written request DTOs: the no-arg constructor legitimately leaves fields
+         unset until from(), the form Binder or a service fills them via setters;
+         marking every field @Nullable would be pessimistic for the reliably-populated
          read sites. -->
     <suppress id="SuppressWarningsNullAway"
         files="[/\\]de[/\\]vptr[/\\]midas[/\\]gui[/\\]dto[/\\]" />

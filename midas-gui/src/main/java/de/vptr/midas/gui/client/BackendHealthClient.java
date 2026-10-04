@@ -9,7 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * REST client for the backend API health endpoint. Uses a separate config key to target the API root (not /api/v1).
+ * REST client for the backend API health endpoint. Has its own config key and no fault-tolerance retry, so a probe
+ * gives up after its own read timeout instead of retrying like the generated API clients.
  */
 @RegisterRestClient(configKey = "midas-api-health")
 @Path("/q/health")

@@ -132,18 +132,18 @@
   <!-- ========================= 3. PROJECT-SPECIFIC ========================== -->
 
   <!--
-    Generated sources:
-    The REST clients and response DTOs are generated from midas-api/openapi.yaml into
-    target/generated-sources (see openapi-generator-maven-plugin in pom.xml), so findings
-    there cannot be fixed in this repository. Their list-valued properties raise
-    EI_EXPOSE_REP/EI_EXPOSE_REP2. The hand-written request DTOs share the dto package
-    but none of these names.
+    Generated response DTOs:
+    The response DTOs are generated from midas-api/openapi.yaml into target/generated-sources
+    (see openapi-generator-maven-plugin in pom.xml, whose modelsToGenerate lists the same names).
+    The generator's model template keeps list-valued properties by reference, which raises
+    EI_EXPOSE_REP/EI_EXPOSE_REP2. Overriding that template next to the customised client
+    template (src/main/openapi-templates/api.mustache) could copy them; this repository does not.
+    The generated clients are interfaces and raise nothing. The hand-written request DTOs share
+    the dto package but none of these names.
   -->
   <Match>
-    <Or>
-      <Class name="~de\.vptr\.midas\.gui\.dto\.(.*ResponseDto|BalancePointDto|ApiErrorResponse)" />
-      <Class name="~de\.vptr\.midas\.gui\.client\.(Account|Page|Payment|Post|PostCategory|PostComment|User|UserGroup|UserRank)Client" />
-    </Or>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    <Class name="~de\.vptr\.midas\.gui\.dto\.(AccountAccessResponseDto|AccountAssociationResponseDto|AccountResponseDto|ApiErrorResponse|BalancePointDto|BalanceResponseDto|PageResponseDto|PaymentResponseDto|PostCategoryResponseDto|PostCommentResponseDto|PostResponseDto|UserGroupResponseDto|UserRankResponseDto|UserResponseDto)" />
   </Match>
 
 </FindBugsFilter>

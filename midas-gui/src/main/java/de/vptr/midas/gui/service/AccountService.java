@@ -228,8 +228,8 @@ public class AccountService {
                 this.authService, LOG, "fetching total balance history");
     }
 
-    private static BigDecimal requireBalance(final BalanceResponseDto balanceResponse) {
-        final BigDecimal balance = balanceResponse.getBalance();
+    private static BigDecimal requireBalance(@Nullable final BalanceResponseDto balanceResponse) {
+        final BigDecimal balance = balanceResponse == null ? null : balanceResponse.getBalance();
         if (balance == null) {
             throw new ServiceException("Malformed balance payload: missing balance");
         }

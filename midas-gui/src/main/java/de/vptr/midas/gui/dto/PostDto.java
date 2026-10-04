@@ -5,7 +5,7 @@ public class PostDto extends AbstractPostDto {
 
     @SuppressWarnings({ "NullAway", "PMD.UnnecessaryConstructor" })
     public PostDto() {
-        // Default constructor for Jackson
+        // Fields are filled by from(), the form Binder or a service
     }
 
     /** Creates the editable form of a post the backend returned. */

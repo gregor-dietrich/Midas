@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -59,22 +60,22 @@ class PostCategoryServiceHttpContractTest extends AbstractHttpContractTest {
         return category;
     }
 
-    private static Arguments categoryLookup(final String suffix, final List<String> query,
+    private static Arguments categoryLookup(final String suffix, final Map<String, String> query,
             final Function<PostCategoryService, List<?>> call) {
         return Arguments.of(suffix, query, call);
     }
 
     static Stream<Arguments> categoryLookups() {
-        return Stream.of(categoryLookup("/categories/root", List.of(), s -> s.getRootCategories()),
-                categoryLookup("/categories/parent/" + PARENT_ID, List.of(), s -> s.getCategoriesByParent(PARENT_ID)),
-                categoryLookup("/categories/search", List.of("query=hard"), s -> s.searchCategories("hard")),
-                categoryLookup("/categories", List.of("page=0", "size=100"), s -> s.getAllCategories()));
+        return Stream.of(categoryLookup("/categories/root", Map.of(), s -> s.getRootCategories()),
+                categoryLookup("/categories/parent/" + PARENT_ID, Map.of(), s -> s.getCategoriesByParent(PARENT_ID)),
+                categoryLookup("/categories/search", Map.of("query", "hard"), s -> s.searchCategories("hard")),
+                categoryLookup("/categories", Map.of("page", "0", "size", "100"), s -> s.getAllCategories()));
     }
 
     /** {@code getAllCategories} always asks for the first page at the maximum page size. */
     @ParameterizedTest(name = "{0} {1}")
     @MethodSource("categoryLookups")
-    void categoryLookups_mapPayloadAndSendQuery(final String suffix, final List<String> query,
+    void categoryLookups_mapPayloadAndSendQuery(final String suffix, final Map<String, String> query,
             final Function<PostCategoryService, List<?>> call) {
         StubBackend.stub("GET", suffix, 200, "[" + CATEGORY_JSON + "]");
 
@@ -83,7 +84,7 @@ class PostCategoryServiceHttpContractTest extends AbstractHttpContractTest {
 
         final var received = StubBackend.onlyRequest();
         assertThat(received.path()).endsWith(suffix);
-        assertThat(query).allSatisfy(param -> assertThat(received.query()).contains(param));
+        assertThat(received.queryParams()).isEqualTo(query);
     }
 
     @Test

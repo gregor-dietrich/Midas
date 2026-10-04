@@ -19,6 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.vptr.midas.gui.dto.AccountDto;
 import de.vptr.midas.gui.dto.PaymentDto;
@@ -28,6 +32,7 @@ import de.vptr.midas.gui.util.AbstractHttpContractTest;
 import de.vptr.midas.gui.util.StubBackend;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
 
 /** Pins {@link AccountService} behaviour against real HTTP responses from a stub backend. */
@@ -340,12 +345,27 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
                 .isInstanceOf(ServiceException.class).hasMessage(GENERIC_FAILURE);
     }
 
-    @Test
-    void getAccountBalance_rejectsPayloadWithoutBalance() {
-        StubBackend.stub("GET", ACCOUNT_PATH + "/balance", 200, "{}");
+    /** A 200 without a body or without the balance field leaves nothing to show. */
+    @ParameterizedTest(name = "body: {0}")
+    @NullSource
+    @ValueSource(strings = "{}")
+    void getAccountBalance_rejectsPayloadWithoutBalance(@Nullable final String body) {
+        StubBackend.stub("GET", ACCOUNT_PATH + "/balance", 200, body);
 
         assertThatThrownBy(() -> this.accountService.getAccountBalance(ACCOUNT_ID)).isInstanceOf(ServiceException.class)
                 .hasMessage("Malformed balance payload: missing balance");
+    }
+
+    /**
+     * A body that is not JSON fails to deserialise. The REST client reports that as a WebApplicationException carrying
+     * the 200, so it surfaces as the generic failure rather than as a raw exception.
+     */
+    @Test
+    void getAccountBalance_reportsGenericFailure_forPayloadThatIsNotJson() {
+        StubBackend.stub("GET", ACCOUNT_PATH + "/balance", 200, "not-json");
+
+        assertThatThrownBy(() -> this.accountService.getAccountBalance(ACCOUNT_ID)).isInstanceOf(ServiceException.class)
+                .hasMessage(GENERIC_FAILURE).hasRootCauseInstanceOf(JsonProcessingException.class);
     }
 
     @Test
