@@ -107,28 +107,22 @@ public class AdminUserGroupMemberPanel extends AbstractUserAssociationPanel<User
         final var combo = Objects.requireNonNull(this.availableUsersCombo);
 
         this.executeWithHandling(() -> {
-            if (this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    selectedUser.getPublicId())) {
-                NotificationUtil.showSuccess("User added to group successfully");
-                this.loadAssociatedUsers();
-                this.loadAvailableUsers();
-                combo.clear();
-            } else {
-                NotificationUtil.showError("Failed to add user to group");
-            }
+            this.groupService.addUserToGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    selectedUser.getPublicId());
+            NotificationUtil.showSuccess("User added to group successfully");
+            this.loadAssociatedUsers();
+            this.loadAvailableUsers();
+            combo.clear();
         }, "Adding user to group failed. Please try again.");
     }
 
     private void removeUserFromGroup(final UserDto user) {
         this.executeWithHandling(() -> {
-            if (this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
-                    Objects.requireNonNull(user.getPublicId()))) {
-                NotificationUtil.showSuccess("User removed from group successfully");
-                this.loadAssociatedUsers();
-                this.loadAvailableUsers();
-            } else {
-                NotificationUtil.showError("Failed to remove user from group");
-            }
+            this.groupService.removeUserFromGroup(Objects.requireNonNull(this.selectedEntity).getPublicId(),
+                    Objects.requireNonNull(user.getPublicId()));
+            NotificationUtil.showSuccess("User removed from group successfully");
+            this.loadAssociatedUsers();
+            this.loadAvailableUsers();
         }, "Removing user from group failed. Please try again.");
     }
 }

@@ -109,7 +109,7 @@ public class AdminUserRankView extends AbstractAdminEntityView<UserRankResponseD
             layout.setSpacing(true);
             layout.setPadding(false);
 
-            final SvgIcon icon = Boolean.TRUE.equals(rank.isAdminView()) ? LineAwesomeIcon.CHECK_SOLID.create()
+            final SvgIcon icon = Boolean.TRUE.equals(rank.getAdminView()) ? LineAwesomeIcon.CHECK_SOLID.create()
                     : LineAwesomeIcon.BAN_SOLID.create();
             icon.getElement().getStyle().set("width", "16px").set("height", "16px").set("flex-shrink", "0");
             icon.setTooltipText("Admin View");
@@ -119,33 +119,33 @@ public class AdminUserRankView extends AbstractAdminEntityView<UserRankResponseD
         }).setHeader("Admin View").setWidth("110px").setFlexGrow(0);
 
         // CRUD permission columns
-        this.addCrudPermissionColumn("Pages", UserRankResponseDto::isPageAdd, "Add Pages",
-                UserRankResponseDto::isPageEdit, "Edit Pages", UserRankResponseDto::isPageDelete, "Delete Pages");
+        this.addCrudPermissionColumn("Pages", UserRankResponseDto::getPageAdd, "Add Pages",
+                UserRankResponseDto::getPageEdit, "Edit Pages", UserRankResponseDto::getPageDelete, "Delete Pages");
 
-        this.addCrudPermissionColumn("Posts", UserRankResponseDto::isPostAdd, "Add Posts",
-                UserRankResponseDto::isPostEdit, "Edit Posts", UserRankResponseDto::isPostDelete, "Delete Posts");
+        this.addCrudPermissionColumn("Posts", UserRankResponseDto::getPostAdd, "Add Posts",
+                UserRankResponseDto::getPostEdit, "Edit Posts", UserRankResponseDto::getPostDelete, "Delete Posts");
 
-        this.addCrudPermissionColumn("Post Categories", UserRankResponseDto::isPostCategoryAdd, "Add Post Categories",
-                UserRankResponseDto::isPostCategoryEdit, "Edit Post Categories",
-                UserRankResponseDto::isPostCategoryDelete, "Delete Post Categories");
+        this.addCrudPermissionColumn("Post Categories", UserRankResponseDto::getPostCategoryAdd, "Add Post Categories",
+                UserRankResponseDto::getPostCategoryEdit, "Edit Post Categories",
+                UserRankResponseDto::getPostCategoryDelete, "Delete Post Categories");
 
-        this.addCrudPermissionColumn("Post Comments", UserRankResponseDto::isPostCommentAdd, "Add Comments",
-                UserRankResponseDto::isPostCommentEdit, "Edit Comments", UserRankResponseDto::isPostCommentDelete,
+        this.addCrudPermissionColumn("Post Comments", UserRankResponseDto::getPostCommentAdd, "Add Comments",
+                UserRankResponseDto::getPostCommentEdit, "Edit Comments", UserRankResponseDto::getPostCommentDelete,
                 "Delete Comments");
 
-        this.addCrudPermissionColumn("Users", UserRankResponseDto::isUserAdd, "Add Users",
-                UserRankResponseDto::isUserEdit, "Edit Users", UserRankResponseDto::isUserDelete, "Delete Users");
+        this.addCrudPermissionColumn("Users", UserRankResponseDto::getUserAdd, "Add Users",
+                UserRankResponseDto::getUserEdit, "Edit Users", UserRankResponseDto::getUserDelete, "Delete Users");
 
-        this.addCrudPermissionColumn("User Groups", UserRankResponseDto::isUserGroupAdd, "Add User Groups",
-                UserRankResponseDto::isUserGroupEdit, "Edit User Groups", UserRankResponseDto::isUserGroupDelete,
+        this.addCrudPermissionColumn("User Groups", UserRankResponseDto::getUserGroupAdd, "Add User Groups",
+                UserRankResponseDto::getUserGroupEdit, "Edit User Groups", UserRankResponseDto::getUserGroupDelete,
                 "Delete User Groups");
 
-        this.addCrudPermissionColumn("Accounts", UserRankResponseDto::isUserAccountAdd, "Add Accounts",
-                UserRankResponseDto::isUserAccountEdit, "Edit Accounts", UserRankResponseDto::isUserAccountDelete,
+        this.addCrudPermissionColumn("Accounts", UserRankResponseDto::getUserAccountAdd, "Add Accounts",
+                UserRankResponseDto::getUserAccountEdit, "Edit Accounts", UserRankResponseDto::getUserAccountDelete,
                 "Delete Accounts");
 
-        this.addCrudPermissionColumn("User Ranks", UserRankResponseDto::isUserRankAdd, "Add Ranks",
-                UserRankResponseDto::isUserRankEdit, "Edit Ranks", UserRankResponseDto::isUserRankDelete,
+        this.addCrudPermissionColumn("User Ranks", UserRankResponseDto::getUserRankAdd, "Add Ranks",
+                UserRankResponseDto::getUserRankEdit, "Edit Ranks", UserRankResponseDto::getUserRankDelete,
                 "Delete Ranks");
 
         g.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);

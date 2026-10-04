@@ -41,4 +41,11 @@ public class AccountDto {
         this.name = name;
     }
 
+    /** Creates the editable form of an account the backend returned. */
+    public static AccountDto from(final AccountResponseDto response) {
+        final var dto = new AccountDto();
+        dto.setPublicId(response.getPublicId());
+        dto.setName(response.getName());
+        return dto;
+    }
 }

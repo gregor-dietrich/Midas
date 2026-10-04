@@ -1,35 +1,36 @@
 package de.vptr.midas.gui.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import com.vaadin.flow.server.VaadinSession;
 
 import de.vptr.midas.gui.client.UserRankClient;
-import de.vptr.midas.gui.exception.AuthenticationException;
-import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
-import de.vptr.midas.gui.util.ExceptionTestUtil;
 import de.vptr.midas.gui.util.MockDataUtil;
-import de.vptr.midas.gui.util.ResponseTestUtil;
-import de.vptr.midas.gui.util.ServiceTestUtil;
-import de.vptr.midas.gui.util.TestUtil;
 import jakarta.ws.rs.WebApplicationException;
 
-@SuppressWarnings({ "NullAway", "PMD.UnitTestShouldIncludeAssert" })
+/** Covers the session cache around {@link UserRankService#getCurrentUserRank()}; HTTP behaviour is pinned elsewhere. */
+@SuppressWarnings("NullAway")
 class UserRankServiceTest extends AbstractSessionServiceTestBase {
+
+    private static final String RANK = "current.user.rank";
+    private static final String RANK_TIMESTAMP = "current.user.rank.timestamp";
 
     @Mock
     @RestClient
@@ -44,412 +45,115 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     @InjectMocks
     UserRankService userRankService;
 
-    @Test
-    void getAllRanks_shouldReturnRankList_whenAuthenticationProvided() {
-        // Given
-        final var rank1 = MockDataUtil.createUserRankResponseDto();
-        rank1.setName("Admin");
-        final var rank2 = MockDataUtil.createUserRankResponseDto();
-        rank2.setName("User");
-        rank2.setPublicId("2");
-        final var expectedRanks = Arrays.asList(rank1, rank2);
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER)).thenReturn(expectedRanks);
-
-        // When
-        final var result = this.userRankService.getAllRanks();
-
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactly(rank1, rank2);
-        verify(this.userRankClient).getAllRanks(TestUtil.TEST_AUTH_HEADER);
+    private void givenCurrentUserWithRank(final String rankPublicId) {
+        when(this.userService.getCurrentUser()).thenReturn(Optional.of(
+                MockDataUtil.createUserResponseDto("1", "testuser", "test@example.com").rankPublicId(rankPublicId)));
     }
 
     @Test
-    void getAllRanks_shouldThrowAuthenticationException_whenAuthHeaderUnavailable() {
-        when(this.authService.requireAuthorizationHeader())
-                .thenThrow(new AuthenticationException("Authentication required"));
+    void getCurrentUserRank_returnsCachedRank_whileCacheIsValid() {
+        final var cachedRank = MockDataUtil.createUserRankDto();
+        when(this.vaadinSession.getAttribute(RANK)).thenReturn(cachedRank);
+        when(this.vaadinSession.getAttribute(RANK_TIMESTAMP)).thenReturn(System.currentTimeMillis());
 
-        ExceptionTestUtil.assertThrowsAuthenticationRequired(() -> this.userRankService.getAllRanks());
+        assertThat(this.userRankService.getCurrentUserRank()).isSameAs(cachedRank);
+
+        verifyNoInteractions(this.userService, this.userRankClient);
     }
 
     @Test
-    void getAllRanks_shouldThrowServiceException_whenProcessingExceptionOccurs() {
-        // Given
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(ExceptionTestUtil.createProcessingException());
+    void getCurrentUserRank_clearsCorruptedCache_andFetchesAgain() {
+        when(this.vaadinSession.getAttribute(RANK)).thenReturn("corrupted");
+        when(this.vaadinSession.getAttribute(RANK_TIMESTAMP)).thenReturn("corrupted");
+        when(this.userService.getCurrentUser()).thenReturn(Optional.empty());
 
-        // When & Then
-        ExceptionTestUtil.assertThrowsBackendConnectionFailed(() -> this.userRankService.getAllRanks());
+        assertThat(this.userRankService.getCurrentUserRank().getPublicId()).isNull();
+
+        verify(this.vaadinSession).setAttribute(RANK, null);
+        verify(this.vaadinSession).setAttribute(RANK_TIMESTAMP, null);
     }
 
     @Test
-    void getAllRanks_shouldThrowAuthenticationException_when401Error() {
-        // Given
-        final WebApplicationException webException = ExceptionTestUtil.create401Exception();
+    void getCurrentUserRank_replacesExpiredCache_withMappedFreshRank() {
+        when(this.vaadinSession.getAttribute(RANK)).thenReturn(MockDataUtil.createUserRankDto());
+        when(this.vaadinSession.getAttribute(RANK_TIMESTAMP)).thenReturn(System.currentTimeMillis() - 10 * 60 * 1000L);
+        givenCurrentUserWithRank("fresh-rank");
+        when(this.userRankClient.getRank("fresh-rank"))
+                .thenReturn(MockDataUtil.createUserRankResponseDto().publicId("fresh-rank").adminView(true));
 
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
-
-        // When & Then
-        ExceptionTestUtil.assertHandles401WithLogout(() -> this.userRankService.getAllRanks(), this.authService);
-    }
-
-    @Test
-    void getCurrentUserRank_shouldReturnCachedRank_whenCacheIsValid() {
-        // Given
-        final var cachedRank = MockDataUtil.createUserRankResponseDto();
-        final var cachedAt = System.currentTimeMillis();
-        when(this.vaadinSession.getAttribute("current.user.rank")).thenReturn(cachedRank);
-        when(this.vaadinSession.getAttribute("current.user.rank.timestamp")).thenReturn(cachedAt);
-
-        // When
         final var result = this.userRankService.getCurrentUserRank();
 
-        // Then
-        assertThat(result).isSameAs(cachedRank);
-        verifyNoInteractions(this.userService);
+        assertThat(result.getPublicId()).isEqualTo("fresh-rank");
+        assertThat(result.canAdminView()).isTrue();
+        assertThat(result.canDeleteUser()).isFalse();
+        final ArgumentCaptor<Object> cached = ArgumentCaptor.forClass(Object.class);
+        verify(this.vaadinSession, times(2)).setAttribute(eq(RANK), cached.capture());
+        assertThat(cached.getAllValues()).containsExactly(null, result);
+        verify(this.vaadinSession).setAttribute(eq(RANK_TIMESTAMP), anyLong());
+    }
+
+    @Test
+    void getCurrentUserRank_cachesFreshRank_whenCacheIsEmpty() {
+        givenCurrentUserWithRank("1");
+        when(this.userRankClient.getRank("1")).thenReturn(MockDataUtil.createUserRankResponseDto());
+
+        final var result = this.userRankService.getCurrentUserRank();
+
+        verify(this.vaadinSession).setAttribute(RANK, result);
+        verify(this.vaadinSession, never()).setAttribute(RANK, null);
+    }
+
+    @Test
+    void getCurrentUserRank_discardsCachedRank_withoutTimestamp() {
+        when(this.vaadinSession.getAttribute(RANK)).thenReturn(MockDataUtil.createUserRankDto());
+        when(this.userService.getCurrentUser()).thenReturn(Optional.empty());
+
+        assertThat(this.userRankService.getCurrentUserRank().getName()).isNull();
+
+        verify(this.vaadinSession).setAttribute(RANK, null);
+    }
+
+    @Test
+    void getCurrentUserRank_fetchesWithoutCaching_whenThereIsNoSession() {
+        this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(null);
+        givenCurrentUserWithRank("1");
+        when(this.userRankClient.getRank("1")).thenReturn(MockDataUtil.createUserRankResponseDto());
+
+        assertThat(this.userRankService.getCurrentUserRank().canAddUser()).isTrue();
+    }
+
+    @Test
+    void getCurrentUserRank_returnsEmptyRank_whenUserHasNoRank() {
+        when(this.userService.getCurrentUser()).thenReturn(Optional
+                .of(MockDataUtil.createUserResponseDto("1", "testuser", "test@example.com").rankPublicId(null)));
+
+        assertThat(this.userRankService.getCurrentUserRank()).isInstanceOf(UserRankDto.class)
+                .extracting(UserRankDto::getPublicId).isNull();
         verifyNoInteractions(this.userRankClient);
     }
 
     @Test
-    void getCurrentUserRank_shouldClearCorruptedCache_whenSessionAttributesHaveUnexpectedTypes() {
-        // Given
-        when(this.vaadinSession.getAttribute("current.user.rank")).thenReturn("corrupted");
-        when(this.vaadinSession.getAttribute("current.user.rank.timestamp")).thenReturn("corrupted");
-        when(this.userService.getCurrentUser()).thenReturn(Optional.empty());
+    void getCurrentUserRank_returnsEmptyRank_whenRankLookupFails() {
+        givenCurrentUserWithRank("1");
+        when(this.userRankClient.getRank("1")).thenThrow(new WebApplicationException(500));
 
-        // When
-        final var result = this.userRankService.getCurrentUserRank();
-
-        // Then
-        assertThat(result.getPublicId()).isNull();
-        verify(this.vaadinSession).setAttribute("current.user.rank", null);
-        verify(this.vaadinSession).setAttribute("current.user.rank.timestamp", null);
+        assertThat(this.userRankService.getCurrentUserRank().hasAnyPermission()).isFalse();
     }
 
     @Test
-    void getRankById_shouldReturnRank_whenRankExists() {
-        // Given
-        final var rankId = "1";
-        final var expectedRank = MockDataUtil.createUserRankResponseDto();
-        expectedRank.setName("Test Rank");
-        expectedRank.setPublicId(rankId);
-        final var mockResponse = ResponseTestUtil.createOkResponse(expectedRank);
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When
-        final var result = this.userRankService.getRankById(rankId);
-
-        // Then
-        assertThat(result.getPublicId()).isEqualTo(rankId);
-        assertThat(result.getName()).isEqualTo("Test Rank");
-        assertThat(result.isUserAdd()).isTrue();
-        assertThat(result.isPostEdit()).isTrue();
-    }
-
-    @Test
-    void getRankById_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        // Given
-        final var rankId = "1";
-        when(this.authService.requireAuthorizationHeader())
-                .thenThrow(new AuthenticationException("Authentication required"));
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.getRankById(rankId));
-    }
-
-    @Test
-    void getRankById_shouldThrowServiceException_whenRankNotFound() {
-        // Given
-        final var rankId = "999";
-        final var mockResponse = ResponseTestUtil.createNotFoundResponse();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsServiceException(() -> this.userRankService.getRankById(rankId),
-                "User rank not found");
-    }
-
-    @Test
-    void createRank_shouldReturnCreatedRank_whenValidRank() {
-        // Given
-        final var newRank = MockDataUtil.createUserRankDto();
-        newRank.setName("New Rank");
-        final var createdRank = MockDataUtil.createUserRankDto();
-        createdRank.setPublicId("1");
-        createdRank.setName("New Rank");
-        final var mockResponse = ResponseTestUtil.createCreatedResponse(createdRank);
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.createRank(newRank, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When
-        final var result = this.userRankService.createRank(newRank);
-
-        // Then
-        assertThat(result.getPublicId()).isEqualTo("1");
-        assertThat(result.getName()).isEqualTo("New Rank");
-        assertThat(result.isUserAdd()).isTrue();
-        verify(this.userRankClient).createRank(newRank, TestUtil.TEST_AUTH_HEADER);
-    }
-
-    @Test
-    void createRank_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        // Given
-        final var newRank = MockDataUtil.createUserRankDto();
-        when(this.authService.requireAuthorizationHeader())
-                .thenThrow(new AuthenticationException("Authentication required"));
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.createRank(newRank));
-    }
-
-    @Test
-    void createRank_shouldThrowServiceException_whenCreationFails() {
-        // Given
-        final var newRank = MockDataUtil.createUserRankDto();
-        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.createRank(newRank, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When & Then
-        assertThatThrownBy(() -> this.userRankService.createRank(newRank)).isInstanceOf(ServiceException.class);
-    }
-
-    @Test
-    void updateRank_shouldReturnUpdatedRank_whenValidRank() {
-        // Given
-        final var rankToUpdate = MockDataUtil.createUserRankDto();
-        rankToUpdate.setName("Updated Rank");
-        rankToUpdate.setPublicId("1");
-        final var mockResponse = ResponseTestUtil.createOkResponse(rankToUpdate);
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When
-        final var result = this.userRankService.updateRank(rankToUpdate);
-
-        // Then
-        assertThat(result.getPublicId()).isEqualTo("1");
-        assertThat(result.getName()).isEqualTo("Updated Rank");
-        assertThat(result.isUserEdit()).isTrue();
-        verify(this.userRankClient).updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER);
-    }
-
-    @Test
-    void updateRank_shouldThrowServiceException_whenUpdateFails() {
-        // Given
-        final var rankToUpdate = MockDataUtil.createUserRankDto();
-        rankToUpdate.setName("Updated Rank");
-        rankToUpdate.setPublicId("1");
-        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.updateRank("1", rankToUpdate, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When & Then
-        assertThatThrownBy(() -> this.userRankService.updateRank(rankToUpdate)).isInstanceOf(ServiceException.class);
-    }
-
-    @Test
-    void deleteRank_shouldSucceed_whenDeletionSuccessful() {
-        // Given
-        final var rankId = "1";
-        final var mockResponse = ResponseTestUtil.createMockResponse(204);
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.deleteRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When
-        this.userRankService.deleteRank(rankId);
-
-        // Then
-        verify(this.userRankClient).deleteRank(rankId, TestUtil.TEST_AUTH_HEADER);
-    }
-
-    @Test
-    void deleteRank_shouldThrowServiceException_whenDeletionFails() {
-        // Given
-        final var rankId = "1";
-        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.deleteRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        // When & Then
-        assertThatThrownBy(() -> this.userRankService.deleteRank(rankId)).isInstanceOf(ServiceException.class);
-    }
-
-    @Test
-    void deleteRank_shouldThrowAuthenticationException_whenNotAuthenticated() {
-        // Given
-        final var rankId = "1";
-        when(this.authService.requireAuthorizationHeader())
-                .thenThrow(new AuthenticationException("Authentication required"));
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsUserNotAuthenticated(() -> this.userRankService.deleteRank(rankId));
-    }
-
-    @Test
-    void getRankById_shouldThrowAuthenticationException_when401ErrorOnFetch() {
-        // Given
-        final var rankId = "1";
-        final WebApplicationException webException = ExceptionTestUtil.create401Exception();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsSessionExpired(() -> this.userRankService.getRankById(rankId));
-    }
-
-    @Test
-    void createRank_shouldThrowAuthenticationException_when401ErrorOnCreate() {
-        // Given
-        final var newRank = MockDataUtil.createUserRankDto();
-        final WebApplicationException webException = ExceptionTestUtil.create401Exception();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.createRank(newRank, TestUtil.TEST_AUTH_HEADER)).thenThrow(webException);
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsSessionExpired(() -> this.userRankService.createRank(newRank));
-    }
-
-    @Test
-    void getAllRanks_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
-        // Given
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getAllRanks(TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(new RuntimeException("Unexpected error"));
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.userRankService.getAllRanks());
-    }
-
-    @Test
-    void getRankById_shouldThrowServiceException_whenUnexpectedExceptionOccurs() {
-        // Given
-        final var rankId = "1";
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank(rankId, TestUtil.TEST_AUTH_HEADER))
-                .thenThrow(new RuntimeException("Unexpected error"));
-
-        // When & Then
-        ExceptionTestUtil.assertThrowsUnexpectedError(() -> this.userRankService.getRankById(rankId));
-    }
-
-    @Test
-    void clearCachedUserRank_shouldRemoveCachedValuesFromSession() {
-        // When
+    void clearCachedUserRank_removesCachedValues() {
         this.userRankService.clearCachedUserRank();
 
-        // Then
-        verify(this.vaadinSession).setAttribute("current.user.rank", null);
-        verify(this.vaadinSession).setAttribute("current.user.rank.timestamp", null);
+        verify(this.vaadinSession).setAttribute(RANK, null);
+        verify(this.vaadinSession).setAttribute(RANK_TIMESTAMP, null);
     }
 
     @Test
-    void clearCachedUserRank_shouldDoNothing_whenSessionIsNull() {
+    void clearCachedUserRank_toleratesMissingSession() {
         this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(null);
 
         this.userRankService.clearCachedUserRank();
-        // no NPE and no interaction with a session object
-    }
 
-    @Test
-    void getCurrentUserRank_shouldReturnEmptyRank_whenSessionIsNull() {
-        this.vaadinSessionMock.when(VaadinSession::getCurrent).thenReturn(null);
-        when(this.userService.getCurrentUser()).thenReturn(Optional.empty());
-
-        final var result = this.userRankService.getCurrentUserRank();
-
-        assertThat(result.getPublicId()).isNull();
-        verifyNoInteractions(this.userRankClient);
-    }
-
-    @Test
-    void getCurrentUserRank_shouldReturnEmptyRank_whenUserHasNoRankPublicId() {
-        final var userWithoutRank = MockDataUtil.createUserResponseDto();
-        userWithoutRank.setRankPublicId(null);
-        when(this.userService.getCurrentUser()).thenReturn(Optional.of(userWithoutRank));
-
-        final var result = this.userRankService.getCurrentUserRank();
-
-        assertThat(result.getPublicId()).isNull();
-        verifyNoInteractions(this.userRankClient);
-    }
-
-    @Test
-    void getCurrentUserRank_shouldReturnEmptyRank_whenGetRankByIdThrowsServiceException() {
-        final var user = MockDataUtil.createUserResponseDto();
-        user.setRankPublicId("1");
-        when(this.userService.getCurrentUser()).thenReturn(Optional.of(user));
-
-        final var mockResponse = ResponseTestUtil.createBadRequestResponse();
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank("1", TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        final var result = this.userRankService.getCurrentUserRank();
-
-        assertThat(result.getPublicId()).isNull();
-    }
-
-    @Test
-    void getCurrentUserRank_shouldClearExpiredCache_andFetchFreshRank() {
-        final var expiredTimestamp = System.currentTimeMillis() - 10 * 60 * 1000L; // 10 minutes ago
-        final var cachedRank = MockDataUtil.createUserRankResponseDto();
-        final var freshRank = MockDataUtil.createUserRankResponseDto();
-        freshRank.setPublicId("fresh-rank");
-        freshRank.setName("Fresh Rank");
-        final var currentUser = MockDataUtil.createUserResponseDto();
-        currentUser.setRankPublicId("fresh-rank");
-
-        when(this.vaadinSession.getAttribute("current.user.rank")).thenReturn(cachedRank);
-        when(this.vaadinSession.getAttribute("current.user.rank.timestamp")).thenReturn(expiredTimestamp);
-        when(this.userService.getCurrentUser()).thenReturn(Optional.of(currentUser));
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.getRank("fresh-rank", TestUtil.TEST_AUTH_HEADER))
-                .thenReturn(ResponseTestUtil.createOkResponse(freshRank));
-
-        final var result = this.userRankService.getCurrentUserRank();
-
-        assertThat(result.getName()).isEqualTo("Fresh Rank");
-        verify(this.vaadinSession).setAttribute("current.user.rank", null);
-        verify(this.vaadinSession).setAttribute("current.user.rank.timestamp", null);
-    }
-
-    @Test
-    void deleteRank_shouldThrowServiceException_whenRankNotFound() {
-        final var rankId = "999";
-        final var mockResponse = ResponseTestUtil.createNotFoundResponse();
-
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.deleteRank(rankId, TestUtil.TEST_AUTH_HEADER)).thenReturn(mockResponse);
-
-        ExceptionTestUtil.assertThrowsServiceException(() -> this.userRankService.deleteRank(rankId),
-                "User rank not found");
-    }
-
-    @Test
-    void searchRanks_shouldReturnMatchingRanks_whenAuthenticated() {
-        final var rank = MockDataUtil.createUserRankResponseDto();
-        rank.setName("Admin");
-        ServiceTestUtil.setupAuthHeader(this.authService);
-        when(this.userRankClient.searchRanks("admin", TestUtil.TEST_AUTH_HEADER)).thenReturn(List.of(rank));
-
-        final var result = this.userRankService.searchRanks("admin");
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getName()).isEqualTo("Admin");
+        verifyNoInteractions(this.vaadinSession);
     }
 }

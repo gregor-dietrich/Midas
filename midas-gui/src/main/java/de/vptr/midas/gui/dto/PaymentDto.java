@@ -173,4 +173,20 @@ public class PaymentDto {
         this.username = username;
     }
 
+    /** Creates the editable form of a payment the backend returned. */
+    public static PaymentDto from(final PaymentResponseDto response) {
+        final var dto = new PaymentDto();
+        dto.setPublicId(response.getPublicId());
+        dto.setSourceAccountPublicId(response.getSourceAccountPublicId());
+        dto.setSourceAccountName(response.getSourceAccountName());
+        dto.setTargetAccountPublicId(response.getTargetAccountPublicId());
+        dto.setTargetAccountName(response.getTargetAccountName());
+        dto.setUsername(response.getUsername());
+        dto.setComment(response.getComment());
+        dto.setDate(response.getDate());
+        dto.setAmount(response.getAmount());
+        dto.setCreated(response.getCreated());
+        dto.setLastEdit(response.getLastEdit());
+        return dto;
+    }
 }

@@ -103,4 +103,17 @@ public class PostCategoryDto {
         return this.parent == null;
     }
 
+    /** Creates the editable form of a category the backend returned, with a minimal parent when it has one. */
+    public static PostCategoryDto from(final PostCategoryResponseDto response) {
+        final var dto = new PostCategoryDto();
+        dto.setPublicId(response.getPublicId());
+        dto.setName(response.getName());
+        if (response.getParentPublicId() != null) {
+            final var parentDto = new PostCategoryDto();
+            parentDto.setPublicId(response.getParentPublicId());
+            parentDto.setName(response.getParentName());
+            dto.setParent(parentDto);
+        }
+        return dto;
+    }
 }

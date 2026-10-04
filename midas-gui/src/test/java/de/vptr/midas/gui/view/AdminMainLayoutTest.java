@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.vptr.midas.gui.dto.UserRankResponseDto;
+import de.vptr.midas.gui.dto.UserRankDto;
 
 @ExtendWith(MockitoExtension.class)
 class AdminMainLayoutTest extends AbstractMainLayoutTestBase {
@@ -52,7 +52,7 @@ class AdminMainLayoutTest extends AbstractMainLayoutTestBase {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.authService.isAuthenticated()).thenReturn(true);
 
-        final var rank = new UserRankResponseDto();
+        final var rank = new UserRankDto();
         when(this.userRankService.getCurrentUserRank()).thenReturn(rank);
 
         this.adminMainLayout.beforeEnter(this.event);
@@ -66,7 +66,7 @@ class AdminMainLayoutTest extends AbstractMainLayoutTestBase {
         when(this.event.getNavigationTarget()).thenReturn((Class) AdminHomeView.class);
         when(this.authService.isAuthenticated()).thenReturn(true);
 
-        final var rank = mock(UserRankResponseDto.class);
+        final var rank = mock(UserRankDto.class);
         when(rank.canAdminView()).thenReturn(true);
         when(this.userRankService.getCurrentUserRank()).thenReturn(rank);
 

@@ -18,6 +18,9 @@ public final class UiConstants {
     /** Delay between retries in milliseconds. */
     public static final long RETRY_DELAY_MS = 500;
 
+    /** Per-request timeout for REST client calls in milliseconds. */
+    public static final long REQUEST_TIMEOUT_MS = 2000;
+
     /** Session TTL in minutes. */
     public static final int SESSION_TTL_MINUTES = 30;
 

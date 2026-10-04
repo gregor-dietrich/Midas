@@ -34,7 +34,7 @@ public class AdminUserRankDialog extends AbstractAdminEntityDialogBase<UserRankD
     /** Opens the dialog for creating or editing a rank. */
     public void open(@Nullable final UserRankResponseDto rank) {
         this.removeAll();
-        this.currentBean = rank != null ? rank.toUserRankDto() : new UserRankDto();
+        this.currentBean = rank != null ? UserRankDto.from(rank) : new UserRankDto();
         this.binder = new Binder<>(UserRankDto.class);
 
         final var form = this.createResponsiveFormLayout();

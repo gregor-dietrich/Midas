@@ -42,7 +42,7 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
     /** Opens the user panel for the specified account. */
     public void open(final AccountResponseDto account) {
-        this.selectedEntity = account.toAccountDto();
+        this.selectedEntity = AccountDto.from(account);
         this.initLayout("Manage Users for Account: " + account.getName());
     }
 
@@ -62,17 +62,19 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
 
         grid.addComponentColumn(user -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(user.isNegative());
+            checkbox.setValue(Boolean.TRUE.equals(user.getIsNegative()));
             checkbox.setLabel("Negative");
-            checkbox.addValueChangeListener(e -> this.updateUserMetaFlags(user, e.getValue(), user.isCanManage()));
+            checkbox.addValueChangeListener(
+                    e -> this.updateUserMetaFlags(user, e.getValue(), Boolean.TRUE.equals(user.getCanManage())));
             return checkbox;
         }).setHeader("Negative?").setWidth("120px").setFlexGrow(0);
 
         grid.addComponentColumn(user -> {
             final var checkbox = new Checkbox();
-            checkbox.setValue(user.isCanManage());
+            checkbox.setValue(Boolean.TRUE.equals(user.getCanManage()));
             checkbox.setLabel("Manage");
-            checkbox.addValueChangeListener(e -> this.updateUserMetaFlags(user, user.isNegative(), e.getValue()));
+            checkbox.addValueChangeListener(
+                    e -> this.updateUserMetaFlags(user, Boolean.TRUE.equals(user.getIsNegative()), e.getValue()));
             return checkbox;
         }).setHeader("Manage?").setWidth("120px").setFlexGrow(0);
 
@@ -133,14 +135,11 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
         this.executeWithHandling(() -> {
             final var accountPublicId = Objects.requireNonNull(
                     Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
-            if (this.accountService.associateUserWithAccount(accountPublicId, selectedUser.getPublicId())) {
-                NotificationUtil.showSuccess("User added to account successfully");
-                this.loadAssociatedUsers();
-                this.loadAvailableUsers();
-                combo.clear();
-            } else {
-                NotificationUtil.showError("Failed to add user to account");
-            }
+            this.accountService.associateUserWithAccount(accountPublicId, selectedUser.getPublicId());
+            NotificationUtil.showSuccess("User added to account successfully");
+            this.loadAssociatedUsers();
+            this.loadAvailableUsers();
+            combo.clear();
         }, "Adding user to account failed. Please try again.");
     }
 
@@ -159,13 +158,10 @@ public class AdminAccountUserPanel extends AbstractUserAssociationPanel<AccountD
         this.executeWithHandling(() -> {
             final var accountPublicId = Objects.requireNonNull(
                     Objects.requireNonNull(this.selectedEntity).getPublicId(), "selectedEntity.publicId");
-            if (this.accountService.removeUserFromAccount(accountPublicId, user.getPublicId())) {
-                NotificationUtil.showSuccess("User removed from account successfully");
-                this.loadAssociatedUsers();
-                this.loadAvailableUsers();
-            } else {
-                NotificationUtil.showError("Failed to remove user from account");
-            }
+            this.accountService.removeUserFromAccount(accountPublicId, user.getPublicId());
+            NotificationUtil.showSuccess("User removed from account successfully");
+            this.loadAssociatedUsers();
+            this.loadAvailableUsers();
         }, "Removing user from account failed. Please try again.");
     }
 }

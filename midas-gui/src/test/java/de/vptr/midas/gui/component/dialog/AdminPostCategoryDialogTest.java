@@ -44,7 +44,7 @@ class AdminPostCategoryDialogTest extends AbstractDialogTest {
         dialog.open(null, allCategories);
 
         findComponent(dialog, TextField.class, field -> "Name".equals(field.getLabel())).setValue("New Category");
-        this.findParentComboBox(dialog).setValue(parentCategory.toPostCategoryDto());
+        this.findParentComboBox(dialog).setValue(PostCategoryDto.from(parentCategory));
 
         findButton(dialog, "Save").click();
 

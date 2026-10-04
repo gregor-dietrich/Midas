@@ -16,15 +16,14 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.ServiceHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 /** Service for user rank operations. */
 @ApplicationScoped
 public class UserRankService {
 
     private static final Logger LOG = Logger.getLogger(UserRankService.class);
-    private static final SessionAttribute<UserRankResponseDto> CURRENT_USER_RANK_ATTRIBUTE =
-            SessionAttribute.of("current.user.rank", UserRankResponseDto.class);
+    private static final SessionAttribute<UserRankDto> CURRENT_USER_RANK_ATTRIBUTE =
+            SessionAttribute.of("current.user.rank", UserRankDto.class);
     private static final SessionAttribute<Long> CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE =
             SessionAttribute.of("current.user.rank.timestamp", Long.class);
 
@@ -43,14 +42,12 @@ public class UserRankService {
     /** Returns the all ranks. */
     public List<UserRankResponseDto> getAllRanks() {
         LOG.debug("Fetching all ranks");
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.userRankClient.getAllRanks(authHeader), this.authService, LOG,
-                "fetching ranks");
+        return ServiceHelper.execute(() -> this.userRankClient.getAllRanks(), this.authService, LOG, "fetching ranks");
     }
 
     /** Returns the current user rank. */
-    public UserRankResponseDto getCurrentUserRank() {
-        final var emptyRank = new UserRankResponseDto();
+    public UserRankDto getCurrentUserRank() {
+        final var emptyRank = new UserRankDto();
 
         // Check session cache first to avoid repeated REST calls
         final var session = VaadinSession.getCurrent();
@@ -83,7 +80,7 @@ public class UserRankService {
         }
 
         try {
-            final var userRank = this.getRankById(user.getRankPublicId());
+            final var userRank = UserRankDto.from(this.getRankById(user.getRankPublicId()));
 
             // Cache the result in session
             if (session != null) {
@@ -114,76 +111,47 @@ public class UserRankService {
     /** Returns the rank by id. */
     public UserRankResponseDto getRankById(final String id) {
         LOG.infof("Getting user rank by id: %s", id);
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.getRank(id, authHeader);
-        }, this.authService, LOG, "getting user rank " + id, response -> {
-            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                final var rank = ServiceHelper.readEntity(response, UserRankResponseDto.class, "user rank response");
-                LOG.infof("Successfully retrieved user rank: %s", rank.getName());
-                return rank;
-            } else {
-                throw new ServiceException("User rank not found");
-            }
-        });
+        final var rank =
+                ServiceHelper
+                        .executeOptional(() -> this.userRankClient.getRank(id), this.authService, LOG,
+                                "getting user rank " + id)
+                        .orElseThrow(() -> new ServiceException("User rank not found"));
+        LOG.infof("Successfully retrieved user rank: %s", rank.getName());
+        return rank;
     }
 
     /** Creates a new rank. */
     public UserRankDto createRank(final UserRankDto rank) {
         LOG.infof("Creating user rank: %s", rank.getName());
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.createRank(rank, authHeader);
-        }, this.authService, LOG, "creating user rank", "Failed to create user rank", response -> {
-            if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
-                final var createdRank = ServiceHelper.readEntity(response, UserRankDto.class, "created user rank");
-                LOG.infof("Successfully created user rank: %s", createdRank.getName());
-                return createdRank;
-            }
-            throw ServiceHelper.responseFailure("Failed to create user rank", response);
-        });
+        final var createdRank = UserRankDto.from(ServiceHelper.execute(() -> this.userRankClient.createRank(rank),
+                this.authService, LOG, "creating user rank", "Failed to create user rank"));
+        LOG.infof("Successfully created user rank: %s", createdRank.getName());
+        return createdRank;
     }
 
     /** Updates the rank. */
     public UserRankDto updateRank(final UserRankDto rank) {
         final String publicId = Objects.requireNonNull(rank.getPublicId(), "rank.publicId");
         LOG.infof("Updating user rank: %s (%s)", rank.getName(), publicId);
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.updateRank(publicId, rank, authHeader);
-        }, this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank", response -> {
-            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
-                final var updatedRank = ServiceHelper.readEntity(response, UserRankDto.class, "updated user rank");
-                LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
-                return updatedRank;
-            }
-            throw ServiceHelper.responseFailure("Failed to update user rank", response);
-        });
+        final var updatedRank =
+                UserRankDto.from(ServiceHelper.execute(() -> this.userRankClient.updateRank(publicId, rank),
+                        this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank"));
+        LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
+        return updatedRank;
     }
 
     /** Handles the search ranks operation. */
     public List<UserRankResponseDto> searchRanks(final String query) {
         LOG.debugf("Searching ranks with query: %s", query);
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query, authHeader), this.authService, LOG,
+        return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query), this.authService, LOG,
                 "searching ranks");
     }
 
     /** Handles the delete rank operation. */
     public void deleteRank(final String id) {
         LOG.infof("Deleting user rank: %s", id);
-        ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.userRankClient.deleteRank(id, authHeader);
-        }, this.authService, LOG, "deleting user rank " + id, response -> {
-            if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
-                LOG.infof("Successfully deleted user rank: %s", id);
-                return null;
-            } else if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                throw new ServiceException("User rank not found");
-            }
-            throw ServiceHelper.responseFailure("Failed to delete user rank", response);
-        });
+        ServiceHelper.executeVoid(() -> this.userRankClient.deleteRank(id), this.authService, LOG,
+                "deleting user rank " + id, "User rank not found");
+        LOG.infof("Successfully deleted user rank: %s", id);
     }
-
 }

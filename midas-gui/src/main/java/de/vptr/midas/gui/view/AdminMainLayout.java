@@ -12,14 +12,14 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import de.vptr.midas.gui.component.button.ThemeToggleButton;
 import de.vptr.midas.gui.component.button.UserViewButton;
 import de.vptr.midas.gui.component.tabs.AdminNavigationTabs;
-import de.vptr.midas.gui.dto.UserRankResponseDto;
+import de.vptr.midas.gui.dto.UserRankDto;
 import jakarta.annotation.Nullable;
 
 /** Layout for admin main. */
 public class AdminMainLayout extends AbstractMainLayoutBase {
 
     @Nullable
-    private transient UserRankResponseDto cachedUserRank = null;
+    private transient UserRankDto cachedUserRank = null;
     private boolean cachedUserRankValid = false;
 
     @Nullable
@@ -155,7 +155,7 @@ public class AdminMainLayout extends AbstractMainLayoutBase {
         this.cachedUserRankValid = false;
     }
 
-    private UserRankResponseDto getCachedUserRank() {
+    private UserRankDto getCachedUserRank() {
         if (!this.cachedUserRankValid) {
             this.cachedUserRank = this.userRankService.getCurrentUserRank();
             this.cachedUserRankValid = true;

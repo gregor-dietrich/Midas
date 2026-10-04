@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.Response;
 
 /** Component. */
 @RegisterRestClient(configKey = "midas-api")
-@Path("/auth")
+@Path("/api/v1/auth")
 @FunctionalInterface
 public interface AuthClient {
 

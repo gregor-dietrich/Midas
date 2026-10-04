@@ -88,4 +88,11 @@ public class UserGroupDto {
         this.created = created;
     }
 
+    /** Creates the editable form of a group the backend returned. */
+    public static UserGroupDto from(final UserGroupResponseDto response) {
+        final var dto = new UserGroupDto();
+        dto.setPublicId(response.getPublicId());
+        dto.setName(response.getName());
+        return dto;
+    }
 }

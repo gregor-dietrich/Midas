@@ -29,7 +29,7 @@ public class AdminAccountDialog extends AbstractAdminEntityDialogBase<AccountDto
     public void open(@Nullable final AccountResponseDto account) {
         this.removeAll();
         this.isNewAccount = account == null;
-        this.currentBean = account != null ? account.toAccountDto() : new AccountDto();
+        this.currentBean = account != null ? AccountDto.from(account) : new AccountDto();
         this.binder = new Binder<>(AccountDto.class);
 
         final var form = this.createResponsiveFormLayout();

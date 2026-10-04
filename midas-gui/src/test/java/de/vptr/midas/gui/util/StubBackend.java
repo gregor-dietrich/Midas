@@ -2,16 +2,22 @@ package de.vptr.midas.gui.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -32,6 +38,24 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
     /** A request the stub received. */
     public record Recorded(String method, String path, @Nullable String query, @Nullable String authorization,
             String body) {
+
+        private static final ObjectMapper JSON = new ObjectMapper();
+
+        /** Returns the query parameters, decoded as received; empty when there is no query. */
+        public Map<String, String> queryParams() {
+            final String raw = this.query;
+            return raw == null ? Map.of() : Arrays.stream(raw.split("&")).map(pair -> pair.split("=", 2))
+                    .collect(Collectors.toMap(pair -> pair[0], pair -> pair.length > 1 ? pair[1] : ""));
+        }
+
+        /** Returns the body parsed as JSON. */
+        public JsonNode jsonBody() {
+            try {
+                return JSON.readTree(this.body);
+            } catch (final JsonProcessingException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
     }
 
     private record Route(String method, String suffix) {

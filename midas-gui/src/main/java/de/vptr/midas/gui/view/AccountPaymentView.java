@@ -170,7 +170,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
     /** Updates the management-only UI affordances based on the current account's manage permission. */
     private void applyManagePermissions() {
-        final boolean canManage = this.currentAccount != null && this.currentAccount.isCanManage();
+        final boolean canManage =
+                this.currentAccount != null && Boolean.TRUE.equals(this.currentAccount.getCanManage());
         if (this.sendButton != null) {
             this.sendButton.setVisible(canManage);
         }
@@ -332,7 +333,7 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
 
         this.actionsColumn = g.addComponentColumn(payment -> {
             final var editButton = new Button(LineAwesomeIcon.EDIT.create(),
-                    e -> this.openPaymentDialog(payment.toPaymentDto(), false));
+                    e -> this.openPaymentDialog(PaymentDto.from(payment), false));
             editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
             final var deleteButton =
@@ -497,12 +498,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
                 new VerticalLayout(new H3("Confirm Delete"), new Span("Are you sure you want to delete this payment?"),
                         new HorizontalLayout(new Button("Delete", e -> {
                             this.executeWithHandling(() -> {
-                                if (this.accountService.deleteMyAccountPayment(aid, pid)) {
-                                    NotificationUtil.showSuccess("Payment deleted successfully");
-                                    this.reloadBalanceAndPayments();
-                                } else {
-                                    NotificationUtil.showError("Failed to delete payment");
-                                }
+                                this.accountService.deleteMyAccountPayment(aid, pid);
+                                NotificationUtil.showSuccess("Payment deleted successfully");
+                                this.reloadBalanceAndPayments();
                             }, "Failed to delete payment");
                             dialog.close();
                         }), new Button("Cancel", e -> dialog.close()))));

@@ -130,6 +130,20 @@
   </Match>
 
   <!-- ========================= 3. PROJECT-SPECIFIC ========================== -->
-  <!-- None. -->
+
+  <!--
+    Generated sources:
+    The REST clients and response DTOs are generated from midas-api/openapi.yaml into
+    target/generated-sources (see openapi-generator-maven-plugin in pom.xml), so findings
+    there cannot be fixed in this repository. Their list-valued properties raise
+    EI_EXPOSE_REP/EI_EXPOSE_REP2. The hand-written request DTOs share the dto package
+    but none of these names.
+  -->
+  <Match>
+    <Or>
+      <Class name="~de\.vptr\.midas\.gui\.dto\.(.*ResponseDto|BalancePointDto|ApiErrorResponse)" />
+      <Class name="~de\.vptr\.midas\.gui\.client\.(Account|Page|Payment|Post|PostCategory|PostComment|User|UserGroup|UserRank)Client" />
+    </Or>
+  </Match>
 
 </FindBugsFilter>

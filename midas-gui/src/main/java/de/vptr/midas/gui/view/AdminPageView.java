@@ -100,7 +100,7 @@ public class AdminPageView extends AbstractAdminEntityView<PageResponseDto> {
                 .setFlexGrow(0);
 
         g.addComponentColumn(
-                page -> this.createClickableSpan(page.getTitle(), ignore -> this.openPageDialog(page.toPageDto())))
+                page -> this.createClickableSpan(page.getTitle(), ignore -> this.openPageDialog(PageDto.from(page))))
                 .setHeader("Title").setFlexGrow(2);
 
         g.addComponentColumn(this::createActionButtons).setHeader("Actions").setWidth("150px").setFlexGrow(0);
@@ -110,7 +110,7 @@ public class AdminPageView extends AbstractAdminEntityView<PageResponseDto> {
         final var layout = new HorizontalLayout();
         layout.setSpacing(true);
 
-        final var editButton = new EditButton(ignore -> this.openPageDialog(page.toPageDto()));
+        final var editButton = new EditButton(ignore -> this.openPageDialog(PageDto.from(page)));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
             this.pageService.deletePage(Objects.requireNonNull(page.getPublicId()));
         }));

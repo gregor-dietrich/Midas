@@ -13,6 +13,7 @@ import de.vptr.midas.gui.component.button.DeleteButton;
 import de.vptr.midas.gui.component.button.EditButton;
 import de.vptr.midas.gui.component.button.RefreshButton;
 import de.vptr.midas.gui.component.dialog.AdminPostCommentDialog;
+import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
 import de.vptr.midas.gui.service.PostCommentService;
 import jakarta.annotation.Nullable;
@@ -132,7 +133,7 @@ public class AdminPostCommentView extends AbstractAdminEntityView<PostCommentRes
         layout.setSpacing(true);
 
         final var editButton =
-                new EditButton(ignore -> Objects.requireNonNull(this.commentDialog).open(comment.toPostCommentDto()));
+                new EditButton(ignore -> Objects.requireNonNull(this.commentDialog).open(PostCommentDto.from(comment)));
         final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
             this.commentService.deleteComment(Objects.requireNonNull(comment.getPublicId()));
         }));

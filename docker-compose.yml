@@ -58,7 +58,7 @@ services:
       TZ: ${TIMEZONE:-UTC}
 
       # Backend URLs
-      quarkus.rest-client.midas-api.url: http://backend:8080/api/v1
+      quarkus.rest-client.midas-api.url: http://backend:8080
       quarkus.rest-client.midas-api.connect-timeout: 3000
       quarkus.rest-client.midas-api.read-timeout: 5000
 

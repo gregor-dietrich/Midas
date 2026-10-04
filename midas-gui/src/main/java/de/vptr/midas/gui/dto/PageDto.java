@@ -11,4 +11,9 @@ public class PageDto extends AbstractTitleContentDto {
     public PageDto(final String publicId, final String title, final String content) {
         super(publicId, title, content);
     }
+
+    /** Creates the editable form of a page the backend returned. */
+    public static PageDto from(final PageResponseDto response) {
+        return new PageDto(response.getPublicId(), response.getTitle(), response.getContent());
+    }
 }

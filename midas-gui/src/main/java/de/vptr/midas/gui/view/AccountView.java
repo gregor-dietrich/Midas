@@ -178,7 +178,7 @@ public class AccountView extends AbstractAsyncDataView implements BeforeEnterObs
     /** Returns the account balance as the current user sees it, applying the per-user negative-account flag. */
     private BigDecimal effectiveBalance(final AccountResponseDto account) {
         final BigDecimal raw = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
-        return account.isNegative() ? raw.negate() : raw;
+        return Boolean.TRUE.equals(account.getIsNegative()) ? raw.negate() : raw;
     }
 
     private void updateTotalBalance() {

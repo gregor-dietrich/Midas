@@ -16,6 +16,7 @@
   <packaging>quarkus</packaging>
 
   <properties>
+    <openapi-generator-plugin.version>7.25.0</openapi-generator-plugin.version>
     <nullaway.annotated.packages>de.vptr.midas.gui</nullaway.annotated.packages>
 
     <assertj.version>3.27.7</assertj.version>
@@ -150,6 +151,51 @@
 
   <build>
     <plugins>
+      <!-- Generates the REST client interfaces and response DTOs from the API's committed contract.
+      Request DTOs stay hand-written: they double as view models and carry fields the contract's
+      request schemas lack. AuthClient and BackendHealthClient stay hand-written too: the first
+      sends credentials before a session exists, the second targets an endpoint outside the
+      contract. -->
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>${openapi-generator-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/../midas-api/openapi.yaml</inputSpec>
+              <generatorName>java</generatorName>
+              <library>microprofile</library>
+              <templateDirectory>${project.basedir}/src/main/openapi-templates</templateDirectory>
+              <apiPackage>de.vptr.midas.gui.client</apiPackage>
+              <modelPackage>de.vptr.midas.gui.dto</modelPackage>
+              <apiNameSuffix>Client</apiNameSuffix>
+              <!-- By tag. SmallRye tags AuthResource "Auth Resource" by itself, so listing the
+              others is what keeps AuthClient hand-written. -->
+              <apisToGenerate>Account,Page,Payment,Post,PostCategory,PostComment,User,UserGroup,UserRank</apisToGenerate>
+              <modelsToGenerate>AccountAccessResponseDto,AccountAssociationResponseDto,AccountResponseDto,ApiErrorResponse,BalancePointDto,BalanceResponseDto,PageResponseDto,PaymentResponseDto,PostCategoryResponseDto,PostCommentResponseDto,PostResponseDto,UserGroupResponseDto,UserRankResponseDto,UserResponseDto</modelsToGenerate>
+              <generateApiTests>false</generateApiTests>
+              <generateModelTests>false</generateModelTests>
+              <generateApiDocumentation>false</generateApiDocumentation>
+              <generateModelDocumentation>false</generateModelDocumentation>
+              <generateSupportingFiles>false</generateSupportingFiles>
+              <configOptions>
+                <!-- 3.0 selects the jakarta.* namespace; the default is still javax.* -->
+                <microprofileRestClientVersion>3.0</microprofileRestClientVersion>
+                <serializationLibrary>jackson</serializationLibrary>
+                <configKey>midas-api</configKey>
+                <dateLibrary>java8-localdatetime</dateLibrary>
+                <!-- ApiException is checked and cannot pass through the ServiceHelper lambdas;
+                without the mapper, errors arrive as WebApplicationException instead. -->
+                <microprofileRegisterExceptionMapper>false</microprofileRegisterExceptionMapper>
+              </configOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
@@ -170,6 +216,26 @@
         <version>${vaadin.version}</version>
         <configuration>
           <cleanFrontendFiles>false</cleanFrontendFiles>
+        </configuration>
+      </plugin>
+      <!-- Generated sources are excluded from the gates (see also -XepExcludedPaths in the root
+      pom, spotbugs-exclude.xml, and JaCoCo, whose client/dto excludes already cover them). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <sourceDirectories>
+            <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+          </sourceDirectories>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <configuration>
+          <excludeRoots>
+            <excludeRoot>${project.build.directory}/generated-sources</excludeRoot>
+          </excludeRoots>
         </configuration>
       </plugin>
       <plugin>

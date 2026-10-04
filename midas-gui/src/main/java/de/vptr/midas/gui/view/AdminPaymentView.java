@@ -19,12 +19,12 @@ import de.vptr.midas.gui.component.layout.DateFilterLayout;
 import de.vptr.midas.gui.component.layout.IntegerFilterLayout;
 import de.vptr.midas.gui.component.layout.SearchLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
+import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiConstants;
 import jakarta.annotation.Nullable;
 import jakarta.inject.Inject;
@@ -179,12 +179,9 @@ public class AdminPaymentView extends AbstractAdminEntityView<PaymentResponseDto
         layout.setSpacing(true);
 
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.paymentDialog)
-                .open(payment.toPaymentDto(), this.availableAccounts != null ? this.availableAccounts : List.of()));
-        final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(() -> {
-            if (!this.paymentService.deletePayment(Objects.requireNonNull(payment.getPublicId()))) {
-                NotificationUtil.showError("Failed to delete payment");
-            }
-        }));
+                .open(PaymentDto.from(payment), this.availableAccounts != null ? this.availableAccounts : List.of()));
+        final var deleteButton = new DeleteButton(ignore -> this.handleDeletion(
+                () -> this.paymentService.deletePayment(Objects.requireNonNull(payment.getPublicId()))));
 
         layout.add(editButton, deleteButton);
         return layout;

@@ -46,7 +46,7 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
         parentField.setPlaceholder("(none)");
         parentField.setInvalid(false);
         if (allCategories != null) {
-            final var availableParents = allCategories.stream().map(PostCategoryResponseDto::toPostCategoryDto)
+            final var availableParents = allCategories.stream().map(PostCategoryDto::from)
                     .filter(cat -> category == null || !this.isDescendantOf(cat, category, allCategories))
                     .filter(cat -> category == null || !Objects.equals(cat.getPublicId(), category.getPublicId()))
                     .toList();
@@ -74,7 +74,7 @@ public class AdminPostCategoryDialog extends AbstractAdminEntityDialogBase<PostC
 
         final var parent =
                 allCategories.stream().filter(cat -> Objects.equals(cat.getPublicId(), parentRef.getPublicId()))
-                        .map(PostCategoryResponseDto::toPostCategoryDto).findFirst().orElse(null);
+                        .map(PostCategoryDto::from).findFirst().orElse(null);
 
         return parent != null && this.isDescendantOf(parent, ancestor, allCategories);
     }

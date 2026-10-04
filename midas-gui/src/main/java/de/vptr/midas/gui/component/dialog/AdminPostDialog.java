@@ -45,7 +45,7 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
     public void open(@Nullable final PostResponseDto post,
             @Nullable final List<PostCategoryResponseDto> availableCategories) {
         this.removeAll();
-        this.currentBean = post != null ? post.toPostDto() : new PostDto();
+        this.currentBean = post != null ? PostDto.from(post) : new PostDto();
         this.binder = new Binder<>(PostDto.class);
 
         if (post == null) {

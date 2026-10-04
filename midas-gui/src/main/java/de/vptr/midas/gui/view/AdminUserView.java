@@ -134,11 +134,11 @@ public class AdminUserView extends AbstractAdminEntityView<UserResponseDto> {
                 .setFlexGrow(0);
         g.addColumn(LitRenderer
                 .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                .withProperty("checked", user -> Boolean.TRUE.equals(user.isActivated()))).setHeader("Activated")
+                .withProperty("checked", user -> Boolean.TRUE.equals(user.getActivated()))).setHeader("Activated")
                 .setWidth("100px").setFlexGrow(0);
         g.addColumn(LitRenderer
                 .<UserResponseDto>of("<vaadin-checkbox disabled ?checked='${item.checked}'></vaadin-checkbox>")
-                .withProperty("checked", user -> Boolean.TRUE.equals(user.isBanned()))).setHeader("Banned")
+                .withProperty("checked", user -> Boolean.TRUE.equals(user.getBanned()))).setHeader("Banned")
                 .setWidth("100px").setFlexGrow(0);
         g.addColumn((ValueProvider<UserResponseDto, ?>) UserResponseDto::getCreated).setHeader("Created")
                 .setWidth("150px").setFlexGrow(0);

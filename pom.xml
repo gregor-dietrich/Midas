@@ -182,7 +182,8 @@
               <arg>-Werror</arg>
               <arg>-Xlint:all,-serial,-this-escape,-classfile</arg>
               <arg>-XDcompilePolicy=simple</arg>
-              <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR
+              <arg>-Xplugin:ErrorProne -XepExcludedPaths:.*/generated-sources/.*
+                -Xep:NullAway:ERROR
                 -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}
                 -Xep:FutureReturnValueIgnored:ERROR
                 -Xep:NullablePrimitive:ERROR

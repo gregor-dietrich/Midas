@@ -31,98 +31,69 @@ public class PostCategoryService {
     /** Returns the all categories. */
     public List<PostCategoryResponseDto> getAllCategories() {
         LOG.debug("Fetching all categories");
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper
-                .execute(
-                        () -> this.categoryClient.getAllCategories(PaginationParamUtil.DEFAULT_PAGE,
-                                PaginationParamUtil.MAX_SIZE, authHeader),
-                        this.authService, LOG, "fetching categories");
+        return ServiceHelper.execute(() -> this.categoryClient.getAllCategories(PaginationParamUtil.DEFAULT_PAGE,
+                PaginationParamUtil.MAX_SIZE), this.authService, LOG, "fetching categories");
     }
 
     /** Returns the root categories. */
     public List<PostCategoryResponseDto> getRootCategories() {
         LOG.debug("Fetching root categories");
-        return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.categoryClient.getRootCategories(authHeader);
-        }, this.authService, LOG, "fetching root categories");
+        return ServiceHelper.execute(() -> this.categoryClient.getRootCategories(), this.authService, LOG,
+                "fetching root categories");
     }
 
-    /** Returns the category by id. */
+    /** Returns the category by id, or empty if it does not exist. */
     public Optional<PostCategoryResponseDto> getCategoryById(final String id) {
         LOG.debugf("Fetching category with ID: %s", id);
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.categoryClient.getCategory(id, authHeader);
-        }, this.authService, LOG, "fetching category " + id, response -> ServiceHelper.readOptionalEntity(response,
-                PostCategoryResponseDto.class, dto -> dto, "category response"));
+        return ServiceHelper.executeOptional(() -> this.categoryClient.getCategory(id), this.authService, LOG,
+                "fetching category " + id);
     }
 
     /** Returns the categories by parent. */
     public List<PostCategoryResponseDto> getCategoriesByParent(final String parentId) {
         LOG.debugf("Fetching categories for parent: %s", parentId);
-        return ServiceHelper.execute(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.categoryClient.getCategoriesByParent(parentId, authHeader);
-        }, this.authService, LOG, "fetching categories for parent " + parentId);
+        return ServiceHelper.execute(() -> this.categoryClient.getCategoriesByParent(parentId), this.authService, LOG,
+                "fetching categories for parent " + parentId);
     }
 
     /** Creates a new category. */
     public PostCategoryDto createCategory(final PostCategoryDto category) {
         LOG.debugf("Creating new category: %s", category.getName());
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-
+        return PostCategoryDto.from(ServiceHelper.execute(() -> {
             final var parent = category.getParent();
             if (parent != null && category.getParentPublicId() == null) {
                 category.setParentPublicId(parent.getPublicId());
             }
 
-            return this.categoryClient.createCategory(category, authHeader);
-        }, this.authService, LOG, "creating category", "Failed to create category",
-                response -> ServiceHelper.readExpectedStatusEntity(response, 201, PostCategoryResponseDto.class,
-                        this::fromApiResponse, "created category response", "Failed to create category"));
+            return this.categoryClient.createCategory(category);
+        }, this.authService, LOG, "creating category", "Failed to create category"));
     }
 
     /** Updates the category. */
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
         final String publicId = Objects.requireNonNull(category.getPublicId(), "category.publicId");
         LOG.debugf("Updating category: %s", publicId);
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-
+        return PostCategoryDto.from(ServiceHelper.execute(() -> {
             final PostCategoryDto parent = category.getParent();
             if (parent != null && category.getParentPublicId() == null) {
                 category.setParentPublicId(parent.getPublicId());
             }
 
-            return this.categoryClient.updateCategory(publicId, category, authHeader);
-        }, this.authService, LOG, "updating category " + publicId, "Failed to update category",
-                response -> ServiceHelper.readExpectedStatusEntity(response, 200, PostCategoryResponseDto.class,
-                        this::fromApiResponse, "updated category response", "Failed to update category"));
+            return this.categoryClient.updateCategory(publicId, category);
+        }, this.authService, LOG, "updating category " + publicId, "Failed to update category"));
     }
 
     /** Handles the delete category operation. */
-    public boolean deleteCategory(final String id) {
+    public void deleteCategory(final String id) {
         LOG.debugf("Deleting category: %s", id);
-        return ServiceHelper.executeWithResponse(() -> {
-            final var authHeader = this.authService.requireAuthorizationHeader();
-            return this.categoryClient.deleteCategory(id, authHeader);
-        }, this.authService, LOG, "deleting category " + id, response -> response.getStatus() == 204);
-    }
-
-    /**
-     * Convert API response back to GUI format
-     */
-    private PostCategoryDto fromApiResponse(final PostCategoryResponseDto responseDto) {
-        return responseDto.toPostCategoryDto();
+        ServiceHelper.executeVoid(() -> this.categoryClient.deleteCategory(id), this.authService, LOG,
+                "deleting category " + id);
     }
 
     /** Handles the search categories operation. */
     public List<PostCategoryResponseDto> searchCategories(final String query) {
         LOG.debugf("Searching categories with query: %s", query);
-        final var authHeader = this.authService.requireAuthorizationHeader();
-        return ServiceHelper.execute(() -> this.categoryClient.searchCategories(query, authHeader), this.authService,
-                LOG, "searching categories");
+        return ServiceHelper.execute(() -> this.categoryClient.searchCategories(query), this.authService, LOG,
+                "searching categories");
     }
 }

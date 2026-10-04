@@ -4,7 +4,7 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.RouterLink;
 
-import de.vptr.midas.gui.dto.UserRankResponseDto;
+import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.view.AdminAccountView;
 import de.vptr.midas.gui.view.AdminHomeView;
 import de.vptr.midas.gui.view.AdminPageView;
@@ -20,7 +20,7 @@ import de.vptr.midas.gui.view.AdminUserView;
 public class AdminNavigationTabs extends Tabs {
 
     /** Creates a new instance with the given parameters. */
-    public AdminNavigationTabs(final UserRankResponseDto userRank) {
+    public AdminNavigationTabs(final UserRankDto userRank) {
         this.setOrientation(Orientation.VERTICAL);
         this.setWidthFull();
         this.add(new Tab(new RouterLink("Home", AdminHomeView.class)));

@@ -30,7 +30,7 @@ public class AdminUserGroupDialog extends AbstractAdminEntityDialogBase<UserGrou
     /** Opens the dialog for creating or editing a user group. */
     public void open(@Nullable final UserGroupResponseDto group) {
         this.removeAll();
-        this.currentBean = group != null ? group.toUserGroupDto() : new UserGroupDto();
+        this.currentBean = group != null ? UserGroupDto.from(group) : new UserGroupDto();
         this.binder = new Binder<>(UserGroupDto.class);
 
         final var form = this.createResponsiveFormLayout();

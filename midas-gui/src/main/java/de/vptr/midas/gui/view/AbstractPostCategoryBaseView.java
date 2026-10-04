@@ -84,7 +84,8 @@ public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView
         if (this.allCategories == null) {
             return;
         }
-        final var rootCategories = this.allCategories.stream().filter(PostCategoryResponseDto::isRootCategory).toList();
+        final var rootCategories = this.allCategories.stream()
+                .filter(category -> Boolean.TRUE.equals(category.getIsRootCategory())).toList();
 
         final var tg = Objects.requireNonNull(this.treeGrid);
         this.setTreeItems(rootCategories, this::getChildrenOfCategory);

@@ -19,6 +19,7 @@ import de.vptr.midas.gui.component.button.EditButton;
 import de.vptr.midas.gui.component.button.RefreshButton;
 import de.vptr.midas.gui.component.dialog.AdminPostCategoryDialog;
 import de.vptr.midas.gui.component.layout.SearchLayout;
+import de.vptr.midas.gui.dto.PostCategoryDto;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
@@ -108,7 +109,7 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
         layout.setSpacing(true);
 
         final var editButton = new EditButton(ignore -> Objects.requireNonNull(this.categoryDialog)
-                .open(category.toPostCategoryDto(), this.allCategories != null ? this.allCategories : List.of()));
+                .open(PostCategoryDto.from(category), this.allCategories != null ? this.allCategories : List.of()));
         final var deleteButton = new DeleteButton(ignore -> this.deleteCategory(category));
 
         layout.add(editButton, deleteButton);
@@ -129,12 +130,9 @@ public class AdminPostCategoryView extends AbstractPostCategoryBaseView {
         }
 
         try {
-            if (this.categoryService.deleteCategory(category.getPublicId())) {
-                NotificationUtil.showSuccess("Category deleted successfully");
-                this.loadCategoriesAsync();
-            } else {
-                NotificationUtil.showError("Failed to delete category");
-            }
+            this.categoryService.deleteCategory(category.getPublicId());
+            NotificationUtil.showSuccess("Category deleted successfully");
+            this.loadCategoriesAsync();
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
             this.getUI().ifPresent(ui -> ui.navigate(LoginView.class));

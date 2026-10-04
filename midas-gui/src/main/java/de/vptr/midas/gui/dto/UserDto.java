@@ -185,4 +185,20 @@ public class UserDto {
         this.commentsCount = commentsCount;
     }
 
+    /** Creates the editable form of a user the backend returned; the contract carries no {@code lastIp}. */
+    public static UserDto from(final UserResponseDto response) {
+        final var dto = new UserDto();
+        dto.setPublicId(response.getPublicId());
+        dto.setUsername(response.getUsername());
+        dto.setEmail(response.getEmail());
+        dto.setRankPublicId(response.getRankPublicId());
+        dto.setRankName(response.getRankName());
+        dto.setBanned(response.getBanned());
+        dto.setActivated(response.getActivated());
+        dto.setCreated(response.getCreated());
+        dto.setLastLogin(response.getLastLogin());
+        dto.setPostsCount(response.getPostsCount());
+        dto.setCommentsCount(response.getCommentsCount());
+        return dto;
+    }
 }
