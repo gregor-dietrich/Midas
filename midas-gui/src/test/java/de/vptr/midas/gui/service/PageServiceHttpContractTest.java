@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
+
+import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -16,6 +19,7 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.util.AbstractHttpContractTest;
 import de.vptr.midas.gui.util.StubBackend;
+import de.vptr.midas.gui.util.UiConstants;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -28,6 +32,12 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String PAGE_JSON = """
             {"publicId":"01AN4Z07BY79KA1307SR9X4MV4","title":"Impressum","content":"Body text"}""";
+
+    /**
+     * Well past {@link UiConstants#REQUEST_TIMEOUT_MS}, so the fault-tolerance timeout fires first (it is shorter than
+     * the client's read timeout). The delay costs no test time: the client gives up at the timeout.
+     */
+    private static final Duration SLOWER_THAN_TIMEOUT = Duration.ofMillis(2 * UiConstants.REQUEST_TIMEOUT_MS);
 
     @Inject
     PageService pageService;
@@ -68,6 +78,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
                 {"status":404,"error":"Not Found","message":"The requested resource was not found."}""");
 
         assertThat(this.pageService.getPageById("missing")).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -112,6 +123,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.pageService.updatePage(new PageDto("01AN4Z07BY79KA1307SR9X4MV4", "", "")))
                 .isInstanceOf(ServiceException.class).hasMessage("Failed to update page: title must not be blank");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -141,6 +153,27 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.pageService.deletePage("missing")).isInstanceOf(ServiceException.class)
                 .hasMessage("Page not found");
+        assertThat(StubBackend.requests()).hasSize(1);
+    }
+
+    /** A timed-out GET is safe to send again, so the generated client retries it. */
+    @Test
+    void getAllPages_isRetried_onTimeout() {
+        StubBackend.stub("GET", "/pages", 200, "[]", SLOWER_THAN_TIMEOUT);
+
+        assertThatThrownBy(() -> this.pageService.getAllPages()).isInstanceOf(ServiceException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
+        assertThat(StubBackend.requests()).hasSize(3);
+    }
+
+    /** A timed-out POST may still have been applied, so the generated client never sends it again. */
+    @Test
+    void createPage_isNotRetried_onTimeout() {
+        StubBackend.stub("POST", "/pages", 201, PAGE_JSON, SLOWER_THAN_TIMEOUT);
+
+        assertThatThrownBy(() -> this.pageService.createPage(new PageDto("", "Impressum", "Body text")))
+                .isInstanceOf(ServiceException.class).hasCauseInstanceOf(TimeoutException.class);
+        assertThat(StubBackend.onlyRequest().method()).isEqualTo("POST");
     }
 
     /** Credentials come from MidasClientHeadersFactory, which refuses before anything is sent. */
@@ -153,6 +186,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
                 .hasMessage("User not authenticated");
 
         assertThat(StubBackend.requests()).isEmpty();
+        verify(this.authService).requireAuthorizationHeader();
     }
 
     @Test
@@ -162,5 +196,6 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.pageService.getAllPages()).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

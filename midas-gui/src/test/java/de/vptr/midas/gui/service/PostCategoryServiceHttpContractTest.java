@@ -105,6 +105,7 @@ class PostCategoryServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", CATEGORY_PATH, 404, null);
 
         assertThat(this.categoryService.getCategoryById(CATEGORY_ID)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -178,6 +179,7 @@ class PostCategoryServiceHttpContractTest extends AbstractHttpContractTest {
                 .isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private void assertCategoryFailure(final String method, final String suffix, final int status,
@@ -186,5 +188,6 @@ class PostCategoryServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.categoryService)).isInstanceOf(ServiceException.class)
                 .hasMessage(message);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

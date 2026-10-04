@@ -6,6 +6,7 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,7 +67,7 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
     private record Route(String method, String suffix) {
     }
 
-    private record Stubbed(int status, @Nullable String body) {
+    private record Stubbed(int status, @Nullable String body, Duration delay) {
     }
 
     private static final Map<Route, Stubbed> ROUTES = new ConcurrentHashMap<>();
@@ -73,11 +76,18 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
     @Nullable
     private static HttpServer server;
 
+    @Nullable
+    private static ExecutorService handlers;
+
     @Override
     public Map<String, String> start() {
         try {
             final HttpServer created = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
             created.createContext("/", StubBackend::handle);
+            // One thread per exchange, so a delayed response does not hold up the requests behind it.
+            final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+            created.setExecutor(executor);
+            handlers = executor;
             created.start();
             server = created;
             final String base = "http://" + created.getAddress().getAddress().getHostAddress() + ":"
@@ -97,6 +107,11 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
             running.stop(0);
             server = null;
         }
+        final ExecutorService executor = handlers;
+        if (executor != null) {
+            executor.shutdownNow();
+            handlers = null;
+        }
     }
 
     /** Clears all stubbed routes and recorded requests. Call from {@code @BeforeEach}. */
@@ -108,7 +123,13 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
     /** Stubs a response for the given method and path suffix. */
     public static void stub(final String method, final String pathSuffix, final int status,
             @Nullable final String body) {
-        ROUTES.put(new Route(method, pathSuffix), new Stubbed(status, body));
+        stub(method, pathSuffix, status, body, Duration.ZERO);
+    }
+
+    /** Stubs a response that is sent only after {@code delay}, e.g. to let a client-side timeout fire first. */
+    public static void stub(final String method, final String pathSuffix, final int status, @Nullable final String body,
+            final Duration delay) {
+        ROUTES.put(new Route(method, pathSuffix), new Stubbed(status, body, delay));
     }
 
     /** Returns the requests the stub received, in arrival order. */
@@ -139,6 +160,11 @@ public class StubBackend implements QuarkusTestResourceLifecycleManager {
             exchange.sendResponseHeaders(501, -1);
             exchange.close();
             return;
+        }
+        try {
+            Thread.sleep(stubbed.delay());
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         final byte[] payload = stubbed.body() == null ? new byte[0] : stubbed.body().getBytes(StandardCharsets.UTF_8);

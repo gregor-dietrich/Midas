@@ -29,8 +29,8 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
+import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import java.time.temporal.ChronoUnit;
-import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.UiConstants;
 
 
@@ -52,8 +52,6 @@ import de.vptr.midas.gui.util.UiConstants;
 @RegisterProvider(ApiExceptionMapper.class)
 {{/microprofileRegisterExceptionMapper}}
 @RegisterClientHeaders(MidasClientHeadersFactory.class)
-@Retry(maxRetries = UiConstants.MAX_RETRIES, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
-        abortOn = AuthenticationException.class)
 @Timeout(UiConstants.REQUEST_TIMEOUT_MS)
 @Path("{{#useAnnotatedBasePath}}{{contextPath}}{{/useAnnotatedBasePath}}{{commonPath}}")
 public interface {{classname}}  {
@@ -77,6 +75,10 @@ public interface {{classname}}  {
     @Deprecated
     {{/isDeprecated}}
     @{{httpMethod}}
+    {{! Per method: only idempotent verbs retry, and only failures a second attempt can fix. RETRIES_<VERB> exists for
+        each verb the GUI uses, so a new verb fails the compile until it gets a decision. }}
+    @Retry(maxRetries = UiConstants.RETRIES_{{httpMethod}}, delay = UiConstants.RETRY_DELAY_MS, delayUnit = ChronoUnit.MILLIS,
+            retryOn = { ProcessingException.class, TimeoutException.class })
     {{#subresourceOperation}}@Path("{{{path}}}"){{/subresourceOperation}}
 {{#hasConsumes}}
     @Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} })

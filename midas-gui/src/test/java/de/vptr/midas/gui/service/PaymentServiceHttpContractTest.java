@@ -164,6 +164,7 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.paymentService.createPayment(rent())).isInstanceOf(ServiceException.class)
                 .hasMessage(message);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** A 422 carries the backend's validation message behind the failure prefix. */
@@ -174,6 +175,7 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.paymentService.updatePayment(rent())).isInstanceOf(ServiceException.class)
                 .hasMessage(message);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -190,6 +192,7 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", PAYMENT_PATH, 404, NOT_FOUND_JSON);
 
         assertThat(this.paymentService.getPaymentById(PAYMENT_ID)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** deletePayment carries no not-found message, so a 404 surfaces as the generic failure. */
@@ -199,6 +202,7 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.paymentService.deletePayment(PAYMENT_ID)).isInstanceOf(ServiceException.class)
                 .hasMessage(GENERIC_FAILURE);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -209,5 +213,6 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
                 .isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

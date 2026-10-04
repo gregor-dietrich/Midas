@@ -191,6 +191,7 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
                 .isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private void assertCommentFailure(final String method, final String suffix, final int status,
@@ -199,5 +200,6 @@ class PostCommentServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.commentService)).isInstanceOf(ServiceException.class)
                 .hasMessage(message);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

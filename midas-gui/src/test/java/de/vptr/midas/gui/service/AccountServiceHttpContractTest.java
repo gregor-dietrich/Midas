@@ -283,6 +283,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.accountService)).as("instead of %s", status)
                 .isInstanceOf(ServiceException.class).hasMessage(prefix + ": " + VALIDATION_MESSAGE);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     static Stream<Arguments> notFoundLookups() {
@@ -299,6 +300,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", suffix, 404, ACCOUNT_NOT_FOUND_JSON);
 
         assertThat(call.apply(this.accountService)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     static Stream<Arguments> notFoundWrites() {
@@ -316,6 +318,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.accountService)).isInstanceOf(ServiceException.class)
                 .hasMessage(GENERIC_FAILURE);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** A 403 has no dedicated message and surfaces as the generic failure. */
@@ -325,6 +328,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.accountService.getMyAccountBalance(ACCOUNT_ID, START, END))
                 .isInstanceOf(ServiceException.class).hasMessage(GENERIC_FAILURE);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -334,6 +338,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.accountService.associateUserWithAccount(ACCOUNT_ID, USER_ID))
                 .isInstanceOf(ServiceException.class).hasMessage("User is already associated with this account");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** Only a 409 gets the duplicate message; other failures stay generic. */
@@ -343,6 +348,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.accountService.associateUserWithAccount(ACCOUNT_ID, USER_ID))
                 .isInstanceOf(ServiceException.class).hasMessage(GENERIC_FAILURE);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** A 200 without a body or without the balance field leaves nothing to show. */
@@ -366,6 +372,8 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.accountService.getAccountBalance(ACCOUNT_ID)).isInstanceOf(ServiceException.class)
                 .hasMessage(GENERIC_FAILURE).hasRootCauseInstanceOf(JsonProcessingException.class);
+        // A body that does not parse is not a connection failure, so it is not retried.
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -375,5 +383,6 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.accountService.getMyAccounts()).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

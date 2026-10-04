@@ -98,6 +98,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", suffix, 404, USER_NOT_FOUND);
 
         assertThat(call.apply(this.userService)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     static Stream<Arguments> notFoundCalls() {
@@ -156,6 +157,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.userService.createUser(existingUser())).isInstanceOf(ServiceException.class)
                 .hasMessage("Failed to create user: Username already taken");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -164,6 +166,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.userService.updateUser(existingUser())).isInstanceOf(ServiceException.class)
                 .hasMessage("Failed to update user: Username already taken");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -202,6 +205,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.userService.changePassword(new PasswordChangeDto("wrong", "N3w#Secret")))
                 .isInstanceOf(ServiceException.class).hasMessage("Current password is incorrect");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -211,6 +215,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.userService.getCurrentUser()).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private static Consumer<UserService> call(final Consumer<UserService> call) {

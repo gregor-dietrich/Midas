@@ -108,6 +108,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.rankService.createRank(new UserRankDto("Moderator")))
                 .isInstanceOf(ServiceException.class)
                 .hasMessage("Failed to create user rank: Rank name already exists");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -126,6 +127,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.rankService.updateRank(existingRank())).isInstanceOf(ServiceException.class)
                 .hasMessage("Failed to update user rank: Rank name already exists");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -173,6 +175,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", RANK_PATH, 404, null);
 
         assertEmptyRank(this.rankService.getCurrentUserRank());
+        assertThat(StubBackend.requests()).hasSize(2);
     }
 
     /** The service deliberately swallows an AuthenticationException from the rank lookup, after it has logged out. */
@@ -183,6 +186,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertEmptyRank(this.rankService.getCurrentUserRank());
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(2);
     }
 
     /** A current user the backend does not find yields the empty rank. */
@@ -191,6 +195,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", "/users/me", 404, null);
 
         assertEmptyRank(this.rankService.getCurrentUserRank());
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -200,6 +205,7 @@ class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.rankService.getAllRanks()).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private static ThrowingConsumer<UserRankService> forRank(final ThrowingConsumer<UserRankService> call) {

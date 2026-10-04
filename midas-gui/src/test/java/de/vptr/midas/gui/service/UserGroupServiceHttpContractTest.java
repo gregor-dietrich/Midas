@@ -136,6 +136,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.groupService.createGroup(new UserGroupDto(null, "Editors")))
                 .isInstanceOf(ServiceException.class).hasMessage("Failed to create group: Group name already exists");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -144,6 +145,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.groupService.updateGroup(new UserGroupDto(GROUP_ID, " ")))
                 .isInstanceOf(ServiceException.class).hasMessage("Failed to update group: Name must not be blank");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     static Stream<Arguments> voidCalls() {
@@ -175,6 +177,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", GROUP_PATH, 404, GROUP_ERROR.formatted(404, "Not found"));
 
         assertThat(this.groupService.getGroupById(GROUP_ID)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** Writes carry no not-found message, so a 404 surfaces as the generic failure. */
@@ -185,6 +188,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.groupService)).isInstanceOf(ServiceException.class)
                 .hasMessage("Backend request failed");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     /** The one 4xx the service handles itself: it catches the client's WebApplicationException for 409. */
@@ -194,6 +198,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> this.groupService.addUserToGroup(GROUP_ID, MEMBER_ID))
                 .isInstanceOf(ServiceException.class).hasMessage("User is already a member of this group");
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -203,6 +208,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.groupService.deleteGroup(GROUP_ID)).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private static Consumer<UserGroupService> ask(final Consumer<UserGroupService> call) {

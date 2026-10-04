@@ -135,6 +135,7 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
         StubBackend.stub("GET", POST_PATH, 404, POST_NOT_FOUND_JSON);
 
         assertThat(this.postService.getPostById(POST_ID)).isEmpty();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     @Test
@@ -206,6 +207,7 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
         assertThatThrownBy(() -> this.postService.getPublishedPosts()).isInstanceOf(AuthenticationException.class);
 
         verify(this.authService).logout();
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 
     private void assertFailure(final String method, final String suffix, final int status, @Nullable final String body,
@@ -214,5 +216,6 @@ class PostServiceHttpContractTest extends AbstractHttpContractTest {
 
         assertThatThrownBy(() -> call.accept(this.postService)).isInstanceOf(ServiceException.class)
                 .hasMessage(message);
+        assertThat(StubBackend.requests()).hasSize(1);
     }
 }

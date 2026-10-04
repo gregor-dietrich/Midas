@@ -85,8 +85,10 @@ If any quality gates or tests fail, work on them until all problems are resolved
   (openapi-generator in `midas-gui/pom.xml`), so a change to a path, parameter or response schema that
   breaks the GUI fails its compile. Request DTOs, `AuthClient` and `BackendHealthClient` stay
   hand-written; the generated clients use a request DTO by its schema name, so it must keep that name,
-  and only the `*HttpContractTest`s check its fields, or catch two same-typed parameters trading places. Client-wide annotations (`@Retry`, `@Timeout`,
-  `@RegisterClientHeaders`) live in the template `midas-gui/src/main/openapi-templates/api.mustache`.
+  and only the `*HttpContractTest`s check its fields, or catch two same-typed parameters trading places. Client-wide annotations (`@Timeout`,
+  `@RegisterClientHeaders`) live in the template `midas-gui/src/main/openapi-templates/api.mustache`, and so does
+  each method's `@Retry`: only connection failures and timeouts are retried, never an HTTP error status, and only for
+  idempotent verbs (`UiConstants.RETRIES_<VERB>`; POST and PATCH get none, a verb without a constant fails the compile).
 - **Database**: Flyway owns the schema in every profile and Hibernate only validates it. A production launch
   never cleans and refuses a dev or test profile (`FlywayCleanGuard`, keyed on LaunchMode, #31). Migrations live in
   `midas-api/src/main/resources/db/migration`; a released migration is never edited, a new one is added
