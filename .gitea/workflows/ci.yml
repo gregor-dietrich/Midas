@@ -44,14 +44,6 @@ jobs:
           git config --global http.https://git.vptr.de/.extraHeader \
             "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
           ./devkitw path
-      # Workaround (#30): devkit's frontend pin check in make install needs vaadin-dev-bundle in ~/.m2.
-      # devkit v0.1.1 resolves it only when no bundle jar is present, but the build has already resolved
-      # vaadin-prod-bundle, which carries no package-lock.json. Drop this step once a devkit release
-      # carries gregor/devkit PR 22.
-      - name: Resolve vaadin-dev-bundle
-        run: >-
-          ./mvnw -B -q dependency:get -Dtransitive=false
-          -Dartifact="com.vaadin:vaadin-dev-bundle:$(sed -nE 's:.*<vaadin.version>([^<]+)</vaadin.version>.*:\1:p' midas-gui/pom.xml)"
       - run: make install
       - run: make test
       - name: Save Vaadin's Node.js

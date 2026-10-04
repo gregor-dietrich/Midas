@@ -7,7 +7,7 @@ This project is a modern web application consisting of a REST API backend and a 
 - **Architecture**:
   - **`midas-api`**: Backend REST API service.
   - **`midas-gui`**: Frontend web application using Vaadin Flow.
-- **Build System**: Maven (multi-module) with a root `Makefile` orchestrating the workflow. All shared configurations and quality gates are centralized in the root `pom.xml`.
+- **Build System**: Maven (multi-module) with a root `Makefile` orchestrating the workflow. The quality gates come from devkit's parent POM, which the root `pom.xml` inherits; the root `pom.xml` carries the configuration both modules share.
 
 ## Building and Running
 
@@ -17,6 +17,7 @@ The project uses a `Makefile` at the root to simplify common tasks. Its shared t
 
 - **JDK 25**
 - **Maven 3.9.9+**
+- **Python 3.11+** (devkit's build scripts)
 - **Docker** (for tests and production deployment)
 
 ### Common Commands
@@ -42,33 +43,51 @@ The project uses a `Makefile` at the root to simplify common tasks. Its shared t
 The project enforces very strict quality gates:
 
 - **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline). Use `make format` to auto-fix formatting.
-- **Linting**: Spotless (`spotless:check`), Checkstyle (engine pinned via `${checkstyle.version}`), PMD (with CPD for duplicate detection).
+- **Linting**: Spotless (`spotless:check`), Checkstyle (devkit's shared rules plus the project's own in `checkstyle-project.xml`; engine pinned via `${checkstyle.version}`), PMD (with CPD for duplicate detection).
 - **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and NullAway (strict nullability checks). The compiler runs with `-Werror` and `-Xlint:all` (minus `serial`, `this-escape`, `classfile`), so any javac or ErrorProne warning fails the build.
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
 - **Coverage**: JaCoCo enforcement. The `report` goal is bound to `post-integration-test` so it includes `*IT` coverage; surefire and failsafe append to the same `target/jacoco.exec`, and a report generated at `test` would silently omit every integration test.
 - **Security**: OWASP Dependency Check via `make audit` (fails on CVSS >= 7; false positives go in the root `dependency-check-suppression.xml`, pinned to the exact package version). It is deliberately not bound to a lifecycle phase, so `make test` does not depend on the network, an NVD API key or a clean CVE feed; CI runs it as its own `audit` job, which fails on findings, and fails as well when the `NVD_API_KEY` secret is unset. It needs `NVD_API_KEY` from the environment or the gitignored `.env.build` (not `.env`, which docker-compose reads); without a key it fails rather than running slowly (gregor/devkit#11). License enforcement blocks commercial/proprietary licenses.
-- **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus security minimums. Runs as part of `make lint` and `make install`.
+- **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed `midas-gui/package.json` / `package-lock.json` against Vaadin's own version manifest for the pinned `${vaadin.version}`, plus the security minimums in `devkit.toml`'s `[frontend.min-pins]`. Runs as part of `make lint` and `make install`.
 - **Frontend toolchain**: `vaadin.node.version` in `midas-gui/pom.xml` (Vaadin's default for the pinned `${vaadin.version}`) is the Node.js every frontend build uses: the production profile, the Quarkus build step behind `make install`/`make test`, and dev mode. Vaadin downloads it to `~/.vaadin` and ignores any `node` on `PATH`, so `package-lock.json` comes out the same on every machine. Bump it with `vaadin.version`.
 - **Frontend installs use `npm ci`** (`vaadin.ci.build` in `midas-gui/pom.xml`): builds install exactly what `package-lock.json` records and fail when `package.json` disagrees with it, e.g. after a Vaadin bump or an `@NpmPackage` change. Fix that with `make regen-lockfile` and commit both files. It keeps the lockfile and lets npm change only the entries `package.json` no longer matches; deleting the lockfile instead re-seeds it from Vaadin's bundled one and moves unrelated packages, some to older versions. Dev mode's runtime dev server has no `npm ci` option and runs `npm install`, which leaves an in-sync lockfile unchanged.
 
 ### Shared configuration from devkit
 
-`checkstyle.xml`, `pmd-ruleset.xml`, `eclipse-formatter.xml`, the shared Make targets and
-the scripts behind them come from devkit, pinned in `devkit.toml` and linked into the
-checkout as `.devkit` by `./devkitw`. Any `make` target creates the link; a bare
-`./mvnw verify` (or any other gate goal) fails on a fresh clone until it exists. They are
-not hand-kept copies: a shared gate changes in devkit, is released there, and is adopted
-here by bumping `version` and `commit` in `devkit.toml`. Never edit `.devkit/` or `devkitw`.
+`checkstyle.xml`, `pmd-ruleset.xml`, `eclipse-formatter.xml`, the parent POM that configures
+and activates every Maven gate plugin and pins the gate tools' versions
+(`de.vptr.devkit:devkit-parent`), the shared Make targets and the scripts behind them come
+from devkit, pinned in `devkit.toml` and linked into the checkout as `.devkit` by
+`./devkitw`. The root `pom.xml` inherits that parent through the link
+(`<relativePath>.devkit/java/parent/pom.xml</relativePath>`). Any `make` target creates the
+link; a bare `./mvnw` or an IDE's Maven import fails on a fresh clone ("Non-resolvable parent
+POM") until it exists. They are not hand-kept copies: a shared gate changes in devkit, is
+released there, and is adopted here by bumping `version` and `commit` in `devkit.toml`
+together with the root pom's `<parent><version>` (the tag without the `v`); a release whose
+contract changes lists its upgrade steps in devkit's README. Never edit `.devkit/` or
+`devkitw`.
 
-The project-specific gate files stay here: `dependency-check-suppression.xml`,
-`spotbugs-exclude.xml` and `checkstyle-suppressions.xml`. The last two share a common
-baseline with the `aimathtutor` repository and carry per-module sections, and until
-devkit ships a parent POM the gate plugin configuration in the root `pom.xml` is kept in
-step with it by hand. Deviations are allowed only where they are unavoidable (package
-names, Vaadin present or absent, multi-module path resolution) or carry a written reason
-in the file itself — never as a convenience. When changing one of these, point out that
-`aimathtutor` needs the same change, but never edit that repository unless explicitly
-asked to.
+The poms keep only the project's own values, as devkit's contract
+(`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the parent's
+properties in the root pom (`error-prone.extra.args` excludes generated sources from Error
+Prone), `nullaway.annotated.packages` and JaCoCo's `<excludes>` in each module, and
+midas-gui's Checkstyle `<sourceDirectories>` and PMD `<excludeRoots>` that keep its
+generated sources out of those gates. Never define one of the parent's `*.version`
+properties (pass `-D<name>=<version>` on the command line to try another tool version), and
+never redeclare `maven-compiler-plugin`'s `<compilerArgs>` or `<annotationProcessorPaths>`
+without `combine.children="append"`: Maven merges a redeclared list by position and silently
+drops the inherited `-Werror`, Error Prone or NullAway. Every target that runs Maven fails on
+either.
+
+The project-specific gate files stay here: `checkstyle-project.xml` at the root (the
+project's own Checkstyle rules, which the parent runs as execution `project`; its
+`SuppressionFilter` reuses each module's `checkstyle-suppressions.xml`),
+`dependency-check-suppression.xml`, `spotbugs-exclude.xml` and `checkstyle-suppressions.xml`.
+The last two share a common baseline with the `aimathtutor` repository and carry per-module
+sections. Deviations are allowed only where they are unavoidable (package names, Vaadin
+present or absent, multi-module path resolution) or carry a written reason in the file
+itself — never as a convenience. When changing one of these, point out that `aimathtutor`
+needs the same change, but never edit that repository unless explicitly asked to.
 
 You MUST ALWAYS run ALL quality gates AND tests via `make test` before claiming you are done, and especially before executing a git commit.
 If any quality gates or tests fail, work on them until all problems are resolved, ensured by a final pass of `make test`.

@@ -22,6 +22,7 @@ midas/
 
 - JDK 25: [Download (Adoptium)](https://adoptium.net/temurin/releases/?os=any&arch=any&version=25)
 - Maven 3.9.9 (or later): [Download (Apache)](https://maven.apache.org/download.cgi)
+- Python 3.11 (or later), for devkit's build scripts
 - Docker: [Download (Docker Engine)](https://docs.docker.com/engine/install/) or [Download (Docker Desktop)](https://docs.docker.com/desktop/)
 
 ## 🚀 Quick Start
@@ -70,7 +71,7 @@ make branch          # create or reset a git branch from a source (prompts for n
 make build           # mvn package, docker buildx (ONLY=<module> limits it to one)
 make check           # verify the local environment
 make check-devkit    # verify .devkit links to the pin (warns on a stale devkitw)
-make check-java      # Verify the JDK, Maven >= 3.9.9 and the pom's version pins
+make check-java      # Verify the JDK, Maven >= 3.9.9, Python >= 3.11, checkstyle-project.xml, the devkit parent POM and the pom's version pins
 make clean           # mvn clean, plus logs and frontend build output
 make coverage        # Run all tests incl. ITs with JaCoCo; write .coverage.md
 make dev-api         # start Midas API in Quarkus dev mode (port 8080)
@@ -407,7 +408,7 @@ For production deployment, use `docker compose up -d --build`.
 This project is a single Git repository where:
 
 - The root holds `docker-compose.yml`, the scripts, the root `Makefile` and the root `pom.xml`
-- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and carries their shared quality-gate configuration
+- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and inherits their quality-gate configuration from devkit's parent POM (`.devkit/java/parent/pom.xml`)
 
 ## 📖 Related Guides
 
