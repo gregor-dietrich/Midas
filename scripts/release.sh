@@ -2,7 +2,8 @@
 
 # Run through make, which exports PROJECT_ROOT and DEVKIT (devkit's make/common.mk).
 cd "${PROJECT_ROOT:?run this through make}" || exit
-. "${DEVKIT:?run this through make}/scripts/lib/get_maven.sh"
+. "${DEVKIT:?run this through make}/scripts/lib/select_modules.sh" || exit
+. "$DEVKIT/scripts/lib/get_maven.sh"
 
 set -e
 
@@ -27,8 +28,7 @@ make tag
 
 # Docker push: the images `make build` built, so ONLY narrows the push as it narrowed the build
 if command -v docker &> /dev/null; then
-    SELECTED=${ONLY:-$MODULES}
-    for module in ${SELECTED//,/ }; do
+    for module in $SELECTED; do
         IMAGE_NAME="gregordietrich/${module}"
         TAG="${IMAGE_NAME}:${REVISION}"
         

@@ -78,12 +78,12 @@ make dev-gui         # start Midas GUI in Quarkus dev mode (port 8081)
 make format          # Format Java sources with spotless
 make help            # list the available targets
 make install         # make check, then mvn clean install -DskipTests
-make kill            # Kill Quarkus/Maven processes; stop and remove ALL Docker containers
+make kill            # Stop this project's Quarkus/Maven JVMs and its docker compose services
 make lint            # Run the quality-gate plugins and the frontend pin check
 make openapi         # regenerate the committed OpenAPI contract snapshot
 make password        # bcrypt-hash a password, read from a prompt or stdin (e.g. for API demo data)
-make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make rebase          # interactive git rebase against a target (defaults to origin/main)
+make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make release         # pull from origin/main, make build, make tag, and push Docker images
 make tag             # create, sign and push a new git tag (auto-increments latest tag suggestion)
 make test            # Run the Maven test suite (mvn verify)

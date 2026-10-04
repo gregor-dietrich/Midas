@@ -1,4 +1,4 @@
 [devkit]
 url = "ssh://git@git.vptr.de:222/gregor/devkit.git"
-version = "v0.1.0"
-commit = "fb26b9c3b41d5ba33308c4757d615cd2d9a53803"
+version = "v0.1.1"
+commit = "cfff94a7ebb05df1154552601f6e444d5b35716c"

@@ -2,12 +2,11 @@
 
 # Run through make, which exports PROJECT_ROOT and DEVKIT (devkit's make/common.mk).
 cd "${PROJECT_ROOT:?run this through make}" || exit
-. "${DEVKIT:?run this through make}/scripts/lib/get_maven.sh"
+# ONLY=<module>[,<module>...] narrows the build like devkit's targets; unset, every module.
+. "${DEVKIT:?run this through make}/scripts/lib/select_modules.sh" || exit
+. "$DEVKIT/scripts/lib/get_maven.sh"
 
 PLATFORMS="linux/amd64,linux/arm64"
-# ONLY=<module>[,<module>...] narrows the build like devkit's targets; unset, every module.
-SELECTED=${ONLY:-$MODULES}
-MODULES_TO_DOCKER=${SELECTED//,/ }
 
 # Detect native platform
 NATIVE_ARCH_RAW="$(uname -m)"
@@ -63,7 +62,7 @@ echo "=== Packaging Application ==="
 
 # Determine production profile for GUI
 GUI_PROFILE=""
-if [[ " $MODULES_TO_DOCKER " == *" $FRONTEND_DIR "* ]]; then
+if [[ "$FRONTEND_SELECTED" == true ]]; then
     GUI_PROFILE="-Pproduction"
     # Build the frontend from the committed lockfile (#15): Vaadin reuses a "compatible" bundle and
     # skips npm install when package.json is unchanged, ignoring the lockfile in both checks, so a
@@ -71,7 +70,7 @@ if [[ " $MODULES_TO_DOCKER " == *" $FRONTEND_DIR "* ]]; then
     rm -rf "$FRONTEND_DIR/src/main/bundles/prod.bundle" "$FRONTEND_DIR/node_modules"
 fi
 
-${MVN_CMD} -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${GUI_PROFILE} -Drevision=${REVISION}
+${MVN_CMD} -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${GUI_PROFILE} -Drevision="${REVISION}"
 
 # Function to build Docker image for a specific module
 build_docker() {
@@ -105,7 +104,7 @@ build_docker() {
     cd - > /dev/null
 }
 
-for m in $MODULES_TO_DOCKER; do
+for m in $SELECTED; do
     build_docker "$m"
 done
 

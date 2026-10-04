@@ -30,7 +30,7 @@ The project uses a `Makefile` at the root to simplify common tasks. Its shared t
 - `make test`: Run full Maven test suite for both modules (requires Docker for API tests).
 - `make dev-api`: Start the backend API in Quarkus Dev Mode (port 8080).
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
-- `make kill`: Terminate all Quarkus/Maven processes and stop and remove **every** Docker container on the host.
+- `make kill`: Stop this project's Quarkus/Maven JVMs and remove its docker compose containers and network (`docker compose down`; volumes are kept).
 - `make openapi`: Regenerate the committed OpenAPI contract snapshot (`midas-api/openapi.yaml`).
 - `make password`: Print the bcrypt hash of a password for the API demo data (`db/demo/R__demo_data.sql`). It prompts, or reads the password from stdin, so it never appears on a command line.
 - `make regen-lockfile`: Update `midas-gui/package-lock.json` to `package.json` with the pinned Node.js, once `npm ci` rejects the pair (see Frontend toolchain).

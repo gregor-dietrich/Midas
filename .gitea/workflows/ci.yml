@@ -33,18 +33,21 @@ jobs:
       # devkit.toml pins devkit's SSH URL, and the forge requires sign-in for every read, git over
       # HTTPS included. CI has no SSH identity, so the fetch goes over HTTPS with the read-only token
       # in DEVKIT_TOKEN, sent for this step only. A deploy token takes basic auth with any user name;
-      # the forge rejects it as a token or bearer header.
+      # the forge rejects it as a token or bearer header. The trap removes the header from
+      # ~/.gitconfig even when the fetch fails, so later steps never see it.
       - name: Fetch devkit
         env:
           DEVKIT_TOKEN: ${{ secrets.DEVKIT_TOKEN }}
         run: |
           git config --global url."https://git.vptr.de/".insteadOf "ssh://git@git.vptr.de:222/"
+          trap 'git config --global --unset http.https://git.vptr.de/.extraHeader' EXIT
           git config --global http.https://git.vptr.de/.extraHeader \
             "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
           ./devkitw path
-          git config --global --unset http.https://git.vptr.de/.extraHeader
-      # Workaround for gregor/devkit#14: the frontend pin check in make install needs
-      # vaadin-dev-bundle in ~/.m2, which nothing in the build resolves. Drop it with that fix.
+      # Workaround (#30): devkit's frontend pin check in make install needs vaadin-dev-bundle in ~/.m2.
+      # devkit v0.1.1 resolves it only when no bundle jar is present, but the build has already resolved
+      # vaadin-prod-bundle, which carries no package-lock.json. Drop this step once a devkit release
+      # carries gregor/devkit PR 22.
       - name: Resolve vaadin-dev-bundle
         run: >-
           ./mvnw -B -q dependency:get -Dtransitive=false
@@ -63,7 +66,7 @@ jobs:
     env:
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
-      # The audit is a merge gate, so a missing key fails the job rather than passing it unaudited.
+      # The audit is a merge gate: a missing key fails the job before checkout, with an annotation.
       - name: Require NVD_API_KEY
         run: '[ -n "$NVD_API_KEY" ] || { echo "::error::NVD_API_KEY secret is not set; the dependency audit cannot run"; exit 1; }'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,16 +93,17 @@ jobs:
       # devkit.toml pins devkit's SSH URL, and the forge requires sign-in for every read, git over
       # HTTPS included. CI has no SSH identity, so the fetch goes over HTTPS with the read-only token
       # in DEVKIT_TOKEN, sent for this step only. A deploy token takes basic auth with any user name;
-      # the forge rejects it as a token or bearer header.
+      # the forge rejects it as a token or bearer header. The trap removes the header from
+      # ~/.gitconfig even when the fetch fails, so later steps never see it.
       - name: Fetch devkit
         env:
           DEVKIT_TOKEN: ${{ secrets.DEVKIT_TOKEN }}
         run: |
           git config --global url."https://git.vptr.de/".insteadOf "ssh://git@git.vptr.de:222/"
+          trap 'git config --global --unset http.https://git.vptr.de/.extraHeader' EXIT
           git config --global http.https://git.vptr.de/.extraHeader \
             "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
           ./devkitw path
-          git config --global --unset http.https://git.vptr.de/.extraHeader
       - run: make audit
       - name: Upload dependency-check reports
         if: ${{ !cancelled() && env.NVD_API_KEY != '' }}
