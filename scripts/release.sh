@@ -4,65 +4,44 @@
 cd "${PROJECT_ROOT:?run this through make}" || exit
 . "${DEVKIT:?run this through make}/scripts/lib/select_modules.sh" || exit
 . "$DEVKIT/scripts/lib/get_maven.sh"
+. scripts/lib/images.sh || exit
 
 set -e
 
 echo "Starting release..."
-RELEASE_START=$(date +%s)
-
-# Fail unless $1 exists locally and was created during this release: buildx without --load leaves
-# the local store alone, so the tag could still name an older build (#45).
-require_fresh_image() {
-    local created stamp
-    created=$(docker image inspect -f '{{.Created}}' "$1" 2>/dev/null) \
-        || { echo "Error: no local image $1 for module $2; the buildx builder probably did not load it; aborting." >&2
-            return 1; }
-    stamp=$(date -d "$created" +%s) \
-        || { echo "Error: cannot parse the creation time '$created' of $1 (GNU date needed); aborting." >&2; return 1; }
-    if (( stamp < RELEASE_START )); then
-        echo "Error: local image $1 for module $2 was created $created, before this release started; the buildx" \
-            "builder probably did not load it (a docker-container driver?). Use the default builder; aborting." >&2
-        return 1
-    fi
-}
 
 if [[ -z "$REVISION" ]]; then
     read -r -p "Enter the new version tag [1.0.0-SNAPSHOT]: " REVISION
     REVISION=${REVISION:-1.0.0-SNAPSHOT}
 fi
 export REVISION
+[[ $REVISION =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] \
+    || { echo "Error: '$REVISION' is not a valid image tag; nothing was tagged or pushed." >&2; exit 1; }
+
+# A host that cannot build every platform fails here, before the tests, the tag or any push (#59).
+register_qemu
+require_multiplatform_builder || { echo "Aborting the release; nothing was tagged or pushed." >&2; exit 1; }
 
 git fetch origin
 git switch main
 git pull
+# Run the release with the scripts just pulled, not the ones this run started from.
+[[ -n "${RELEASE_REEXEC:-}" ]] || RELEASE_REEXEC=1 exec scripts/release.sh
 
-# Run full verification via Makefile
+# Run full verification via Makefile, then package the jars the images copy
 make clean
 make install
 make test
-make build
-# Check every image before tagging or pushing anything, so a stale one cannot leave a half-published release
-for module in $SELECTED; do
-    require_fresh_image "gregordietrich/${module}:${REVISION}" "$module" || exit 1
-done
+package_modules
 make tag
 
-# Docker push: the images `make build` built, so ONLY narrows the push as it narrowed the build.
-# Every versioned tag goes first; :latest moves only once all of them are in the registry.
+# buildx builds every platform and pushes the versioned tag and latest together; there is no local
+# image (#59). ONLY narrows the push as it narrows the build. A failure stops the release, but the
+# modules before it stay published.
 for module in $SELECTED; do
-    TAG="gregordietrich/${module}:${REVISION}"
-    echo "Pushing $TAG..."
-    docker push "$TAG" || { echo "Error: failed to push $TAG; aborting before moving latest." >&2; exit 1; }
+    image="${IMAGE_NAMESPACE}/${module}"
+    push_image "$module" "$module/$DOCKERFILE" "${image}:${REVISION}" "${image}:latest" \
+        || { echo "Error: building or pushing ${image} failed; aborting the release." >&2; exit 1; }
 done
-latest_failed=0
-for module in $SELECTED; do
-    IMAGE_NAME="gregordietrich/${module}"
-    docker tag "${IMAGE_NAME}:${REVISION}" "${IMAGE_NAME}:latest"
-    docker push "${IMAGE_NAME}:latest" || { echo "Error: failed to push ${IMAGE_NAME}:latest" >&2; latest_failed=1; }
-done
-if (( latest_failed )); then
-    echo "Release published, but some :latest tags were not moved; push them by hand." >&2
-    exit 1
-fi
 
 echo "Release completed."

@@ -29,5 +29,5 @@ password: ## bcrypt-hash a password, read from a prompt or stdin (demo data, bre
 regen-lockfile: ## update the frontend lockfile to package.json once npm ci rejects it
 	@scripts/regen-lockfile.sh
 
-release: ## pull from origin/main, make build, make tag, and push Docker images
+release: ## pull from origin/main, test, make tag, and buildx-push multi-platform images
 	@scripts/release.sh

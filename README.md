@@ -84,7 +84,7 @@ make openapi         # regenerate the committed OpenAPI contract snapshot
 make password        # bcrypt-hash a password, read from a prompt or stdin (demo data, break-glass reset)
 make rebase          # interactive git rebase against a target (defaults to origin/main)
 make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
-make release         # pull from origin/main, make build, make tag, and push Docker images
+make release         # pull from origin/main, test, make tag, and buildx-push multi-platform images
 make tag             # create, sign and push a new git tag (auto-increments latest tag suggestion)
 make test            # Run the Maven test suite (mvn verify)
 make untag           # delete a local and remote git tag (prompts for tag to delete)
@@ -151,6 +151,20 @@ docker build midas-api -f midas-api/src/main/docker/Dockerfile.jvm-alpine -t mid
 # Build GUI image (requires -Pproduction package first)
 docker build midas-gui -f midas-gui/src/main/docker/Dockerfile.jvm-alpine -t midas-gui:1.0.0-SNAPSHOT
 ```
+
+### Publishing a Release
+
+`make release` checks that the current buildx builder can build both `linux/amd64` and
+`linux/arm64` (the default `docker` driver needs the containerd image store for that; a
+`docker-container` builder works on either store), then pulls `main`, runs `make clean install
+test`, packages the jars, and runs `make tag`. Last, one `docker buildx build --platform
+linux/amd64,linux/arm64 --push` per module pushes `gregordietrich/<module>:<REVISION>` and
+`gregordietrich/<module>:latest` together; `ONLY=<module>` narrows it to one module.
+
+Unlike `make build`, a release pushes nothing from the local image store, and it never falls back to a
+single-platform build: a failing build or push stops the release with an error. Modules pushed
+before the failure stay published under both tags, and the git tag stays in place (`make untag`
+removes it).
 
 ### Native Executables
 

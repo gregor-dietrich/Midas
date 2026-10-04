@@ -6,50 +6,11 @@ cd "${PROJECT_ROOT:?run this through make}" || exit
 . "${DEVKIT:?run this through make}/scripts/lib/select_modules.sh" || exit
 . "$DEVKIT/scripts/lib/get_maven.sh"
 
-PLATFORMS="linux/amd64,linux/arm64"
-
-# Detect native platform
-NATIVE_ARCH_RAW="$(uname -m)"
-if [[ "$NATIVE_ARCH_RAW" == "x86_64" ]]; then
-    NATIVE_PLATFORM="linux/amd64"
-elif [[ "$NATIVE_ARCH_RAW" == "aarch64" || "$NATIVE_ARCH_RAW" == "arm64" ]]; then
-    NATIVE_PLATFORM="linux/arm64"
-else
-    NATIVE_PLATFORM="linux/amd64" # Default fallback
-fi
+. scripts/lib/images.sh || exit
 
 set -e
 
-# Register QEMU binfmt handlers only for non-native target platforms
-if docker buildx version >/dev/null 2>&1; then
-    _binfmt_install_targets=""
-    for _platform in ${PLATFORMS//,/ }; do
-        _arch="${_platform#linux/}"
-        case "$_arch" in
-            amd64) _qemu_entry="qemu-x86_64"  ;;
-            arm64) _qemu_entry="qemu-aarch64" ;;
-            *)     continue ;;
-        esac
-        [[ "$NATIVE_PLATFORM" == "$_platform" ]] && continue
-        grep -q "enabled" "/proc/sys/fs/binfmt_misc/${_qemu_entry}" 2>/dev/null && continue
-        _binfmt_install_targets="${_binfmt_install_targets} ${_arch}"
-    done
-    _binfmt_install_targets="${_binfmt_install_targets# }"
-
-    if [[ -n "$_binfmt_install_targets" ]]; then
-        echo "Registering QEMU binfmt handlers for: ${_binfmt_install_targets}"
-        # Image is pinned to a specific digest to prevent supply chain attacks from a mutable tag.
-        if docker run --privileged --rm \
-            tonistiigi/binfmt:qemu-v10.2.1@sha256:d3b963f787999e6c0219a48dba02978769286ff61a5f4d26245cb6a6e5567ea3 \
-            --install "${_binfmt_install_targets}" >/dev/null 2>&1; then
-            echo "QEMU binfmt handlers installed."
-        else
-            echo "Warning: failed to install QEMU binfmt handlers; ${_binfmt_install_targets} builds may fail on this host."
-        fi
-    else
-        echo "QEMU binfmt handlers already registered or not required."
-    fi
-fi
+register_qemu
 
 echo "Starting build..."
 
@@ -58,25 +19,13 @@ if [[ -z "$REVISION" ]]; then
     REVISION=${REVISION:-1.0.0-SNAPSHOT}
 fi
 
-echo "=== Packaging Application ==="
-
-# Determine production profile for GUI
-GUI_PROFILE=""
-if [[ "$FRONTEND_SELECTED" == true ]]; then
-    GUI_PROFILE="-Pproduction"
-    # Build the frontend from the committed lockfile (#15): Vaadin reuses a "compatible" bundle and
-    # skips npm install when package.json is unchanged, ignoring the lockfile in both checks, so a
-    # lockfile-only bump would otherwise ship the old dependency.
-    rm -rf "$FRONTEND_DIR/src/main/bundles/prod.bundle" "$FRONTEND_DIR/node_modules"
-fi
-
-${MVN_CMD} -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${GUI_PROFILE} -Drevision="${REVISION}"
+package_modules
 
 # Function to build Docker image for a specific module
 build_docker() {
     local module_dir="$1"
-    local image_name="gregordietrich/${module_dir}"
-    local dockerfile="src/main/docker/Dockerfile.jvm-alpine"
+    local image_name="${IMAGE_NAMESPACE}/${module_dir}"
+    local dockerfile="$DOCKERFILE"
     local tag="${image_name}:${REVISION}"
 
     echo "=== Building Docker Image for $module_dir ==="
