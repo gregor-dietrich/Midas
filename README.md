@@ -81,7 +81,7 @@ make install         # make check, then mvn clean install -DskipTests
 make kill            # Stop this project's Quarkus/Maven JVMs and its docker compose services
 make lint            # Run the quality-gate plugins and the frontend pin check
 make openapi         # regenerate the committed OpenAPI contract snapshot
-make password        # bcrypt-hash a password, read from a prompt or stdin (e.g. for API demo data)
+make password        # bcrypt-hash a password, read from a prompt or stdin (demo data, break-glass reset)
 make rebase          # interactive git rebase against a target (defaults to origin/main)
 make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make release         # pull from origin/main, make build, make tag, and push Docker images
@@ -122,7 +122,7 @@ Flyway creates and upgrades the schema on startup in every profile (`midas-api/s
 
 Flyway refuses a database built from an earlier V1 (checksum mismatch) or from the pre-Flyway `init.sql` (no schema history): recreate it with `docker compose down -v`, and never enable `baselineOnMigrate`, which would keep its old seeded accounts.
 
-For production, the `docker-compose.yml` at the project root includes a PostgreSQL service. Production seeds no account. On any start that finds the `users` table empty, the API creates an admin from `APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72 characters and at most 72 bytes, with a digit, a lowercase and an uppercase letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once any account exists, both settings are ignored and can be removed.
+For production, the `docker-compose.yml` at the project root includes a PostgreSQL service. Production seeds no account. On any start that finds the `users` table empty, the API creates an admin from `APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72 characters and at most 72 bytes, with a digit, a lowercase and an uppercase letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once any account exists, both settings are ignored and can be removed. To regain access later, see [Break-glass: Reset a Lost Admin Password](#break-glass-reset-a-lost-admin-password).
 
 A production build also refuses to start under the `dev` or `test` profile (e.g. a stray `QUARKUS_PROFILE=dev`), before Flyway or Hibernate touch the database: those profiles clean the schema at start and relax logging and rate limits. Unset `QUARKUS_PROFILE` (and any `quarkus.config.profile.parent`) or set it to `prod`. This guards against a wrong profile, not against the individual settings: anyone who controls the environment can still set those directly.
 
@@ -221,8 +221,42 @@ docker compose exec db psql -U midas -d midas
 ```
 
 ```sql
-ALTER USER midas WITH PASSWORD '<new SQL_PASSWORD>';
+\password midas
 ```
+
+It prompts for the new password twice and keeps it out of the `psql` history.
+
+### Break-glass: Reset a Lost Admin Password
+
+The API refuses to delete, ban, deactivate or demote the last active administrator, but a forgotten password still locks everyone out. Hash a new password with `make password` (it prompts and prints `Password: <hash>`). The reset bypasses the regular password rules (see [Database Setup](#database-setup)), so pick one that meets them. `make password` runs in a checkout with the JDK and Maven from Requirements; the hash it prints can be used on any host. Then open `psql` on the database (with your `SQL_USERNAME` and `SQL_DATABASE` if you changed them):
+
+```shell
+docker compose exec db psql -U midas -d midas
+```
+
+List the active administrators to find the `<admin>` to reset:
+
+```sql
+SELECT u.username FROM users u JOIN user_ranks r ON r.id = u.rank_id
+    WHERE u.activated AND NOT u.banned AND r.admin_view AND r.user_edit AND r.user_rank_edit;
+```
+
+Let `\prompt` read the hash and paste it there: that keeps it out of the `psql` history and has `psql` quote it (it contains `$` signs, which a shell would expand in `psql -c "…"`):
+
+```sql
+\prompt 'Hash: ' hash
+UPDATE users SET password = :'hash' WHERE username = '<admin>';
+```
+
+If the list is empty, no active administrator remains: restore the flags of the Administrator rank seeded by the schema, then give a user that rank back:
+
+```sql
+UPDATE user_ranks SET admin_view = TRUE, user_edit = TRUE, user_rank_edit = TRUE WHERE public_id = '01AN4Z07BY79KA1307SR9X4MV3';
+UPDATE users SET rank_id = (SELECT id FROM user_ranks WHERE public_id = '01AN4Z07BY79KA1307SR9X4MV3'),
+    activated = TRUE, banned = FALSE WHERE username = '<admin>';
+```
+
+If the first statement reports `UPDATE 0`, that rank was deleted: recreate it with `INSERT INTO user_ranks (public_id, name, admin_view, user_edit, user_rank_edit) VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator', TRUE, TRUE, TRUE);`, then run the second one.
 
 ## 📖 Architecture
 
@@ -262,6 +296,7 @@ ALTER USER midas WITH PASSWORD '<new SQL_PASSWORD>';
 - Protected endpoints require Basic authentication.
 - Ownership-sensitive operations (e.g. content mutations) enforce ownership or admin rights and return `403` on violations.
 - Invalid credentials return `401`; excessive invalid attempts return `429` with a structured error payload.
+- A user delete, update or patch, or a rank update or patch, that would leave no active administrator (an activated, unbanned user whose rank has `adminView`, `userEdit` and `userRankEdit`) returns `422`.
 
 ### API — Error Payload
 

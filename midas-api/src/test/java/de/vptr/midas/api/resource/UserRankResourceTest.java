@@ -189,6 +189,13 @@ class UserRankResourceTest {
     }
 
     @Test
+    void testDeleteUserRank_heldByUsers() {
+        // The users' foreign key keeps a rank that active administrators hold
+        authenticatedRequest().when().delete(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3").then().statusCode(409);
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/01AN4Z07BY79KA1307SR9X4MV3");
+    }
+
+    @Test
     void testDeleteUserRank_nonexistent() {
         authenticatedRequest().when().delete(ENDPOINT_URL + "/999999").then().statusCode(404);
     }

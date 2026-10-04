@@ -46,6 +46,9 @@ public class UserService {
     @Inject
     Validator validator;
 
+    @Inject
+    AdministratorGuard administratorGuard;
+
     @ConfigProperty(name = "midas.default-rank-public-id")
     @Nullable
     String defaultRankPublicId;
@@ -161,35 +164,37 @@ public class UserService {
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
-        final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
-        if (existingUser == null) {
-            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
-        }
+        return this.administratorGuard.guard(() -> {
+            final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
+            if (existingUser == null) {
+                throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
+            }
 
-        // Check for duplicate username (only if username is different from current)
-        if (!Objects.equals(userDto.username, existingUser.username)) {
-            EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
-        }
+            // Check for duplicate username (only if username is different from current)
+            if (!Objects.equals(userDto.username, existingUser.username)) {
+                EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
+            }
 
-        // Normalize email and check for duplicate email (only if email is different
-        // from current)
-        final String normalizedEmail = this.normalizeEmail(userDto.email);
-        if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
-            EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
-        }
+            // Normalize email and check for duplicate email (only if email is different
+            // from current)
+            final String normalizedEmail = this.normalizeEmail(userDto.email);
+            if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
+                EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
+            }
 
-        // Complete replacement (PUT semantics)
-        existingUser.username = userDto.username;
-        existingUser.email = normalizedEmail;
-        existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
-        existingUser.banned = Boolean.TRUE.equals(userDto.banned);
-        existingUser.activated = Boolean.TRUE.equals(userDto.activated);
+            // Complete replacement (PUT semantics)
+            existingUser.username = userDto.username;
+            existingUser.email = normalizedEmail;
+            existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
+            existingUser.banned = Boolean.TRUE.equals(userDto.banned);
+            existingUser.activated = Boolean.TRUE.equals(userDto.activated);
 
-        this.applyPassword(existingUser, userDto.password);
-        this.applyRank(existingUser, userDto.rankPublicId, true);
+            this.applyPassword(existingUser, userDto.password);
+            this.applyRank(existingUser, userDto.rankPublicId, true);
 
-        existingUser.persistAndFlush();
-        return this.userResponseAssembler.toResponseDto(existingUser);
+            existingUser.persistAndFlush();
+            return this.userResponseAssembler.toResponseDto(existingUser);
+        });
     }
 
     /** Partially updates the user with the given publicId. */
@@ -203,46 +208,48 @@ public class UserService {
                 throw new ConstraintViolationException(violations);
             }
         }
-        final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
-        if (existingUser == null) {
-            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
-        }
-
-        // Check for duplicate username if username is being updated
-        if (userDto.username != null && !userDto.username.trim().isEmpty()
-                && !userDto.username.equals(existingUser.username)) {
-            EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
-        }
-
-        // Check for duplicate email if email is being updated
-        if (userDto.email != null) {
-            final String normalizedEmail = this.normalizeEmail(userDto.email);
-            if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
-                EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
+        return this.administratorGuard.guard(() -> {
+            final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
+            if (existingUser == null) {
+                throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
             }
-        }
 
-        // Partial update (PATCH semantics) - only update provided fields
-        if (userDto.username != null && !userDto.username.trim().isEmpty()) {
-            existingUser.username = userDto.username;
-        }
-        if (userDto.email != null) {
-            final String normalizedEmail = this.normalizeEmail(userDto.email);
-            existingUser.email = normalizedEmail;
-            existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
-        }
-        if (userDto.banned != null) {
-            existingUser.banned = userDto.banned;
-        }
-        if (userDto.activated != null) {
-            existingUser.activated = userDto.activated;
-        }
+            // Check for duplicate username if username is being updated
+            if (userDto.username != null && !userDto.username.trim().isEmpty()
+                    && !userDto.username.equals(existingUser.username)) {
+                EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
+            }
 
-        this.applyPassword(existingUser, userDto.password);
-        this.applyRank(existingUser, userDto.rankPublicId, false);
+            // Check for duplicate email if email is being updated
+            if (userDto.email != null) {
+                final String normalizedEmail = this.normalizeEmail(userDto.email);
+                if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
+                    EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
+                }
+            }
 
-        existingUser.persistAndFlush();
-        return this.userResponseAssembler.toResponseDto(existingUser);
+            // Partial update (PATCH semantics) - only update provided fields
+            if (userDto.username != null && !userDto.username.trim().isEmpty()) {
+                existingUser.username = userDto.username;
+            }
+            if (userDto.email != null) {
+                final String normalizedEmail = this.normalizeEmail(userDto.email);
+                existingUser.email = normalizedEmail;
+                existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
+            }
+            if (userDto.banned != null) {
+                existingUser.banned = userDto.banned;
+            }
+            if (userDto.activated != null) {
+                existingUser.activated = userDto.activated;
+            }
+
+            this.applyPassword(existingUser, userDto.password);
+            this.applyRank(existingUser, userDto.rankPublicId, false);
+
+            existingUser.persistAndFlush();
+            return this.userResponseAssembler.toResponseDto(existingUser);
+        });
     }
 
     /** Changes the password for the given username. */
@@ -302,7 +309,7 @@ public class UserService {
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public boolean deleteUser(final String publicId) {
-        return UserEntity.delete("publicId", publicId) > 0;
+        return this.administratorGuard.guard(() -> UserEntity.delete("publicId", publicId) > 0);
     }
 
     /** Returns all active non-banned users. */

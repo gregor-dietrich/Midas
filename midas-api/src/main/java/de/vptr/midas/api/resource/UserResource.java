@@ -209,7 +209,7 @@ public class UserResource {
     @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User updated")
     @APIResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @APIResponse(responseCode = "422", description = "New password invalid",
+    @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
@@ -225,6 +225,8 @@ public class UserResource {
     @RolesAllowed({ "user:delete" })
     @APIResponse(responseCode = "204", description = "User deleted")
     @APIResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "User is the last active administrator",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteUser(@PathParam("publicId") final String publicId) {
         final boolean deleted = this.userService.deleteUser(publicId);

@@ -14,6 +14,7 @@ import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -21,6 +22,9 @@ import jakarta.ws.rs.core.Response;
 /** Service for user rank business logic. */
 @ApplicationScoped
 public class UserRankService {
+
+    @Inject
+    AdministratorGuard administratorGuard;
 
     /** Returns all ranks. */
     @CacheResult(cacheName = "user-ranks")
@@ -65,40 +69,44 @@ public class UserRankService {
         return new UserRankResponseDto(rank, 0L);
     }
 
-    /** Processes the request and returns the result. */
+    /** Updates the rank with the given publicId; permissions left out become false. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto) {
-        final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
-        if (existingRank == null) {
-            throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
-        }
+        return this.administratorGuard.guard(() -> {
+            final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
+            if (existingRank == null) {
+                throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
+            }
 
-        // Complete replacement (PUT semantics)
-        existingRank.name = rankDto.name;
-        this.mapPermissions(existingRank, rankDto);
+            // Complete replacement (PUT semantics)
+            existingRank.name = rankDto.name;
+            this.mapPermissions(existingRank, rankDto);
 
-        existingRank.persist();
-        return this.toRankResponseDto(existingRank);
+            existingRank.persist();
+            return this.toRankResponseDto(existingRank);
+        });
     }
 
-    /** Processes the request and returns the result. */
+    /** Partially updates the rank with the given publicId. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto) {
-        final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
-        if (existingRank == null) {
-            throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
-        }
+        return this.administratorGuard.guard(() -> {
+            final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
+            if (existingRank == null) {
+                throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
+            }
 
-        // Partial update (PATCH semantics) - only update provided fields
-        if (rankDto.name != null) {
-            existingRank.name = rankDto.name;
-        }
-        this.patchPermissions(existingRank, rankDto);
+            // Partial update (PATCH semantics) - only update provided fields
+            if (rankDto.name != null) {
+                existingRank.name = rankDto.name;
+            }
+            this.patchPermissions(existingRank, rankDto);
 
-        existingRank.persist();
-        return this.toRankResponseDto(existingRank);
+            existingRank.persist();
+            return this.toRankResponseDto(existingRank);
+        });
     }
 
     /** Full replacement — null defaults to false. Used by create/update. */

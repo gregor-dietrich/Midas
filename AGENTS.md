@@ -32,7 +32,7 @@ The project uses a `Makefile` at the root to simplify common tasks. Its shared t
 - `make dev-gui`: Start the frontend GUI in Quarkus Dev Mode (port 8081).
 - `make kill`: Stop this project's Quarkus/Maven JVMs and remove its docker compose containers and network (`docker compose down`; volumes are kept).
 - `make openapi`: Regenerate the committed OpenAPI contract snapshot (`midas-api/openapi.yaml`).
-- `make password`: Print the bcrypt hash of a password for the API demo data (`db/demo/R__demo_data.sql`). It prompts, or reads the password from stdin, so it never appears on a command line.
+- `make password`: Print the bcrypt hash of a password, for the API demo data (`db/demo/R__demo_data.sql`) or the README's break-glass admin reset. It prompts, or reads the password from stdin, so it never appears on a command line.
 - `make regen-lockfile`: Update `midas-gui/package-lock.json` to `package.json` with the pinned Node.js, once `npm ci` rejects the pair (see Frontend toolchain).
 
 ## Development Conventions
@@ -98,6 +98,9 @@ If any quality gates or tests fail, work on them until all problems are resolved
   Demo accounts live in `db/demo/R__demo_data.sql`, loaded in dev/test only; update it in the same change
   as a migration that alters a table it seeds. Production seeds no account: any start that finds the `users` table empty creates
   the admin from `APP_BOOTSTRAP_ADMIN_USERNAME` / `APP_BOOTSTRAP_ADMIN_PASSWORD`, or fails fast.
+- **Last administrator**: any service method that deletes users or changes a user's `activated`, `banned` or rank, or a
+  rank's `adminView`, `userEdit` or `userRankEdit`, runs its change inside `AdministratorGuard.guard(...)`, so the API
+  answers 422 to a change that leaves no active administrator; recovery is the README's break-glass section.
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at both GUI and API levels.
 - **Security**: Basic Auth with BCrypt. The GUI stores backend credentials behind an opaque session ID.
 - **Architecture**: Prefer composition and clear abstraction. Use MicroProfile Fault Tolerance in the GUI for resilient API communication.

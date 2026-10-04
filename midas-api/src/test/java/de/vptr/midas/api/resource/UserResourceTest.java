@@ -29,9 +29,14 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
+import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.service.AdministratorGuard;
 import de.vptr.midas.api.util.TestUtil;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -39,6 +44,7 @@ import io.quarkus.test.junit.QuarkusTest;
 @SuppressWarnings("PMD.TooManyMethods")
 class UserResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/users";
+    private static final String ADMIN_ID = "01AN4Z07BY79KA1307SR9X4MV7";
 
     @Test
     void testGetAllUsers_unauthorized() {
@@ -349,6 +355,31 @@ class UserResourceTest {
                 .body(limitedUpdateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
                 // Still banned/rank from previous admin update
                 .body("rankPublicId", equalTo("01AN4Z07BY79KA1307SR9X4MV3")).body("banned", equalTo(true));
+    }
+
+    @Test
+    void testLastActiveAdministrator_cannotBeBannedOrDeleted() {
+        // Deactivate every other user for the test, so that the demo admin is the last active administrator
+        final List<Long> others = QuarkusTransaction.requiringNew().call(() -> {
+            final List<Long> ids = UserEntity.<UserEntity>find("activated = true AND publicId <> ?1", ADMIN_ID).stream()
+                    .map(user -> user.id).toList();
+            UserEntity.update("activated = false WHERE activated = true AND publicId <> ?1", ADMIN_ID);
+            return ids;
+        });
+        try {
+            authenticatedJsonRequest().body("{\"banned\":true}").when().patch(ENDPOINT_URL + "/" + ADMIN_ID).then()
+                    .statusCode(422).body("message", equalTo(AdministratorGuard.LAST_ADMINISTRATOR_MESSAGE));
+            authenticatedRequest().when().delete(ENDPOINT_URL + "/" + ADMIN_ID).then().statusCode(422).body("message",
+                    equalTo(AdministratorGuard.LAST_ADMINISTRATOR_MESSAGE));
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                UserEntity.update("banned = false, activated = true WHERE publicId = ?1", ADMIN_ID);
+                if (!others.isEmpty()) {
+                    UserEntity.update("activated = true WHERE id IN ?1", others);
+                }
+            });
+        }
+        testAuthorizedGetWithExistingResource(ENDPOINT_URL + "/" + ADMIN_ID);
     }
 
 }

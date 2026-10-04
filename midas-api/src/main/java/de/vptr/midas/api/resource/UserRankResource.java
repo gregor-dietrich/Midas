@@ -112,6 +112,8 @@ public class UserRankResource {
     @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank updated")
     @APIResponse(responseCode = "404", description = "Rank not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchRank(@PathParam("publicId") final String publicId, final UserRankDto rankDto) {
         final UserRankResponseDto updated = this.rankService.patchRank(publicId, rankDto);
         return ResponseUtil.ok(updated);
