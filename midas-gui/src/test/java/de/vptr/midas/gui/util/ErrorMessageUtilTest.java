@@ -5,6 +5,8 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -28,15 +30,39 @@ class ErrorMessageUtilTest {
     }
 
     @Test
-    void extractErrorMessage_shouldReturnBodyText_whenResponseContainsPlainText() {
+    void extractErrorMessage_shouldFallbackToStatus_whenResponseContainsPlainText() {
         final var response = Mockito.mock(Response.class);
         when(response.hasEntity()).thenReturn(true);
-        when(response.getStatus()).thenReturn(400);
-        when(response.readEntity(String.class)).thenReturn("Bad request: invalid input");
+        when(response.getStatus()).thenReturn(502);
+        when(response.readEntity(String.class)).thenReturn("Bad gateway");
 
         final var result = ErrorMessageUtil.extractErrorMessage(response);
 
-        assertThat(result).isEqualTo("Bad request: invalid input");
+        assertThat(result).isEqualTo("HTTP 502");
+    }
+
+    @Test
+    void extractErrorMessage_shouldFallbackToStatus_whenResponseContainsLongPlainText() {
+        final var response = Mockito.mock(Response.class);
+        when(response.hasEntity()).thenReturn(true);
+        when(response.getStatus()).thenReturn(422);
+        when(response.readEntity(String.class)).thenReturn("x".repeat(10_000));
+
+        final var result = ErrorMessageUtil.extractErrorMessage(response);
+
+        assertThat(result).isEqualTo("HTTP 422");
+    }
+
+    @Test
+    void extractErrorMessage_shouldFallbackToStatus_whenJsonHasNoMessageField() {
+        final var response = Mockito.mock(Response.class);
+        when(response.hasEntity()).thenReturn(true);
+        when(response.getStatus()).thenReturn(400);
+        when(response.readEntity(String.class)).thenReturn("{\"code\":42}");
+
+        final var result = ErrorMessageUtil.extractErrorMessage(response);
+
+        assertThat(result).isEqualTo("HTTP 400");
     }
 
     @Test
@@ -138,5 +164,35 @@ class ErrorMessageUtilTest {
         final var result = ErrorMessageUtil.extractErrorMessage(null);
 
         assertThat(result).isEqualTo("HTTP unknown");
+    }
+
+    private static Response errorResponse(final int status, final String body) {
+        final var response = Mockito.mock(Response.class);
+        when(response.hasEntity()).thenReturn(true);
+        when(response.getStatus()).thenReturn(status);
+        when(response.readEntity(String.class)).thenReturn(body);
+        return response;
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "\"text\"", "[1]", "{\"message\":42}", "{\"message\":\"  \"}" })
+    void extractErrorMessage_shouldFallbackToStatus_whenJsonCarriesNoTextualMessage(final String body) {
+        assertThat(ErrorMessageUtil.extractErrorMessage(errorResponse(422, body))).isEqualTo("HTTP 422");
+    }
+
+    @Test
+    void extractErrorMessage_shouldTakeFieldsInPrecedenceOrder_skippingBlankOnes() {
+        assertThat(ErrorMessageUtil
+                .extractErrorMessage(errorResponse(422, "{\"title\":\"t\",\"error\":\"e\",\"message\":\" \"}")))
+                .isEqualTo("e");
+    }
+
+    @Test
+    void extractErrorMessage_shouldCapLongMessages_andRemoveControlCharacters() {
+        final var result = ErrorMessageUtil
+                .extractErrorMessage(errorResponse(422, "{\"message\":\"line1\\r\\nforged " + "x".repeat(300) + "\"}"));
+
+        assertThat(result).startsWith("line1  forged ").doesNotContain("\r", "\n")
+                .hasSize(ErrorMessageUtil.MAX_MESSAGE_LENGTH + 1).endsWith("…");
     }
 }

@@ -296,7 +296,7 @@ List and recent endpoints normalize pagination inputs before service calls:
 
 ### GUI — Backend Error Parsing
 
-GUI services consume API error payloads via `ErrorMessageUtil`. It prefers structured JSON fields (`message`, `detail`, `error`, `title`) and falls back to `HTTP <status>` when no safe message exists.
+GUI services consume API error payloads via `ErrorMessageUtil`. It reads structured JSON fields (`message`, `detail`, `error`, `title`) and falls back to `HTTP <status>` when no safe message exists: any other body, such as a proxy's plain-text or HTML error page, never reaches the user.
 
 ### GUI — Pagination Parameter Normalization
 

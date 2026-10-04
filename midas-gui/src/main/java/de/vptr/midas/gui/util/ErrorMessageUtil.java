@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.util;
 
+import java.util.regex.Pattern;
+
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,14 +18,19 @@ public final class ErrorMessageUtil {
 
     private static final Logger LOG = Logger.getLogger(ErrorMessageUtil.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    /** Longest backend message shown to the user or logged. */
+    static final int MAX_MESSAGE_LENGTH = 200;
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("\\p{Cntrl}");
 
     private ErrorMessageUtil() {
         // Utility class
     }
 
     /**
-     * Extracts error message from HTTP response body. Attempts to parse structured error response, falls back to status
-     * text.
+     * Returns the first non-blank textual {@code message}, {@code detail}, {@code error} or {@code title} of a JSON
+     * error object in the response body, capped at {@value #MAX_MESSAGE_LENGTH} characters with control characters
+     * removed. Any other body (plain text, HTML, JSON without such a field) falls back to {@code HTTP <status>}, so raw
+     * backend or proxy text never reaches the user or the log.
      */
     public static String extractErrorMessage(final Response response) {
         if (response == null) {
@@ -34,18 +41,16 @@ public final class ErrorMessageUtil {
             if (response.hasEntity() && response.getStatus() >= 400) {
                 response.bufferEntity();
                 final String responseBody = response.readEntity(String.class);
-                if (responseBody != null && !responseBody.trim().isEmpty()) {
-                    final String parsedMessage = parseMessageFromBody(responseBody);
-                    if (parsedMessage != null && !parsedMessage.isBlank()) {
-                        return parsedMessage;
-                    }
+                final String parsedMessage =
+                        responseBody == null || responseBody.isBlank() ? null : parseMessageFromBody(responseBody);
+                if (parsedMessage != null) {
+                    return parsedMessage;
                 }
             }
         } catch (final RuntimeException e) {
             LOG.warnf("Failed to extract error message from %s response: %s", response.getStatus(), e.getMessage());
         }
 
-        // Fall back to HTTP status
         return "HTTP " + response.getStatus();
     }
 
@@ -53,21 +58,12 @@ public final class ErrorMessageUtil {
     private static String parseMessageFromBody(final String body) {
         try {
             final JsonNode root = OBJECT_MAPPER.readTree(body);
-            if (root != null && root.isObject()) {
-                final String structuredMessage = firstNonBlankText(root, "message", "detail", "error", "title");
-                if (structuredMessage != null) {
-                    return structuredMessage;
-                }
-            }
+            return root != null && root.isObject() ? firstNonBlankText(root, "message", "detail", "error", "title")
+                    : null;
         } catch (final JsonProcessingException e) {
-            // Not valid JSON — fall through to raw body
-        }
-
-        final String trimmed = body.trim();
-        if (trimmed.isEmpty() || trimmed.startsWith("<")) {
+            // Not valid JSON: never surface a raw body (proxy pages, stack traces), fall back to the status
             return null;
         }
-        return trimmed;
     }
 
     @Nullable
@@ -75,9 +71,9 @@ public final class ErrorMessageUtil {
         for (final String fieldName : fieldNames) {
             final JsonNode field = root.get(fieldName);
             if (field != null && field.isTextual()) {
-                final String value = field.asText().trim();
+                final String value = CONTROL_CHARACTERS.matcher(field.asText()).replaceAll(" ").trim();
                 if (!value.isEmpty()) {
-                    return value;
+                    return value.length() > MAX_MESSAGE_LENGTH ? value.substring(0, MAX_MESSAGE_LENGTH) + "…" : value;
                 }
             }
         }
