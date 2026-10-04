@@ -126,6 +126,8 @@ For production, the `docker-compose.yml` at the project root includes a PostgreS
 
 A production build also refuses to start under the `dev` or `test` profile (e.g. a stray `QUARKUS_PROFILE=dev`), before Flyway or Hibernate touch the database: those profiles clean the schema at start and relax logging and rate limits. Unset `QUARKUS_PROFILE` (and any `quarkus.config.profile.parent`) or set it to `prod`. This guards against a wrong profile, not against the individual settings: anyone who controls the environment can still set those directly.
 
+A production start also refuses to run when Hibernate's schema management is set to anything other than `validate` or `none` (e.g. `QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY=drop-and-create`, or the deprecated `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION`), since that would drop or alter the tables Flyway owns.
+
 ## 📦 Building for Production
 
 ### Package Applications

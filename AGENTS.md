@@ -90,7 +90,8 @@ If any quality gates or tests fail, work on them until all problems are resolved
   each method's `@Retry`: only connection failures and timeouts are retried, never an HTTP error status, and only for
   idempotent verbs (`UiConstants.RETRIES_<VERB>`; POST and PATCH get none, a verb without a constant fails the compile).
 - **Database**: Flyway owns the schema in every profile and Hibernate only validates it. A production launch
-  never cleans and refuses a dev or test profile (`FlywayCleanGuard`, keyed on LaunchMode, #31). Migrations live in
+  never cleans and refuses a dev or test profile (`FlywayCleanGuard`, keyed on LaunchMode, #31), and refuses any
+  Hibernate schema-management strategy but `validate` or `none` (`SchemaManagementGuard`, #48). Migrations live in
   `midas-api/src/main/resources/db/migration`; a released migration is never edited, a new one is added
   instead (V1 may still change until the first release). Flyway refuses a database built from an earlier V1
   (checksum mismatch) or the pre-Flyway `init.sql` (no schema history): recreate it with
