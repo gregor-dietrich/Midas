@@ -1,0 +1,117 @@
+# The jobs call the same make targets a developer runs. Image publishing stays manual (make release).
+# Actions are pinned by commit SHA; the comment names the tag it resolved from.
+#
+# Caches are restored on every run but saved only by pushes to main. The forge's cache is not scoped
+# per branch, so whatever a pull request's build left behind would otherwise be restored by main.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven # ~/.m2/repository, keyed on the poms, and the JDK
+          cache-read-only: ${{ github.event_name != 'push' }}
+      - name: Read pinned Node.js version
+        id: node
+        run: echo "version=$(sed -nE 's:.*<vaadin.node.version>(v[0-9.]+)</vaadin.node.version>.*:\1:p' midas-gui/pom.xml)" >>"$GITHUB_OUTPUT"
+      - name: Restore Vaadin's Node.js
+        id: vaadin-node
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.vaadin/node-${{ steps.node.outputs.version }}
+          key: ${{ runner.os }}-vaadin-node-${{ steps.node.outputs.version }}
+      # devkit.toml pins devkit's SSH URL, and the forge requires sign-in for every read, git over
+      # HTTPS included. CI has no SSH identity, so the fetch goes over HTTPS with the read-only token
+      # in DEVKIT_TOKEN, sent for this step only. A deploy token takes basic auth with any user name;
+      # the forge rejects it as a token or bearer header.
+      - name: Fetch devkit
+        env:
+          DEVKIT_TOKEN: ${{ secrets.DEVKIT_TOKEN }}
+        run: |
+          git config --global url."https://git.vptr.de/".insteadOf "ssh://git@git.vptr.de:222/"
+          git config --global http.https://git.vptr.de/.extraHeader \
+            "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
+          ./devkitw path
+          git config --global --unset http.https://git.vptr.de/.extraHeader
+      # Workaround for gregor/devkit#14: the frontend pin check in make install needs
+      # vaadin-dev-bundle in ~/.m2, which nothing in the build resolves. Drop it with that fix.
+      - name: Resolve vaadin-dev-bundle
+        run: >-
+          ./mvnw -B -q dependency:get -Dtransitive=false
+          -Dartifact="com.vaadin:vaadin-dev-bundle:$(sed -nE 's:.*<vaadin.version>([^<]+)</vaadin.version>.*:\1:p' midas-gui/pom.xml)"
+      - run: make install
+      - run: make test
+      - name: Save Vaadin's Node.js
+        if: github.event_name == 'push' && steps.vaadin-node.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.vaadin/node-${{ steps.node.outputs.version }}
+          key: ${{ steps.vaadin-node.outputs.cache-primary-key }}
+
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+    steps:
+      # The audit is a merge gate, so a missing key fails the job rather than passing it unaudited.
+      - name: Require NVD_API_KEY
+        run: '[ -n "$NVD_API_KEY" ] || { echo "::error::NVD_API_KEY secret is not set; the dependency audit cannot run"; exit 1; }'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The NVD data lives under ~/.m2/repository but changes daily, so it gets its own cache.
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          cache-path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/owasp/dependency-check-data
+          cache-read-only: ${{ github.event_name != 'push' }}
+      - name: Read today's date
+        id: date
+        run: echo "today=$(date -u +%F)" >>"$GITHUB_OUTPUT"
+      - name: Restore NVD data
+        id: nvd
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-nvd-${{ steps.date.outputs.today }}
+          restore-keys: ${{ runner.os }}-nvd-
+      # devkit.toml pins devkit's SSH URL, and the forge requires sign-in for every read, git over
+      # HTTPS included. CI has no SSH identity, so the fetch goes over HTTPS with the read-only token
+      # in DEVKIT_TOKEN, sent for this step only. A deploy token takes basic auth with any user name;
+      # the forge rejects it as a token or bearer header.
+      - name: Fetch devkit
+        env:
+          DEVKIT_TOKEN: ${{ secrets.DEVKIT_TOKEN }}
+        run: |
+          git config --global url."https://git.vptr.de/".insteadOf "ssh://git@git.vptr.de:222/"
+          git config --global http.https://git.vptr.de/.extraHeader \
+            "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
+          ./devkitw path
+          git config --global --unset http.https://git.vptr.de/.extraHeader
+      - run: make audit
+      - name: Upload dependency-check reports
+        if: ${{ !cancelled() && env.NVD_API_KEY != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dependency-check-report
+          path: |
+            target/dependency-check-report.html
+            midas-*/target/dependency-check-report.html
+      - name: Save NVD data
+        if: github.event_name == 'push' && steps.nvd.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ steps.nvd.outputs.cache-primary-key }}
