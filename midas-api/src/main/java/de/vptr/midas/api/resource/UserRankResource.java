@@ -13,7 +13,9 @@ import de.vptr.midas.api.dto.UserRankResponseDto;
 import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.UserRankService;
 import de.vptr.midas.api.util.ResponseUtil;
+import de.vptr.midas.api.util.SecurityContextUtil;
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -28,8 +30,10 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 
 /** REST resource for managing user ranks. */
 @Path("/user-ranks")
@@ -41,6 +45,14 @@ public class UserRankResource {
 
     @Inject
     UserRankService rankService;
+
+    @Context
+    @Nullable
+    SecurityContext securityContext;
+
+    private String requireCurrentUsername() {
+        return SecurityContextUtil.requireCurrentUsername(this.securityContext);
+    }
 
     // No "user-rank:view" role exists in the current security model; use "user-rank:edit"
     // as the closest privilege that grants read access to rank definitions.
@@ -86,26 +98,35 @@ public class UserRankResource {
     @POST
     @RolesAllowed({ "user-rank:add" })
     @APIResponseSchema(value = UserRankResponseDto.class, responseCode = "201", responseDescription = "Rank created")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the rank grants permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createRank(@Valid final UserRankDto rankDto) {
-        final UserRankResponseDto created = this.rankService.createRank(rankDto);
+        final UserRankResponseDto created = this.rankService.createRank(rankDto, this.requireCurrentUsername());
         return ResponseUtil.created(created);
     }
 
+    /** Replaces the rank with the given publicId; permissions left out become false. */
     @PUT
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
     @APIResponseSchema(value = UserRankResponseDto.class, responseDescription = "Rank replaced")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the rank holds or would grant permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "404", description = "Rank not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateRank(@PathParam("publicId") final String publicId, @Valid final UserRankDto rankDto) {
-        final UserRankResponseDto updated = this.rankService.updateRank(publicId, rankDto);
+        final UserRankResponseDto updated =
+                this.rankService.updateRank(publicId, rankDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
 
+    /** Partially updates the rank with the given publicId. */
     @PATCH
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:edit" })
@@ -114,8 +135,12 @@ public class UserRankResource {
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the rank holds or would grant permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchRank(@PathParam("publicId") final String publicId, final UserRankDto rankDto) {
-        final UserRankResponseDto updated = this.rankService.patchRank(publicId, rankDto);
+        final UserRankResponseDto updated =
+                this.rankService.patchRank(publicId, rankDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
 
@@ -124,10 +149,15 @@ public class UserRankResource {
     @Path("/{publicId}")
     @RolesAllowed({ "user-rank:delete" })
     @APIResponse(responseCode = "204", description = "Rank deleted")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the rank holds permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "404", description = "Rank not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "422", description = "Rank is the default rank",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteRank(@PathParam("publicId") final String publicId) {
-        final boolean deleted = this.rankService.deleteRank(publicId);
+        final boolean deleted = this.rankService.deleteRank(publicId, this.requireCurrentUsername());
         if (deleted) {
             return ResponseUtil.noContent();
         }

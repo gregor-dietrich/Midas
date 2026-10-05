@@ -195,7 +195,7 @@ public class UserRankIdentityAugmentorTest {
             rankEntity.userRankAdd = Boolean.TRUE.equals(rank.userRankAdd);
             rankEntity.userRankDelete = Boolean.TRUE.equals(rank.userRankDelete);
             rankEntity.userRankEdit = Boolean.TRUE.equals(rank.userRankEdit);
-            return this.userRankIdentityAugmentor.buildRolesFromUserRank(rankEntity);
+            return UserRankIdentityAugmentor.buildRolesFromUserRank(rankEntity);
         }
         return Set.of();
     }

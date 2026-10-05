@@ -3872,6 +3872,13 @@ paths:
               $ref: "#/components/schemas/UserRankDto"
         required: true
       responses:
+        "403":
+          description: "Missing role, or the rank grants permissions the caller's\
+            \ rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "422":
           description: Validation failed
           content:
@@ -3886,8 +3893,6 @@ paths:
                 $ref: "#/components/schemas/UserRankResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
       summary: Create Rank
@@ -3980,6 +3985,13 @@ paths:
               $ref: "#/components/schemas/UserRankDto"
         required: true
       responses:
+        "403":
+          description: "Missing role, or the rank holds or would grant permissions\
+            \ the caller's rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Rank not found
           content:
@@ -4000,8 +4012,6 @@ paths:
                 $ref: "#/components/schemas/UserRankResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
       summary: Update Rank
@@ -4037,6 +4047,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Missing role, or the rank holds or would grant permissions\
+            \ the caller's rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "200":
           description: Rank updated
           content:
@@ -4045,8 +4062,6 @@ paths:
                 $ref: "#/components/schemas/UserRankResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
       summary: Patch Rank
       security:
       - basicAuth:
@@ -4096,16 +4111,27 @@ paths:
       responses:
         "204":
           description: Rank deleted
+        "403":
+          description: "Missing role, or the rank holds permissions the caller's rank\
+            \ lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Rank not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
+          description: Rank is the default rank
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
       summary: Delete Rank
       security:
       - basicAuth:
@@ -4160,6 +4186,13 @@ paths:
               $ref: "#/components/schemas/UserDto"
         required: true
       responses:
+        "403":
+          description: "Missing role, or the new user's rank holds permissions the\
+            \ caller's rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "422":
           description: Validation failed
           content:
@@ -4174,8 +4207,6 @@ paths:
                 $ref: "#/components/schemas/UserResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
       summary: Create User
@@ -4372,6 +4403,13 @@ paths:
               $ref: "#/components/schemas/UserDto"
         required: true
       responses:
+        "403":
+          description: "Missing role, or the user's current or new rank holds permissions\
+            \ the caller's rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: User not found
           content:
@@ -4392,8 +4430,6 @@ paths:
                 $ref: "#/components/schemas/UserResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
       summary: Update User
@@ -4429,6 +4465,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: "Missing role, or the user's current or new rank holds permissions\
+            \ the caller's rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "200":
           description: User updated
           content:
@@ -4437,8 +4480,6 @@ paths:
                 $ref: "#/components/schemas/UserResponseDto"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
       summary: Patch User
       security:
       - basicAuth:
@@ -4488,6 +4529,13 @@ paths:
       responses:
         "204":
           description: User deleted
+        "403":
+          description: "Missing role, or the user's rank holds permissions the caller's\
+            \ rank lacks"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: User not found
           content:
@@ -4502,8 +4550,6 @@ paths:
                 $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
       summary: Delete User
       security:
       - basicAuth:

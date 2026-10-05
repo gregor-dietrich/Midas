@@ -118,9 +118,19 @@ If any quality gates or tests fail, work on them until all problems are resolved
   Demo accounts live in `db/demo/R__demo_data.sql`, loaded in dev/test only; update it in the same change
   as a migration that alters a table it seeds. Production seeds no account: any start that finds the `users` table empty creates
   the admin from `APP_BOOTSTRAP_ADMIN_USERNAME` / `APP_BOOTSTRAP_ADMIN_PASSWORD`, or fails fast.
-- **Last administrator**: any service method that deletes users or changes a user's `activated`, `banned` or rank, or a
-  rank's `adminView`, `userEdit` or `userRankEdit`, runs its change inside `AdministratorGuard.guard(...)`, so the API
-  answers 422 to a change that leaves no active administrator; recovery is the README's break-glass section.
+- **Last administrator**: an active administrator is an activated, unbanned user whose rank holds every permission
+  (`AdministratorGuard.PERMISSIONS`). Any service method that deletes users or changes a user's `activated`, `banned`
+  or rank, or a rank's permissions, runs its change inside `AdministratorGuard.guard(...)`, so the API answers 422 to a
+  change that leaves no active administrator; recovery is the README's break-glass section.
+- **Privilege ceiling**: `user:edit` is not administrator-equivalent.
+  - Any service method that changes or deletes a user, or creates, changes or deletes a rank, takes the
+    `currentUsername` and checks `PrivilegeCeiling` in the change's transaction (inside the guard where it runs one).
+  - It refuses with 403 a target user or rank that holds a permission the caller's rank lacks, and a rank created,
+    edited or given to a user that grants one; equal ranks pass.
+  - Two deliberate exceptions: self-service on one's own account (`/users/me/password`) is not checked, and creating
+    a user at the configured default rank skips the grant check (so `user:add` alone can still create users).
+  - The overloads without a caller apply no ceiling and are for bootstrap and tests only; resources always pass the
+    caller.
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at both GUI and API levels.
 - **Security**: Basic Auth with BCrypt. The GUI stores backend credentials behind an opaque session ID.
 - **Architecture**: Prefer composition and clear abstraction. Use MicroProfile Fault Tolerance in the GUI for resilient API communication.

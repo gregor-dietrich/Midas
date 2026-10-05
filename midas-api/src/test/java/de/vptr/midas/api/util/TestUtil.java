@@ -15,6 +15,7 @@ import jakarta.annotation.Nullable;
 /**
  * General test utilities for REST API testing
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public final class TestUtil {
 
     public static final String ADMIN_USERNAME = System.getProperty("test.admin.username", "admin");
@@ -46,6 +47,13 @@ public final class TestUtil {
      */
     public static RequestSpecification authenticatedJsonRequest() {
         return authenticatedRequest().contentType(ContentType.JSON);
+    }
+
+    /**
+     * Creates a REST-assured request with basic authentication and JSON content type (given account)
+     */
+    public static RequestSpecification authenticatedJsonRequest(final String username, final String password) {
+        return given().auth().preemptive().basic(username, password).contentType(ContentType.JSON);
     }
 
     /**

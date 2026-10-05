@@ -13,7 +13,6 @@ import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.exception.ApiErrorResponse;
 import de.vptr.midas.api.service.UserService;
-import de.vptr.midas.api.util.AppConstants;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ResponseUtil;
 import de.vptr.midas.api.util.SecurityContextUtil;
@@ -59,6 +58,10 @@ public class UserResource {
     @Nullable
     SecurityContext securityContext;
 
+    private String requireCurrentUsername() {
+        return SecurityContextUtil.requireCurrentUsername(this.securityContext);
+    }
+
     /** Returns all users with normalized pagination parameters. */
     @GET
     @RolesAllowed({ "user:delete", "user:edit" })
@@ -80,7 +83,7 @@ public class UserResource {
     @APIResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response getCurrentUser() {
-        final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
+        final String username = this.requireCurrentUsername();
         return ResponseUtil.okOrNotFound(this.userService.findByUsername(username));
     }
 
@@ -101,7 +104,7 @@ public class UserResource {
     @APIResponse(responseCode = "422", description = "Current password incorrect or new password invalid",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response changePassword(@Valid final PasswordChangeDto passwordChangeDto) {
-        final String username = SecurityContextUtil.requireCurrentUsername(this.securityContext);
+        final String username = this.requireCurrentUsername();
         this.userService.changePassword(username, passwordChangeDto);
         return ResponseUtil.ok();
     }
@@ -116,15 +119,18 @@ public class UserResource {
     @POST
     @RolesAllowed({ "user:add" })
     @APIResponseSchema(value = UserResponseDto.class, responseCode = "201", responseDescription = "User created")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the new user's rank holds permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        if (userDto.rankPublicId != null && !AppConstants.DEFAULT_USER_RANK_PUBLIC_ID.equals(userDto.rankPublicId)
-                && (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit"))) {
-            userDto.rankPublicId = AppConstants.DEFAULT_USER_RANK_PUBLIC_ID;
+        if (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit")) {
+            // The service gives the account the configured default rank
+            userDto.rankPublicId = null;
         }
-        final UserResponseDto created = this.userService.createUser(userDto);
+        final UserResponseDto created = this.userService.createUser(userDto, this.requireCurrentUsername());
         return ResponseUtil.created(created);
     }
 
@@ -182,6 +188,9 @@ public class UserResource {
     @Path("/{publicId}")
     @RolesAllowed({ "user:edit" })
     @APIResponseSchema(value = UserResponseDto.class, responseDescription = "User replaced")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the user's current or new rank holds permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
@@ -190,7 +199,7 @@ public class UserResource {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
         enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
-        final UserResponseDto updated = this.userService.updateUser(publicId, userDto);
+        final UserResponseDto updated = this.userService.updateUser(publicId, userDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
 
@@ -211,11 +220,14 @@ public class UserResource {
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "Validation failed",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the user's current or new rank holds permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
         final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
         enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
-        final UserResponseDto updated = this.userService.patchUser(publicId, userDto);
+        final UserResponseDto updated = this.userService.patchUser(publicId, userDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
 
@@ -224,12 +236,15 @@ public class UserResource {
     @Path("/{publicId}")
     @RolesAllowed({ "user:delete" })
     @APIResponse(responseCode = "204", description = "User deleted")
+    @APIResponse(responseCode = "403",
+            description = "Missing role, or the user's rank holds permissions the caller's rank lacks",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "404", description = "User not found",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     @APIResponse(responseCode = "422", description = "User is the last active administrator",
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response deleteUser(@PathParam("publicId") final String publicId) {
-        final boolean deleted = this.userService.deleteUser(publicId);
+        final boolean deleted = this.userService.deleteUser(publicId, this.requireCurrentUsername());
         if (deleted) {
             return ResponseUtil.noContent();
         }

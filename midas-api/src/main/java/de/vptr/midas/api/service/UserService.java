@@ -97,10 +97,19 @@ public class UserService {
         return email.trim();
     }
 
-    /** Creates a new user. */
+    /** Creates a new user without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserResponseDto createUser(final UserDto userDto) {
+        return this.createUser(userDto, null);
+    }
+
+    /**
+     * Creates a new user for the given caller, who cannot give it a rank above their own, except the configured default
+     * rank that every new account may get.
+     */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserResponseDto createUser(final UserDto userDto) {
+    public UserResponseDto createUser(final UserDto userDto, @Nullable final String currentUsername) {
+        final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
         // Check for duplicate username
         EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username,
                 "already taken");
@@ -112,6 +121,9 @@ public class UserService {
         }
 
         final UserEntity user = this.buildUserEntity(userDto, normalizedEmail);
+        if (user.rank != null && !Objects.equals(user.rank.publicId, this.defaultRankPublicId)) {
+            ceiling.requireCanGrant(user.rank);
+        }
         user.persistAndFlush();
         return this.userResponseAssembler.toResponseDto(user);
     }
@@ -160,15 +172,19 @@ public class UserService {
         return user;
     }
 
-    /** Updates the user with the given publicId. */
+    /** Updates the user with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
+        return this.updateUser(publicId, userDto, null);
+    }
+
+    /** Updates the user with the given publicId within the caller's {@link PrivilegeCeiling}. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserResponseDto updateUser(final String publicId, final UserDto userDto) {
+    public UserResponseDto updateUser(final String publicId, final UserDto userDto,
+            @Nullable final String currentUsername) {
         return this.administratorGuard.guard(() -> {
-            final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
-            if (existingUser == null) {
-                throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
-            }
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            final UserEntity existingUser = findForChange(publicId, ceiling);
 
             // Check for duplicate username (only if username is different from current)
             if (!Objects.equals(userDto.username, existingUser.username)) {
@@ -191,16 +207,23 @@ public class UserService {
 
             this.applyPassword(existingUser, userDto.password);
             this.applyRank(existingUser, userDto.rankPublicId, true);
+            ceiling.requireCanGrant(existingUser.rank);
 
             existingUser.persistAndFlush();
             return this.userResponseAssembler.toResponseDto(existingUser);
         });
     }
 
-    /** Partially updates the user with the given publicId. */
+    /** Partially updates the user with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
+        return this.patchUser(publicId, userDto, null);
+    }
+
+    /** Partially updates the user with the given publicId within the caller's {@link PrivilegeCeiling}. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserResponseDto patchUser(final String publicId, final UserDto userDto) {
+    public UserResponseDto patchUser(final String publicId, final UserDto userDto,
+            @Nullable final String currentUsername) {
         // A patch omits fields, so the DTO as a whole is not validated; a new password still is.
         if (userDto.password != null) {
             final var violations = this.validator.validateProperty(userDto, "password");
@@ -209,10 +232,8 @@ public class UserService {
             }
         }
         return this.administratorGuard.guard(() -> {
-            final UserEntity existingUser = UserEntity.find("publicId", publicId).firstResult();
-            if (existingUser == null) {
-                throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
-            }
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            final UserEntity existingUser = findForChange(publicId, ceiling);
 
             // Check for duplicate username if username is being updated
             if (userDto.username != null && !userDto.username.trim().isEmpty()
@@ -246,10 +267,21 @@ public class UserService {
 
             this.applyPassword(existingUser, userDto.password);
             this.applyRank(existingUser, userDto.rankPublicId, false);
+            ceiling.requireCanGrant(existingUser.rank);
 
             existingUser.persistAndFlush();
             return this.userResponseAssembler.toResponseDto(existingUser);
         });
+    }
+
+    /** Loads the user a change applies to, refusing a missing one and one above the caller's ceiling. */
+    private static UserEntity findForChange(final String publicId, final PrivilegeCeiling ceiling) {
+        final UserEntity user = UserEntity.find("publicId", publicId).firstResult();
+        if (user == null) {
+            throw new WebApplicationException("User not found", Response.Status.NOT_FOUND);
+        }
+        ceiling.requireCanManageUser(user.rank);
+        return user;
     }
 
     /** Changes the password for the given username. */
@@ -305,11 +337,21 @@ public class UserService {
         }
     }
 
-    /** Deletes the user with the given publicId. */
+    /** Deletes the user with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public boolean deleteUser(final String publicId) {
+        return this.deleteUser(publicId, null);
+    }
+
+    /** Deletes the user with the given publicId within the caller's {@link PrivilegeCeiling}. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public boolean deleteUser(final String publicId) {
-        return this.administratorGuard.guard(() -> UserEntity.delete("publicId", publicId) > 0);
+    public boolean deleteUser(final String publicId, @Nullable final String currentUsername) {
+        return this.administratorGuard.guard(() -> {
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            UserEntity.<UserEntity>find("publicId", publicId).firstResultOptional()
+                    .ifPresent(user -> ceiling.requireCanManageUser(user.rank));
+            return UserEntity.delete("publicId", publicId) > 0;
+        });
     }
 
     /** Returns all active non-banned users. */

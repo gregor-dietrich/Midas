@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import de.vptr.midas.api.dto.UserRankDto;
 import de.vptr.midas.api.dto.UserRankResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
@@ -16,6 +18,7 @@ import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
@@ -23,8 +26,15 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public class UserRankService {
 
+    /** Refusal message for deleting the rank every new account gets. */
+    public static final String DEFAULT_RANK_MESSAGE = "The default rank cannot be deleted";
+
     @Inject
     AdministratorGuard administratorGuard;
+
+    @ConfigProperty(name = "midas.default-rank-public-id")
+    @Nullable
+    String defaultRankPublicId;
 
     /** Returns all ranks. */
     @CacheResult(cacheName = "user-ranks")
@@ -56,57 +66,86 @@ public class UserRankService {
         return this.toRankResponseDtos(ranks);
     }
 
-    /** Creates a new user rank. */
+    /** Creates a new user rank without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserRankResponseDto createRank(final UserRankDto rankDto) {
+        return this.createRank(rankDto, null);
+    }
+
+    /** Creates a new user rank within the caller's {@link PrivilegeCeiling}. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserRankResponseDto createRank(final UserRankDto rankDto) {
+    public UserRankResponseDto createRank(final UserRankDto rankDto, @Nullable final String currentUsername) {
         UserRankEntity rank = new UserRankEntity();
         rank.name = rankDto.name;
         this.mapPermissions(rank, rankDto);
+        PrivilegeCeiling.of(currentUsername).requireCanGrant(rank);
 
         rank.persistAndFlush();
         rank = UserRankEntity.findById(rank.id);
         return new UserRankResponseDto(rank, 0L);
     }
 
-    /** Updates the rank with the given publicId; permissions left out become false. */
+    /** Updates the rank with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto) {
+        return this.updateRank(publicId, rankDto, null);
+    }
+
+    /**
+     * Updates the rank with the given publicId within the caller's {@link PrivilegeCeiling}; permissions left out
+     * become false.
+     */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto) {
+    public UserRankResponseDto updateRank(final String publicId, final UserRankDto rankDto,
+            @Nullable final String currentUsername) {
         return this.administratorGuard.guard(() -> {
-            final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
-            if (existingRank == null) {
-                throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
-            }
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            final UserRankEntity existingRank = findForChange(publicId, ceiling);
 
             // Complete replacement (PUT semantics)
             existingRank.name = rankDto.name;
             this.mapPermissions(existingRank, rankDto);
+            ceiling.requireCanGrant(existingRank);
 
             existingRank.persist();
             return this.toRankResponseDto(existingRank);
         });
     }
 
-    /** Partially updates the rank with the given publicId. */
+    /** Partially updates the rank with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto) {
+        return this.patchRank(publicId, rankDto, null);
+    }
+
+    /** Partially updates the rank with the given publicId within the caller's {@link PrivilegeCeiling}. */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto) {
+    public UserRankResponseDto patchRank(final String publicId, final UserRankDto rankDto,
+            @Nullable final String currentUsername) {
         return this.administratorGuard.guard(() -> {
-            final UserRankEntity existingRank = UserRankEntity.find("publicId", publicId).firstResult();
-            if (existingRank == null) {
-                throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
-            }
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            final UserRankEntity existingRank = findForChange(publicId, ceiling);
 
             // Partial update (PATCH semantics) - only update provided fields
             if (rankDto.name != null) {
                 existingRank.name = rankDto.name;
             }
             this.patchPermissions(existingRank, rankDto);
+            ceiling.requireCanGrant(existingRank);
 
             existingRank.persist();
             return this.toRankResponseDto(existingRank);
         });
+    }
+
+    /** Loads the rank a change applies to, refusing a missing one and one above the caller's ceiling. */
+    private static UserRankEntity findForChange(final String publicId, final PrivilegeCeiling ceiling) {
+        final UserRankEntity rank = UserRankEntity.find("publicId", publicId).firstResult();
+        if (rank == null) {
+            throw new WebApplicationException("User rank not found", Response.Status.NOT_FOUND);
+        }
+        ceiling.requireCanManageRank(rank);
+        return rank;
     }
 
     /** Full replacement — null defaults to false. Used by create/update. */
@@ -227,10 +266,26 @@ public class UserRankService {
         }
     }
 
-    /** Deletes the rank with the given publicId. */
+    /** Deletes the rank with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */
+    public boolean deleteRank(final String publicId) {
+        return this.deleteRank(publicId, null);
+    }
+
+    /**
+     * Deletes the rank with the given publicId within the caller's {@link PrivilegeCeiling}. The configured default
+     * rank is never deleted, by anyone.
+     */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
-    public boolean deleteRank(final String publicId) {
+    public boolean deleteRank(final String publicId, @Nullable final String currentUsername) {
+        final UserRankEntity rank = UserRankEntity.find("publicId", publicId).firstResult();
+        if (rank == null) {
+            return false;
+        }
+        if (publicId.equals(this.defaultRankPublicId)) {
+            throw new ValidationException(DEFAULT_RANK_MESSAGE);
+        }
+        PrivilegeCeiling.of(currentUsername).requireCanManageRank(rank);
         return UserRankEntity.delete("publicId", publicId) > 0;
     }
 

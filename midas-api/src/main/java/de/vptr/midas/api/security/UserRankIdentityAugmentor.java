@@ -67,7 +67,7 @@ public class UserRankIdentityAugmentor implements SecurityIdentityAugmentor {
                 return identity;
             }
 
-            final var roles = this.buildRolesFromUserRank(rank);
+            final var roles = buildRolesFromUserRank(rank);
 
             return QuarkusSecurityIdentity.builder(identity).addRoles(roles).build();
         });
@@ -76,7 +76,7 @@ public class UserRankIdentityAugmentor implements SecurityIdentityAugmentor {
     /**
      * Builds the set of role strings from the given user rank's permission flags.
      */
-    Set<String> buildRolesFromUserRank(final UserRankEntity rank) {
+    public static Set<String> buildRolesFromUserRank(final UserRankEntity rank) {
         final Set<String> roles = new HashSet<>();
         PERMISSION_MAP.forEach((role, getter) -> {
             if (Boolean.TRUE.equals(getter.apply(rank))) {

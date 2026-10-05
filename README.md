@@ -251,11 +251,17 @@ The API refuses to delete, ban, deactivate or demote the last active administrat
 docker compose exec db psql -U midas -d midas
 ```
 
-List the active administrators to find the `<admin>` to reset:
+List the active administrators, activated and unbanned users whose rank holds every permission, to find the `<admin>` to reset:
 
 ```sql
 SELECT u.username FROM users u JOIN user_ranks r ON r.id = u.rank_id
-    WHERE u.activated AND NOT u.banned AND r.admin_view AND r.user_edit AND r.user_rank_edit;
+    WHERE u.activated AND NOT u.banned
+    AND r.admin_view AND r.page_add AND r.page_delete AND r.page_edit AND r.post_add AND r.post_delete
+    AND r.post_edit AND r.post_category_add AND r.post_category_delete AND r.post_category_edit
+    AND r.post_comment_add AND r.post_comment_delete AND r.post_comment_edit AND r.user_add AND r.user_delete
+    AND r.user_edit AND r.user_group_add AND r.user_group_delete AND r.user_group_edit AND r.user_account_add
+    AND r.user_account_delete AND r.user_account_edit AND r.user_rank_add AND r.user_rank_delete
+    AND r.user_rank_edit;
 ```
 
 Let `\prompt` read the hash and paste it there: that keeps it out of the `psql` history and has `psql` quote it (it contains `$` signs, which a shell would expand in `psql -c "…"`):
@@ -265,15 +271,33 @@ Let `\prompt` read the hash and paste it there: that keeps it out of the `psql` 
 UPDATE users SET password = :'hash' WHERE username = '<admin>';
 ```
 
-If the list is empty, no active administrator remains: restore the flags of the Administrator rank seeded by the schema, then give a user that rank back:
+If the list is empty, no active administrator remains: restore every permission of the Administrator rank seeded by the schema, then give a user that rank back:
 
 ```sql
-UPDATE user_ranks SET admin_view = TRUE, user_edit = TRUE, user_rank_edit = TRUE WHERE public_id = '01AN4Z07BY79KA1307SR9X4MV3';
+UPDATE user_ranks SET
+    admin_view = TRUE, page_add = TRUE, page_delete = TRUE, page_edit = TRUE, post_add = TRUE,
+    post_delete = TRUE, post_edit = TRUE, post_category_add = TRUE, post_category_delete = TRUE,
+    post_category_edit = TRUE, post_comment_add = TRUE, post_comment_delete = TRUE, post_comment_edit = TRUE,
+    user_add = TRUE, user_delete = TRUE, user_edit = TRUE, user_group_add = TRUE, user_group_delete = TRUE,
+    user_group_edit = TRUE, user_account_add = TRUE, user_account_delete = TRUE, user_account_edit = TRUE,
+    user_rank_add = TRUE, user_rank_delete = TRUE, user_rank_edit = TRUE
+    WHERE public_id = '01AN4Z07BY79KA1307SR9X4MV3';
 UPDATE users SET rank_id = (SELECT id FROM user_ranks WHERE public_id = '01AN4Z07BY79KA1307SR9X4MV3'),
     activated = TRUE, banned = FALSE WHERE username = '<admin>';
 ```
 
-If the first statement reports `UPDATE 0`, that rank was deleted: recreate it with `INSERT INTO user_ranks (public_id, name, admin_view, user_edit, user_rank_edit) VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator', TRUE, TRUE, TRUE);`, then run the second one.
+If the first statement reports `UPDATE 0`, that rank was deleted: recreate it as the schema seeds it, then run the second one:
+
+```sql
+INSERT INTO user_ranks (public_id, name,
+    admin_view, page_add, page_delete, page_edit, post_add, post_delete, post_edit, post_category_add,
+    post_category_delete, post_category_edit, post_comment_add, post_comment_delete, post_comment_edit,
+    user_add, user_delete, user_edit, user_group_add, user_group_delete, user_group_edit, user_account_add,
+    user_account_delete, user_account_edit, user_rank_add, user_rank_delete, user_rank_edit)
+VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
+    TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE,
+    TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE);
+```
 
 ## 📖 Architecture
 
@@ -313,7 +337,9 @@ If the first statement reports `UPDATE 0`, that rank was deleted: recreate it wi
 - Protected endpoints require Basic authentication.
 - Ownership-sensitive operations (e.g. content mutations) enforce ownership or admin rights and return `403` on violations.
 - Invalid credentials return `401`; excessive invalid attempts return `429` with a structured error payload.
-- A user delete, update or patch, or a rank update or patch, that would leave no active administrator (an activated, unbanned user whose rank has `adminView`, `userEdit` and `userRankEdit`) returns `422`.
+- A caller cannot act above their own rank: deleting, updating or patching a user whose rank holds a permission the caller's rank lacks, updating, patching or deleting such a rank, or creating or editing a rank, or giving a user a rank, that grants one returns `403`. Equal ranks are allowed, a new account may always get the configured default rank, and `/users/me/password` is unaffected.
+- Deleting the configured default rank (`midas.default-rank-public-id`) returns `422`, for every caller.
+- A user delete, update or patch, or a rank update or patch, that would leave no active administrator (an activated, unbanned user whose rank holds every permission) returns `422`.
 
 ### API — Error Payload
 

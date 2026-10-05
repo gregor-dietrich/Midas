@@ -1,6 +1,8 @@
 package de.vptr.midas.api.service;
 
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import de.vptr.midas.api.entity.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,9 +12,9 @@ import jakarta.validation.ValidationException;
 /**
  * Refuses user and rank changes that would leave no active administrator.
  * <p>
- * An active administrator is a user with {@code activated = true} and {@code banned = false} whose rank grants
- * {@code adminView}, {@code userEdit} and {@code userRankEdit}. That set can reach the admin area, reassign any user's
- * rank and grant any permission back, so a user holding it can recover the system.
+ * An active administrator is a user with {@code activated = true} and {@code banned = false} whose rank grants every
+ * permission. Under the {@link PrivilegeCeiling} only such a user can manage every user and rank and grant any
+ * permission back, so only such a user can recover the system.
  * <p>
  * Every change that can remove one runs inside {@link #guard(Supplier)}, in the caller's transaction, which rolls back
  * on the refusal. Guarded transactions serialize on one transaction-scoped PostgreSQL advisory lock, so two of them
@@ -26,9 +28,16 @@ public class AdministratorGuard {
     public static final String LAST_ADMINISTRATOR_MESSAGE =
             "The last active administrator cannot be deleted, banned, deactivated or demoted";
 
+    /** Every permission flag of {@code UserRankEntity}; a test keeps it in step with the entity. */
+    static final List<String> PERMISSIONS = List.of("adminView", "pageAdd", "pageDelete", "pageEdit", "postAdd",
+            "postDelete", "postEdit", "postCategoryAdd", "postCategoryDelete", "postCategoryEdit", "postCommentAdd",
+            "postCommentDelete", "postCommentEdit", "userAdd", "userDelete", "userEdit", "userGroupAdd",
+            "userGroupDelete", "userGroupEdit", "userAccountAdd", "userAccountDelete", "userAccountEdit", "userRankAdd",
+            "userRankDelete", "userRankEdit");
+
     /** The class comment's definition as a JPQL condition on {@link UserEntity}. */
     static final String ACTIVE_ADMINISTRATOR = "activated = true AND banned = false"
-            + " AND rank.adminView = true AND rank.userEdit = true AND rank.userRankEdit = true";
+            + PERMISSIONS.stream().map(flag -> " AND rank." + flag + " = true").collect(Collectors.joining());
 
     /**
      * Key of the advisory lock that guarded transactions serialize on, ASCII {@code MIDASADM}. Any constant works as

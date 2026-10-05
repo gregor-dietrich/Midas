@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.service.AdministratorGuard;
+import de.vptr.midas.api.service.PrivilegeCeiling;
 import de.vptr.midas.api.util.TestUtil;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
@@ -45,6 +46,7 @@ import io.quarkus.test.junit.QuarkusTest;
 class UserResourceTest {
     private static final String ENDPOINT_URL = "/api/v1/users";
     private static final String ADMIN_ID = "01AN4Z07BY79KA1307SR9X4MV7";
+    private static final String GUEST_RANK_ID = "01AN4Z07BY79KA1307SR9X4MV5";
 
     @Test
     void testGetAllUsers_unauthorized() {
@@ -332,11 +334,11 @@ class UserResourceTest {
         final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
                 .statusCode(201).extract().path("publicId");
 
-        // 1. Admin can update everything
+        // 1. Admin can update everything; the Guest rank keeps the user below the limited editor's ceiling
         final String updateJson = createUniqueUserUpdateJson().replace("}",
-                ",\"password\":\"ValidPass123!\",\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\",\"banned\":true}");
+                ",\"password\":\"ValidPass123!\",\"rankPublicId\":\"" + GUEST_RANK_ID + "\",\"banned\":true}");
         authenticatedJsonRequest().body(updateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
-                .body("rankPublicId", equalTo("01AN4Z07BY79KA1307SR9X4MV3")).body("banned", equalTo(true));
+                .body("rankPublicId", equalTo(GUEST_RANK_ID)).body("banned", equalTo(true));
 
         // 2. Create a user with user:edit but WITHOUT user-rank:edit and WITHOUT admin:view
         final String rankId = authenticatedJsonRequest().body("{\"name\":\"Limited Editor\",\"userEdit\":true}").when()
@@ -354,7 +356,12 @@ class UserResourceTest {
         TestUtil.given().auth().preemptive().basic(username, password).contentType("application/json")
                 .body(limitedUpdateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
                 // Still banned/rank from previous admin update
-                .body("rankPublicId", equalTo("01AN4Z07BY79KA1307SR9X4MV3")).body("banned", equalTo(true));
+                .body("rankPublicId", equalTo(GUEST_RANK_ID)).body("banned", equalTo(true));
+
+        // 3. The limited editor cannot replace a user whose rank holds permissions its own rank lacks
+        TestUtil.authenticatedJsonRequest(username, password).body(limitedUpdateJson).when()
+                .put(ENDPOINT_URL + "/" + ADMIN_ID).then().statusCode(403)
+                .body("message", equalTo(PrivilegeCeiling.MANAGE_USER_MESSAGE));
     }
 
     @Test

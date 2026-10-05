@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -23,6 +25,8 @@ import de.vptr.midas.api.dto.UserDto;
 import de.vptr.midas.api.dto.UserRankDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.entity.UserRankEntity;
+import de.vptr.midas.api.security.UserRankIdentityAugmentor;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -60,6 +64,15 @@ class AdministratorGuardTest {
 
     private static UserDto userPatch(final Boolean banned, final Boolean activated, final String rankPublicId) {
         return new UserDto(null, null, null, rankPublicId, banned, activated, null);
+    }
+
+    /** A rank that grants every permission, as the Administrator rank does. */
+    private static UserRankDto fullRank(final String name) throws ReflectiveOperationException {
+        final var rank = new UserRankDto(name);
+        for (final String flag : AdministratorGuard.PERMISSIONS) {
+            UserRankDto.class.getField(flag).set(rank, true);
+        }
+        return rank;
     }
 
     private UserResponseDto createActiveAdministrator(final String rankPublicId) {
@@ -144,17 +157,60 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
-    void testDemoteRankWhileAdministratorInAnotherRankRemainsIsAllowed() {
+    void testDemoteRankWhileAdministratorInAnotherRankRemainsIsAllowed() throws ReflectiveOperationException {
         leaveAdminAsLastAdministrator();
-        final var rank = new UserRankDto("Second Administrator");
-        rank.adminView = true;
-        rank.userEdit = true;
-        rank.userRankEdit = true;
-        this.createActiveAdministrator(this.userRankService.createRank(rank).publicId);
+        this.createActiveAdministrator(this.userRankService.createRank(fullRank("Second Administrator")).publicId);
 
         final var patch = new UserRankDto();
         patch.userRankEdit = false;
         assertFalse(this.userRankService.patchRank(ADMINISTRATOR_RANK_ID, patch).userRankEdit);
+    }
+
+    @Test
+    @TestTransaction
+    void testStripAnyPermissionFromRankOfLastAdministratorIsRefused() {
+        leaveAdminAsLastAdministrator();
+        final var patch = new UserRankDto();
+        patch.pageAdd = false;
+        assertRefused(() -> this.userRankService.patchRank(ADMINISTRATOR_RANK_ID, patch));
+    }
+
+    /** Leaves the demo admin the last active administrator beside an active user holding only the former set. */
+    private void leaveAdminBesidePartialAdministrator() {
+        leaveAdminAsLastAdministrator();
+        final var partial = new UserRankDto("Partial Administrator");
+        partial.adminView = true;
+        partial.userEdit = true;
+        partial.userRankEdit = true;
+        this.createActiveAdministrator(this.userRankService.createRank(partial).publicId);
+    }
+
+    @Test
+    @TestTransaction
+    void testDemoteLastAdministratorWhilePartialAdministratorRemainsIsRefused() {
+        this.leaveAdminBesidePartialAdministrator();
+        assertRefused(() -> this.userService.patchUser(ADMIN_ID, userPatch(null, null, USER_RANK_ID)));
+    }
+
+    @Test
+    @TestTransaction
+    void testDeleteLastAdministratorWhilePartialAdministratorRemainsIsRefused() {
+        this.leaveAdminBesidePartialAdministrator();
+        assertRefused(() -> this.userService.deleteUser(ADMIN_ID));
+    }
+
+    @Test
+    @TestTransaction
+    void testPermissionsAreEveryRankFlag() throws ReflectiveOperationException {
+        // Panache turns the public entity fields into private ones with accessors
+        assertEquals(
+                Arrays.stream(UserRankEntity.class.getDeclaredFields())
+                        .filter(field -> field.getType() == Boolean.class).map(Field::getName).sorted().toList(),
+                AdministratorGuard.PERMISSIONS.stream().sorted().toList());
+        final String full = this.userRankService.createRank(fullRank("Full Rank")).publicId;
+        final UserRankEntity rank = UserRankEntity.find("publicId", full).firstResult();
+        assertEquals(AdministratorGuard.PERMISSIONS.size(),
+                UserRankIdentityAugmentor.buildRolesFromUserRank(rank).size());
     }
 
     @Test
