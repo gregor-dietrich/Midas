@@ -64,8 +64,8 @@ link; a bare `./mvnw` or an IDE's Maven import fails on a fresh clone ("Non-reso
 POM") until it exists. They are not hand-kept copies: a shared gate changes in devkit, is
 released there, and is adopted here by bumping `version` and `commit` in `devkit.toml`
 together with the root pom's `<parent><version>` (the tag without the `v`); a release whose
-contract changes lists its upgrade steps in devkit's README. Never edit `.devkit/` or
-`devkitw`.
+contract changes lists its upgrade steps in devkit's README. `renovate.json` proposes that bump
+as one PR covering both files. Never edit `.devkit/` or `devkitw`.
 
 The poms keep only the project's own values, as devkit's contract
 (`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the parent's
@@ -140,6 +140,7 @@ If any quality gates or tests fail, work on them until all problems are resolved
 - `midas-api/`: Backend service source and configuration.
 - `midas-gui/`: Frontend application source and configuration.
 - `scripts/`: Project-only shell scripts (build, dev mode, OpenAPI snapshot, password, release).
+- `renovate.json`: the forge's weekly Renovate run proposes devkit bumps (`devkit.toml` and the parent POM version, one PR); its other managers are off for now.
 - `devkitw`, `devkit.toml`: The devkit wrapper and its pin; `.devkit` is the gitignored link it creates.
 - `docker-compose.yml`: Orchestration for local production-like environments.
 - `.gitea/workflows/ci.yml`: Gitea Actions CI on pushes to `main` and on pull requests: `make install` and `make test` in one job, `make audit` in another. It reads two secrets: `DEVKIT_TOKEN`, a read-only deploy token on devkit that fetches it over HTTPS (the forge requires sign-in even for public repos), and `NVD_API_KEY`. Images are not built or published in CI; that stays `make release`.

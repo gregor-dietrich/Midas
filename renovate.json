@@ -1,0 +1,63 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "devkit pin: the tag and the commit it peels to, in devkit.toml",
+      "managerFilePatterns": [
+        "/^devkit\\.toml$/"
+      ],
+      "matchStrings": [
+        "version = \"(?<currentValue>v[^\"]+)\"[^\\[]*?commit = \"(?<currentDigest>[0-9a-f]{40})\""
+      ],
+      "depNameTemplate": "devkit",
+      "packageNameTemplate": "gregor/devkit",
+      "datasourceTemplate": "gitea-tags",
+      "registryUrlTemplate": "https://git.vptr.de"
+    },
+    {
+      "customType": "regex",
+      "description": "devkit's parent POM: its version is the tag without the leading v",
+      "managerFilePatterns": [
+        "/^pom\\.xml$/"
+      ],
+      "matchStrings": [
+        "<artifactId>devkit-parent</artifactId>\\s*<version>(?<currentValue>[^<]+)</version>"
+      ],
+      "depNameTemplate": "devkit-parent",
+      "packageNameTemplate": "gregor/devkit",
+      "datasourceTemplate": "gitea-tags",
+      "extractVersionTemplate": "^v(?<version>.+)$",
+      "registryUrlTemplate": "https://git.vptr.de"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Only the devkit pin for now; the runner's forced managers stay off until the operator opts this repository in for them",
+      "matchManagers": [
+        "dockerfile",
+        "docker-compose",
+        "github-actions"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "devkit-parent is published to no Maven repository; the regex manager above owns it",
+      "matchDatasources": [
+        "maven"
+      ],
+      "matchPackageNames": [
+        "de.vptr.devkit:**"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "devkit.toml and the parent POM version must move together, or every Maven target fails",
+      "matchDepNames": [
+        "devkit",
+        "devkit-parent"
+      ],
+      "groupName": "devkit"
+    }
+  ]
+}
