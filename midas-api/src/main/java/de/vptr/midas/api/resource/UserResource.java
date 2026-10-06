@@ -197,8 +197,6 @@ public class UserResource {
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response updateUser(@PathParam("publicId") final String publicId, @Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
-        enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
         final UserResponseDto updated = this.userService.updateUser(publicId, userDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
@@ -225,8 +223,6 @@ public class UserResource {
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response patchUser(@PathParam("publicId") final String publicId, final UserDto userDto) {
         stripProtectedFields(userDto);
-        final UserResponseDto existing = this.userService.findById(publicId).orElse(null);
-        enforceProtectedFieldPermissions(userDto, existing, this.securityContext);
         final UserResponseDto updated = this.userService.patchUser(publicId, userDto, this.requireCurrentUsername());
         return ResponseUtil.ok(updated);
     }
@@ -261,20 +257,5 @@ public class UserResource {
     /** Strips fields that should never be client-settable from the DTO. */
     private static void stripProtectedFields(final UserDto dto) {
         dto.lastIp = null;
-    }
-
-    /** Enforces role-based write protection for rank and account-status fields. */
-    private static void enforceProtectedFieldPermissions(final UserDto dto, @Nullable final UserResponseDto existing,
-            @Nullable final SecurityContext securityContext) {
-        if (existing == null || securityContext == null) {
-            return;
-        }
-        if (!securityContext.isUserInRole("user-rank:edit")) {
-            dto.rankPublicId = existing.rankPublicId;
-        }
-        if (!securityContext.isUserInRole("admin:view")) {
-            dto.banned = existing.banned;
-            dto.activated = existing.activated;
-        }
     }
 }

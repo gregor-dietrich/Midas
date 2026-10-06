@@ -185,6 +185,7 @@ public class UserService {
         return this.administratorGuard.guard(() -> {
             final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
             final UserEntity existingUser = findForChange(publicId, ceiling);
+            keepRoleGatedFields(userDto, existingUser, ceiling);
 
             // Check for duplicate username (only if username is different from current)
             if (!Objects.equals(userDto.username, existingUser.username)) {
@@ -234,6 +235,7 @@ public class UserService {
         return this.administratorGuard.guard(() -> {
             final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
             final UserEntity existingUser = findForChange(publicId, ceiling);
+            keepRoleGatedFields(userDto, existingUser, ceiling);
 
             // Check for duplicate username if username is being updated
             if (userDto.username != null && !userDto.username.trim().isEmpty()
@@ -282,6 +284,21 @@ public class UserService {
         }
         ceiling.requireCanManageUser(user.rank);
         return user;
+    }
+
+    /**
+     * Keeps the fields the caller's rank may not set at the user's current values. It runs in the change's transaction,
+     * inside the {@link AdministratorGuard} lock, so a concurrent change to them is never written back.
+     */
+    private static void keepRoleGatedFields(final UserDto userDto, final UserEntity user,
+            final PrivilegeCeiling ceiling) {
+        if (!ceiling.holds("user-rank:edit")) {
+            userDto.rankPublicId = user.rank != null ? user.rank.publicId : null;
+        }
+        if (!ceiling.holds("admin:view")) {
+            userDto.banned = user.banned;
+            userDto.activated = user.activated;
+        }
     }
 
     /** Changes the password for the given username. */

@@ -231,6 +231,12 @@ lint-repo test`.
     users).
   - The overloads without a caller apply no ceiling and are for bootstrap and
     tests only; resources always pass the caller.
+  - The same snapshot decides a user change's role-gated fields: without
+    `user-rank:edit` the rank, without `admin:view` `banned` and `activated`
+    keep their current values, read in the service inside the guard
+    (`PrivilegeCeiling.holds`), never in the resource from the SecurityContext,
+    which would write a value read outside the transaction back over a
+    concurrent change (#54). `POST /users` still decides in the resource (#70).
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at
   both GUI and API levels.
 - **Security**: Basic Auth with BCrypt. The GUI stores backend credentials

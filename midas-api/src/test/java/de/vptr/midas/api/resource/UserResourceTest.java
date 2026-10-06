@@ -357,6 +357,10 @@ class UserResourceTest {
                 .body(limitedUpdateJson).when().put(ENDPOINT_URL + "/" + userId).then().statusCode(200)
                 // Still banned/rank from previous admin update
                 .body("rankPublicId", equalTo(GUEST_RANK_ID)).body("banned", equalTo(true));
+        TestUtil.authenticatedJsonRequest(username, password)
+                .body("{\"rankPublicId\":\"01AN4Z07BY79KA1307SR9X4MV3\",\"banned\":false}").when()
+                .patch(ENDPOINT_URL + "/" + userId).then().statusCode(200).body("rankPublicId", equalTo(GUEST_RANK_ID))
+                .body("banned", equalTo(true));
 
         // 3. The limited editor cannot replace a user whose rank holds permissions its own rank lacks
         TestUtil.authenticatedJsonRequest(username, password).body(limitedUpdateJson).when()

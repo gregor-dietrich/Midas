@@ -16,7 +16,8 @@ import jakarta.ws.rs.core.Response;
  * <p>
  * {@link #of(String)} takes a snapshot of the caller's rank at the start of the change, inside the
  * {@link AdministratorGuard} lock on the paths that take it, so a change to the caller's own account or rank is judged
- * by the rank the caller held before it. Calls without a caller, such as the bootstrap admin and tests, get
+ * by the rank the caller held before it. The same snapshot decides which of a user's rank, banned and activated fields
+ * the caller may set ({@link #holds(String)}). Calls without a caller, such as the bootstrap admin and tests, get
  * {@link #NONE}, which refuses nothing.
  */
 public final class PrivilegeCeiling {
@@ -57,6 +58,11 @@ public final class PrivilegeCeiling {
 
     private static Set<String> permissionsOf(@Nullable final UserRankEntity rank) {
         return rank != null ? UserRankIdentityAugmentor.buildRolesFromUserRank(rank) : Set.of();
+    }
+
+    /** Tells whether the caller's rank holds the given role; a call without a caller holds every one. */
+    public boolean holds(final String role) {
+        return this.permissions == null || this.permissions.contains(role);
     }
 
     /** Refuses a change to, or the deletion of, a user with the given rank above the ceiling. */
