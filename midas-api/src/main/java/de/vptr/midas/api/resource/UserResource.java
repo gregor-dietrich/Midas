@@ -126,10 +126,6 @@ public class UserResource {
             content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public Response createUser(@Valid final UserDto userDto) {
         stripProtectedFields(userDto);
-        if (this.securityContext == null || !this.securityContext.isUserInRole("user-rank:edit")) {
-            // The service gives the account the configured default rank
-            userDto.rankPublicId = null;
-        }
         final UserResponseDto created = this.userService.createUser(userDto, this.requireCurrentUsername());
         return ResponseUtil.created(created);
     }

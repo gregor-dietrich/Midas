@@ -219,9 +219,9 @@ lint-repo test`.
   `AdministratorGuard.guard(...)`, so the API answers 422 to a change that
   leaves no active administrator; recovery is the README's break-glass section.
 - **Privilege ceiling**: `user:edit` is not administrator-equivalent.
-  - Any service method that changes or deletes a user, or creates, changes or
-    deletes a rank, takes the `currentUsername` and checks `PrivilegeCeiling` in
-    the change's transaction (inside the guard where it runs one).
+  - Any service method that creates, changes or deletes a user or a rank takes
+    the `currentUsername` and checks `PrivilegeCeiling` in the change's
+    transaction (inside the guard where it runs one).
   - It refuses with 403 a target user or rank that holds a permission the
     caller's rank lacks, and a rank created, edited or given to a user that
     grants one; equal ranks pass.
@@ -233,10 +233,12 @@ lint-repo test`.
     tests only; resources always pass the caller.
   - The same snapshot decides a user change's role-gated fields: without
     `user-rank:edit` the rank, without `admin:view` `banned` and `activated`
-    keep their current values, read in the service inside the guard
-    (`PrivilegeCeiling.holds`), never in the resource from the SecurityContext,
-    which would write a value read outside the transaction back over a
-    concurrent change (#54). `POST /users` still decides in the resource (#70).
+    keep their current values (a new user's defaults on create: the default
+    rank, not banned, not activated). The service decides them in the change's
+    transaction (`PrivilegeCeiling.holds`, inside the guard where it runs one),
+    never the resource from the SecurityContext, which would judge the caller by
+    roles read outside the transaction and, on a change, write a value read
+    there back over a concurrent change (#54).
 - **Pagination**: Normalization of `page`, `size`, and `limit` parameters at
   both GUI and API levels.
 - **Security**: Basic Auth with BCrypt. The GUI stores backend credentials

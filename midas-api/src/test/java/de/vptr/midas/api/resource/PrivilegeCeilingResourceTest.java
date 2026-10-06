@@ -289,6 +289,20 @@ class PrivilegeCeilingResourceTest {
     }
 
     @Test
+    void testCreateUserByUserAddOnlyGetsDefaults() {
+        // user:add alone cannot create an account it could log in as, nor pick its rank or status
+        final String username = generateUniqueUsername("ceiling");
+        assertResponse(createAccount(createRank("\"userAdd\":true")), "POST", USERS,
+                createUserJson(username, generateUniqueEmail("ceiling"), PASSWORD).replace("}",
+                        ",\"rankPublicId\":\"" + GUEST_RANK_ID + "\",\"banned\":true,\"activated\":true}"),
+                201);
+        authenticatedRequest().when().get(USERS + "/username/" + username).then().statusCode(200)
+                .body("rankPublicId", equalTo(DEFAULT_RANK_ID)).body("banned", equalTo(false))
+                .body("activated", equalTo(false));
+        authenticatedJsonRequest(username, PASSWORD).when().get(USERS + "/me").then().statusCode(401);
+    }
+
+    @Test
     void testOwnAccountIsManaged() {
         final Account editor = createEditor();
         assertResponse(editor, "PATCH", user(editor), "{\"email\":\"" + generateUniqueEmail("ceiling") + "\"}", 200);

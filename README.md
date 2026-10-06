@@ -418,6 +418,10 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
   rank, that grants one returns `403`. Equal ranks are allowed, a new account
   may always get the configured default rank, and `/users/me/password` is
   unaffected.
+- Fields the caller's rank may not set are ignored, not refused: without
+  `user-rank:edit` a user's rank, without `admin:view` its `banned` and
+  `activated` keep their current values, or on create the defaults (the default
+  rank, not banned, not activated). The response shows the stored values.
 - Deleting the configured default rank (`midas.default-rank-public-id`) returns
   `422`, for every caller.
 - A user delete, update or patch, or a rank update or patch, that would leave no

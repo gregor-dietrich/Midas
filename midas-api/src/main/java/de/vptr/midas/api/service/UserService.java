@@ -106,12 +106,13 @@ public class UserService {
 
     /**
      * Creates a new user for the given caller, who cannot give it a rank above their own, except the configured default
-     * rank that every new account may get.
+     * rank that every new account may get. The fields the caller's rank may not set take a new user's defaults.
      */
     @Transactional
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto createUser(final UserDto userDto, @Nullable final String currentUsername) {
         final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+        keepRoleGatedFields(userDto, null, ceiling);
         // Check for duplicate username
         EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username,
                 "already taken");
@@ -292,17 +293,18 @@ public class UserService {
     }
 
     /**
-     * Keeps the fields the caller's rank may not set at the user's current values. It runs in the change's transaction,
-     * inside the {@link AdministratorGuard} lock, so a concurrent change to them is never written back.
+     * Keeps the fields the caller's rank may not set at the user's current values, or for a new user (null) at its
+     * defaults: the default rank, not banned and not activated. It runs in the change's transaction, inside the
+     * {@link AdministratorGuard} lock on the paths that take it, so a concurrent change to them is never written back.
      */
-    private static void keepRoleGatedFields(final UserDto userDto, final UserEntity user,
+    private static void keepRoleGatedFields(final UserDto userDto, @Nullable final UserEntity user,
             final PrivilegeCeiling ceiling) {
         if (!ceiling.holds("user-rank:edit")) {
-            userDto.rankPublicId = user.rank != null ? user.rank.publicId : null;
+            userDto.rankPublicId = user != null && user.rank != null ? user.rank.publicId : null;
         }
         if (!ceiling.holds("admin:view")) {
-            userDto.banned = user.banned;
-            userDto.activated = user.activated;
+            userDto.banned = user != null && user.banned;
+            userDto.activated = user != null && user.activated;
         }
     }
 

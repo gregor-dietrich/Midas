@@ -3,6 +3,7 @@ package de.vptr.midas.api.service;
 import static de.vptr.midas.api.util.ServiceTestDataBuilder.createUniqueUserDto;
 import static de.vptr.midas.api.util.ServiceTestUtil.generateUniqueTestSuffix;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -16,15 +17,18 @@ import jakarta.inject.Inject;
 
 /**
  * Tests that a caller without {@code user-rank:edit} or {@code admin:view} cannot write back the rank or status it read
- * before a concurrent change: the service keeps them at their current values inside the change's transaction (#54). The
- * editor holds {@code user:edit} and {@code admin:view} but not {@code user-rank:edit}; an unknown caller holds
- * neither.
+ * before a concurrent change: the service keeps them at their current values inside the change's transaction (#54), and
+ * cannot set them on a new user, which gets the defaults (#70). The editor holds {@code user:edit} and
+ * {@code admin:view} but not {@code user-rank:edit}; an unknown caller holds neither.
  */
 @QuarkusTest
 @SuppressWarnings("NullAway")
 class UserServiceRoleGatedFieldsTest {
 
-    /** Demo ranks: User holds postCommentAdd, which the editor holds too; Guest holds no permission. */
+    /**
+     * Demo ranks: User, the configured default rank, holds postCommentAdd, which the editor holds too; Guest holds no
+     * permission.
+     */
     private static final String USER_RANK_ID = "01AN4Z07BY79KA1307SR9X4MV4";
     private static final String GUEST_RANK_ID = "01AN4Z07BY79KA1307SR9X4MV5";
 
@@ -106,6 +110,20 @@ class UserServiceRoleGatedFieldsTest {
         final var updated = this.userService.updateUser(stale.publicId, staleDto(stale), "no-such-user");
         assertTrue(updated.banned);
         assertTrue(updated.activated);
+    }
+
+    @Test
+    @TestTransaction
+    void testCreateWithoutEitherRoleGetsDefaults() {
+        final var dto = createUniqueUserDto("protected", "protected");
+        dto.rankPublicId = GUEST_RANK_ID;
+        dto.banned = true;
+        dto.activated = true;
+
+        final var created = this.userService.createUser(dto, "no-such-user");
+        assertEquals(USER_RANK_ID, created.rankPublicId);
+        assertFalse(created.banned);
+        assertFalse(created.activated);
     }
 
     @Test
