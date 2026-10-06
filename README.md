@@ -152,7 +152,7 @@ accounts.
 For production, the `docker-compose.yml` at the project root includes a
 PostgreSQL service. Production seeds no account. On any start that finds the
 `users` table empty, the API creates an admin from
-`APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and
+`APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters, no `:`) and
 `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72
 characters and at most 72 bytes, with a digit, a lowercase and an uppercase
 letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once

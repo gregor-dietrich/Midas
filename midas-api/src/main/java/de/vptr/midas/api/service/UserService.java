@@ -1,5 +1,6 @@
 package de.vptr.midas.api.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
@@ -225,12 +227,16 @@ public class UserService {
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto patchUser(final String publicId, final UserDto userDto,
             @Nullable final String currentUsername) {
-        // A patch omits fields, so the DTO as a whole is not validated; a new password still is.
+        // A patch omits fields, so the DTO as a whole is not validated; a new username or password still is.
+        final var violations = new HashSet<ConstraintViolation<UserDto>>();
+        if (userDto.username != null) {
+            violations.addAll(this.validator.validateProperty(userDto, "username"));
+        }
         if (userDto.password != null) {
-            final var violations = this.validator.validateProperty(userDto, "password");
-            if (!violations.isEmpty()) {
-                throw new ConstraintViolationException(violations);
-            }
+            violations.addAll(this.validator.validateProperty(userDto, "password"));
+        }
+        if (!violations.isEmpty()) {
+            throw new ConstraintViolationException(violations);
         }
         return this.administratorGuard.guard(() -> {
             final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
@@ -238,8 +244,7 @@ public class UserService {
             keepRoleGatedFields(userDto, existingUser, ceiling);
 
             // Check for duplicate username if username is being updated
-            if (userDto.username != null && !userDto.username.trim().isEmpty()
-                    && !userDto.username.equals(existingUser.username)) {
+            if (userDto.username != null && !userDto.username.equals(existingUser.username)) {
                 EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
             }
 
@@ -252,7 +257,7 @@ public class UserService {
             }
 
             // Partial update (PATCH semantics) - only update provided fields
-            if (userDto.username != null && !userDto.username.trim().isEmpty()) {
+            if (userDto.username != null) {
                 existingUser.username = userDto.username;
             }
             if (userDto.email != null) {

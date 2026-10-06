@@ -5,6 +5,7 @@ import static de.vptr.midas.gui.util.UiTestUtil.findComponent;
 import static de.vptr.midas.gui.util.UiTestUtil.findComponents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,20 +38,24 @@ class AdminUserDialogTest extends AbstractDialogTest {
     UserService userService;
 
     @Test
+    void saveUser_shouldRejectColonInUsername() {
+        final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
+
+        this.fillAndSaveNewUser(dialog, "colon:user");
+
+        final var usernameField = findComponent(dialog, TextField.class, field -> "Username".equals(field.getLabel()));
+        assertThat(usernameField.isInvalid()).isTrue();
+        assertThat(usernameField.getErrorMessage()).isEqualTo("Username must not contain ':'");
+        verify(this.userService, never()).createUser(any(UserDto.class));
+    }
+
+    @Test
     void saveUser_shouldPreserveEnteredPassword_onCreate() {
         final var dialog = new AdminUserDialog(this.userService, this.onSave, this.onAuthFailure);
-        final var rank = this.createRank("1", "Administrator");
         when(this.userService.createUser(any(UserDto.class)))
                 .thenReturn(MockDataUtil.createUserResponseDto("1", "newuser", "new@example.com"));
 
-        dialog.open(null, List.of(rank));
-
-        findComponent(dialog, TextField.class, field -> "Username".equals(field.getLabel())).setValue("newuser");
-        findComponent(dialog, EmailField.class, field -> "Email".equals(field.getLabel())).setValue("new@example.com");
-        findComponent(dialog, PasswordField.class, field -> "Password".equals(field.getLabel())).setValue("Secret123!");
-        this.findRankComboBox(dialog).setValue(rank);
-
-        findButton(dialog, "Save").click();
+        this.fillAndSaveNewUser(dialog, "newuser");
 
         final ArgumentCaptor<UserDto> userCaptor = ArgumentCaptor.forClass(UserDto.class);
         verify(this.userService).createUser(userCaptor.capture());
@@ -77,6 +82,18 @@ class AdminUserDialogTest extends AbstractDialogTest {
         final List<PasswordField> passwordFields = findComponents(passwordDialog, PasswordField.class);
         assertThat(passwordFields).extracting(PasswordField::getLabel).containsExactlyInAnyOrder("New Password",
                 "Confirm Password");
+    }
+
+    private void fillAndSaveNewUser(final AdminUserDialog dialog, final String username) {
+        final var rank = this.createRank("1", "Administrator");
+        dialog.open(null, List.of(rank));
+
+        findComponent(dialog, TextField.class, field -> "Username".equals(field.getLabel())).setValue(username);
+        findComponent(dialog, EmailField.class, field -> "Email".equals(field.getLabel())).setValue("new@example.com");
+        findComponent(dialog, PasswordField.class, field -> "Password".equals(field.getLabel())).setValue("Secret123!");
+        this.findRankComboBox(dialog).setValue(rank);
+
+        findButton(dialog, "Save").click();
     }
 
     private UserRankResponseDto createRank(final String id, final String name) {

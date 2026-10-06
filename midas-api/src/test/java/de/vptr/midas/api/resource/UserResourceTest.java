@@ -120,6 +120,14 @@ class UserResourceTest {
                 .body("message", containsString("between 8 and 72 characters"));
     }
 
+    /** Basic Auth splits the credentials at the first colon, so a username with one could never log in (#55). */
+    @Test
+    void testCreateUser_rejectsColonInUsername() {
+        testAuthorizedPostWithValidationError(ENDPOINT_URL,
+                createUserJson("colon:user", "colonuser@example.com", "Password123!"))
+                .body("message", containsString("Username must not contain ':'"));
+    }
+
     @Test
     void testGetUserByUsername_unauthorized() {
         testUnauthorizedAccess(ENDPOINT_URL + "/username/admin");
@@ -283,6 +291,28 @@ class UserResourceTest {
                 .statusCode(201).extract().path("publicId");
         authenticatedJsonRequest().body("{\"password\":\"a\"}").when().patch(ENDPOINT_URL + "/" + userId).then()
                 .statusCode(422).body("message", containsString("between 8 and 72 characters"));
+    }
+
+    @Test
+    void testUpdateUser_rejectsColonInUsername() {
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body(createUserJson("colon:user", "colonput@example.com", "Password123!")).when()
+                .put(ENDPOINT_URL + "/" + userId).then().statusCode(422)
+                .body("message", containsString("Username must not contain ':'"));
+    }
+
+    /** A patch is not validated as a whole, but a username in it must still meet the rules (#55). */
+    @Test
+    void testPatchUser_validatesUsername() {
+        final String userId = authenticatedJsonRequest().body(createUniqueUserJson()).when().post(ENDPOINT_URL).then()
+                .statusCode(201).extract().path("publicId");
+        authenticatedJsonRequest().body("{\"username\":\"colon:user\"}").when().patch(ENDPOINT_URL + "/" + userId)
+                .then().statusCode(422).body("message", containsString("Username must not contain ':'"));
+        authenticatedJsonRequest().body("{\"username\":\"ab\"}").when().patch(ENDPOINT_URL + "/" + userId).then()
+                .statusCode(422).body("message", containsString("between 3 and 50 characters"));
+        authenticatedJsonRequest().body("{\"username\":\"   \"}").when().patch(ENDPOINT_URL + "/" + userId).then()
+                .statusCode(422).body("message", containsString("Username is required"));
     }
 
     @Test

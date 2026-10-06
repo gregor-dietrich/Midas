@@ -11,6 +11,8 @@ public class UserDto {
 
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    // Basic Auth splits the credentials at the first colon (RFC 7617), so a user named a:b could never log in.
+    @Pattern(regexp = "^[^:]*$", message = "Username must not contain ':'")
     @Nullable
     public String username;
 

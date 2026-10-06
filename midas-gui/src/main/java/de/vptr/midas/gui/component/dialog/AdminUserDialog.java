@@ -21,6 +21,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.validator.StringLengthValidator;
 
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
@@ -87,7 +88,7 @@ public class AdminUserDialog extends FormDialog {
 
         final var usernameField = new TextField("Username");
         usernameField.setRequired(true);
-        usernameField.setMaxLength(255);
+        usernameField.setMaxLength(50);
         usernameField.setInvalid(false);
 
         final var emailField = new EmailField("Email");
@@ -138,7 +139,10 @@ public class AdminUserDialog extends FormDialog {
         form.add(rankField, activatedField, bannedField);
 
         // Bind fields with proper validation
-        b.forField(usernameField).asRequired("Username is required").bind(UserDto::getUsername, UserDto::setUsername);
+        b.forField(usernameField).asRequired("Username is required")
+                .withValidator(new StringLengthValidator("Username must be between 3 and 50 characters", 3, 50))
+                .withValidator(username -> !username.contains(":"), "Username must not contain ':'")
+                .bind(UserDto::getUsername, UserDto::setUsername);
 
         b.forField(emailField).withValidator(email -> {
             if (email == null || email.trim().isEmpty()) {

@@ -485,4 +485,13 @@ class UserServiceTest {
         assertThrows(ConstraintViolationException.class, () -> this.userService.createInitialAdmin("ad", "B00tstr@p!"));
         assertFalse(this.userService.hasUsers());
     }
+
+    @Test
+    @TestTransaction
+    void testCreateInitialAdminRejectsColonInUsername() {
+        UserEntity.deleteAll();
+        assertThrows(ConstraintViolationException.class,
+                () -> this.userService.createInitialAdmin("boot:admin", "B00tstr@p!"));
+        assertFalse(this.userService.hasUsers());
+    }
 }

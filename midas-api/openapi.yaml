@@ -312,7 +312,7 @@ components:
       properties:
         username:
           type: string
-          pattern: \S
+          pattern: "^[^:]*$"
           minLength: 3
           maxLength: 50
         password:
