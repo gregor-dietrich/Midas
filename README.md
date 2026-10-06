@@ -1,6 +1,7 @@
 # Midas
 
-A modern web application built with Quarkus, consisting of a REST API backend and a Vaadin frontend.
+A modern web application built with Quarkus, consisting of a REST API backend
+and a Vaadin frontend.
 
 ## 🏗️ Project Structure
 
@@ -20,10 +21,17 @@ midas/
 
 ## ⚠️ Requirements
 
-- JDK 25: [Download (Adoptium)](https://adoptium.net/temurin/releases/?os=any&arch=any&version=25)
-- Maven 3.9.9 (or later): [Download (Apache)](https://maven.apache.org/download.cgi)
+- JDK 25: [Download
+  (Adoptium)](https://adoptium.net/temurin/releases/?os=any&arch=any&version=25)
+- Maven 3.9.9 (or later): [Download
+  (Apache)](https://maven.apache.org/download.cgi)
 - Python 3.11 (or later), for devkit's build scripts
-- Docker: [Download (Docker Engine)](https://docs.docker.com/engine/install/) or [Download (Docker Desktop)](https://docs.docker.com/desktop/)
+- Node.js 22.22.2 (or later) with npm, for `make lint`'s and `make format`'s
+  Markdown gate
+- curl, tar and sha256sum or shasum: devkit downloads gitleaks and markdownlint
+  on the first `make lint`, which needs network access
+- Docker: [Download (Docker Engine)](https://docs.docker.com/engine/install/) or
+  [Download (Docker Desktop)](https://docs.docker.com/desktop/)
 
 ## 🚀 Quick Start
 
@@ -52,7 +60,10 @@ Start the full stack (backend + frontend + PostgreSQL + pgAdmin):
 docker compose up -d --build
 ```
 
-Set `SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` (e.g. in `.env`, see [Environment Variables](#environment-variables)) before the first `docker compose up`. `SQL_PASSWORD` set later does not reach an existing database; see [Changing the Database Password](#changing-the-database-password).
+Set `SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` (e.g. in `.env`, see
+[Environment Variables](#environment-variables)) before the first `docker
+compose up`. `SQL_PASSWORD` set later does not reach an existing database; see
+[Changing the Database Password](#changing-the-database-password).
 
 The frontend will be available at <http://localhost:8081>.
 pgAdmin will be available at <http://localhost:42069>.
@@ -61,9 +72,9 @@ pgAdmin will be available at <http://localhost:42069>.
 
 ### Makefile Targets
 
-The root `Makefile` runs every target on both modules; `make <target> ONLY=midas-api` (or
-`midas-gui`) limits it to one. The shared targets come from devkit, pinned in `devkit.toml`;
-`make help` prints this list:
+The root `Makefile` runs every target on both modules; `make <target>
+ONLY=midas-api` (or `midas-gui`) limits it to one. The shared targets come from
+devkit, pinned in `devkit.toml`; `make help` prints this list:
 
 ```shell
 make audit           # Run OWASP dependency-check (NVD_API_KEY or .env.build)
@@ -76,11 +87,18 @@ make clean           # mvn clean, plus logs and frontend build output
 make coverage        # Run all tests incl. ITs with JaCoCo; write .coverage.md
 make dev-api         # start Midas API in Quarkus dev mode (port 8080)
 make dev-gui         # start Midas GUI in Quarkus dev mode (port 8081)
-make format          # Format Java sources with spotless
+make format          # Run format-md, then format Java sources with spotless
+make format-md       # fix what markdownlint can fix in Markdown
 make help            # list the available targets
+make hooks           # install the git hooks (pre-commit: lint-repo; pre-push: lint-repo and test)
 make install         # make check, then mvn clean install -DskipTests
 make kill            # Stop this project's Quarkus/Maven JVMs and its docker compose services
-make lint            # Run the quality-gate plugins and the frontend pin check
+make lint            # Run lint-repo, then the quality-gate plugins and the frontend pin check
+make lint-decisions  # check docs/decisions.md's entry format, when the project keeps one
+make lint-md         # check Markdown with markdownlint (needs node and npm)
+make lint-pins       # check that workflow actions and container images are pinned
+make lint-repo       # run the repository-wide gates (ONLY does not narrow them)
+make lint-secrets    # scan git history and uncommitted changes for secrets (gitleaks)
 make openapi         # regenerate the committed OpenAPI contract snapshot
 make password        # bcrypt-hash a password, read from a prompt or stdin (demo data, break-glass reset)
 make rebase          # interactive git rebase against a target (defaults to origin/main)
@@ -113,21 +131,47 @@ make test ONLY=midas-api
 make test ONLY=midas-gui
 ```
 
-Docker must be running for API tests (Testcontainers starts a PostgreSQL container automatically).
+Docker must be running for API tests (Testcontainers starts a PostgreSQL
+container automatically).
 
 ### Database Setup
 
-The API uses PostgreSQL. In dev/test mode, Quarkus Dev Services automatically starts a PostgreSQL container (port 55432) — no manual setup needed.
+The API uses PostgreSQL. In dev/test mode, Quarkus Dev Services automatically
+starts a PostgreSQL container (port 55432) — no manual setup needed.
 
-Flyway creates and upgrades the schema on startup in every profile (`midas-api/src/main/resources/db/migration`); Hibernate only validates it. Dev and test also load demo accounts from `db/demo/R__demo_data.sql`, whose password is the username (e.g. `admin`/`admin`).
+Flyway creates and upgrades the schema on startup in every profile
+(`midas-api/src/main/resources/db/migration`); Hibernate only validates it. Dev
+and test also load demo accounts from `db/demo/R__demo_data.sql`, whose password
+is the username (e.g. `admin`/`admin`).
 
-Flyway refuses a database built from an earlier V1 (checksum mismatch) or from the pre-Flyway `init.sql` (no schema history): recreate it with `docker compose down -v`, and never enable `baselineOnMigrate`, which would keep its old seeded accounts.
+Flyway refuses a database built from an earlier V1 (checksum mismatch) or from
+the pre-Flyway `init.sql` (no schema history): recreate it with `docker compose
+down -v`, and never enable `baselineOnMigrate`, which would keep its old seeded
+accounts.
 
-For production, the `docker-compose.yml` at the project root includes a PostgreSQL service. Production seeds no account. On any start that finds the `users` table empty, the API creates an admin from `APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and `APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72 characters and at most 72 bytes, with a digit, a lowercase and an uppercase letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once any account exists, both settings are ignored and can be removed. To regain access later, see [Break-glass: Reset a Lost Admin Password](#break-glass-reset-a-lost-admin-password).
+For production, the `docker-compose.yml` at the project root includes a
+PostgreSQL service. Production seeds no account. On any start that finds the
+`users` table empty, the API creates an admin from
+`APP_BOOTSTRAP_ADMIN_USERNAME` (default `admin`, 3–50 characters) and
+`APP_BOOTSTRAP_ADMIN_PASSWORD`, which must meet the regular password rules (8–72
+characters and at most 72 bytes, with a digit, a lowercase and an uppercase
+letter, and one of `@#$%^&+=!`). Without a password it refuses to start. Once
+any account exists, both settings are ignored and can be removed. To regain
+access later, see [Break-glass: Reset a Lost Admin
+Password](#break-glass-reset-a-lost-admin-password).
 
-A production build also refuses to start under the `dev` or `test` profile (e.g. a stray `QUARKUS_PROFILE=dev`), before Flyway or Hibernate touch the database: those profiles clean the schema at start and relax logging and rate limits. Unset `QUARKUS_PROFILE` (and any `quarkus.config.profile.parent`) or set it to `prod`. This guards against a wrong profile, not against the individual settings: anyone who controls the environment can still set those directly.
+A production build also refuses to start under the `dev` or `test` profile (e.g.
+a stray `QUARKUS_PROFILE=dev`), before Flyway or Hibernate touch the database:
+those profiles clean the schema at start and relax logging and rate limits.
+Unset `QUARKUS_PROFILE` (and any `quarkus.config.profile.parent`) or set it to
+`prod`. This guards against a wrong profile, not against the individual
+settings: anyone who controls the environment can still set those directly.
 
-A production start also refuses to run when Hibernate's schema management is set to anything other than `validate` or `none` (e.g. `QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY=drop-and-create`, or the deprecated `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION`), since that would drop or alter the tables Flyway owns.
+A production start also refuses to run when Hibernate's schema management is set
+to anything other than `validate` or `none` (e.g.
+`QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY=drop-and-create`, or the
+deprecated `QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION`), since that would drop
+or alter the tables Flyway owns.
 
 ## 📦 Building for Production
 
@@ -141,7 +185,8 @@ A production start also refuses to run when Hibernate's schema management is set
 ./mvnw package -pl midas-gui -Pproduction
 ```
 
-Or use `make build` (runs check + package + Docker buildx; `ONLY=<module>` limits it to one).
+Or use `make build` (runs check + package + Docker buildx; `ONLY=<module>`
+limits it to one).
 
 ### Create Docker Images
 
@@ -155,17 +200,19 @@ docker build midas-gui -f midas-gui/src/main/docker/Dockerfile.jvm-alpine -t mid
 
 ### Publishing a Release
 
-`make release` checks that the current buildx builder can build both `linux/amd64` and
-`linux/arm64` (the default `docker` driver needs the containerd image store for that; a
-`docker-container` builder works on either store), then pulls `main`, runs `make clean install
-test`, packages the jars, and runs `make tag`. Last, one `docker buildx build --platform
-linux/amd64,linux/arm64 --push` per module pushes `gregordietrich/<module>:<REVISION>` and
-`gregordietrich/<module>:latest` together; `ONLY=<module>` narrows it to one module.
+`make release` checks that the current buildx builder can build both
+`linux/amd64` and `linux/arm64` (the default `docker` driver needs the
+containerd image store for that; a `docker-container` builder works on either
+store), then pulls `main`, runs `make clean install test`, packages the jars,
+and runs `make tag`. Last, one `docker buildx build --platform
+linux/amd64,linux/arm64 --push` per module pushes
+`gregordietrich/<module>:<REVISION>` and `gregordietrich/<module>:latest`
+together; `ONLY=<module>` narrows it to one module.
 
-Unlike `make build`, a release pushes nothing from the local image store, and it never falls back to a
-single-platform build: a failing build or push stops the release with an error. Modules pushed
-before the failure stay published under both tags, and the git tag stays in place (`make untag`
-removes it).
+Unlike `make build`, a release pushes nothing from the local image store, and it
+never falls back to a single-platform build: a failing build or push stops the
+release with an error. Modules pushed before the failure stay published under
+both tags, and the git tag stays in place (`make untag` removes it).
 
 ### Native Executables
 
@@ -193,7 +240,8 @@ Deploy the complete application stack with PostgreSQL:
 docker compose up -d --build
 ```
 
-`SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` must be set (e.g. in `.env`) before the first `docker compose up`; see the table below.
+`SQL_PASSWORD` and `APP_BOOTSTRAP_ADMIN_PASSWORD` must be set (e.g. in `.env`)
+before the first `docker compose up`; see the table below.
 
 ### Environment Variables
 
@@ -218,20 +266,28 @@ Key variables (see `docker-compose.yml` for all):
 | `PGADMIN_EMAIL`                | `admin@example.com` | pgAdmin login email                                  |
 | `PGADMIN_PASSWORD`             | `changeit`          | pgAdmin login password                               |
 
-In `.env`, single-quote values containing `$`, since Compose interpolates unquoted values.
+In `.env`, single-quote values containing `$`, since Compose interpolates
+unquoted values.
 
 ### Changing the Database Password
 
-The `db` service passes `SQL_PASSWORD` to PostgreSQL as `POSTGRES_PASSWORD`, which takes effect only when the `postgres_data` volume is first initialised. Changing it afterwards, for example after the API refused to start with the default `changeit`, changes only the password the API sends, and it then fails to authenticate against the database.
+The `db` service passes `SQL_PASSWORD` to PostgreSQL as `POSTGRES_PASSWORD`,
+which takes effect only when the `postgres_data` volume is first initialised.
+Changing it afterwards, for example after the API refused to start with the
+default `changeit`, changes only the password the API sends, and it then fails
+to authenticate against the database.
 
-On a fresh install with nothing to keep, recreate the volumes, which also removes the encryption key in `midas_keys`:
+On a fresh install with nothing to keep, recreate the volumes, which also
+removes the encryption key in `midas_keys` and the session key in
+`midas_session_keys`:
 
 ```shell
 docker compose down -v
 docker compose up -d --build
 ```
 
-Otherwise, set the new password in the database (with your `SQL_USERNAME` and `SQL_DATABASE` if you changed them):
+Otherwise, set the new password in the database (with your `SQL_USERNAME` and
+`SQL_DATABASE` if you changed them):
 
 ```shell
 docker compose exec db psql -U midas -d midas
@@ -245,13 +301,21 @@ It prompts for the new password twice and keeps it out of the `psql` history.
 
 ### Break-glass: Reset a Lost Admin Password
 
-The API refuses to delete, ban, deactivate or demote the last active administrator, but a forgotten password still locks everyone out. Hash a new password with `make password` (it prompts and prints `Password: <hash>`). The reset bypasses the regular password rules (see [Database Setup](#database-setup)), so pick one that meets them. `make password` runs in a checkout with the JDK and Maven from Requirements; the hash it prints can be used on any host. Then open `psql` on the database (with your `SQL_USERNAME` and `SQL_DATABASE` if you changed them):
+The API refuses to delete, ban, deactivate or demote the last active
+administrator, but a forgotten password still locks everyone out. Hash a new
+password with `make password` (it prompts and prints `Password: <hash>`). The
+reset bypasses the regular password rules (see [Database
+Setup](#database-setup)), so pick one that meets them. `make password` runs in a
+checkout with the JDK and Maven from Requirements; the hash it prints can be
+used on any host. Then open `psql` on the database (with your `SQL_USERNAME` and
+`SQL_DATABASE` if you changed them):
 
 ```shell
 docker compose exec db psql -U midas -d midas
 ```
 
-List the active administrators, activated and unbanned users whose rank holds every permission, to find the `<admin>` to reset:
+List the active administrators, activated and unbanned users whose rank holds
+every permission, to find the `<admin>` to reset:
 
 ```sql
 SELECT u.username FROM users u JOIN user_ranks r ON r.id = u.rank_id
@@ -264,14 +328,17 @@ SELECT u.username FROM users u JOIN user_ranks r ON r.id = u.rank_id
     AND r.user_rank_edit;
 ```
 
-Let `\prompt` read the hash and paste it there: that keeps it out of the `psql` history and has `psql` quote it (it contains `$` signs, which a shell would expand in `psql -c "…"`):
+Let `\prompt` read the hash and paste it there: that keeps it out of the `psql`
+history and has `psql` quote it (it contains `$` signs, which a shell would
+expand in `psql -c "…"`):
 
 ```sql
 \prompt 'Hash: ' hash
 UPDATE users SET password = :'hash' WHERE username = '<admin>';
 ```
 
-If the list is empty, no active administrator remains: restore every permission of the Administrator rank seeded by the schema, then give a user that rank back:
+If the list is empty, no active administrator remains: restore every permission
+of the Administrator rank seeded by the schema, then give a user that rank back:
 
 ```sql
 UPDATE user_ranks SET
@@ -286,7 +353,8 @@ UPDATE users SET rank_id = (SELECT id FROM user_ranks WHERE public_id = '01AN4Z0
     activated = TRUE, banned = FALSE WHERE username = '<admin>';
 ```
 
-If the first statement reports `UPDATE 0`, that rank was deleted: recreate it as the schema seeds it, then run the second one:
+If the first statement reports `UPDATE 0`, that rank was deleted: recreate it as
+the schema seeds it, then run the second one:
 
 ```sql
 INSERT INTO user_ranks (public_id, name,
@@ -310,15 +378,19 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
 - **Validation**: Hibernate Validator (Bean Validation)
 - **API**: Jakarta REST (`@ApplicationPath("/api/v1")`) with Jackson
 - **Security**: Basic Auth with BCrypt, role-based access control
-- **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP dependency-check
+- **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP
+  dependency-check
 
 ### Frontend (midas-gui)
 
 - **Framework**: Quarkus 3 + Vaadin Flow 25
 - **Language**: Java 25
 - **UI Components**: Vaadin
-- **API Communication**: MicroProfile REST Clients and response DTOs generated from `midas-api/openapi.yaml` at build time, with backend Basic Auth stored server-side behind opaque session IDs
-- **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP dependency-check
+- **API Communication**: MicroProfile REST Clients and response DTOs generated
+  from `midas-api/openapi.yaml` at build time, with backend Basic Auth stored
+  server-side behind opaque session IDs
+- **Code Quality**: Checkstyle (Google Java Style) + SpotBugs + OWASP
+  dependency-check
 
 ### Key Features
 
@@ -327,7 +399,8 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
 - Hot reload in development mode
 - Automatic database setup with Dev Services
 - Production-ready Docker images (Eclipse Temurin JRE on Alpine)
-- Git hooks (lint before commit, test before push) are planned in [gregor/devkit#3](https://git.vptr.de/gregor/devkit/issues/3)
+- Git hooks from devkit: `make hooks` installs a pre-commit hook that runs
+  `make lint-repo` and a pre-push hook that runs `make lint-repo test`
 - License enforcement (blocks commercial/proprietary licenses)
 
 ## 🔐 Contracts & Specifications
@@ -335,11 +408,21 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
 ### API — Authentication & Access
 
 - Protected endpoints require Basic authentication.
-- Ownership-sensitive operations (e.g. content mutations) enforce ownership or admin rights and return `403` on violations.
-- Invalid credentials return `401`; excessive invalid attempts return `429` with a structured error payload.
-- A caller cannot act above their own rank: deleting, updating or patching a user whose rank holds a permission the caller's rank lacks, updating, patching or deleting such a rank, or creating or editing a rank, or giving a user a rank, that grants one returns `403`. Equal ranks are allowed, a new account may always get the configured default rank, and `/users/me/password` is unaffected.
-- Deleting the configured default rank (`midas.default-rank-public-id`) returns `422`, for every caller.
-- A user delete, update or patch, or a rank update or patch, that would leave no active administrator (an activated, unbanned user whose rank holds every permission) returns `422`.
+- Ownership-sensitive operations (e.g. content mutations) enforce ownership or
+  admin rights and return `403` on violations.
+- Invalid credentials return `401`; excessive invalid attempts return `429` with
+  a structured error payload.
+- A caller cannot act above their own rank: deleting, updating or patching a
+  user whose rank holds a permission the caller's rank lacks, updating, patching
+  or deleting such a rank, or creating or editing a rank, or giving a user a
+  rank, that grants one returns `403`. Equal ranks are allowed, a new account
+  may always get the configured default rank, and `/users/me/password` is
+  unaffected.
+- Deleting the configured default rank (`midas.default-rank-public-id`) returns
+  `422`, for every caller.
+- A user delete, update or patch, or a rank update or patch, that would leave no
+  active administrator (an activated, unbanned user whose rank holds every
+  permission) returns `422`.
 
 ### API — Error Payload
 
@@ -367,14 +450,22 @@ List and recent endpoints normalize pagination inputs before service calls:
 
 ### GUI — Session Authorization
 
-- `AuthService` validates credentials against the API, then stores the backend `Authorization` header only in `SessionAuthorizationStore`.
-- Vaadin session stores an opaque `authenticated.session-id`, not the raw Basic header.
-- The generated REST clients get the header from `MidasClientHeadersFactory`, which reads it through `AuthService` and throws `AuthenticationException` before a request is sent when the session has none. Only `AuthClient` passes credentials explicitly, at login.
+- `AuthService` validates credentials against the API, then stores the backend
+  `Authorization` header only in `SessionAuthorizationStore`.
+- Vaadin session stores an opaque `authenticated.session-id`, not the raw Basic
+  header.
+- The generated REST clients get the header from `MidasClientHeadersFactory`,
+  which reads it through `AuthService` and throws `AuthenticationException`
+  before a request is sent when the session has none. Only `AuthClient` passes
+  credentials explicitly, at login.
 - Re-authentication and logout revoke the previous session mapping.
 
 ### GUI — Backend Error Parsing
 
-GUI services consume API error payloads via `ErrorMessageUtil`. It reads structured JSON fields (`message`, `detail`, `error`, `title`) and falls back to `HTTP <status>` when no safe message exists: any other body, such as a proxy's plain-text or HTML error page, never reaches the user.
+GUI services consume API error payloads via `ErrorMessageUtil`. It reads
+structured JSON fields (`message`, `detail`, `error`, `title`) and falls back to
+`HTTP <status>` when no safe message exists: any other body, such as a proxy's
+plain-text or HTML error page, never reaches the user.
 
 ### GUI — Pagination Parameter Normalization
 
@@ -388,38 +479,53 @@ Before GUI services call paginated API endpoints, they normalize:
 
 ### Encryption at Rest & Key Management
 
-The project implements transparent encryption for sensitive data (PII) at rest and in transit.
+The project implements transparent encryption for sensitive data (PII) at rest
+and in transit.
 
 #### API — Database Encryption (PII)
 
-- **Master Key**: A 256-bit AES key used by `EncryptionService` to encrypt fields (e.g., `UserEntity.email`) before persisting to PostgreSQL.
+- **Master Key**: A 256-bit AES key used by `EncryptionService` to encrypt
+  fields (e.g., `UserEntity.email`) before persisting to PostgreSQL.
 - **Key Discovery Order**:
   1. System property or environment variable `midas.encryption.key.path`
-  2. Default value `encryption.key` in the application's current working directory
+  2. Default value `encryption.key` in the application's current working
+     directory
 - **Generation & Persistence**:
-  - If the key file is absent, a new 256-bit key is automatically generated using `SecureRandom` on first start.
+  - If the key file is absent, a new 256-bit key is automatically generated
+    using `SecureRandom` on first start.
   - New keys are **Base64-encoded** for easier management and backup.
-  - To prevent data corruption, the key is written using an **atomic move** operation.
-  - On POSIX-compliant filesystems, the file is restricted to **0600 permissions** (read/write only by the owner).
-- **Backward Compatibility**: Existing 32-byte raw binary keys are automatically detected and supported.
-- **Docker Deployment**: In production (Docker Compose), the key is stored in the `midas_keys` volume and mapped to `/etc/midas/keys/encryption.key`.
-- **Warning**: Losing the master key makes all encrypted database content permanently unrecoverable. Ensure the key file is backed up securely.
+  - To prevent data corruption, the key is written using an **atomic move**
+    operation.
+  - On POSIX-compliant filesystems, the file is restricted to **0600
+    permissions** (read/write only by the owner).
+- **Backward Compatibility**: Existing 32-byte raw binary keys are automatically
+  detected and supported.
+- **Docker Deployment**: In production (Docker Compose), the key is stored in
+  the `midas_keys` volume and mapped to `/etc/midas/keys/encryption.key`.
+- **Warning**: Losing the master key makes all encrypted database content
+  permanently unrecoverable. Ensure the key file is backed up securely.
 
 #### GUI — Session Encryption
 
-- **Key**: A static 256-bit AES key generated in-memory on application startup.
-- **Usage**: Used by `SessionAuthorizationStore` to encrypt the backend Basic Auth header before storing it in the Vaadin session.
-- **Persistence**: This key is NOT persisted and is unique to each application lifecycle.
+- **Key**: A 256-bit AES key, managed by `SessionKeyManager`.
+- **Usage**: Used by `SessionAuthorizationStore` to encrypt the backend Basic
+  Auth header before storing it in the Vaadin session.
+- **Persistence**: Loaded from `midas.session.key.path` (default `session.key`
+  in the working directory), or generated on first use and persisted there with
+  0600 permissions, so sessions survive a restart.
+- **Docker Deployment**: Stored in the `midas_session_keys` volume and mapped to
+  `/etc/midas/keys/session.key`. Losing it only forces users to sign in again.
 
 ## 🚀 Getting Started
 
 1. Clone the repository
-2. Ensure you have JDK 25, Maven, and Docker installed
-3. Run `make install` to compile both modules
-4. Start the API: `make dev-api`
-5. Start the GUI: `make dev-gui`
-6. Access the frontend at <http://localhost:8081>
-7. Access the API at <http://localhost:8080>
+2. Install everything listed under Requirements
+3. Run `make hooks` once to install the git hooks
+4. Run `make install` to compile both modules
+5. Start the API: `make dev-api`
+6. Start the GUI: `make dev-gui`
+7. Access the frontend at <http://localhost:8081>
+8. Access the API at <http://localhost:8080>
 
 For production deployment, use `docker compose up -d --build`.
 
@@ -433,27 +539,53 @@ For production deployment, use `docker compose up -d --build`.
 
 This project is a single Git repository where:
 
-- The root holds `docker-compose.yml`, the scripts, the root `Makefile` and the root `pom.xml`
-- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and inherits their quality-gate configuration from devkit's parent POM (`.devkit/java/parent/pom.xml`)
+- The root holds `docker-compose.yml`, the scripts, the root `Makefile` and the
+  root `pom.xml`
+- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and
+  inherits their quality-gate configuration from devkit's parent POM
+  (`.devkit/java/parent/pom.xml`)
 
 ## 📖 Related Guides
 
 ### General
 
-- Quarkus ([guide](https://quarkus.io/guides/)): The main framework for building Java applications with a focus on cloud-native and microservices architectures.
-- ArC (CDI) ([guide](https://quarkus.io/guides/cdi-reference)): A dependency injection framework that is part of Quarkus, providing support for CDI (Contexts and Dependency Injection).
-- Maven Tooling ([guide](https://quarkus.io/guides/maven-tooling)): Build Tooling
-- Vaadin Flow ([guide](https://vaadin.com/docs/latest/flow/integrations/quarkus)): Vaadin Flow is a unique framework that lets you build web apps without writing HTML or JavaScript
+- Quarkus ([guide](https://quarkus.io/guides/)): The main framework for building
+  Java applications with a focus on cloud-native and microservices
+  architectures.
+- ArC (CDI) ([guide](https://quarkus.io/guides/cdi-reference)): A dependency
+  injection framework that is part of Quarkus, providing support for CDI
+  (Contexts and Dependency Injection).
+- Maven Tooling ([guide](https://quarkus.io/guides/maven-tooling)): Build
+  Tooling
+- Vaadin Flow
+  ([guide](https://vaadin.com/docs/latest/flow/integrations/quarkus)): Vaadin
+  Flow is a unique framework that lets you build web apps without writing HTML
+  or JavaScript
 
 ### Database
 
-- Datasource ([guide](https://quarkus.io/guides/datasource)): A Quarkus extension for connecting to databases using JDBC, JPA, Hibernate ORM, and more.
-- Flyway ([guide](https://quarkus.io/guides/flyway)): A Quarkus extension that runs versioned database schema migrations, here at application startup.
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): A Quarkus extension that simplifies the use of Hibernate ORM with a focus on ease of use and productivity.
-- Hibernate Validator ([guide](https://quarkus.io/guides/hibernate-validator)): A Quarkus extension that integrates Hibernate Validator for bean validation, allowing you to validate your data models easily.
+- Datasource ([guide](https://quarkus.io/guides/datasource)): A Quarkus
+  extension for connecting to databases using JDBC, JPA, Hibernate ORM, and
+  more.
+- Flyway ([guide](https://quarkus.io/guides/flyway)): A Quarkus extension that
+  runs versioned database schema migrations, here at application startup.
+- Hibernate ORM with Panache
+  ([guide](https://quarkus.io/guides/hibernate-orm-panache)): A Quarkus
+  extension that simplifies the use of Hibernate ORM with a focus on ease of use
+  and productivity.
+- Hibernate Validator ([guide](https://quarkus.io/guides/hibernate-validator)):
+  A Quarkus extension that integrates Hibernate Validator for bean validation,
+  allowing you to validate your data models easily.
 
 ### REST
 
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- REST Client ([guide](https://quarkus.io/guides/rest-client)): A client for making RESTful calls to other services.
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): A Quarkus extension that provides support for JSON serialization and deserialization using Jackson, making it easy to work with JSON data in your RESTful APIs.
+- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation
+  utilizing build time processing and Vert.x. This extension is not compatible
+  with the quarkus-resteasy extension, or any of the extensions that depend on
+  it.
+- REST Client ([guide](https://quarkus.io/guides/rest-client)): A client for
+  making RESTful calls to other services.
+- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): A
+  Quarkus extension that provides support for JSON serialization and
+  deserialization using Jackson, making it easy to work with JSON data in your
+  RESTful APIs.

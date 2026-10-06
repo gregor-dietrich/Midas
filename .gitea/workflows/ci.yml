@@ -15,6 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # lint-secrets scans the full history; a shallow clone fails it
+          persist-credentials: false # no later step pushes; keep the token away from build code
+      # devkit's Markdown gate needs node on PATH; Vaadin's own Node.js under ~/.vaadin is not on it.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22" # the newest 22.x, at or above devkit's 22.22.2 floor
+          check-latest: true # not an older 22.x the runner has cached
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
@@ -44,6 +52,7 @@ jobs:
           git config --global http.https://git.vptr.de/.extraHeader \
             "Authorization: Basic $(printf 'ci:%s' "$DEVKIT_TOKEN" | base64 -w0)"
           ./devkitw path
+      - run: make lint-repo
       - run: make install
       - run: make test
       - name: Save Vaadin's Node.js
@@ -62,6 +71,8 @@ jobs:
       - name: Require NVD_API_KEY
         run: '[ -n "$NVD_API_KEY" ] || { echo "::error::NVD_API_KEY secret is not set; the dependency audit cannot run"; exit 1; }'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # no later step pushes; keep the token away from build code
       # The NVD data lives under ~/.m2/repository but changes daily, so it gets its own cache.
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:

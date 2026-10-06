@@ -1,8 +1,12 @@
 [devkit]
 url = "ssh://git@git.vptr.de:222/gregor/devkit.git"
-version = "v0.2.0"
-commit = "59a9a23f0a23f3559cff985874b34516d33335b1"
+version = "v0.3.0"
+commit = "6b38ff8662c7931c2be2ce900aac438d547fb76e"
 
 [frontend.min-pins]
 react-router = "7.15.0"
 dompurify = "3.4.16"
+
+# The namespace make release publishes to; docker-compose.yml builds its images (pull_policy: build) and tags them through ${REVISION}.
+[pins]
+first-party = ["docker.io/gregordietrich"]
