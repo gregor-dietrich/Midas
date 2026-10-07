@@ -16,7 +16,8 @@
     "lit": "3.3.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-router": "8.4.0"
+    "react-router": "8.4.0",
+    "source-map-js": "1.2.2"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
@@ -56,7 +57,8 @@
       "lit": "3.3.3",
       "react": "19.3.0",
       "react-dom": "19.3.0",
-      "react-router": "8.4.0"
+      "react-router": "8.4.0",
+      "source-map-js": "1.2.2"
     },
     "devDependencies": {
       "@babel/core": "7.29.7",
@@ -81,7 +83,7 @@
       "vite": "8.3.0",
       "vite-plugin-checker": "0.14.5"
     },
-    "hash": "b25af0930d1802810bf784e05c8bf4a6f4fcb1e0b1522343469e57fa66c260c4"
+    "hash": "c5a886489d90793241591e3f021a2c76b8fc342a6b63bbae3aeccb3f6b0bf16a"
   },
   "type": "module",
   "overrides": {
@@ -161,6 +163,7 @@
     "lit": "$lit",
     "react": "$react",
     "react-dom": "$react-dom",
-    "react-router": "$react-router"
+    "react-router": "$react-router",
+    "source-map-js": "$source-map-js"
   }
 }
