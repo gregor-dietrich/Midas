@@ -417,7 +417,8 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
   or deleting such a rank, or creating or editing a rank, or giving a user a
   rank, that grants one returns `403`. Equal ranks are allowed, a new account
   may always get the configured default rank, and `/users/me/password` is
-  unaffected.
+  unaffected. A user or rank change also returns `403` when its caller was
+  banned, deactivated or deleted while the request waited.
 - Fields the caller's rank may not set are ignored, not refused: without
   `user-rank:edit` a user's rank, without `admin:view` its `banned` and
   `activated` keep their current values, or on create the defaults (the default

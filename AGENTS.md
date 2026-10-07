@@ -220,11 +220,14 @@ lint-repo test`.
   leaves no active administrator; recovery is the README's break-glass section.
 - **Privilege ceiling**: `user:edit` is not administrator-equivalent.
   - Any service method that creates, changes or deletes a user or a rank takes
-    the `currentUsername` and checks `PrivilegeCeiling` in the change's
-    transaction (inside the guard where it runs one).
+    the `currentUsername` and checks `PrivilegeCeiling`, a snapshot of the
+    caller's rank, in the change's transaction (inside the guard where it runs
+    one).
   - It refuses with 403 a target user or rank that holds a permission the
     caller's rank lacks, and a rank created, edited or given to a user that
-    grants one; equal ranks pass.
+    grants one; equal ranks pass. It refuses with 403 a caller it finds banned,
+    not activated or gone, since authentication checks those only as a request
+    starts (#78).
   - Two deliberate exceptions: self-service on one's own account
     (`/users/me/password`) is not checked, and creating a user at the configured
     default rank skips the grant check (so `user:add` alone can still create

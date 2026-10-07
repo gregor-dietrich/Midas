@@ -32,6 +32,7 @@ import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
 
 /**
  * Tests the last-administrator guard through every service path it covers. Most tests run in a rolled-back transaction
@@ -274,6 +275,62 @@ class AdministratorGuardTest {
                 if (!others.isEmpty()) {
                     UserEntity.update("activated = true WHERE id IN ?1", others);
                 }
+            });
+        }
+    }
+
+    /** #78: a request queued on the guard's lock behind its caller's ban re-reads the caller and is refused. */
+    @Test
+    void testRequestQueuedBehindCallerBanIsRefused() throws Exception {
+        final var rank = new UserRankDto("editor_queued");
+        rank.userEdit = true;
+        rank.adminView = true;
+        final String rankPublicId =
+                QuarkusTransaction.requiringNew().call(() -> this.userRankService.createRank(rank).publicId);
+        final var dto = createUniqueUserDto("queuedEditor", "queuededitor");
+        dto.rankPublicId = rankPublicId;
+        dto.activated = true;
+        final var editor = QuarkusTransaction.requiringNew().call(() -> this.userService.createUser(dto));
+        try {
+            final var banHoldsLock = new CountDownLatch(1);
+            final var commitBan = new CountDownLatch(1);
+            final var selfPatch = new UserDto(null, null, null, null, false, null, null);
+            try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+                final Future<Boolean> ban = executor.submit(() -> QuarkusTransaction.requiringNew().call(() -> {
+                    this.userService.patchUser(editor.publicId, userPatch(true, null, null));
+                    banHoldsLock.countDown();
+                    return commitBan.await(10, TimeUnit.SECONDS);
+                }));
+                final Future<WebApplicationException> queued = executor.submit(() -> {
+                    assertTrue(banHoldsLock.await(10, TimeUnit.SECONDS));
+                    return assertThrows(WebApplicationException.class, () -> QuarkusTransaction.requiringNew()
+                            .run(() -> this.userService.patchUser(editor.publicId, selfPatch, editor.username)));
+                });
+                try {
+                    assertTrue(banHoldsLock.await(10, TimeUnit.SECONDS));
+                    final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+                    while (QuarkusTransaction.requiringNew()
+                            .call(() -> ((Number) UserEntity.getEntityManager()
+                                    .createNativeQuery(
+                                            "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND NOT granted")
+                                    .getSingleResult()).longValue()) == 0) {
+                        assertTrue(System.nanoTime() < deadline, "The request never queued on the guard's lock");
+                        Thread.sleep(20);
+                    }
+                } finally {
+                    commitBan.countDown();
+                }
+                assertTrue(ban.get());
+                final var refusal = queued.get();
+                assertEquals(403, refusal.getResponse().getStatus());
+                assertEquals(PrivilegeCeiling.CALLER_INACTIVE_MESSAGE, refusal.getMessage());
+            }
+            assertTrue(QuarkusTransaction.requiringNew().call(() -> this.userService.findById(editor.publicId))
+                    .orElseThrow().banned);
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> {
+                UserEntity.delete("publicId", editor.publicId);
+                UserRankEntity.delete("publicId", rankPublicId);
             });
         }
     }

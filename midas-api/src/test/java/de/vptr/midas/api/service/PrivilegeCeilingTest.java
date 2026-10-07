@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
+import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -66,8 +67,8 @@ class PrivilegeCeilingTest {
 
     @Test
     @TestTransaction
-    void testUnknownCallerHoldsNoPermission() {
-        final PrivilegeCeiling ceiling = PrivilegeCeiling.of("no-such-user");
+    void testCallerWithoutPermissionsManagesOnlyEmptyRanks() {
+        final PrivilegeCeiling ceiling = PrivilegeCeiling.of("guest");
         assertDoesNotThrow(() -> ceiling.requireCanManageUser(rank("Guest")));
         assertRefused(PrivilegeCeiling.MANAGE_USER_MESSAGE, () -> ceiling.requireCanManageUser(rank("User")));
     }
@@ -79,5 +80,25 @@ class PrivilegeCeilingTest {
         final UserRankEntity own = rank("Moderator");
         own.pageAdd = true;
         assertRefused(PrivilegeCeiling.GRANT_MESSAGE, () -> ceiling.requireCanGrant(own));
+    }
+
+    @Test
+    @TestTransaction
+    void testBannedCallerIsRefused() {
+        UserEntity.<UserEntity>find("username", "moderator").firstResult().banned = true;
+        assertRefused(PrivilegeCeiling.CALLER_INACTIVE_MESSAGE, () -> PrivilegeCeiling.of("moderator"));
+    }
+
+    @Test
+    @TestTransaction
+    void testDeactivatedCallerIsRefused() {
+        UserEntity.<UserEntity>find("username", "moderator").firstResult().activated = false;
+        assertRefused(PrivilegeCeiling.CALLER_INACTIVE_MESSAGE, () -> PrivilegeCeiling.of("moderator"));
+    }
+
+    @Test
+    @TestTransaction
+    void testUnknownCallerIsRefused() {
+        assertRefused(PrivilegeCeiling.CALLER_INACTIVE_MESSAGE, () -> PrivilegeCeiling.of("no-such-user"));
     }
 }

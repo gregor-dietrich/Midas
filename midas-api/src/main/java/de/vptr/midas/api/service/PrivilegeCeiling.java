@@ -17,8 +17,9 @@ import jakarta.ws.rs.core.Response;
  * {@link #of(String)} takes a snapshot of the caller's rank at the start of the change, inside the
  * {@link AdministratorGuard} lock on the paths that take it, so a change to the caller's own account or rank is judged
  * by the rank the caller held before it. The same snapshot decides which of a user's rank, banned and activated fields
- * the caller may set ({@link #holds(String)}). Calls without a caller, such as the bootstrap admin and tests, get
- * {@link #NONE}, which refuses nothing.
+ * the caller may set ({@link #holds(String)}). A caller the snapshot finds banned, not activated or gone is refused
+ * outright, since authentication checks that only as a request starts (#78). Calls without a caller, such as the
+ * bootstrap admin and tests, get {@link #NONE}, which refuses nothing.
  */
 public final class PrivilegeCeiling {
 
@@ -34,6 +35,9 @@ public final class PrivilegeCeiling {
     /** Refusal message for a rank, or a user's rank, that would grant permissions the caller lacks. */
     public static final String GRANT_MESSAGE = "You cannot grant permissions your own rank lacks";
 
+    /** Refusal message for a caller banned, deactivated, renamed or deleted since their request was authenticated. */
+    public static final String CALLER_INACTIVE_MESSAGE = "Your account is banned, not activated or no longer exists";
+
     @Nullable
     private final Set<String> permissions;
 
@@ -42,18 +46,24 @@ public final class PrivilegeCeiling {
     }
 
     /**
-     * Reads the ceiling of the given caller from their rank. A caller without an account or rank holds no permission.
+     * Reads the ceiling of the given caller from their rank. A caller without a rank holds no permission.
      *
      * @param currentUsername
      *            the authenticated caller, or null for a call that acts for no caller
      * @return the caller's ceiling, or {@link #NONE} without a caller
+     * @throws WebApplicationException
+     *             403 when the caller is banned, not activated or no longer exists, such as a request that waited on
+     *             the {@link AdministratorGuard} lock behind the caller's ban
      */
     public static PrivilegeCeiling of(@Nullable final String currentUsername) {
         if (currentUsername == null) {
             return NONE;
         }
         final UserEntity caller = UserEntity.find("username", currentUsername).firstResult();
-        return new PrivilegeCeiling(permissionsOf(caller != null ? caller.rank : null));
+        if (caller == null || caller.banned || !caller.activated) {
+            throw new WebApplicationException(CALLER_INACTIVE_MESSAGE, Response.Status.FORBIDDEN);
+        }
+        return new PrivilegeCeiling(permissionsOf(caller.rank));
     }
 
     private static Set<String> permissionsOf(@Nullable final UserRankEntity rank) {

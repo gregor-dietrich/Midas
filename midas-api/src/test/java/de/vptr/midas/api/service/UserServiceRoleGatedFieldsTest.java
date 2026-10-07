@@ -4,6 +4,7 @@ import static de.vptr.midas.api.util.ServiceTestDataBuilder.createUniqueUserDto;
 import static de.vptr.midas.api.util.ServiceTestUtil.generateUniqueTestSuffix;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -14,12 +15,14 @@ import de.vptr.midas.api.dto.UserResponseDto;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 /**
  * Tests that a caller without {@code user-rank:edit} or {@code admin:view} cannot write back the rank or status it read
  * before a concurrent change: the service keeps them at their current values inside the change's transaction (#54), and
  * cannot set them on a new user, which gets the defaults (#70). The editor holds {@code user:edit} and
- * {@code admin:view} but not {@code user-rank:edit}; an unknown caller holds neither.
+ * {@code admin:view} but not {@code user-rank:edit}; the demo guest holds neither. A banned editor is refused outright
+ * (#78).
  */
 @QuarkusTest
 @SuppressWarnings("NullAway")
@@ -44,14 +47,17 @@ class UserServiceRoleGatedFieldsTest {
         return this.userService.createUser(dto);
     }
 
-    /** Creates a caller whose rank holds user:edit and admin:view, but not user-rank:edit, and returns its name. */
-    private String createEditor() {
+    /** Creates an activated caller whose rank holds user:edit and admin:view, but not user-rank:edit. */
+    private UserResponseDto createEditor() {
         final var rank = new UserRankDto();
         rank.name = "editor_" + generateUniqueTestSuffix();
         rank.userEdit = true;
         rank.adminView = true;
         rank.postCommentAdd = true;
-        return this.createUserWithRank(this.userRankService.createRank(rank).publicId).username;
+        final var dto = createUniqueUserDto("editor", "editor");
+        dto.rankPublicId = this.userRankService.createRank(rank).publicId;
+        dto.activated = true;
+        return this.userService.createUser(dto);
     }
 
     /** The user as the caller read it, sent back unchanged. */
@@ -73,7 +79,7 @@ class UserServiceRoleGatedFieldsTest {
         final var change = staleDto(stale);
         change.banned = true;
 
-        final var patched = this.userService.patchUser(stale.publicId, change, this.createEditor());
+        final var patched = this.userService.patchUser(stale.publicId, change, this.createEditor().username);
         assertEquals(GUEST_RANK_ID, patched.rankPublicId);
         assertTrue(patched.banned);
     }
@@ -85,7 +91,7 @@ class UserServiceRoleGatedFieldsTest {
         final var change = staleDto(stale);
         change.banned = true;
 
-        final var updated = this.userService.updateUser(stale.publicId, change, this.createEditor());
+        final var updated = this.userService.updateUser(stale.publicId, change, this.createEditor().username);
         assertEquals(GUEST_RANK_ID, updated.rankPublicId);
         assertTrue(updated.banned);
     }
@@ -96,7 +102,7 @@ class UserServiceRoleGatedFieldsTest {
         final var stale = this.createUserWithRank(GUEST_RANK_ID);
         this.userService.patchUser(stale.publicId, new UserDto(null, null, null, null, true, true, null));
 
-        final var patched = this.userService.patchUser(stale.publicId, staleDto(stale), "no-such-user");
+        final var patched = this.userService.patchUser(stale.publicId, staleDto(stale), "guest");
         assertTrue(patched.banned);
         assertTrue(patched.activated);
     }
@@ -107,7 +113,7 @@ class UserServiceRoleGatedFieldsTest {
         final var stale = this.createUserWithRank(GUEST_RANK_ID);
         this.userService.patchUser(stale.publicId, new UserDto(null, null, null, null, true, true, null));
 
-        final var updated = this.userService.updateUser(stale.publicId, staleDto(stale), "no-such-user");
+        final var updated = this.userService.updateUser(stale.publicId, staleDto(stale), "guest");
         assertTrue(updated.banned);
         assertTrue(updated.activated);
     }
@@ -120,7 +126,7 @@ class UserServiceRoleGatedFieldsTest {
         dto.banned = true;
         dto.activated = true;
 
-        final var created = this.userService.createUser(dto, "no-such-user");
+        final var created = this.userService.createUser(dto, "guest");
         assertEquals(USER_RANK_ID, created.rankPublicId);
         assertFalse(created.banned);
         assertFalse(created.activated);
@@ -135,5 +141,19 @@ class UserServiceRoleGatedFieldsTest {
         assertEquals(GUEST_RANK_ID, patched.rankPublicId);
         assertTrue(patched.banned);
         assertTrue(patched.activated);
+    }
+
+    /** A change that runs after the caller's own ban is refused, so cannot lift the ban (#78). */
+    @Test
+    @TestTransaction
+    void testBannedCallerCannotUnbanThemselves() {
+        final var editor = this.createEditor();
+        this.userService.patchUser(editor.publicId, new UserDto(null, null, null, null, true, null, null));
+
+        final var refusal = assertThrows(WebApplicationException.class, () -> this.userService
+                .patchUser(editor.publicId, new UserDto(null, null, null, null, false, null, null), editor.username));
+        assertEquals(403, refusal.getResponse().getStatus());
+        assertEquals(PrivilegeCeiling.CALLER_INACTIVE_MESSAGE, refusal.getMessage());
+        assertTrue(this.userService.findByUsername(editor.username).orElseThrow().banned);
     }
 }
