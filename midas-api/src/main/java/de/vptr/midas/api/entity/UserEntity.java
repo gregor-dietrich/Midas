@@ -3,6 +3,7 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
@@ -23,7 +24,15 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-/** JPA entity representing a user. */
+/**
+ * JPA entity representing a user.
+ * <p>
+ * {@link DynamicUpdate} makes an UPDATE write only the columns whose values the change modified, so a change that runs
+ * outside the {@code AdministratorGuard} lock, such as a password change, never writes back a stale {@code banned},
+ * {@code activated} or rank over a concurrent guarded change, and a guarded change never writes back a stale password
+ * (#77).
+ */
+@DynamicUpdate
 @Entity
 @Table(name = "users")
 public class UserEntity extends BaseEntity {

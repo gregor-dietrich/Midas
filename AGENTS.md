@@ -218,6 +218,10 @@ lint-repo test`.
   rank, or a rank's permissions, runs its change inside
   `AdministratorGuard.guard(...)`, so the API answers 422 to a change that
   leaves no active administrator; recovery is the README's break-glass section.
+  A user write outside the guard, such as the password change, never sets those
+  fields and relies on `UserEntity`'s `@DynamicUpdate` to write only the columns
+  it changes, so it never writes back a stale `activated`, `banned` or rank
+  (#77).
 - **Privilege ceiling**: `user:edit` is not administrator-equivalent.
   - Any service method that creates, changes or deletes a user or a rank takes
     the `currentUsername` and checks `PrivilegeCeiling`, a snapshot of the

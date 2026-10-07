@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import de.vptr.midas.api.dto.PasswordChangeDto;
 import de.vptr.midas.api.dto.UserDto;
@@ -21,6 +23,7 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.PaginationUtil;
 import de.vptr.midas.api.util.ServiceTestUtil;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -155,6 +158,37 @@ class UserServiceTest {
 
         final var changeDto = new PasswordChangeDto("wrongpassword", "NewPassword123!");
         assertThrows(WebApplicationException.class, () -> this.userService.changePassword(newUser.username, changeDto));
+    }
+
+    /**
+     * #77: a password change and a guarded ban of the same user both stick, whichever of them loaded the user before
+     * the other committed. With the ban first, the password change passes its ban check on its stale load: that order
+     * also pins this known residual, and a fix for it changes what the order expects.
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testPasswordChangeAndConcurrentBanBothKept(final boolean banFirst) {
+        final var dto = createUniqueUserDto("concurrentPasswordUser", "concurrentpassword");
+        dto.activated = true;
+        final String publicId = QuarkusTransaction.requiringNew().call(() -> this.userService.createUser(dto).publicId);
+        final Runnable ban =
+                () -> this.userService.patchUser(publicId, new UserDto(null, null, null, null, true, null, null));
+        final Runnable changePassword = () -> this.userService.changePassword(dto.username,
+                new PasswordChangeDto(dto.password, "NewPassword123!"));
+        try {
+            QuarkusTransaction.requiringNew().run(() -> {
+                // The second change finds the user as loaded here, before the first one commits
+                UserEntity.find("publicId", publicId).firstResult();
+                QuarkusTransaction.requiringNew().run(banFirst ? ban : changePassword);
+                (banFirst ? changePassword : ban).run();
+            });
+            final UserEntity user =
+                    QuarkusTransaction.requiringNew().call(() -> UserEntity.find("publicId", publicId).firstResult());
+            assertTrue(user.banned);
+            assertTrue(this.passwordHashingService.verifyPassword("NewPassword123!", user.password));
+        } finally {
+            QuarkusTransaction.requiringNew().run(() -> UserEntity.delete("publicId", publicId));
+        }
     }
 
     @Test
