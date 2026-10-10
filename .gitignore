@@ -16,6 +16,9 @@ __pycache__
 # devkit (the link devkitw creates)
 /.devkit
 
+# Claude Code's per-machine settings (see AGENTS.md)
+/.claude/settings.local.json
+
 # Maven
 target/
 pom.xml.tag

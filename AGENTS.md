@@ -264,6 +264,14 @@ lint-repo test`.
   for now.
 - `devkitw`, `devkit.toml`: The devkit wrapper and its pin; `.devkit` is the
   gitignored link it creates.
+- `.claude/settings.json`: enables the agent-kit plugin for Claude Code, which
+  carries the generic agent method (delegation, review, debugging, design,
+  planning) as skills and its guards as hooks; install it per machine as its
+  README describes. Its marketplace entry declares `"autoUpdate": true` so no
+  machine needs the `/plugin` auto-update toggle, which writes into the first
+  settings file declaring the marketplace and would dirty this one: to change
+  it on one machine, declare the marketplace in the gitignored
+  `.claude/settings.local.json` instead.
 - `docker-compose.yml`: Orchestration for local production-like environments.
 - `.gitea/workflows/ci.yml`: Gitea Actions CI on pushes to `main` and on pull
   requests: `make lint-repo`, `make install` and `make test` in one job (full
