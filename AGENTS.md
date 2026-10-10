@@ -43,8 +43,12 @@ target.
   generated frontend sources.
 - `make format`: Fix what markdownlint can in Markdown, then run
   `spotless:apply` to auto-format code for both modules.
-- `make hooks`: Install devkit's git hooks, once per clone: `pre-commit` runs
-  `make lint-repo`, `pre-push` runs `make lint-repo test`.
+- `make gate`: Run the push gate (`make lint-repo test`) and, when it passes on
+  a strictly clean tree, record HEAD, so `pre-push` skips it for that commit.
+- `make hooks`: Install devkit's git hooks, once per clone and again after
+  every devkit bump (`make check` warns while a copy is stale): `pre-commit`
+  runs `make lint-repo`, `pre-push` runs `make lint-repo test` unless `make
+  gate` passed the HEAD being pushed.
 - `make lint`: Run the repository gates (`make lint-repo`), then the quality
   gate plugins (including `spotless:check`) for both modules.
 - `make test`: Run full Maven test suite for both modules (requires Docker for
@@ -75,14 +79,18 @@ The project enforces very strict quality gates:
   `<repository>:<tag>@sha256:<digest>` and every workflow action by full commit
   SHA with a `# vX.Y.Z` comment; the `gregordietrich/` namespace `make release`
   publishes to is exempt through `[pins] first-party` in `devkit.toml`, and its
-  compose services carry `pull_policy: build`. It does not read `.properties`,
-  so the Dev Services image stays a tag (#74). `lint-secrets` runs gitleaks over
-  the full history and the staged and unstaged changes to tracked files
-  (untracked files are not scanned); a triaged finding goes in
-  `.gitleaksignore` by fingerprint. `lint-md` runs markdownlint with devkit's
-  profile (80 columns; `LICENSE.md`, verbatim license text, is excluded in
-  `.markdownlintignore`). `lint-decisions` skips: there is no
-  `docs/decisions.md`.
+  compose services carry `pull_policy: build`. It does not read `.properties`:
+  the Dev Services image in `midas-api`'s `application.properties` is pinned by
+  digest alone, since Testcontainers rejects `tag@sha256:`, with its tag in the
+  `# renovate:` comment above it, and Renovate bumps it together with compose's
+  `db`. Renovate keeps postgres on 18.x: a major is a person's PR, moving both
+  pins, `quarkus.datasource.db-version` and the `db` volume's mount path, and
+  the existing volume needs `pg_upgrade`. `lint-secrets` runs gitleaks over the
+  full history and the staged and unstaged changes to tracked files (untracked
+  files are not scanned); a triaged finding goes in `.gitleaksignore` by
+  fingerprint. `lint-md` runs markdownlint with devkit's profile (80 columns;
+  `LICENSE.md`, verbatim license text, is excluded in `.markdownlintignore`).
+  `lint-decisions` skips: there is no `docs/decisions.md`.
 - **Formatting**: Spotless with Eclipse Formatter (Google Java Style baseline).
   Use `make format` to auto-fix formatting.
 - **Linting**: Spotless (`spotless:check`), Checkstyle (devkit's shared rules
@@ -142,7 +150,9 @@ copies: a shared gate changes in devkit, is released there, and is adopted here
 by bumping `version` and `commit` in `devkit.toml` together with the root pom's
 `<parent><version>` (the tag without the `v`); a release whose contract changes
 lists its upgrade steps in devkit's README. `renovate.json` proposes that bump
-as one PR covering both files. Never edit `.devkit/` or `devkitw`.
+as one PR covering both files; after merging it, run `make hooks` in each clone,
+since the hooks are copies a bump does not refresh. Never edit `.devkit/` or
+`devkitw`.
 
 The poms keep only the project's own values, as devkit's contract
 (`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the
@@ -169,11 +179,13 @@ the file itself — never as a convenience. When changing one of these, point ou
 that `aimathtutor` needs the same change, but never edit that repository unless
 explicitly asked to.
 
-You MUST ALWAYS run ALL quality gates AND tests via `make lint-repo test` before
-claiming you are done, and especially before executing a git commit (`make
-test` alone runs no repository gate). If any quality gates or tests fail, work
-on them until all problems are resolved, ensured by a final pass of `make
-lint-repo test`.
+You MUST ALWAYS run ALL quality gates AND tests via `make gate` before claiming
+you are done and before every push (`make test` alone runs no repository gate).
+Commit first, then run `make gate` on the clean tree, then push: only a
+passing run on a strictly clean tree records HEAD, and `pre-push` skips its own
+run of the same gate only for that HEAD, so a run over uncommitted edits is
+repeated by the push. If any quality gates or tests fail, fix them in a new
+commit and run `make gate` again, until a final pass succeeds.
 
 ### Design Patterns & Logic
 
@@ -260,8 +272,11 @@ lint-repo test`.
 - `scripts/`: Project-only shell scripts (build, dev mode, OpenAPI snapshot,
   password, release).
 - `renovate.json`: the forge's weekly Renovate run proposes devkit bumps
-  (`devkit.toml` and the parent POM version, one PR); its other managers are off
-  for now.
+  (`devkit.toml` and the parent POM version, one PR), and bumps of the pinned
+  images (compose, Dockerfiles, the Dev Services image) and workflow actions.
+  Java stays on LTS releases. Image tags stay exact, never floating (`18-alpine`,
+  `25-jre`): its versioning rules count the Alpine version as part of the
+  version, so a newer Alpine arrives as an ordinary update.
 - `devkitw`, `devkit.toml`: The devkit wrapper and its pin; `.devkit` is the
   gitignored link it creates.
 - `.claude/settings.json`: enables the agent-kit plugin for Claude Code, which

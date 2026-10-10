@@ -1,5 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "workarounds:javaLTSVersions"
+  ],
   "customManagers": [
     {
       "customType": "regex",
@@ -29,18 +32,20 @@
       "datasourceTemplate": "gitea-tags",
       "extractVersionTemplate": "^v(?<version>.+)$",
       "registryUrlTemplate": "https://git.vptr.de"
+    },
+    {
+      "customType": "regex",
+      "description": "Dev Services image: Testcontainers rejects tag@sha256:, so the tag sits in the comment above the digest-only image name",
+      "managerFilePatterns": [
+        "/^midas-api/src/main/resources/application\\.properties$/"
+      ],
+      "matchStrings": [
+        "# renovate: (?<depName>[^:\\s]+):(?<currentValue>\\S+)\\n[^\\n]*\\.devservices\\.image-name=[^@\\s]+@(?<currentDigest>sha256:[0-9a-f]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [
-    {
-      "description": "Only the devkit pin for now; the runner's forced managers stay off until the operator opts this repository in for them",
-      "matchManagers": [
-        "dockerfile",
-        "docker-compose",
-        "github-actions"
-      ],
-      "enabled": false
-    },
     {
       "description": "devkit-parent is published to no Maven repository; the regex manager above owns it",
       "matchDatasources": [
@@ -58,6 +63,43 @@
         "devkit-parent"
       ],
       "groupName": "devkit"
+    },
+    {
+      "description": "Dev Services must run the same postgres build as docker-compose.yml's db",
+      "matchDepNames": [
+        "postgres"
+      ],
+      "groupName": "postgres"
+    },
+    {
+      "description": "postgres stays on 18.x: a database major is a person's PR, because compose's data volume needs pg_upgrade (CI's fresh Dev Services database never shows it), and its mount path and quarkus.datasource.db-version name 18 where no manager reads them",
+      "matchDepNames": [
+        "postgres"
+      ],
+      "allowedVersions": "/^18\\./"
+    },
+    {
+      "description": "Tags stay exact, never floating: the Alpine version counts as part of postgres's version, so moving to a newer Alpine is an ordinary update rather than a suffix Renovate never leaves",
+      "matchDepNames": [
+        "postgres"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)-alpine3\\.(?<patch>\\d+)$"
+    },
+    {
+      "description": "Temurin on Alpine: the respin (25.0.4.1_1) and the Alpine version count as version parts, which the LTS preset's versioning rejects or ignores; its LTS cap still applies",
+      "matchDepNames": [
+        "eclipse-temurin"
+      ],
+      "matchCurrentValue": "/-jre-alpine-3\\.\\d+$/",
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?_\\d+-(?<compatibility>jre-alpine)-3\\.(?<revision>\\d+)$"
+    },
+    {
+      "description": "Temurin on Ubuntu: the same, with the codename as the compatibility, which no version order can move past (the image is unused, see #75)",
+      "matchDepNames": [
+        "eclipse-temurin"
+      ],
+      "matchCurrentValue": "/-jre-[a-z]+$/",
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?_\\d+-(?<compatibility>jre-[a-z]+)$"
     }
   ]
 }
