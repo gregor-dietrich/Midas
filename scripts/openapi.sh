@@ -12,7 +12,7 @@ echo "Regenerating OpenAPI contract snapshot..."
 
 # Quarkus augmentation writes the contract to target/openapi/ during `package`; see
 # quarkus.smallrye-openapi.store-schema-directory in midas-api/src/main/resources/application.properties.
-${MVN_CMD} -q package -DskipTests -pl midas-api -Drevision="${REVISION}"
+"${MVN_CMD}" -q package -DskipTests -pl midas-api -Drevision="${REVISION}"
 
 cp midas-api/target/openapi/openapi.yaml midas-api/openapi.yaml
 

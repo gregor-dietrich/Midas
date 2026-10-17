@@ -15,7 +15,6 @@ import jakarta.annotation.Nullable;
 /**
  * General test utilities for REST API testing
  */
-@SuppressWarnings("PMD.TooManyMethods")
 public final class TestUtil {
 
     public static final String ADMIN_USERNAME = System.getProperty("test.admin.username", "admin");
@@ -137,13 +136,6 @@ public final class TestUtil {
     }
 
     /**
-     * Tests unauthenticated GET request on a @PermitAll endpoint expecting 200 OK
-     */
-    public static ValidatableResponse testPermitAllGetWithJson(final String endpoint) {
-        return given().when().get(endpoint).then().statusCode(200);
-    }
-
-    /**
      * Tests authorized GET request expecting 200 OK (resource exists)
      */
     public static ValidatableResponse testAuthorizedGetWithExistingResource(final String endpoint) {
@@ -177,43 +169,6 @@ public final class TestUtil {
     public static ValidatableResponse testAuthorizedPostWithInsufficientRole(final String endpoint,
             final String jsonBody) {
         return authenticatedGuestJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(403);
-    }
-
-    /**
-     * Tests authorized request expecting 403 Forbidden (insufficient role)
-     */
-    public static ValidatableResponse testAuthorizedRequestWithInsufficientRole(final String endpoint,
-            final String httpMethod) {
-        return authenticatedGuestRequest().when().request(httpMethod, endpoint).then().statusCode(403);
-    }
-
-    /**
-     * Tests authorized POST request expecting 409 (conflict)
-     */
-    public static ValidatableResponse testAuthorizedPostWithConflict(final String endpoint, final String jsonBody) {
-        return authenticatedJsonRequest().body(jsonBody).when().post(endpoint).then().statusCode(409);
-    }
-
-    /**
-     * Tests authorized request expecting 429 Too Many Requests
-     */
-    public static ValidatableResponse testAuthorizedRequestWithRateLimit(final String endpoint,
-            final String httpMethod) {
-        return authenticatedRequest().when().request(httpMethod, endpoint).then().statusCode(429);
-    }
-
-    /**
-     * Tests authorized DELETE request expecting 204 No Content
-     */
-    public static ValidatableResponse testAuthorizedDeleteWithSuccess(final String endpoint) {
-        return authenticatedRequest().when().delete(endpoint).then().statusCode(204);
-    }
-
-    /**
-     * Tests authorized DELETE request expecting 404 Not Found
-     */
-    public static ValidatableResponse testAuthorizedDeleteWithNotFound(final String endpoint) {
-        return authenticatedRequest().when().delete(endpoint).then().statusCode(404);
     }
 
     /**

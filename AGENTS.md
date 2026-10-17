@@ -23,13 +23,17 @@ target.
 ### Prerequisites
 
 - **JDK 25**
-- **Maven 3.9.9+**
 - **Python 3.11+** (devkit's build scripts)
 - **Node.js 22.22.2+** with npm (devkit's Markdown gate in `make lint` and
   `make format`)
-- **curl**, **tar** and **sha256sum** or **shasum** (devkit downloads gitleaks
-  and markdownlint on the first `make lint`, which needs network access)
+- **curl**, **tar** and **sha256sum** or **shasum** (devkit downloads its
+  pinned Maven on the first target that runs Maven, and gitleaks and markdownlint
+  on the first `make lint`, which needs network access)
+- **ssh-keygen** (OpenSSH 8.1+; `devkitw` verifies the devkit release's
+  signature)
 - **Docker** (for tests and production deployment)
+- **Maven 3.9.9+** only for an IDE import or a bare `mvn` build (`./mvnw`
+  downloads its own); the `make` targets run devkit's pinned Maven
 
 ### Common Commands
 
@@ -113,7 +117,10 @@ The project enforces very strict quality gates:
   well when the `NVD_API_KEY` secret is unset. It needs `NVD_API_KEY` from the
   environment or the gitignored `.env.build` (not `.env`, which docker-compose
   reads); without a key it fails rather than running slowly (gregor/devkit#11).
-  License enforcement blocks commercial/proprietary licenses.
+  License enforcement allows only the license names devkit's parent lists,
+  compared exactly, plus the ones the root pom appends; a dependency declaring
+  another spelling of an allowed license fails the build until its name is added
+  there.
 - **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed
   `midas-gui/package.json` / `package-lock.json` against Vaadin's own version
   manifest for the pinned `${vaadin.version}`, plus the security minimums in
@@ -149,15 +156,19 @@ clone ("Non-resolvable parent POM") until it exists. They are not hand-kept
 copies: a shared gate changes in devkit, is released there, and is adopted here
 by bumping `version` and `commit` in `devkit.toml` together with the root pom's
 `<parent><version>` (the tag without the `v`); a release whose contract changes
-lists its upgrade steps in devkit's README. `renovate.json` proposes that bump
-as one PR covering both files; after merging it, run `make hooks` in each clone,
-since the hooks are copies a bump does not refresh. Never edit `.devkit/` or
-`devkitw`.
+lists its upgrade steps in devkit's README. A release that changed `devkitw`
+also needs its copy committed (`cp .devkit/devkitw devkitw`), which
+`lint-devkitw` asks for until it is there. `renovate.json` proposes the bump as
+one PR covering `devkit.toml` and the pom, so such a PR needs that commit added;
+after merging it, run `make hooks` in each clone, since the hooks are copies a
+bump does not refresh. Never edit `.devkit/` or `devkitw` by hand.
 
 The poms keep only the project's own values, as devkit's contract
 (`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the
 parent's properties in the root pom (`error-prone.extra.args` excludes generated
-sources from Error Prone), `nullaway.annotated.packages` and JaCoCo's
+sources from Error Prone; `pmd.extraAssertMethodNames` names the test helpers
+PMD counts as assertions), the license names the root pom appends to the
+parent's allowlist, `nullaway.annotated.packages` and JaCoCo's
 `<excludes>` in each module, and midas-gui's Checkstyle `<sourceDirectories>`
 and PMD `<excludeRoots>` that keep its generated sources out of those gates.
 Never define one of the parent's `*.version` properties (pass
@@ -270,9 +281,10 @@ commit and run `make gate` again, until a final pass succeeds.
 - `midas-api/`: Backend service source and configuration.
 - `midas-gui/`: Frontend application source and configuration.
 - `scripts/`: Project-only shell scripts (build, dev mode, OpenAPI snapshot,
-  password, release).
+  password, frontend lockfile, release).
 - `renovate.json`: the forge's weekly Renovate run proposes devkit bumps
-  (`devkit.toml` and the parent POM version, one PR), and bumps of the pinned
+  (`devkit.toml` and the parent POM version, one PR, which lacks the `devkitw`
+  copy a release that changed it needs), and bumps of the pinned
   images (compose, Dockerfiles, the Dev Services image) and workflow actions.
   Java stays on LTS releases. Image tags stay exact, never floating (`18-alpine`,
   `25-jre`): its versioning rules count the Alpine version as part of the

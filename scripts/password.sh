@@ -34,7 +34,7 @@ case $MODULE in
         [ -n "$PASSWORD" ] || { echo "Password must not be empty. Aborting." >&2; exit 1; }
 
         # The password reaches PasswordUtil on stdin (printf is a builtin), never on a command line.
-        printf '%s\n' "$PASSWORD" | ${MVN_CMD} -q -pl midas-api -Dexec.mainClass="de.vptr.midas.api.util.PasswordUtil" exec:java
+        printf '%s\n' "$PASSWORD" | "${MVN_CMD}" -q -pl midas-api -Dexec.mainClass="de.vptr.midas.api.util.PasswordUtil" compile exec:java
 
         ;;
     *)

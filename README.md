@@ -14,7 +14,7 @@ This is a single Git repository with two Maven modules:
 midas/
 ├── midas-api/            # Backend REST API (Maven module)
 ├── midas-gui/            # Frontend web application (Maven module)
-├── scripts/              # Project-only scripts (build, dev, openapi, password, release)
+├── scripts/              # Project-only scripts (build, dev, openapi, password, lockfile, release)
 ├── docker-compose.yml    # Full-stack Docker Compose
 └── Makefile              # Orchestrates both subprojects
 ```
@@ -23,15 +23,19 @@ midas/
 
 - JDK 25: [Download
   (Adoptium)](https://adoptium.net/temurin/releases/?os=any&arch=any&version=25)
-- Maven 3.9.9 (or later): [Download
-  (Apache)](https://maven.apache.org/download.cgi)
 - Python 3.11 (or later), for devkit's build scripts
 - Node.js 22.22.2 (or later) with npm, for `make lint`'s and `make format`'s
   Markdown gate
-- curl, tar and sha256sum or shasum: devkit downloads gitleaks and markdownlint
-  on the first `make lint`, which needs network access
+- curl, tar and sha256sum or shasum: devkit downloads its pinned Maven on the
+  first target that runs Maven, and gitleaks and markdownlint on the first `make
+  lint`, which needs network access
+- ssh-keygen (OpenSSH 8.1 or later): `devkitw` verifies the signature of the
+  devkit release it fetches
 - Docker: [Download (Docker Engine)](https://docs.docker.com/engine/install/) or
   [Download (Docker Desktop)](https://docs.docker.com/desktop/)
+- Maven 3.9.9 (or later), only for an IDE import or a bare `mvn` build
+  (`./mvnw` downloads its own); the `make` targets run devkit's pinned Maven:
+  [Download (Apache)](https://maven.apache.org/download.cgi)
 
 ## 🚀 Quick Start
 
@@ -81,20 +85,22 @@ make audit           # Run OWASP dependency-check (NVD_API_KEY or .env.build)
 make branch          # create or reset a git branch from a source (prompts for names and pushes)
 make build           # mvn package, docker buildx (ONLY=<module> limits it to one)
 make check           # verify the local environment
-make check-devkit    # verify .devkit links to the pin (warns on a stale devkitw)
-make check-java      # Verify the JDK, Maven >= 3.9.9, Python >= 3.11, checkstyle-project.xml, the devkit parent POM and the pom's version pins
+make check-devkit    # verify .devkit links to the pin
+make check-java      # Verify checkstyle-project.xml, FRONTEND_DIR, Python >= 3.11, the devkit parent POM, then (the first run downloads devkit's pinned Maven) the JDK and Maven versions and the pom's version pins
 make clean           # mvn clean, plus logs and frontend build output
 make coverage        # Run all tests incl. ITs with JaCoCo; write .coverage.md
 make dev-api         # start Midas API in Quarkus dev mode (port 8080)
 make dev-gui         # start Midas GUI in Quarkus dev mode (port 8081)
 make format          # Run format-md, then format Java sources with spotless
 make format-md       # fix what markdownlint can fix in Markdown
+make gate            # run the push gate (lint-repo, test) and record a passing clean HEAD, which pre-push then skips
 make help            # list the available targets
 make hooks           # install the git hooks (pre-commit: lint-repo; pre-push: lint-repo and test)
 make install         # make check, then mvn clean install -DskipTests
 make kill            # Stop this project's Quarkus/Maven JVMs and its docker compose services
 make lint            # Run lint-repo, then the quality-gate plugins and the frontend pin check
 make lint-decisions  # check docs/decisions.md's entry format, when the project keeps one
+make lint-devkitw    # check that ./devkitw is not older than the pinned devkit's
 make lint-md         # check Markdown with markdownlint (needs node and npm)
 make lint-pins       # check that workflow actions and container images are pinned
 make lint-repo       # run the repository-wide gates (ONLY does not narrow them)
@@ -104,7 +110,7 @@ make password        # bcrypt-hash a password, read from a prompt or stdin (demo
 make rebase          # interactive git rebase against a target (defaults to origin/main)
 make regen-lockfile  # update the frontend lockfile to package.json once npm ci rejects it
 make release         # pull from origin/main, test, make tag, and buildx-push multi-platform images
-make tag             # create, sign and push a new git tag (auto-increments latest tag suggestion)
+make tag             # sign and push a new release tag at the default branch tip (suggests the next version)
 make test            # Run the Maven test suite (mvn verify)
 make untag           # delete a local and remote git tag (prompts for tag to delete)
 ```
@@ -204,10 +210,16 @@ docker build midas-gui -f midas-gui/src/main/docker/Dockerfile.jvm-alpine -t mid
 `linux/amd64` and `linux/arm64` (the default `docker` driver needs the
 containerd image store for that; a `docker-container` builder works on either
 store), then pulls `main`, runs `make clean install test`, packages the jars,
-and runs `make tag`. Last, one `docker buildx build --platform
+and runs `make tag`. `REVISION`, prompted for when unset, must be a release tag:
+`X.Y.Z`, optionally followed by `rcN` or `-rcN`, without leading zeros or a `v`
+prefix, since the tag is also the Maven version and the image tag. The release
+refuses any other before it builds. After the build, `make tag` also refuses a
+checkout with uncommitted or untracked files, or whose HEAD is no longer the tip
+of `origin`'s `main`. Last, one `docker buildx build --platform
 linux/amd64,linux/arm64 --push` per module pushes
-`gregordietrich/<module>:<REVISION>` and `gregordietrich/<module>:latest`
-together; `ONLY=<module>` narrows it to one module.
+`gregordietrich/<module>:<REVISION>` and, for a final release,
+`gregordietrich/<module>:latest` together; a release candidate leaves `latest`
+on the last final release. `ONLY=<module>` narrows the push to one module.
 
 Unlike `make build`, a release pushes nothing from the local image store, and it
 never falls back to a single-platform build: a failing build or push stops the
@@ -306,9 +318,9 @@ administrator, but a forgotten password still locks everyone out. Hash a new
 password with `make password` (it prompts and prints `Password: <hash>`). The
 reset bypasses the regular password rules (see [Database
 Setup](#database-setup)), so pick one that meets them. `make password` runs in a
-checkout with the JDK and Maven from Requirements; the hash it prints can be
-used on any host. Then open `psql` on the database (with your `SQL_USERNAME` and
-`SQL_DATABASE` if you changed them):
+checkout that meets Requirements and compiles `midas-api` first; the hash it
+prints can be used on any host. Then open `psql` on the database (with your
+`SQL_USERNAME` and `SQL_DATABASE` if you changed them):
 
 ```shell
 docker compose exec db psql -U midas -d midas
@@ -401,7 +413,8 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
 - Production-ready Docker images (Eclipse Temurin JRE on Alpine)
 - Git hooks from devkit: `make hooks` installs a pre-commit hook that runs
   `make lint-repo` and a pre-push hook that runs `make lint-repo test`
-- License enforcement (blocks commercial/proprietary licenses)
+- License enforcement (an allowlist of license names: devkit's, plus the ones
+  the root `pom.xml` appends)
 
 ## 🔐 Contracts & Specifications
 

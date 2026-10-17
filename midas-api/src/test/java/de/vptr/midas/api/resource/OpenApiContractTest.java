@@ -51,6 +51,10 @@ class OpenApiContractTest {
             // The server list is derived from the runtime host and port, which differ between the
             // build-time export and the port @QuarkusTest binds to.
             node.remove("servers");
+            // info.version is the build's revision: a release sets it, the snapshot is exported at the default.
+            if (node.get("info") instanceof final ObjectNode info) {
+                info.remove("version");
+            }
         }
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);

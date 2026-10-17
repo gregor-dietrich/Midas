@@ -85,3 +85,5 @@ midas-gui/vite.config.ts
 **/encryption.key
 **/session.key
 
+# Planning sessions' working plans (agent-kit plan-create / plan-run)
+/.plans/

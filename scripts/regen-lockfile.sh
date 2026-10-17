@@ -20,6 +20,6 @@ echo "Updating $FRONTEND_DIR/package-lock.json..."
 # Vaadin skips npm while node_modules or a compatible bundle exists, whatever the lockfile says.
 rm -rf "$FRONTEND_DIR/node_modules" "$FRONTEND_DIR/src/main/bundles/prod.bundle"
 
-${MVN_CMD} -q clean compile -pl "$FRONTEND_DIR" -Pproduction -Dvaadin.ci.build=false -Drevision="${REVISION}"
+"${MVN_CMD}" -q clean compile -pl "$FRONTEND_DIR" -Pproduction -Dvaadin.ci.build=false -Drevision="${REVISION}"
 
 echo "Lockfile updated. Review the diff before committing."

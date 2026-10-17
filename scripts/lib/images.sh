@@ -58,7 +58,7 @@ package_modules() {
         # lockfile-only bump would otherwise ship the old dependency.
         rm -rf "$FRONTEND_DIR/src/main/bundles/prod.bundle" "$FRONTEND_DIR/node_modules"
     fi
-    ${MVN_CMD} -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${gui_profile} -Drevision="${REVISION}"
+    "${MVN_CMD}" -q clean package ${ONLY:+-pl "$ONLY"} -DskipTests ${gui_profile} -Drevision="${REVISION}"
 }
 
 # Fail unless the current buildx builder can build every platform in $PLATFORMS in one build and

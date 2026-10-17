@@ -9,7 +9,7 @@
   <parent>
     <groupId>de.vptr.devkit</groupId>
     <artifactId>devkit-parent</artifactId>
-    <version>0.5.0</version>
+    <version>0.7.0</version>
     <relativePath>.devkit/java/parent/pom.xml</relativePath>
   </parent>
 
@@ -41,6 +41,10 @@
     <!-- generated sources (midas-gui's openapi-generator output) are not ours to fix; a no-op in
     a module that generates none -->
     <error-prone.extra.args>-XepExcludedPaths:.*/generated-sources/.*</error-prone.extra.args>
+
+    <!-- TestUtil's REST Assured helpers and statusCode, which midas-api tests use as their only
+    assertion; PMD counts none of them as one unless named here -->
+    <pmd.extraAssertMethodNames>statusCode,testAuthorizedGetWithExistingResource,testAuthorizedGetWithExistingResourceAndJson,testAuthorizedGetWithJson,testAuthorizedGetWithNonExistentResource,testAuthorizedPatchWithJson,testAuthorizedPostWithCreation,testAuthorizedPostWithInsufficientRole,testAuthorizedPostWithSyntaxError,testAuthorizedPostWithValidationError,testAuthorizedPutWithJson,testAuthorizedSearchWithJson,testUnauthorizedAccess,testUnauthorizedDelete,testUnauthorizedPatch,testUnauthorizedPost,testUnauthorizedPut</pmd.extraAssertMethodNames>
 
     <spotbugs-annotations.version>4.10.4</spotbugs-annotations.version>
   </properties>
@@ -135,6 +139,38 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-third-party</id>
+            <configuration>
+              <!-- The parent allows only the license names it lists, compared exactly. These are
+              other spellings of licenses it allows, but for UPL-1.0; append extends the parent's
+              list, without it this list would replace it. -->
+              <includedLicenses combine.children="append">
+                <includedLicense>Apache 2</includedLicense>
+                <includedLicense>Apache 2.0</includedLicense>
+                <includedLicense>Apache License Version 2.0</includedLicense>
+                <!-- javax.annotation-api's dual license, allowed for its GPLv2 + Classpath
+                Exception half -->
+                <includedLicense>CDDL + GPLv2 with classpath exception</includedLicense>
+                <includedLicense>Eclipse Public License 2.0</includedLicense>
+                <includedLicense>Eclipse Public License, Version 2.0</includedLicense>
+                <includedLicense>GNU General Public License, version 2 with the GNU Classpath Exception</includedLicense>
+                <includedLicense>GNU General Public License, version 2, with the Classpath Exception</includedLicense>
+                <includedLicense>GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1</includedLicense>
+                <!-- a deliberate addition (org.graalvm.sdk:nativeimage and :word): UPL-1.0 is an
+                OSI-approved permissive license the parent does not list -->
+                <includedLicense>Universal Permissive License, Version 1.0</includedLicense>
+              </includedLicenses>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>

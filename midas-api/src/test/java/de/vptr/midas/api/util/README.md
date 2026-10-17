@@ -21,10 +21,12 @@ patterns, and unique data generation.
   `testUnauthorizedPost()`, `testUnauthorizedPut()`, `testUnauthorizedDelete()`,
   `testUnauthorizedPatch()` - Test unauthorized access scenarios
 - **Authorized Testing**: `testAuthorizedGetWithJson()`,
-  `testAuthorizedGetWithOptionalResource()`,
-  `testAuthorizedPostWithRoleCheck()`, `testAuthorizedPutWithJson()`,
-  `testAuthorizedPatchWithJson()`, `testAuthorizedPostWithCreation()` - Test
-  authorized scenarios with various expectations
+  `testAuthorizedPutWithJson()`, `testAuthorizedPatchWithJson()`,
+  `testAuthorizedPostWithCreation()` - Test authorized scenarios with various
+  expectations
+- **PMD**: a test whose only assertion is one of these helpers passes PMD's
+  `UnitTestShouldIncludeAssert` only while the root `pom.xml`'s
+  `pmd.extraAssertMethodNames` names the helper; add a new helper there
 - **Resource Management**: `createTestCategory()`, `createTestPost()`,
   `createTestComment()` - Create test resources and return their IDs
 - **Unique Data Generation**: `generateUniqueSuffix()`, `generateUniqueEmail()`,
