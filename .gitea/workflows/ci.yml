@@ -1,14 +1,24 @@
 # The jobs call the same make targets a developer runs. Image publishing stays manual (make release).
 # Actions are pinned by commit SHA; the comment names the tag it resolved from.
 #
-# Caches are restored on every run but saved only by pushes to main. The forge's cache is not scoped
-# per branch, so whatever a pull request's build left behind would otherwise be restored by main.
+# Maven Central rate-limits the network's address (429), so every Maven download goes through the
+# network's mirror of it: devkit's pinned Maven through DEVKIT_MAVEN_MIRROR, the resolver through
+# the mirror each job writes into ~/.m2/settings.xml.
+#
+# The JDK, Vaadin's Node.js and ~/.m2/repository are downloaded on every run, not cached. The forge's
+# cache is not scoped per branch, so any pull request can write the entry a later run restores, and
+# a restore extracts it with tar -P, which writes wherever the archive's paths point, before a later
+# step could check it. The NVD data is still cached, restored on every run but saved only by pushes
+# to main.
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+
+env:
+  DEVKIT_MAVEN_MIRROR: https://maven.vptr.de/central
 
 jobs:
   test:
@@ -27,17 +37,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-          cache: maven # ~/.m2/repository, keyed on the poms, and the JDK
-          cache-read-only: ${{ github.event_name != 'push' }}
-      - name: Read pinned Node.js version
-        id: node
-        run: echo "version=$(sed -nE 's:.*<vaadin.node.version>(v[0-9.]+)</vaadin.node.version>.*:\1:p' midas-gui/pom.xml)" >>"$GITHUB_OUTPUT"
-      - name: Restore Vaadin's Node.js
-        id: vaadin-node
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.vaadin/node-${{ steps.node.outputs.version }}
-          key: ${{ runner.os }}-vaadin-node-${{ steps.node.outputs.version }}
+      # Replaces the settings.xml setup-java writes, whose only content is a server no step uses.
+      - name: Use the Maven Central mirror
+        run: |
+          cat >~/.m2/settings.xml <<'EOF'
+          <settings>
+            <mirrors>
+              <mirror><id>central-mirror</id><mirrorOf>central</mirrorOf><url>${env.DEVKIT_MAVEN_MIRROR}</url></mirror>
+            </mirrors>
+          </settings>
+          EOF
       # devkit.toml pins devkit's SSH URL, and the forge requires sign-in for every read, git over
       # HTTPS included. CI has no SSH identity, so the fetch goes over HTTPS with the read-only token
       # in DEVKIT_TOKEN, sent for this step only. A deploy token takes basic auth with any user name;
@@ -55,12 +64,6 @@ jobs:
       - run: make lint-repo
       - run: make install
       - run: make test
-      - name: Save Vaadin's Node.js
-        if: github.event_name == 'push' && steps.vaadin-node.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.vaadin/node-${{ steps.node.outputs.version }}
-          key: ${{ steps.vaadin-node.outputs.cache-primary-key }}
 
   audit:
     runs-on: ubuntu-latest
@@ -73,16 +76,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false # no later step pushes; keep the token away from build code
-      # The NVD data lives under ~/.m2/repository but changes daily, so it gets its own cache.
+      # The NVD data, under ~/.m2/repository, is the only part of it cached: a download takes minutes.
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "25"
-          cache: maven
-          cache-path: |
-            ~/.m2/repository
-            !~/.m2/repository/org/owasp/dependency-check-data
-          cache-read-only: ${{ github.event_name != 'push' }}
+      - name: Use the Maven Central mirror
+        run: |
+          cat >~/.m2/settings.xml <<'EOF'
+          <settings>
+            <mirrors>
+              <mirror><id>central-mirror</id><mirrorOf>central</mirrorOf><url>${env.DEVKIT_MAVEN_MIRROR}</url></mirror>
+            </mirrors>
+          </settings>
+          EOF
       - name: Read today's date
         id: date
         run: echo "today=$(date -u +%F)" >>"$GITHUB_OUTPUT"

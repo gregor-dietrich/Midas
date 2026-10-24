@@ -305,7 +305,12 @@ commit and run `make gate` again, until a final pass succeeds.
   history, which `lint-secrets` needs), `make audit` in another.
   It reads two secrets: `DEVKIT_TOKEN`, a read-only deploy token on devkit that
   fetches it over HTTPS (the forge requires sign-in even for public repos), and
-  `NVD_API_KEY`. Images are not built or published in CI; that stays `make
+  `NVD_API_KEY`. Maven Central rate-limits the network, so every Maven download
+  goes through its mirror (`DEVKIT_MAVEN_MIRROR` and a `~/.m2/settings.xml`
+  mirror of `central`). The JDK, Vaadin's Node.js and `~/.m2/repository` are
+  downloaded on every run: any pull request can write the forge's shared cache,
+  and restoring an entry can write files anywhere in the job (the workflow's
+  header says how). Images are not built or published in CI; that stays `make
   release`.
 - `Makefile`: Entry point for all development tasks.
 - `README.md`: General project documentation.
