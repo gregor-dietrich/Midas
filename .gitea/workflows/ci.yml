@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: "22" # the newest 22.x, at or above devkit's 22.22.2 floor
           check-latest: true # not an older 22.x the runner has cached
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "25"
@@ -74,7 +74,7 @@ jobs:
         with:
           persist-credentials: false # no later step pushes; keep the token away from build code
       # The NVD data lives under ~/.m2/repository but changes daily, so it gets its own cache.
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "25"
