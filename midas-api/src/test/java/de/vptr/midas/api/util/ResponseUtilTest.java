@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.ws.rs.core.Response;
 
-@SuppressWarnings("NullAway")
 class ResponseUtilTest {
 
     @Test

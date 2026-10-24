@@ -20,7 +20,6 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 
 /** Covers the parent-id derivation edge cases; HTTP behaviour is pinned elsewhere. */
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("NullAway")
 class PostCategoryServiceTest {
 
     @Mock
@@ -34,6 +33,7 @@ class PostCategoryServiceTest {
     PostCategoryService categoryService;
 
     @Test
+    @SuppressWarnings("NullAway")
     void createCategory_sendsNoParent_forRootCategory() {
         when(this.categoryClient.createCategory(any(PostCategoryDto.class)))
                 .thenReturn(new PostCategoryResponseDto().publicId("c1").name("Topics"));

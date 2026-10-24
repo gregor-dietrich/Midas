@@ -28,7 +28,6 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-@SuppressWarnings("NullAway")
 class AuthServiceTest extends AbstractSessionServiceTestBase {
 
     @Mock
@@ -87,6 +86,7 @@ class AuthServiceTest extends AbstractSessionServiceTestBase {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void authenticate_shouldReturnInvalidInput_whenUsernameIsNull() {
         // When
         final AuthResultDto result = this.authService.authenticate(null, "password");
@@ -96,6 +96,7 @@ class AuthServiceTest extends AbstractSessionServiceTestBase {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void authenticate_shouldReturnInvalidInput_whenPasswordIsNull() {
         // When
         final AuthResultDto result = this.authService.authenticate("username", null);

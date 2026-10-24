@@ -25,7 +25,6 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.util.MockDataUtil;
 import de.vptr.midas.gui.util.NotificationUtil;
 
-@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class AdminPostCategoryDialogTest extends AbstractDialogTest {
 
@@ -33,6 +32,7 @@ class AdminPostCategoryDialogTest extends AbstractDialogTest {
     PostCategoryService categoryService;
 
     @Test
+    @SuppressWarnings("NullAway")
     void saveCategory_shouldCreateCategory_withNameAndParent() {
         final var dialog = new AdminPostCategoryDialog(this.categoryService, this.onSave, this.onAuthFailure);
         final var parentCategory =

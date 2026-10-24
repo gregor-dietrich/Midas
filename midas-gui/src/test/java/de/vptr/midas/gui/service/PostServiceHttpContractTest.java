@@ -31,7 +31,6 @@ import jakarta.inject.Inject;
 /** Pins {@link PostService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class PostServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String POST_ID = "01JB8Y2K4M6N8P0Q2R4S6T8V0W";

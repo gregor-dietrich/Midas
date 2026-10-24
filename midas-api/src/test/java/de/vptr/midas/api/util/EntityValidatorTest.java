@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.validation.ValidationException;
 
-@SuppressWarnings("NullAway")
 class EntityValidatorTest {
 
     @Test
@@ -40,6 +39,7 @@ class EntityValidatorTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void testCheckUnique_messageContainsFieldNameAndValue() {
         final Optional<String> existing = Optional.of("existing-entity");
 

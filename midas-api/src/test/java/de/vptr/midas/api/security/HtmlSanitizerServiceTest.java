@@ -10,7 +10,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
 @QuarkusTest
-@SuppressWarnings("NullAway")
 class HtmlSanitizerServiceTest {
 
     @Inject
@@ -27,6 +26,7 @@ class HtmlSanitizerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void sanitizeRichContent_shouldStripScriptTags() {
         final String result = this.sanitizer.sanitizeRichContent("<script>alert(1)</script>");
         assertFalse(result.contains("<script>"), "script tag must be removed");
@@ -44,12 +44,14 @@ class HtmlSanitizerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void sanitizeComment_shouldStripScriptTags() {
         final String result = this.sanitizer.sanitizeComment("<script>evil()</script>");
         assertFalse(result.contains("<script>"), "script tag must be removed");
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void sanitizeComment_shouldStripLinksAndPreserveText() {
         final String result = this.sanitizer.sanitizeComment("<a href=\"http://evil.com\">click here</a>");
         assertFalse(result.contains("<a"), "anchor tag must be stripped in comments");

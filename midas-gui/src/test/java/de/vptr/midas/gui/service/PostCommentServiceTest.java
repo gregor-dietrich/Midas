@@ -24,7 +24,6 @@ import jakarta.ws.rs.WebApplicationException;
 
 /** Covers the comment-created event; HTTP behaviour is pinned by {@link PostCommentServiceHttpContractTest}. */
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("NullAway")
 class PostCommentServiceTest {
 
     @Mock

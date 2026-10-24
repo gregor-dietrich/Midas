@@ -413,8 +413,7 @@ VALUES ('01AN4Z07BY79KA1307SR9X4MV3', 'Administrator',
 - Production-ready Docker images (Eclipse Temurin JRE on Alpine)
 - Git hooks from devkit: `make hooks` installs a pre-commit hook that runs
   `make lint-repo` and a pre-push hook that runs `make lint-repo test`
-- License enforcement (an allowlist of license names: devkit's, plus the ones
-  the root `pom.xml` appends)
+- License enforcement (devkit's allowlist of license names)
 
 ## 🔐 Contracts & Specifications
 

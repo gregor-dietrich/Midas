@@ -38,7 +38,6 @@ import jakarta.inject.Inject;
 /** Pins {@link AccountService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class AccountServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String ACCOUNT_ID = "01JQ4ACC0UNT00000000000001";
@@ -97,6 +96,7 @@ class AccountServiceHttpContractTest extends AbstractHttpContractTest {
         return arguments(suffix, json, probe, expected, query);
     }
 
+    @SuppressWarnings("NullAway")
     static Stream<Arguments> readEndpoints() {
         final String accounts = "[" + ACCOUNT_JSON + "]";
         final String payments = "[" + PAYMENT_JSON + "]";

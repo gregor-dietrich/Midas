@@ -20,7 +20,6 @@ import io.quarkus.test.InjectMock;
  * carry {@code @QuarkusTest} and
  * {@code @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)}.
  */
-@SuppressWarnings("NullAway")
 public abstract class AbstractHttpContractTest {
 
     protected static final String AUTH_HEADER = "Basic dGVzdDp0ZXN0";

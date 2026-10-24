@@ -40,7 +40,6 @@ import jakarta.ws.rs.WebApplicationException;
  * restores it.
  */
 @QuarkusTest
-@SuppressWarnings("NullAway")
 class AdministratorGuardTest {
 
     private static final String ADMIN_ID = "01AN4Z07BY79KA1307SR9X4MV7";
@@ -92,6 +91,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testBanLastAdministratorIsRefused() {
         leaveAdminAsLastAdministrator();
         assertRefused(() -> this.userService.patchUser(ADMIN_ID, userPatch(true, null, null)));
@@ -107,6 +107,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testMoveLastAdministratorToRankWithoutAdministrationIsRefused() {
         leaveAdminAsLastAdministrator();
         assertRefused(() -> this.userService.patchUser(ADMIN_ID, userPatch(null, null, USER_RANK_ID)));
@@ -142,6 +143,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testBanAdministratorWhileAnotherRemainsIsAllowed() {
         leaveAdminAsLastAdministrator();
         this.createActiveAdministrator(ADMINISTRATOR_RANK_ID);
@@ -150,6 +152,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testDeleteAdministratorWhileAnotherRemainsIsAllowed() {
         leaveAdminAsLastAdministrator();
         final var second = this.createActiveAdministrator(ADMINISTRATOR_RANK_ID);
@@ -158,6 +161,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testDemoteRankWhileAdministratorInAnotherRankRemainsIsAllowed() throws ReflectiveOperationException {
         leaveAdminAsLastAdministrator();
         this.createActiveAdministrator(this.userRankService.createRank(fullRank("Second Administrator")).publicId);
@@ -177,6 +181,7 @@ class AdministratorGuardTest {
     }
 
     /** Leaves the demo admin the last active administrator beside an active user holding only the former set. */
+    @SuppressWarnings("NullAway")
     private void leaveAdminBesidePartialAdministrator() {
         leaveAdminAsLastAdministrator();
         final var partial = new UserRankDto("Partial Administrator");
@@ -188,6 +193,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testDemoteLastAdministratorWhilePartialAdministratorRemainsIsRefused() {
         this.leaveAdminBesidePartialAdministrator();
         assertRefused(() -> this.userService.patchUser(ADMIN_ID, userPatch(null, null, USER_RANK_ID)));
@@ -216,6 +222,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testEditNonAdministratorIsAllowed() {
         leaveAdminAsLastAdministrator();
         assertTrue(this.userService.patchUser(USER_ID, userPatch(true, null, null)).banned);
@@ -225,6 +232,7 @@ class AdministratorGuardTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testEditWithoutAnyAdministratorIsAllowed() {
         UserEntity.update("activated = false");
         assertTrue(this.userService.patchUser(USER_ID, userPatch(true, null, null)).banned);
@@ -236,6 +244,7 @@ class AdministratorGuardTest {
      * would count two administrators before and one after their own change, and both would commit.
      */
     @Test
+    @SuppressWarnings("NullAway")
     void testConcurrentBansOfLastTwoAdministratorsLeaveOne() throws InterruptedException {
         final List<Long> others = QuarkusTransaction.requiringNew().call(() -> {
             final List<Long> ids = UserEntity.<UserEntity>find("activated = true AND publicId <> ?1", ADMIN_ID).stream()
@@ -281,6 +290,7 @@ class AdministratorGuardTest {
 
     /** #78: a request queued on the guard's lock behind its caller's ban re-reads the caller and is refused. */
     @Test
+    @SuppressWarnings("NullAway")
     void testRequestQueuedBehindCallerBanIsRefused() throws Exception {
         final var rank = new UserRankDto("editor_queued");
         rank.userEdit = true;

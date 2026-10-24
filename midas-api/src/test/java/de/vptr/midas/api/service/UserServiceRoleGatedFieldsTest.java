@@ -25,7 +25,6 @@ import jakarta.ws.rs.WebApplicationException;
  * (#78).
  */
 @QuarkusTest
-@SuppressWarnings("NullAway")
 class UserServiceRoleGatedFieldsTest {
 
     /**
@@ -66,6 +65,7 @@ class UserServiceRoleGatedFieldsTest {
     }
 
     /** A user at the User rank that a concurrent change has since moved to Guest. */
+    @SuppressWarnings("NullAway")
     private UserResponseDto createDemotedUser() {
         final var stale = this.createUserWithRank(USER_RANK_ID);
         this.userService.patchUser(stale.publicId, new UserDto(null, null, null, GUEST_RANK_ID, null, null, null));
@@ -74,6 +74,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchWithoutRankRoleKeepsCurrentRankButSetsStatus() {
         final var stale = this.createDemotedUser();
         final var change = staleDto(stale);
@@ -86,6 +87,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testUpdateWithoutRankRoleKeepsCurrentRankButSetsStatus() {
         final var stale = this.createDemotedUser();
         final var change = staleDto(stale);
@@ -98,6 +100,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchWithoutAdminViewKeepsCurrentStatus() {
         final var stale = this.createUserWithRank(GUEST_RANK_ID);
         this.userService.patchUser(stale.publicId, new UserDto(null, null, null, null, true, true, null));
@@ -109,6 +112,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testUpdateWithoutAdminViewKeepsCurrentStatus() {
         final var stale = this.createUserWithRank(GUEST_RANK_ID);
         this.userService.patchUser(stale.publicId, new UserDto(null, null, null, null, true, true, null));
@@ -120,6 +124,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCreateWithoutEitherRoleGetsDefaults() {
         final var dto = createUniqueUserDto("protected", "protected");
         dto.rankPublicId = GUEST_RANK_ID;
@@ -134,6 +139,7 @@ class UserServiceRoleGatedFieldsTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCallerWithBothRolesSetsRoleGatedFields() {
         final var created = this.createUserWithRank(USER_RANK_ID);
         final var patched = this.userService.patchUser(created.publicId,
@@ -146,6 +152,7 @@ class UserServiceRoleGatedFieldsTest {
     /** A change that runs after the caller's own ban is refused, so cannot lift the ban (#78). */
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testBannedCallerCannotUnbanThemselves() {
         final var editor = this.createEditor();
         this.userService.patchUser(editor.publicId, new UserDto(null, null, null, null, true, null, null));

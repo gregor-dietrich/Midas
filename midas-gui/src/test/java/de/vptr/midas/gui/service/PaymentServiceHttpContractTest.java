@@ -31,7 +31,6 @@ import jakarta.inject.Inject;
 /** Pins {@link PaymentService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String PAYMENT_ID = "01JQ5PAYMENT00000000000007";
@@ -69,6 +68,7 @@ class PaymentServiceHttpContractTest extends AbstractHttpContractTest {
         return arguments(suffix, probe, expected, query);
     }
 
+    @SuppressWarnings("NullAway")
     static Stream<Arguments> readEndpoints() {
         return Stream.of(
                 get("/payments", s -> s.getAllPayments(null, null).get(0).getPublicId(), PAYMENT_ID,

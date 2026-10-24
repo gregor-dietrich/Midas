@@ -26,7 +26,6 @@ import de.vptr.midas.gui.util.MockDataUtil;
 import jakarta.ws.rs.WebApplicationException;
 
 /** Covers the session cache around {@link UserRankService#getCurrentUserRank()}; HTTP behaviour is pinned elsewhere. */
-@SuppressWarnings("NullAway")
 class UserRankServiceTest extends AbstractSessionServiceTestBase {
 
     private static final String RANK = "current.user.rank";
@@ -123,6 +122,7 @@ class UserRankServiceTest extends AbstractSessionServiceTestBase {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void getCurrentUserRank_returnsEmptyRank_whenUserHasNoRank() {
         when(this.userService.getCurrentUser()).thenReturn(Optional
                 .of(MockDataUtil.createUserResponseDto("1", "testuser", "test@example.com").rankPublicId(null)));

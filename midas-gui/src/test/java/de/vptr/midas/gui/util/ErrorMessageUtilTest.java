@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("NullAway")
 class ErrorMessageUtilTest {
 
     @Test
@@ -160,6 +159,7 @@ class ErrorMessageUtilTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void extractErrorMessage_shouldHandleNullResponse() {
         final var result = ErrorMessageUtil.extractErrorMessage(null);
 

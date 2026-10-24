@@ -25,7 +25,6 @@ import jakarta.inject.Inject;
 /** Pins {@link UserGroupService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String GROUP_ID = "01HZX3GR0UP000000000000001";
@@ -52,6 +51,7 @@ class UserGroupServiceHttpContractTest extends AbstractHttpContractTest {
 
     @ParameterizedTest
     @MethodSource("paginations")
+    @SuppressWarnings("NullAway")
     void getAllGroups_mapsGroupsAndNormalisesPagination(final Integer page, final Integer size,
             final String expectedPage, final String expectedSize) {
         StubBackend.stub("GET", "/user-groups", 200, "[" + GROUP_JSON + "]");

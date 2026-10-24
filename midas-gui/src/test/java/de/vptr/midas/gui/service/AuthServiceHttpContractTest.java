@@ -39,7 +39,6 @@ import jakarta.inject.Inject;
  */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class AuthServiceHttpContractTest {
 
     private static final String USERNAME = "member";

@@ -32,7 +32,6 @@ import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
-@SuppressWarnings("NullAway")
 class UserServiceTest {
     @Inject
     UserService userService;
@@ -53,6 +52,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCreateUser() {
         final var newUser = createUniqueUserDto("newTestUser", "newtest");
         final var createdUser = this.userService.createUser(newUser);
@@ -70,6 +70,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCreateUserWithExistingUsername() {
         // First create a user
         final var firstUser = createUniqueUserDto("duplicateUser", "first");
@@ -92,6 +93,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testUpdateUser() {
         // First create a user
         final var newUser = createUniqueUserDto("updateTestUser", "update");
@@ -109,6 +111,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testDeleteUser() {
         // First create a user
         final var newUser = createUniqueUserDto("deleteTestUser", "delete");
@@ -132,6 +135,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testChangePassword() {
         final var newUser = createUniqueUserDto("changePasswordUser", "changepassword");
         final var password = "OldPassword123!";
@@ -149,6 +153,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testChangePasswordInvalidCurrent() {
         final var newUser = createUniqueUserDto("changePasswordUserInvalid", "changepasswordinvalid");
         final var password = "OldPassword123!";
@@ -167,6 +172,7 @@ class UserServiceTest {
      */
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
+    @SuppressWarnings("NullAway")
     void testPasswordChangeAndConcurrentBanBothKept(final boolean banFirst) {
         final var dto = createUniqueUserDto("concurrentPasswordUser", "concurrentpassword");
         dto.activated = true;
@@ -218,6 +224,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testFindActiveUsers() {
         // Create active and inactive users
         final var activeUser = createUniqueUserDto("activeUser", "active");
@@ -241,6 +248,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCreateUserWithExistingEmail() {
         // First create a user
         final var firstUser = createUniqueUserDto("duplicateEmail", "first");
@@ -261,6 +269,7 @@ class UserServiceTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void testSearchUsersWithNull() {
         final var expected = this.userService.getAllUsers();
 
@@ -282,6 +291,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testSearchUsersWithQuery() {
         final var dto = createUniqueUserDto("searchTestUser", "searchtest");
         this.userService.createUser(dto);
@@ -329,6 +339,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserUsername() {
         final var dto = createUniqueUserDto("patchUser", "patch");
         final var created = this.userService.createUser(dto);
@@ -343,6 +354,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserEmail() {
         final var dto = createUniqueUserDto("patchEmailUser", "patchemail");
         final var created = this.userService.createUser(dto);
@@ -357,6 +369,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserBannedFlag() {
         final var dto = createUniqueUserDto("patchBannedUser", "patchbanned");
         final var created = this.userService.createUser(dto);
@@ -371,6 +384,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserActivatedFlag() {
         final var dto = createUniqueUserDto("patchActivatedUser", "patchactivated");
         final var created = this.userService.createUser(dto);
@@ -392,6 +406,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserDuplicateUsername() {
         final var user1 = createUniqueUserDto("patchDup1", "patchdup1");
         this.userService.createUser(user1);
@@ -407,6 +422,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testPatchUserPassword() {
         final var dto = createUniqueUserDto("patchPwUser", "patchpw");
         final var created = this.userService.createUser(dto);
@@ -420,6 +436,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testUpdateUserWithPassword() {
         final var dto = createUniqueUserDto("updatePwUser", "updatepw");
         final var created = this.userService.createUser(dto);
@@ -459,6 +476,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testFindById() {
         final var dto = createUniqueUserDto("findByIdUser", "findbyid");
         final var created = this.userService.createUser(dto);
@@ -489,6 +507,7 @@ class UserServiceTest {
 
     @Test
     @TestTransaction
+    @SuppressWarnings("NullAway")
     void testCreateInitialAdminOnEmptyTable() {
         UserEntity.deleteAll();
         assertFalse(this.userService.hasUsers());

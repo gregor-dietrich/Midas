@@ -118,9 +118,10 @@ The project enforces very strict quality gates:
   environment or the gitignored `.env.build` (not `.env`, which docker-compose
   reads); without a key it fails rather than running slowly (gregor/devkit#11).
   License enforcement allows only the license names devkit's parent lists,
-  compared exactly, plus the ones the root pom appends; a dependency declaring
-  another spelling of an allowed license fails the build until its name is added
-  there.
+  compared exactly; a dependency declaring another spelling of an allowed
+  license fails the build until the root pom appends its name
+  (`<includedLicenses combine.children="append">` in `license-maven-plugin`'s
+  `add-third-party` execution).
 - **Frontend pins**: devkit's `check_frontend_deps.py` verifies the committed
   `midas-gui/package.json` / `package-lock.json` against Vaadin's own version
   manifest for the pinned `${vaadin.version}`, plus the security minimums in
@@ -167,8 +168,7 @@ The poms keep only the project's own values, as devkit's contract
 (`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the
 parent's properties in the root pom (`error-prone.extra.args` excludes generated
 sources from Error Prone; `pmd.extraAssertMethodNames` names the test helpers
-PMD counts as assertions), the license names the root pom appends to the
-parent's allowlist, `nullaway.annotated.packages` and JaCoCo's
+PMD counts as assertions), `nullaway.annotated.packages` and JaCoCo's
 `<excludes>` in each module, and midas-gui's Checkstyle `<sourceDirectories>`
 and PMD `<excludeRoots>` that keep its generated sources out of those gates.
 Never define one of the parent's `*.version` properties (pass

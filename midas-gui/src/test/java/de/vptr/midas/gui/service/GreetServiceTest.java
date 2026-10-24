@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.exception.AuthenticationException;
 
-@SuppressWarnings("NullAway")
 @ExtendWith(MockitoExtension.class)
 class GreetServiceTest {
 
@@ -40,6 +39,7 @@ class GreetServiceTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void greet_shouldReturnGreetingWithAnonymous_whenNameIsNull() {
         // Given
         when(this.authService.getAuthorizationHeader()).thenReturn("Basic dGVzdDp0ZXN0");

@@ -14,7 +14,6 @@ import javax.crypto.SecretKey;
 
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("NullAway")
 class SessionAuthorizationStoreTest {
 
     private static SecretKey testKey() {

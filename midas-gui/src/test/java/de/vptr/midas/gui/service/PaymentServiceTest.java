@@ -23,7 +23,6 @@ import de.vptr.midas.gui.dto.PaymentResponseDto;
 
 /** Covers the merge in {@link PaymentService#getPaymentsByAccount}; HTTP behaviour is pinned elsewhere. */
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("NullAway")
 class PaymentServiceTest {
 
     @Mock

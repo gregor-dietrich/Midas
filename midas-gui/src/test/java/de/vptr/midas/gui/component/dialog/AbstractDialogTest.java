@@ -12,7 +12,6 @@ import com.vaadin.flow.component.UI;
 import de.vptr.midas.gui.util.NotificationUtil;
 
 /** Base class for dialog tests providing common setup and mocks. */
-@SuppressWarnings("NullAway")
 public abstract class AbstractDialogTest {
 
     protected UI ui;

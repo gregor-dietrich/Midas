@@ -27,7 +27,6 @@ import jakarta.inject.Inject;
 /** Pins {@link PageService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String PAGE_JSON = """
@@ -53,6 +52,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
     }
 
     @Test
+    @SuppressWarnings("NullAway")
     void getAllPages_normalisesPaginationToDefaults() {
         StubBackend.stub("GET", "/pages", 200, "[]");
 
@@ -93,6 +93,7 @@ class PageServiceHttpContractTest extends AbstractHttpContractTest {
 
     @ParameterizedTest(name = "page={0} size={1}")
     @CsvSource({ "-2,0,0,20", "3,500,3,100" })
+    @SuppressWarnings("NullAway")
     void getAllPagesPaginated_normalisesPagination(final int page, final int size, final int sentPage,
             final int sentSize) {
         StubBackend.stub("GET", "/pages", 200, "[" + PAGE_JSON + "]");

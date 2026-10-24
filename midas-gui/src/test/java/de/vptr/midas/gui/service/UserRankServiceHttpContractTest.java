@@ -25,7 +25,6 @@ import jakarta.inject.Inject;
 /** Pins {@link UserRankService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class UserRankServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String RANK_ID = "01HZX3RANK0000000000000003";

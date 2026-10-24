@@ -30,7 +30,6 @@ import jakarta.ws.rs.ProcessingException;
 
 /** Every service reports an unreachable backend the same way; the stub backend cannot simulate that cheaply. */
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("NullAway")
 class ServiceConnectionFailureTest {
 
     private final ProcessingException refused = new ProcessingException("Connection refused");

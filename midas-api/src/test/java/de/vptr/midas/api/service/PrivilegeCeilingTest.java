@@ -16,7 +16,6 @@ import jakarta.ws.rs.WebApplicationException;
 
 /** Tests the privilege ceiling against the demo ranks: Administrator holds every permission, Guest none. */
 @QuarkusTest
-@SuppressWarnings("NullAway")
 class PrivilegeCeilingTest {
 
     private static UserRankEntity rank(final String name) {

@@ -7,10 +7,10 @@ import java.security.Principal;
 
 import org.junit.jupiter.api.Test;
 
+import jakarta.annotation.Nullable;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.SecurityContext;
 
-@SuppressWarnings("NullAway")
 class SecurityContextUtilTest {
 
     @Test
@@ -48,13 +48,15 @@ class SecurityContextUtilTest {
     }
 
     private static final class TestSecurityContext implements SecurityContext {
+        @Nullable
         private final Principal principal;
 
-        private TestSecurityContext(final Principal principal) {
+        private TestSecurityContext(@Nullable final Principal principal) {
             this.principal = principal;
         }
 
         @Override
+        @Nullable
         public Principal getUserPrincipal() {
             return this.principal;
         }

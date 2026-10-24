@@ -29,7 +29,6 @@ import jakarta.inject.Inject;
 /** Pins {@link UserService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest
 @QuarkusTestResource(value = StubBackend.class, restrictToAnnotatedClass = true)
-@SuppressWarnings("NullAway")
 class UserServiceHttpContractTest extends AbstractHttpContractTest {
 
     private static final String USER_ID = "01HZX3U5ER0000000000000001";
@@ -49,6 +48,7 @@ class UserServiceHttpContractTest extends AbstractHttpContractTest {
 
     @ParameterizedTest
     @CsvSource(nullValues = "null", value = { "null, null, 0, 20", "-3, 0, 0, 20", "2, 500, 2, 100", "1, 50, 1, 50" })
+    @SuppressWarnings("NullAway")
     void getAllUsers_sendsNormalisedPagination(final Integer page, final Integer size, final int expectedPage,
             final int expectedSize) {
         StubBackend.stub("GET", "/users", 200, "[" + USER_JSON + "]");
