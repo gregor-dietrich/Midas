@@ -16,12 +16,12 @@
   <packaging>quarkus</packaging>
 
   <properties>
-    <openapi-generator-plugin.version>7.25.0</openapi-generator-plugin.version>
+    <openapi-generator-plugin.version>7.26.0</openapi-generator-plugin.version>
     <nullaway.annotated.packages>de.vptr.midas.gui</nullaway.annotated.packages>
 
     <assertj.version>3.27.7</assertj.version>
     <line-awesome.version>2.1.0</line-awesome.version>
-    <vaadin.version>25.3.0</vaadin.version>
+    <vaadin.version>25.3.3</vaadin.version>
     <!-- Node.js for every Vaadin frontend build. vaadin-maven-plugin reads these two properties
     directly; quarkus-maven-plugin passes them to the Quarkus build step and to dev mode (see its
     systemProperties). Vaadin downloads this version to ~/.vaadin instead of using a node on PATH,
@@ -34,7 +34,7 @@
     Off only in `make regen-lockfile`, which updates the lockfile. -->
     <vaadin.ci.build>true</vaadin.ci.build>
     <!-- Jackson 3 security pin (transitive via Vaadin). See dependencyManagement. -->
-    <jackson3.version>3.1.7</jackson3.version>
+    <jackson3.version>3.1.8</jackson3.version>
   </properties>
 
   <dependencyManagement>
@@ -60,8 +60,8 @@
           Stays on the 3.1.x line Vaadin 25.3 is built against rather than moving to 3.2.x, which
           needs com.fasterxml.jackson.core:jackson-annotations 2.22 (Quarkus manages 2.21).
           Jackson 2 (via Quarkus) is already patched at 2.21.7.
-      Vaadin cannot resolve this by version bump: 25.3.0 is the newest release and ships 3.1.5.
-      Remove this pin once Vaadin manages tools.jackson.core >= 3.1.7. -->
+        3.1.7 -> 3.1.8: the newest 3.1.x release; Vaadin 25.3.3 ships 3.1.7.
+      Remove this pin once Vaadin ships tools.jackson.core >= ${jackson3.version}. -->
       <dependency>
         <groupId>tools.jackson</groupId>
         <artifactId>jackson-bom</artifactId>

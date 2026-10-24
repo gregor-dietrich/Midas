@@ -9,7 +9,7 @@
   <parent>
     <groupId>de.vptr.devkit</groupId>
     <artifactId>devkit-parent</artifactId>
-    <version>0.7.0</version>
+    <version>0.8.0</version>
     <relativePath>.devkit/java/parent/pom.xml</relativePath>
   </parent>
 
@@ -36,7 +36,7 @@
 
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.40.1</quarkus.platform.version>
+    <quarkus.platform.version>3.40.1.1</quarkus.platform.version>
 
     <!-- generated sources (midas-gui's openapi-generator output) are not ours to fix; a no-op in
     a module that generates none -->
@@ -46,7 +46,7 @@
     assertion; PMD counts none of them as one unless named here -->
     <pmd.extraAssertMethodNames>statusCode,testAuthorizedGetWithExistingResource,testAuthorizedGetWithExistingResourceAndJson,testAuthorizedGetWithJson,testAuthorizedGetWithNonExistentResource,testAuthorizedPatchWithJson,testAuthorizedPostWithCreation,testAuthorizedPostWithInsufficientRole,testAuthorizedPostWithSyntaxError,testAuthorizedPostWithValidationError,testAuthorizedPutWithJson,testAuthorizedSearchWithJson,testUnauthorizedAccess,testUnauthorizedDelete,testUnauthorizedPatch,testUnauthorizedPost,testUnauthorizedPut</pmd.extraAssertMethodNames>
 
-    <spotbugs-annotations.version>4.10.4</spotbugs-annotations.version>
+    <spotbugs-annotations.version>4.10.5</spotbugs-annotations.version>
   </properties>
 
   <modules>
