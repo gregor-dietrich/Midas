@@ -5,6 +5,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import de.vptr.midas.api.dto.UserGroupDto;
 import de.vptr.midas.api.dto.UserGroupResponseDto;
 import de.vptr.midas.api.dto.UserResponseDto;
@@ -13,11 +19,6 @@ import de.vptr.midas.api.entity.UserGroupEntity;
 import de.vptr.midas.api.entity.UserGroupMetaEntity;
 import de.vptr.midas.api.util.QueryAggregationUtil;
 import de.vptr.midas.api.util.SearchQueryUtil;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /** Service for user group business logic. */
 @ApplicationScoped

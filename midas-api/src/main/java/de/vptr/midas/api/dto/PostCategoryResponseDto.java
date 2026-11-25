@@ -3,8 +3,9 @@ package de.vptr.midas.api.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import de.vptr.midas.api.entity.PostCategoryEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.PostCategoryEntity;
 
 /**
  * Response DTO for post category operations. Contains computed fields and safe data for client responses.

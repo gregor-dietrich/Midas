@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
@@ -31,7 +33,6 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing users in the admin view. Encapsulates form fields, binder, password management, and
@@ -96,34 +97,7 @@ public class AdminUserDialog extends FormDialog {
 
         form.add(usernameField, emailField);
 
-        if (user == null) {
-            final var passwordField = new PasswordField("Password");
-            passwordField.setRequired(true);
-            passwordField.setMaxLength(MAX_PASSWORD_LENGTH);
-            passwordField.setInvalid(false);
-            form.add(passwordField);
-            b.forField(passwordField).asRequired("Password is required")
-                    .withValidator(this::isValidPassword, PASSWORD_RULES)
-                    .bind(UserDto::getPassword, UserDto::setPassword);
-        } else {
-            final var passwordLayout = new VerticalLayout();
-            passwordLayout.setPadding(false);
-            passwordLayout.setMargin(false);
-            passwordLayout.setSpacing(false);
-
-            final var passwordLabel = new Span("Password");
-            passwordLabel.getStyle().set("font-size", "var(--lumo-font-size-s)");
-            passwordLabel.getStyle().set("font-weight", "500");
-            passwordLabel.getStyle().set("color", "var(--lumo-secondary-text-color)");
-            passwordLabel.getStyle().set("margin-bottom", "var(--lumo-space-xs)");
-
-            final var passwordButton = new Button("Change Password");
-            passwordButton.setPrefixComponent(LineAwesomeIcon.LOCK_SOLID.create());
-            passwordButton.addClickListener(e -> this.openPasswordDialog(user));
-
-            passwordLayout.add(passwordLabel, passwordButton);
-            form.add(passwordLayout);
-        }
+        this.addPasswordControls(user, form, b);
 
         final var rankField = new ComboBox<UserRankResponseDto>("Rank");
         rankField.setItems(availableRanks != null ? availableRanks : List.of());
@@ -138,37 +112,7 @@ public class AdminUserDialog extends FormDialog {
 
         form.add(rankField, activatedField, bannedField);
 
-        // Bind fields with proper validation
-        b.forField(usernameField).asRequired("Username is required")
-                .withValidator(new StringLengthValidator("Username must be between 3 and 50 characters", 3, 50))
-                .withValidator(username -> !username.contains(":"), "Username must not contain ':'")
-                .bind(UserDto::getUsername, UserDto::setUsername);
-
-        b.forField(emailField).withValidator(email -> {
-            if (email == null || email.trim().isEmpty()) {
-                return true;
-            }
-            return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-        }, "Email must be valid or empty").bind(UserDto::getEmail,
-                (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
-
-        b.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
-        b.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
-
-        // Rank binding - convert between UserRankResponseDto and rankPublicId
-        b.forField(rankField).asRequired("Rank is required").bind(u -> {
-            if (u.getRankPublicId() != null && availableRanks != null) {
-                return availableRanks.stream().filter(rank -> Objects.equals(rank.getPublicId(), u.getRankPublicId()))
-                        .findFirst().orElse(null);
-            }
-            return null;
-        }, (u, value) -> {
-            if (value != null) {
-                u.setRankPublicId(value.getPublicId());
-            } else {
-                u.setRankPublicId(null);
-            }
-        });
+        bindUserFields(b, usernameField, emailField, rankField, activatedField, bannedField, availableRanks);
 
         final var buttonLayout = new HorizontalLayout();
         buttonLayout.setSpacing(true);
@@ -188,6 +132,73 @@ public class AdminUserDialog extends FormDialog {
         this.add(dialogLayout);
         b.readBean(this.currentUser);
         super.open();
+    }
+
+    private void addPasswordControls(@Nullable final UserResponseDto user, final FormLayout form,
+            final Binder<UserDto> b) {
+        if (user == null) {
+            final var passwordField = new PasswordField("Password");
+            passwordField.setRequired(true);
+            passwordField.setMaxLength(MAX_PASSWORD_LENGTH);
+            passwordField.setInvalid(false);
+            form.add(passwordField);
+            b.forField(passwordField).asRequired("Password is required")
+                    .withValidator(this::isValidPassword, PASSWORD_RULES)
+                    .bind(UserDto::getPassword, UserDto::setPassword);
+            return;
+        }
+
+        final var passwordLayout = new VerticalLayout();
+        passwordLayout.setPadding(false);
+        passwordLayout.setMargin(false);
+        passwordLayout.setSpacing(false);
+
+        final var passwordLabel = new Span("Password");
+        passwordLabel.getStyle().set("font-size", "var(--lumo-font-size-s)");
+        passwordLabel.getStyle().set("font-weight", "500");
+        passwordLabel.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        passwordLabel.getStyle().set("margin-bottom", "var(--lumo-space-xs)");
+
+        final var passwordButton = new Button("Change Password");
+        passwordButton.setPrefixComponent(LineAwesomeIcon.LOCK_SOLID.create());
+        passwordButton.addClickListener(e -> this.openPasswordDialog(user));
+
+        passwordLayout.add(passwordLabel, passwordButton);
+        form.add(passwordLayout);
+    }
+
+    private static void bindUserFields(final Binder<UserDto> b, final TextField usernameField,
+            final EmailField emailField, final ComboBox<UserRankResponseDto> rankField, final Checkbox activatedField,
+            final Checkbox bannedField, @Nullable final List<UserRankResponseDto> availableRanks) {
+        b.forField(usernameField).asRequired("Username is required")
+                .withValidator(new StringLengthValidator("Username must be between 3 and 50 characters", 3, 50))
+                .withValidator(username -> !username.contains(":"), "Username must not contain ':'")
+                .bind(UserDto::getUsername, UserDto::setUsername);
+
+        b.forField(emailField).withValidator(email -> {
+            if (email == null || email.trim().isEmpty()) {
+                return true;
+            }
+            return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+        }, "Email must be valid or empty").bind(UserDto::getEmail,
+                (u, value) -> u.setEmail((value == null || value.trim().isEmpty()) ? null : value.trim()));
+
+        b.bind(activatedField, u -> Boolean.TRUE.equals(u.isActivated()), UserDto::setActivated);
+        b.bind(bannedField, u -> Boolean.TRUE.equals(u.isBanned()), UserDto::setBanned);
+
+        b.forField(rankField).asRequired("Rank is required").bind(
+                u -> findRankByPublicId(availableRanks, u.getRankPublicId()),
+                (u, value) -> u.setRankPublicId(value != null ? value.getPublicId() : null));
+    }
+
+    @Nullable
+    private static UserRankResponseDto findRankByPublicId(@Nullable final List<UserRankResponseDto> availableRanks,
+            @Nullable final String rankPublicId) {
+        if (rankPublicId == null || availableRanks == null) {
+            return null;
+        }
+        return availableRanks.stream().filter(rank -> Objects.equals(rank.getPublicId(), rankPublicId)).findFirst()
+                .orElse(null);
     }
 
     private void openPasswordDialog(final UserResponseDto user) {

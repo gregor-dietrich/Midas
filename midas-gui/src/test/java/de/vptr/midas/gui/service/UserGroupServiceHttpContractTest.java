@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,7 +22,6 @@ import de.vptr.midas.gui.util.AbstractHttpContractTest;
 import de.vptr.midas.gui.util.StubBackend;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 /** Pins {@link UserGroupService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest

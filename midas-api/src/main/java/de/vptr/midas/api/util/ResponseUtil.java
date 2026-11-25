@@ -2,9 +2,10 @@ package de.vptr.midas.api.util;
 
 import java.util.Optional;
 
-import de.vptr.midas.api.exception.ApiErrorResponse;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.exception.ApiErrorResponse;
 
 /** ResponseUtil class. */
 public final class ResponseUtil {

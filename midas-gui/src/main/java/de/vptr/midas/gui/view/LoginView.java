@@ -2,6 +2,8 @@ package de.vptr.midas.gui.view;
 
 import java.util.concurrent.TimeoutException;
 
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
@@ -19,10 +21,10 @@ import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.service.AuthService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
-import jakarta.inject.Inject;
 
 /** Login view for user authentication. */
 @Route(value = "login", layout = MainLayout.class)
@@ -100,7 +102,8 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     private void handleAuthenticationResult(final AuthResultDto result, final PasswordField passwordField,
             final Button loginButton) {
         try {
-            LOG.tracef("Authentication result - Status: %s, Message: %s", result.getStatus(), result.getMessage());
+            LOG.tracef("Authentication result - Status: %s, Message: %s", LogSanitizer.sanitize(result.getStatus()),
+                    LogSanitizer.sanitize(result.getMessage()));
 
             switch (result.getStatus()) {
                 case SUCCESS -> {
@@ -123,7 +126,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                     NotificationUtil.showWarning(result.getMessage());
                 }
                 default -> {
-                    LOG.errorf("Unknown authentication result status: %s", result.getStatus());
+                    LOG.errorf("Unknown authentication result status: %s", LogSanitizer.sanitize(result.getStatus()));
                     NotificationUtil.showError("Unknown error occurred");
                 }
             }

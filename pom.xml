@@ -4,13 +4,14 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- devkit's parent POM configures and activates every quality gate; this pom keeps only the
-  project's own values. Maven reads it through the .devkit link devkitw creates. -->
+  <!-- devkit's Quarkus parent POM configures and activates every quality gate plus Quarkus'
+  platform BOM, plugin and test dependencies; this pom keeps only the project's own values. Maven
+  reads it through the .devkit link devkitw creates. -->
   <parent>
     <groupId>de.vptr.devkit</groupId>
-    <artifactId>devkit-parent</artifactId>
-    <version>0.8.0</version>
-    <relativePath>.devkit/java/parent/pom.xml</relativePath>
+    <artifactId>devkit-quarkus-parent</artifactId>
+    <version>0.9.0</version>
+    <relativePath>.devkit/java/quarkus/pom.xml</relativePath>
   </parent>
 
   <groupId>de.vptr</groupId>
@@ -29,10 +30,6 @@
     <java.version>25</java.version>
     <maven.compiler.release>${java.version}</maven.compiler.release>
 
-    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.40.1.1</quarkus.platform.version>
-
     <!-- generated sources (midas-gui's openapi-generator output) are not ours to fix; a no-op in
     a module that generates none -->
     <error-prone.extra.args>-XepExcludedPaths:.*/generated-sources/.*</error-prone.extra.args>
@@ -46,19 +43,6 @@
     <module>midas-api</module>
     <module>midas-gui</module>
   </modules>
-
-  <dependencyManagement>
-    <dependencies>
-      <!-- Quarkus -->
-      <dependency>
-        <groupId>${quarkus.platform.group-id}</groupId>
-        <artifactId>${quarkus.platform.artifact-id}</artifactId>
-        <version>${quarkus.platform.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <!-- Quarkus Core (shared) -->
@@ -78,17 +62,7 @@
     <!-- Test (shared) -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit-mockito</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jacoco</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -98,53 +72,4 @@
       <artifactId>spotbugs-annotations</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>${quarkus.platform.group-id}</groupId>
-          <artifactId>quarkus-maven-plugin</artifactId>
-          <version>${quarkus.platform.version}</version>
-          <extensions>true</extensions>
-          <configuration>
-            <jvmArgs>--add-opens java.base/java.lang=ALL-UNNAMED
-              --add-opens java.base/jdk.internal.ref=ALL-UNNAMED
-              --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
-              --add-opens java.base/java.nio=ALL-UNNAMED
-              --add-opens java.base/sun.nio.ch=ALL-UNNAMED
-              --enable-native-access=ALL-UNNAMED
-              --sun-misc-unsafe-memory-access=allow
-              -XX:+EnableDynamicAgentLoading
-              -Xshare:off</jvmArgs>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>build</goal>
-                <goal>generate-code</goal>
-                <goal>generate-code-tests</goal>
-                <goal>native-image-agent</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
-  <profiles>
-    <profile>
-      <id>native</id>
-      <activation>
-        <property>
-          <name>native</name>
-        </property>
-      </activation>
-      <properties>
-        <skipITs>false</skipITs>
-        <quarkus.native.enabled>true</quarkus.native.enabled>
-      </properties>
-    </profile>
-  </profiles>
 </project>

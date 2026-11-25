@@ -9,9 +9,10 @@ Vaadin frontend, built using **Quarkus 3** and **Java 25**.
   - **`midas-api`**: Backend REST API service.
   - **`midas-gui`**: Frontend web application using Vaadin Flow.
 - **Build System**: Maven (multi-module) with a root `Makefile` orchestrating
-  the workflow. The quality gates come from devkit's parent POM, which the root
-  `pom.xml` inherits; the root `pom.xml` carries the configuration both modules
-  share.
+  the workflow. The quality gates and framework baselines come from devkit's
+  parent POMs: the root `pom.xml` inherits `devkit-quarkus-parent` (which
+  `midas-api` inherits through the root), and `midas-gui/pom.xml` inherits
+  `devkit-vaadin-parent` directly.
 
 ## Building and Running
 
@@ -100,10 +101,11 @@ The project enforces very strict quality gates:
 - **Linting**: Spotless (`spotless:check`), Checkstyle (devkit's shared rules
   plus the project's own in `checkstyle-project.xml`; engine pinned via
   `${checkstyle.version}`), PMD (with CPD for duplicate detection).
-- **Static Analysis**: SpotBugs (Max effort, Low threshold), ErrorProne, and
-  NullAway (strict nullability checks). The compiler runs with `-Werror` and
-  `-Xlint:all` (minus `serial`, `this-escape`, `classfile`), so any javac or
-  ErrorProne warning fails the build.
+- **Static Analysis**: SpotBugs (Max effort, Low threshold, with find-sec-bugs
+  security detectors), ErrorProne, and NullAway (strict nullability checks).
+  The compiler runs with `-Werror` and `-Xlint:all` (minus `classfile`;
+  `devkit-vaadin-parent` appends `-Xlint:-serial` and `-Xlint:-this-escape` for
+  `midas-gui`), so any javac or ErrorProne warning fails the build.
 - **Testing**: JUnit 5, Mockito, AssertJ, and REST Assured.
 - **Coverage**: JaCoCo enforcement. The `report` goal is bound to
   `post-integration-test` so it includes `*IT` coverage; surefire and failsafe
@@ -127,42 +129,47 @@ The project enforces very strict quality gates:
   manifest for the pinned `${vaadin.version}`, plus the security minimums in
   `devkit.toml`'s `[frontend.min-pins]`. Runs as part of `make lint` and `make
   install`.
-- **Frontend toolchain**: `vaadin.node.version` in `midas-gui/pom.xml` (Vaadin's
-  default for the pinned `${vaadin.version}`) is the Node.js every frontend
-  build uses: the production profile, the Quarkus build step behind `make
-  install`/`make test`, and dev mode. Vaadin downloads it to `~/.vaadin` and
-  ignores any `node` on `PATH`, so `package-lock.json` comes out the same on
-  every machine. Bump it with `vaadin.version`.
-- **Frontend installs use `npm ci`** (`vaadin.ci.build` in `midas-gui/pom.xml`):
-  builds install exactly what `package-lock.json` records and fail when
-  `package.json` disagrees with it, e.g. after a Vaadin bump or an `@NpmPackage`
-  change. Fix that with `make regen-lockfile` and commit both files. It keeps
-  the lockfile and lets npm change only the entries `package.json` no longer
-  matches; deleting the lockfile instead re-seeds it from Vaadin's bundled one
-  and moves unrelated packages, some to older versions. Dev mode's runtime dev
-  server has no `npm ci` option and runs `npm install`, which leaves an in-sync
-  lockfile unchanged.
+- **Frontend toolchain**: `vaadin.node.version` from `devkit-vaadin-parent`
+  (Vaadin's default for the pinned `${vaadin.version}`) is the Node.js every
+  frontend build uses: the production profile, the Quarkus build step behind
+  `make install`/`make test`, and dev mode. Vaadin downloads it to `~/.vaadin`
+  and ignores any `node` on `PATH`, so `package-lock.json` comes out the same
+  on every machine. Both `vaadin.version` and `vaadin.node.version` move with a
+  devkit release.
+- **Frontend installs use `npm ci`** (`vaadin.ci.build`, defaulting to `true`
+  in `devkit-vaadin-parent`): builds install exactly what `package-lock.json`
+  records and fail when `package.json` disagrees with it, e.g. after a Vaadin
+  bump or an `@NpmPackage` change. Fix that with `make regen-lockfile` and
+  commit both files. It keeps the lockfile and lets npm change only the entries
+  `package.json` no longer matches; deleting the lockfile instead re-seeds it
+  from Vaadin's bundled one and moves unrelated packages, some to older
+  versions. Dev mode's runtime dev server has no `npm ci` option and runs `npm
+  install`, which leaves an in-sync lockfile unchanged.
 
 ### Shared configuration from devkit
 
-`checkstyle.xml`, `pmd-ruleset.xml`, `eclipse-formatter.xml`, the parent POM
-that configures and activates every Maven gate plugin and pins the gate tools'
-versions (`de.vptr.devkit:devkit-parent`), the shared Make targets and the
-scripts behind them come from devkit, pinned in `devkit.toml` and linked into
-the checkout as `.devkit` by `./devkitw`. The root `pom.xml` inherits that
-parent through the link
-(`<relativePath>.devkit/java/parent/pom.xml</relativePath>`). Any `make` target
-creates the link; a bare `./mvnw` or an IDE's Maven import fails on a fresh
-clone ("Non-resolvable parent POM") until it exists. They are not hand-kept
-copies: a shared gate changes in devkit, is released there, and is adopted here
-by bumping `version` and `commit` in `devkit.toml` together with the root pom's
+`checkstyle.xml`, `pmd-ruleset.xml`, `eclipse-formatter.xml`, the parent POMs
+that configure and activate every Maven gate plugin and pin the gate tools' and
+framework versions (`de.vptr.devkit:devkit-parent`, `devkit-quarkus-parent` and
+`devkit-vaadin-parent`), the shared Make targets and the scripts behind them
+come from devkit, pinned in `devkit.toml` and linked into the checkout as
+`.devkit` by `./devkitw`. The root `pom.xml` inherits `devkit-quarkus-parent`
+through the link (`<relativePath>.devkit/java/quarkus/pom.xml</relativePath>`),
+and `midas-gui/pom.xml` inherits `devkit-vaadin-parent` directly
+(`<relativePath>../.devkit/java/vaadin/pom.xml</relativePath>`), restating the
+root's shared properties and dependencies it needs. Any `make` target creates
+the link; a bare `./mvnw` or an IDE's Maven import fails on a fresh clone
+("Non-resolvable parent POM") until it exists. They are not hand-kept copies: a
+shared gate changes in devkit, is released there, and is adopted here by
+bumping `version` and `commit` in `devkit.toml` together with both poms'
 `<parent><version>` (the tag without the `v`); a release whose contract changes
 lists its upgrade steps in devkit's README. A release that changed `devkitw`
 also needs its copy committed (`cp .devkit/devkitw devkitw`), which
 `lint-devkitw` asks for until it is there. `renovate.json` proposes the bump as
-one PR covering `devkit.toml` and the pom, so such a PR needs that commit added;
-after merging it, run `make hooks` in each clone, since the hooks are copies a
-bump does not refresh. Never edit `.devkit/` or `devkitw` by hand.
+one PR covering `devkit.toml`, `pom.xml` and `midas-gui/pom.xml`, so such a PR
+needs that commit added; after merging it, run `make hooks` in each clone,
+since the hooks are copies a bump does not refresh. Never edit `.devkit/` or
+`devkitw` by hand.
 
 The poms keep only the project's own values, as devkit's contract
 (`.devkit/docs/contract.md`, "Parent POM") defines them: overrides of the
@@ -283,8 +290,8 @@ commit and run `make gate` again, until a final pass succeeds.
 - `scripts/`: Project-only shell scripts (build, dev mode, OpenAPI snapshot,
   password, frontend lockfile, release).
 - `renovate.json`: the forge's weekly Renovate run proposes devkit bumps
-  (`devkit.toml` and the parent POM version, one PR, which lacks the `devkitw`
-  copy a release that changed it needs), and bumps of the pinned
+  (`devkit.toml`, `pom.xml` and `midas-gui/pom.xml`, one PR, which lacks the
+  `devkitw` copy a release that changed it needs), and bumps of the pinned
   images (compose, Dockerfiles, the Dev Services image) and workflow actions.
   Java stays on LTS releases. Image tags stay exact, never floating (`18-alpine`,
   `25-jre`): its versioning rules count the Alpine version as part of the

@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,7 +24,6 @@ import de.vptr.midas.gui.util.StubBackend;
 import de.vptr.midas.gui.util.UiConstants;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 /** Pins {@link PageService} behaviour against real HTTP responses from a stub backend. */
 @QuarkusTest

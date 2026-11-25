@@ -6,12 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import de.vptr.midas.api.dto.PaymentDto;
-import de.vptr.midas.api.dto.PaymentResponseDto;
-import de.vptr.midas.api.entity.AccountEntity;
-import de.vptr.midas.api.entity.PaymentEntity;
-import de.vptr.midas.api.entity.UserEntity;
-import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -19,6 +13,13 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.dto.PaymentDto;
+import de.vptr.midas.api.dto.PaymentResponseDto;
+import de.vptr.midas.api.entity.AccountEntity;
+import de.vptr.midas.api.entity.PaymentEntity;
+import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.util.SearchQueryUtil;
 
 /** Service for payment business logic. */
 @ApplicationScoped
@@ -35,24 +36,20 @@ public class PaymentService {
     AdminAccessService adminAccessService;
 
     private void verifyPaymentAccess(@Nullable final String currentUsername, final PaymentEntity payment) {
-        if (currentUsername == null || currentUsername.isBlank()) {
+        if (currentUsername == null || currentUsername.isBlank() || !payment.hasLinkedAccount()) {
             throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
         }
-        if (!payment.hasLinkedAccount()) {
+        final boolean hasAccess = this.hasAccountAccess(currentUsername, payment.sourceAccount)
+                || this.hasAccountAccess(currentUsername, payment.targetAccount)
+                || this.adminAccessService.hasAdminViewAccess(currentUsername);
+        if (!hasAccess) {
             throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
         }
-        boolean hasAccess = false;
-        if (payment.sourceAccount != null && payment.sourceAccount.publicId != null
-                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.sourceAccount.publicId)) {
-            hasAccess = true;
-        }
-        if (!hasAccess && payment.targetAccount != null && payment.targetAccount.publicId != null
-                && this.accountAccessService.hasUserAccessToAccount(currentUsername, payment.targetAccount.publicId)) {
-            hasAccess = true;
-        }
-        if (!hasAccess && !this.adminAccessService.hasAdminViewAccess(currentUsername)) {
-            throw new WebApplicationException(PAYMENT_ACCESS_DENIED_MESSAGE, Response.Status.FORBIDDEN);
-        }
+    }
+
+    private boolean hasAccountAccess(final String username, @Nullable final AccountEntity account) {
+        return account != null && account.publicId != null
+                && this.accountAccessService.hasUserAccessToAccount(username, account.publicId);
     }
 
     private static void validatePaymentAccounts(final PaymentEntity payment) {
@@ -181,11 +178,7 @@ public class PaymentService {
             @Nullable final String currentUsername) {
         validatePaymentAccountIds(paymentDto);
 
-        final PaymentEntity existingPayment = PaymentEntity.find("publicId", publicId).firstResult();
-        if (existingPayment == null) {
-            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
-        }
-
+        final PaymentEntity existingPayment = requireExistingPayment(publicId);
         this.verifyPaymentAccess(currentUsername, existingPayment);
 
         final AccountEntity targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
@@ -214,7 +207,8 @@ public class PaymentService {
         if (!this.accountAccessService.canUserManage(username, accountPublicId)) {
             throw new WebApplicationException("Read-only access for this account", Response.Status.FORBIDDEN);
         }
-        this.verifyAccountAccessForPayment(username, accountPublicId, paymentDto);
+        this.requireAccountAccess(username, paymentDto.sourceAccountPublicId, "Access denied to source account");
+        this.requireAccountAccess(username, paymentDto.targetAccountPublicId, "Access denied to target account");
         return this.createPayment(paymentDto, username);
     }
 
@@ -230,14 +224,8 @@ public class PaymentService {
         this.verifyCounterpartyAccess(existingPayment, username, accountPublicId,
                 "Cannot modify payment with inaccessible counterparty");
 
-        if (paymentDto.sourceAccountPublicId != null
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountPublicId)) {
-            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-        }
-        if (paymentDto.targetAccountPublicId != null
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountPublicId)) {
-            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-        }
+        this.requireAccountAccess(username, paymentDto.sourceAccountPublicId, "Access denied to source account");
+        this.requireAccountAccess(username, paymentDto.targetAccountPublicId, "Access denied to target account");
         return this.updatePayment(paymentPublicId, paymentDto, username);
     }
 
@@ -258,6 +246,15 @@ public class PaymentService {
 
     private PaymentEntity verifyPaymentWriteAccess(final String paymentPublicId, final String username,
             final String accountPublicId) {
+        this.requireAccountManageAccess(username, accountPublicId);
+        final PaymentEntity existingPayment = requireExistingPayment(paymentPublicId);
+        if (!paymentBelongsToAccount(existingPayment, accountPublicId)) {
+            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
+        }
+        return existingPayment;
+    }
+
+    private void requireAccountManageAccess(final String username, final String accountPublicId) {
         final AccountEntity account = AccountEntity.find("publicId", accountPublicId).firstResult();
         if (account == null) {
             throw new WebApplicationException("Account not found", Response.Status.NOT_FOUND);
@@ -268,13 +265,12 @@ public class PaymentService {
         if (!this.accountAccessService.canUserManage(username, accountPublicId)) {
             throw new WebApplicationException("Read-only access for this account", Response.Status.FORBIDDEN);
         }
+    }
 
+    private static PaymentEntity requireExistingPayment(final String paymentPublicId) {
         final PaymentEntity existingPayment = PaymentEntity.find("publicId", paymentPublicId).firstResult();
         if (existingPayment == null) {
             throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
-        }
-        if (!paymentBelongsToAccount(existingPayment, accountPublicId)) {
-            throw new WebApplicationException("Payment does not belong to this account", Response.Status.FORBIDDEN);
         }
         return existingPayment;
     }
@@ -293,23 +289,10 @@ public class PaymentService {
         }
     }
 
-    private void verifyAccountAccessForPayment(final String username, final String accountPublicId,
-            final PaymentDto paymentDto) {
-        if (paymentDto.sourceAccountPublicId != null && paymentDto.sourceAccountPublicId.equals(accountPublicId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
-            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-        }
-        if (paymentDto.targetAccountPublicId != null && paymentDto.targetAccountPublicId.equals(accountPublicId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
-            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
-        }
-        if (paymentDto.sourceAccountPublicId != null && !paymentDto.sourceAccountPublicId.equals(accountPublicId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.sourceAccountPublicId)) {
-            throw new WebApplicationException("Access denied to source account", Response.Status.FORBIDDEN);
-        }
-        if (paymentDto.targetAccountPublicId != null && !paymentDto.targetAccountPublicId.equals(accountPublicId)
-                && !this.accountAccessService.hasUserAccessToAccount(username, paymentDto.targetAccountPublicId)) {
-            throw new WebApplicationException("Access denied to target account", Response.Status.FORBIDDEN);
+    private void requireAccountAccess(final String username, @Nullable final String accountPublicId,
+            final String errorMessage) {
+        if (accountPublicId != null && !this.accountAccessService.hasUserAccessToAccount(username, accountPublicId)) {
+            throw new WebApplicationException(errorMessage, Response.Status.FORBIDDEN);
         }
     }
 
@@ -322,14 +305,22 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDto patchPayment(final String publicId, final PaymentDto paymentDto,
             @Nullable final String currentUsername) {
-        final PaymentEntity existingPayment = PaymentEntity.find("publicId", publicId).firstResult();
-        if (existingPayment == null) {
-            throw new WebApplicationException("Payment not found", Response.Status.NOT_FOUND);
-        }
-
+        final PaymentEntity existingPayment = requireExistingPayment(publicId);
         this.verifyPaymentAccess(currentUsername, existingPayment);
 
         // Partial update (PATCH semantics) - only update provided fields
+        if (paymentDto.date != null) {
+            existingPayment.date = paymentDto.date;
+        }
+        applyPatchedFields(existingPayment, paymentDto);
+
+        // Validate that at least one account is still present after the patch
+        validatePaymentAccounts(existingPayment);
+        existingPayment.persistAndFlush();
+        return new PaymentResponseDto(existingPayment);
+    }
+
+    private static void applyPatchedFields(final PaymentEntity existingPayment, final PaymentDto paymentDto) {
         if (paymentDto.targetAccountPublicId != null) {
             existingPayment.targetAccount = resolveAccount(paymentDto.targetAccountPublicId, "Target");
         }
@@ -342,20 +333,12 @@ public class PaymentService {
             }
             existingPayment.comment = paymentDto.comment;
         }
-        if (paymentDto.date != null) {
-            existingPayment.date = paymentDto.date;
-        }
         if (paymentDto.amount != null) {
             if (paymentDto.amount.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new ValidationException("Amount must be positive");
             }
             existingPayment.amount = paymentDto.amount;
         }
-
-        // Validate that at least one account is still present after the patch
-        validatePaymentAccounts(existingPayment);
-        existingPayment.persistAndFlush();
-        return new PaymentResponseDto(existingPayment);
     }
 
     /** Deletes the payment with the given publicId. */

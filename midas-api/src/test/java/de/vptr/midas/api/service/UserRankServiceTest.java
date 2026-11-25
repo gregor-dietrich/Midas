@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Objects;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +24,6 @@ import de.vptr.midas.api.util.ServiceTestDataBuilder;
 import de.vptr.midas.api.util.ServiceTestUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 @QuarkusTest
 class UserRankServiceTest extends AbstractIntegrationTest {

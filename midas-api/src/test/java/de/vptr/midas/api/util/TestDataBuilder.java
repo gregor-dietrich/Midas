@@ -2,10 +2,10 @@ package de.vptr.midas.api.util;
 
 import java.util.LinkedHashMap;
 
+import jakarta.annotation.Nullable;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.annotation.Nullable;
 
 /**
  * Builder utility for creating test data JSON strings

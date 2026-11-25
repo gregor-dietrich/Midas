@@ -1,10 +1,10 @@
 package de.vptr.midas.api.resource;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.Liveness;
-
-import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Liveness probe for the API service. Confirms the application is running and able to serve requests. The datasource

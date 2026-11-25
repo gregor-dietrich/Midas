@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PageClient;
 import de.vptr.midas.gui.dto.PageDto;
 import de.vptr.midas.gui.dto.PageResponseDto;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Service for page operations. */
 @ApplicationScoped
@@ -38,7 +40,7 @@ public class PageService {
 
     /** Returns the all pages paginated. */
     public List<PageResponseDto> getAllPages(final Integer page, final Integer size) {
-        LOG.debugf("Fetching all pages page %s size %s", page, size);
+        LOG.debugf("Fetching all pages page %s size %s", LogSanitizer.sanitize(page), LogSanitizer.sanitize(size));
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(() -> this.pageClient.getAllPages(safePage, safeSize), this.authService, LOG,
@@ -47,14 +49,14 @@ public class PageService {
 
     /** Returns the page by id, or empty if it does not exist. */
     public Optional<PageResponseDto> getPageById(final String id) {
-        LOG.infof("Getting page by id: %s", id);
+        LOG.infof("Getting page by id: %s", LogSanitizer.sanitize(id));
         return ServiceHelper.executeOptional(() -> this.pageClient.getPage(id), this.authService, LOG,
                 "getting page " + id);
     }
 
     /** Creates a new page. */
     public PageDto createPage(final PageDto page) {
-        LOG.infof("Creating page: %s", page.getTitle());
+        LOG.infof("Creating page: %s", LogSanitizer.sanitize(page.getTitle()));
         return PageDto.from(ServiceHelper.execute(() -> this.pageClient.createPage(page), this.authService, LOG,
                 "creating page", "Failed to create page"));
     }
@@ -62,28 +64,28 @@ public class PageService {
     /** Updates the page. */
     public PageDto updatePage(final PageDto page) {
         final String publicId = Objects.requireNonNull(page.getPublicId(), "page.publicId");
-        LOG.infof("Updating page: %s (%s)", page.getTitle(), publicId);
+        LOG.infof("Updating page: %s (%s)", LogSanitizer.sanitize(page.getTitle()), LogSanitizer.sanitize(publicId));
         return PageDto.from(ServiceHelper.execute(() -> this.pageClient.updatePage(publicId, page), this.authService,
                 LOG, "updating page " + publicId, "Failed to update page"));
     }
 
     /** Handles the delete page operation. */
     public void deletePage(final String id) {
-        LOG.infof("Deleting page: %s", id);
+        LOG.infof("Deleting page: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.pageClient.deletePage(id), this.authService, LOG, "deleting page " + id,
                 "Page not found");
     }
 
     /** Handles the search content operation. */
     public List<PageResponseDto> searchContent(final String searchTerm) {
-        LOG.debugf("Searching page content: %s", searchTerm);
+        LOG.debugf("Searching page content: %s", LogSanitizer.sanitize(searchTerm));
         return ServiceHelper.execute(() -> this.pageClient.searchPages(searchTerm), this.authService, LOG,
                 "searching page content");
     }
 
     /** Handles the search pages operation. */
     public List<PageResponseDto> searchPages(final String query) {
-        LOG.debugf("Searching pages with query: %s", query);
+        LOG.debugf("Searching pages with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.pageClient.searchPages(query), this.authService, LOG,
                 "searching pages");
     }

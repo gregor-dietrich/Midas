@@ -2,8 +2,9 @@ package de.vptr.midas.api.dto;
 
 import java.time.LocalDateTime;
 
-import de.vptr.midas.api.entity.UserRankEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.UserRankEntity;
 
 /** Data transfer object for user rank response data. */
 public class UserRankResponseDto extends BaseUserRankDto {

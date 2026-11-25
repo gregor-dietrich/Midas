@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -17,10 +20,10 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Detail view for a single post category. */
 @Route(value = "categories", layout = MainLayout.class)
@@ -49,8 +52,9 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
         }
     }
 
+    @SuppressFBWarnings(value = "IMPROPER_UNICODE", justification = "Case-insensitive display-name lookup in UI view")
     private void resolveCategoryAsync(final String identifier) {
-        LOG.infof("Resolving category for identifier: %s", identifier);
+        LOG.infof("Resolving category for identifier: %s", LogSanitizer.sanitize(identifier));
 
         this.loadDataAsync(() -> {
             try {
@@ -60,7 +64,7 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
                     return opt.get();
                 }
             } catch (final NumberFormatException ignored) {
-                LOG.debugf("Identifier '%s' is not numeric, searching by name", identifier);
+                LOG.debugf("Identifier '%s' is not numeric, searching by name", LogSanitizer.sanitize(identifier));
             }
 
             final var allCategories = this.categoryService.getAllCategories();
@@ -117,7 +121,7 @@ public class PostCategoryDetailView extends AbstractAuthenticatedParameterView {
 
     private void loadPostsAsync() {
         final var cat = Objects.requireNonNull(this.category);
-        LOG.infof("Loading posts for category: %s", cat.getName());
+        LOG.infof("Loading posts for category: %s", LogSanitizer.sanitize(cat.getName()));
 
         this.loadDataAsync(() -> this.postService.getPostsByCategory(cat.getPublicId()), posts -> {
             LOG.infof("Successfully loaded %s posts", posts.size());

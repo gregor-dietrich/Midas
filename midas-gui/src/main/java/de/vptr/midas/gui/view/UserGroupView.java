@@ -6,6 +6,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -24,10 +27,9 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiConstants;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** View for browsing and searching user groups. */
 @Route(value = "groups", layout = MainLayout.class)
@@ -66,7 +68,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
         try {
             this.authService.requireAuthorizationHeader();
         } catch (final AuthenticationException e) {
-            LOG.debugf("Authentication required: %s", e.getMessage());
+            LOG.debugf("Authentication required: %s", LogSanitizer.sanitize(e.getMessage()));
             event.forwardTo(LoginView.class);
             return;
         }
@@ -162,7 +164,7 @@ public class UserGroupView extends AbstractAsyncDataView implements BeforeEnterO
     private void searchGroups(final String query) {
         final var sl = Objects.requireNonNull(this.searchLayout);
         sl.setSearching(true);
-        LOG.infof("Starting async group search with query: %s", query);
+        LOG.infof("Starting async group search with query: %s", LogSanitizer.sanitize(query));
 
         final String capturedUserId = this.currentUserId;
 

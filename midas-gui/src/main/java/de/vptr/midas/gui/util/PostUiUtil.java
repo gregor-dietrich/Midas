@@ -33,11 +33,29 @@ public final class PostUiUtil {
             metaLayout.add(new Span(publishedPrefix + created.format(formatter)));
         }
 
-        final var lastEdit = post.getLastEdit();
-        if (includeEditTime && lastEdit != null && !lastEdit.equals(created)) {
-            metaLayout.add(new Span("(edited " + lastEdit.format(formatter) + ")"));
+        if (includeEditTime) {
+            addEditTimeIfPresent(metaLayout, post, formatter);
         }
 
+        addCategoryBadgeIfPresent(metaLayout, post);
+
+        final var commentsCount = post.getCommentsCount();
+        if (includeCommentsCount && commentsCount != null && commentsCount > 0) {
+            metaLayout.add(new Span(commentsCount + " comments"));
+        }
+
+        return metaLayout;
+    }
+
+    private static void addEditTimeIfPresent(final HorizontalLayout metaLayout, final PostResponseDto post,
+            final DateTimeFormatter formatter) {
+        final var lastEdit = post.getLastEdit();
+        if (lastEdit != null && !lastEdit.equals(post.getCreated())) {
+            metaLayout.add(new Span("(edited " + lastEdit.format(formatter) + ")"));
+        }
+    }
+
+    private static void addCategoryBadgeIfPresent(final HorizontalLayout metaLayout, final PostResponseDto post) {
         final var categoryName = post.getCategoryName();
         if (categoryName != null) {
             final var categoryBadge = new Span(categoryName);
@@ -46,12 +64,5 @@ public final class PostUiUtil {
             categoryBadge.getStyle().set("padding", "2px 8px");
             metaLayout.add(categoryBadge);
         }
-
-        final var commentsCount = post.getCommentsCount();
-        if (includeCommentsCount && commentsCount != null && commentsCount > 0) {
-            metaLayout.add(new Span(commentsCount + " comments"));
-        }
-
-        return metaLayout;
     }
 }

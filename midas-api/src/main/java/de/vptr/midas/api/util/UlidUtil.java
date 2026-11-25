@@ -1,8 +1,8 @@
 package de.vptr.midas.api.util;
 
-import com.github.f4b6a3.ulid.UlidCreator;
-
 import jakarta.ws.rs.BadRequestException;
+
+import com.github.f4b6a3.ulid.UlidCreator;
 
 /**
  * Utility class for generating and validating ULIDs.

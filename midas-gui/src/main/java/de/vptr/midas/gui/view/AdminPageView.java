@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -19,8 +22,6 @@ import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Admin view for managing pages. */
 @Route(value = "admin/pages", layout = AdminMainLayout.class)

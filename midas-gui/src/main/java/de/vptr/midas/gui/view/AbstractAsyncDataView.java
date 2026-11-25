@@ -3,12 +3,13 @@ package de.vptr.midas.gui.view;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
-import jakarta.annotation.Nullable;
 
 /** View for base async data. */
 public abstract class AbstractAsyncDataView extends VerticalLayout {

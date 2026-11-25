@@ -2,8 +2,9 @@ package de.vptr.midas.api.dto;
 
 import java.time.LocalDateTime;
 
-import de.vptr.midas.api.entity.UserGroupEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.UserGroupEntity;
 
 /** Data transfer object for user group response data. */
 public class UserGroupResponseDto {

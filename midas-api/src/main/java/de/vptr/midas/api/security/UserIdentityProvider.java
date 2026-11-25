@@ -5,12 +5,22 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.transaction.Transactional;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.IpUtil;
+import de.vptr.midas.api.util.LogSanitizer;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -22,14 +32,6 @@ import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
-import jakarta.annotation.Nullable;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
 
 /** Type definition. */
 @ApplicationScoped
@@ -143,41 +145,60 @@ public class UserIdentityProvider implements IdentityProvider<UsernamePasswordAu
             final String clientKey) {
         final UserEntity user = UserEntity.find("username = ?1", username).firstResult();
 
-        if (user == null || user.banned || !user.activated || user.password == null) {
-            // Run a real bcrypt verification against a decoy hash to prevent timing-based username enumeration
-            this.passwordHashingService.verifyPassword("dummy", DUMMY_HASH);
-            this.authFailureRateLimitService.recordFailure(clientKey);
-            this.loginAttemptService.recordFailure(username, ip);
-
-            if (user == null || user.password == null) {
-                throw new AuthenticationFailedException("Invalid credentials");
-            } else if (user.banned) {
-                throw new AuthenticationFailedException("User is banned");
-            } else {
-                throw new AuthenticationFailedException("User is not activated");
-            }
+        if (!isAuthenticable(user)) {
+            throw this.rejectInvalidUser(user, username, ip, clientKey);
         }
 
         final String passwordStr = password != null ? new String(password) : "";
+        final String storedHash = user != null && user.password != null ? user.password : "";
 
-        if (!this.passwordHashingService.verifyPassword(passwordStr, user.password)) {
-            this.authFailureRateLimitService.recordFailure(clientKey);
-            this.loginAttemptService.recordFailure(username, ip);
+        if (!this.passwordHashingService.verifyPassword(passwordStr, storedHash)) {
+            this.recordAuthFailure(username, ip, clientKey);
             throw new AuthenticationFailedException("Invalid credentials");
         }
 
         this.loginAttemptService.recordSuccess(username, ip);
+        if (user != null) {
+            this.updateLastLogin(user.id);
+        }
 
+        return QuarkusSecurityIdentity.builder().setPrincipal(new QuarkusPrincipal(username)).build();
+    }
+
+    private static boolean isAuthenticable(@Nullable final UserEntity user) {
+        return user != null && !user.banned && user.activated && user.password != null;
+    }
+
+    private AuthenticationFailedException rejectInvalidUser(@Nullable final UserEntity user, final String username,
+            final String ip, final String clientKey) {
+        // Run a real bcrypt verification against a decoy hash to prevent timing-based username enumeration
+        this.passwordHashingService.verifyPassword("dummy", DUMMY_HASH);
+        this.recordAuthFailure(username, ip, clientKey);
+
+        if (user == null || user.password == null) {
+            return new AuthenticationFailedException("Invalid credentials");
+        }
+        if (user.banned) {
+            return new AuthenticationFailedException("User is banned");
+        }
+        return new AuthenticationFailedException("User is not activated");
+    }
+
+    private void recordAuthFailure(final String username, final String ip, final String clientKey) {
+        this.authFailureRateLimitService.recordFailure(clientKey);
+        this.loginAttemptService.recordFailure(username, ip);
+    }
+
+    private void updateLastLogin(@Nullable final Long userId) {
         // Update lastLogin - ignore optimistic lock exceptions as they're not critical
         // for authentication
         try {
             this.entityManager.createQuery("UPDATE UserEntity u SET u.lastLogin = :now WHERE u.id = :id")
-                    .setParameter("now", LocalDateTime.now(ZoneOffset.UTC)).setParameter("id", user.id).executeUpdate();
+                    .setParameter("now", LocalDateTime.now(ZoneOffset.UTC)).setParameter("id", userId).executeUpdate();
         } catch (final OptimisticLockException e) {
-            LOG.debugf("Failed to update last_login for user %s (concurrent login): %s", user.id, e.getMessage());
+            LOG.debugf("Failed to update last_login for user %s (concurrent login): %s", LogSanitizer.sanitize(userId),
+                    LogSanitizer.sanitize(e.getMessage()));
         }
-
-        return QuarkusSecurityIdentity.builder().setPrincipal(new QuarkusPrincipal(username)).build();
     }
 
     private static void clearPassword(@Nullable final char[] password) {

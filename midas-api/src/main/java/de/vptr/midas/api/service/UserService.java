@@ -6,6 +6,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import de.vptr.midas.api.dto.PasswordChangeDto;
@@ -18,16 +29,6 @@ import de.vptr.midas.api.security.PasswordHashingService;
 import de.vptr.midas.api.util.EntityValidator;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import io.quarkus.cache.CacheInvalidateAll;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /** Service for user business logic. */
 @ApplicationScoped
@@ -228,6 +229,20 @@ public class UserService {
     @CacheInvalidateAll(cacheName = "user-ranks")
     public UserResponseDto patchUser(final String publicId, final UserDto userDto,
             @Nullable final String currentUsername) {
+        this.validatePatchedProperties(userDto);
+        return this.administratorGuard.guard(() -> {
+            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
+            final UserEntity existingUser = findForChange(publicId, ceiling);
+            keepRoleGatedFields(userDto, existingUser, ceiling);
+            this.applyPatchedFields(existingUser, userDto);
+            ceiling.requireCanGrant(existingUser.rank);
+
+            existingUser.persistAndFlush();
+            return this.userResponseAssembler.toResponseDto(existingUser);
+        });
+    }
+
+    private void validatePatchedProperties(final UserDto userDto) {
         // A patch omits fields, so the DTO as a whole is not validated; a new username or password still is.
         final var violations = new HashSet<ConstraintViolation<UserDto>>();
         if (userDto.username != null) {
@@ -239,47 +254,32 @@ public class UserService {
         if (!violations.isEmpty()) {
             throw new ConstraintViolationException(violations);
         }
-        return this.administratorGuard.guard(() -> {
-            final PrivilegeCeiling ceiling = PrivilegeCeiling.of(currentUsername);
-            final UserEntity existingUser = findForChange(publicId, ceiling);
-            keepRoleGatedFields(userDto, existingUser, ceiling);
+    }
 
-            // Check for duplicate username if username is being updated
-            if (userDto.username != null && !userDto.username.equals(existingUser.username)) {
+    private void applyPatchedFields(final UserEntity existingUser, final UserDto userDto) {
+        if (userDto.username != null) {
+            if (!userDto.username.equals(existingUser.username)) {
                 EntityValidator.checkUnique(this.findByUsername(userDto.username), "Username", userDto.username);
             }
+            existingUser.username = userDto.username;
+        }
+        if (userDto.email != null) {
+            final String normalizedEmail = this.normalizeEmail(userDto.email);
+            if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
+                EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
+            }
+            existingUser.email = normalizedEmail;
+            existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
+        }
+        if (userDto.banned != null) {
+            existingUser.banned = userDto.banned;
+        }
+        if (userDto.activated != null) {
+            existingUser.activated = userDto.activated;
+        }
 
-            // Check for duplicate email if email is being updated
-            if (userDto.email != null) {
-                final String normalizedEmail = this.normalizeEmail(userDto.email);
-                if (!Objects.equals(normalizedEmail, existingUser.email) && normalizedEmail != null) {
-                    EntityValidator.checkUnique(this.findByEmail(normalizedEmail), "Email", normalizedEmail);
-                }
-            }
-
-            // Partial update (PATCH semantics) - only update provided fields
-            if (userDto.username != null) {
-                existingUser.username = userDto.username;
-            }
-            if (userDto.email != null) {
-                final String normalizedEmail = this.normalizeEmail(userDto.email);
-                existingUser.email = normalizedEmail;
-                existingUser.emailBlindIndex = this.encryptionService.generateBlindIndex(normalizedEmail);
-            }
-            if (userDto.banned != null) {
-                existingUser.banned = userDto.banned;
-            }
-            if (userDto.activated != null) {
-                existingUser.activated = userDto.activated;
-            }
-
-            this.applyPassword(existingUser, userDto.password);
-            this.applyRank(existingUser, userDto.rankPublicId, false);
-            ceiling.requireCanGrant(existingUser.rank);
-
-            existingUser.persistAndFlush();
-            return this.userResponseAssembler.toResponseDto(existingUser);
-        });
+        this.applyPassword(existingUser, userDto.password);
+        this.applyRank(existingUser, userDto.rankPublicId, false);
     }
 
     /** Loads the user a change applies to, refusing a missing one and one above the caller's ceiling. */

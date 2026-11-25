@@ -10,6 +10,11 @@ import static org.mockito.Mockito.verify;
 
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
-import jakarta.annotation.Nullable;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceHelperTest {

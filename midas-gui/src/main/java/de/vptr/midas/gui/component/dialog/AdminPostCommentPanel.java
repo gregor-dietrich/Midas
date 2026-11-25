@@ -2,6 +2,8 @@ package de.vptr.midas.gui.component.dialog;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.textfield.TextArea;
 
 import de.vptr.midas.gui.dto.PostCommentDto;
@@ -10,7 +12,6 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /** Dialog for adding comments to posts in the admin view. */
 public class AdminPostCommentPanel extends AbstractPostCommentDialogBase {

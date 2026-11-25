@@ -2,12 +2,13 @@ package de.vptr.midas.api;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.flyway.FlywayConfigurationCustomizer;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 
 /**
  * Pins that Quarkus discovers {@link FlywayCleanGuard}. A test launch cannot exercise its production branch; that was

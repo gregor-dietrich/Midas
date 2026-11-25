@@ -7,16 +7,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.eclipse.microprofile.config.Config;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.LaunchMode;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
+
+import org.eclipse.microprofile.config.Config;
+import org.jboss.logging.Logger;
+
+import de.vptr.midas.api.util.LogSanitizer;
+import io.quarkus.runtime.LaunchMode;
 
 /**
  * Keeps Hibernate from altering the production schema, which Flyway owns (#48). The schema-management strategy is a
@@ -67,9 +69,11 @@ public class SchemaManagementGuard {
         for (final String property : STRATEGY_PROPERTIES) {
             final var strategy = this.config.apply(property).orElse("none");
             if (!ALLOWED_STRATEGIES.contains(strategy.strip().toLowerCase(Locale.ROOT))) {
-                LOG.errorf("FATAL: %s=%s would let Hibernate alter or drop the production tables!", property, strategy);
+                LOG.errorf("FATAL: %s=%s would let Hibernate alter or drop the production tables!",
+                        LogSanitizer.sanitize(property), LogSanitizer.sanitize(strategy));
                 final String envVar = property.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]", "_");
-                LOG.errorf("Unset %s (%s) or set it to validate; Flyway owns the schema.", envVar, property);
+                LOG.errorf("Unset %s (%s) or set it to validate; Flyway owns the schema.",
+                        LogSanitizer.sanitize(envVar), LogSanitizer.sanitize(property));
                 throw new IllegalStateException("Hibernate schema management enabled in production: " + property + "="
                         + strategy + " (" + envVar + ")");
             }

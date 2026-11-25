@@ -2,6 +2,9 @@ package de.vptr.midas.gui.view;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.AttachEvent;
@@ -18,8 +21,6 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.service.UserRankService;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Base class for main layouts. */
 public abstract class AbstractMainLayoutBase extends VerticalLayout implements RouterLayout, BeforeEnterObserver {

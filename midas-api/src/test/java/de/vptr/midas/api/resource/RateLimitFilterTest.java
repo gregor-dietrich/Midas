@@ -4,13 +4,14 @@ import static de.vptr.midas.api.util.TestUtil.assertRateLimitResponse;
 
 import java.util.Map;
 
+import jakarta.annotation.Nullable;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.util.TestUtil;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
-import jakarta.annotation.Nullable;
 
 // Literal client IPs are the subject under test here, not a hard-coded endpoint.
 @SuppressWarnings("PMD.AvoidUsingHardCodedIP")

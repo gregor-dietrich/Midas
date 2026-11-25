@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Optional;
 
-import org.junit.jupiter.api.Test;
-
 import jakarta.ws.rs.core.Response;
+
+import org.junit.jupiter.api.Test;
 
 class ResponseUtilTest {
 

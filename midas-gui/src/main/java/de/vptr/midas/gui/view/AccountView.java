@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -25,8 +28,6 @@ import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** View for managing user accounts. */
 @Route(value = "accounts", layout = MainLayout.class)

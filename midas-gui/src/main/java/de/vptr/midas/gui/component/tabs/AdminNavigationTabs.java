@@ -1,5 +1,6 @@
 package de.vptr.midas.gui.component.tabs;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.RouterLink;
@@ -30,32 +31,18 @@ public class AdminNavigationTabs extends Tabs {
             this.add(new Tab(new RouterLink("Payments", AdminPaymentView.class)));
         }
 
-        if (userRank.hasAnyPagePermission()) {
-            this.add(new Tab(new RouterLink("Pages", AdminPageView.class)));
-        }
+        this.addTabIf(userRank.hasAnyPagePermission(), "Pages", AdminPageView.class);
+        this.addTabIf(userRank.hasAnyPostPermission(), "Posts", AdminPostView.class);
+        this.addTabIf(userRank.hasAnyPostCategoryPermission(), "Post Categories", AdminPostCategoryView.class);
+        this.addTabIf(userRank.hasAnyPostCommentPermission(), "Post Comments", AdminPostCommentView.class);
+        this.addTabIf(userRank.hasAnyUserPermission(), "Users", AdminUserView.class);
+        this.addTabIf(userRank.hasAnyUserGroupPermission(), "User Groups", AdminUserGroupView.class);
+        this.addTabIf(userRank.hasAnyUserRankPermission(), "User Ranks", AdminUserRankView.class);
+    }
 
-        if (userRank.hasAnyPostPermission()) {
-            this.add(new Tab(new RouterLink("Posts", AdminPostView.class)));
-        }
-
-        if (userRank.hasAnyPostCategoryPermission()) {
-            this.add(new Tab(new RouterLink("Post Categories", AdminPostCategoryView.class)));
-        }
-
-        if (userRank.hasAnyPostCommentPermission()) {
-            this.add(new Tab(new RouterLink("Post Comments", AdminPostCommentView.class)));
-        }
-
-        if (userRank.hasAnyUserPermission()) {
-            this.add(new Tab(new RouterLink("Users", AdminUserView.class)));
-        }
-
-        if (userRank.hasAnyUserGroupPermission()) {
-            this.add(new Tab(new RouterLink("User Groups", AdminUserGroupView.class)));
-        }
-
-        if (userRank.hasAnyUserRankPermission()) {
-            this.add(new Tab(new RouterLink("User Ranks", AdminUserRankView.class)));
+    private void addTabIf(final boolean condition, final String label, final Class<? extends Component> target) {
+        if (condition) {
+            this.add(new Tab(new RouterLink(label, target)));
         }
     }
 }

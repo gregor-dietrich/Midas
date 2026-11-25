@@ -2,6 +2,8 @@ package de.vptr.midas.gui.view;
 
 import java.util.Optional;
 
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
@@ -9,7 +11,6 @@ import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.service.PageService;
-import jakarta.inject.Inject;
 
 /** PageDetailView view. */
 @Route(value = "pages", layout = MainLayout.class)

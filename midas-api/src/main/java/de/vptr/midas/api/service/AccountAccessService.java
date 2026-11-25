@@ -11,6 +11,14 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.dto.BalancePointDto;
 import de.vptr.midas.api.dto.PaymentResponseDto;
@@ -24,12 +32,6 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.PerformanceMonitor;
 import de.vptr.midas.api.util.QueryAggregationUtil;
 import de.vptr.midas.api.util.SearchQueryUtil;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /** Service for account access, user-account linking, and account queries. */
 @ApplicationScoped
@@ -227,16 +229,9 @@ public class AccountAccessService {
     /** Sums payment amounts for a single account on the given association side, optionally restricted by date range. */
     private BigDecimal sumByAccount(final String joinPath, final String accountPublicId,
             @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
-        final boolean hasRange = startDate != null && endDate != null;
-        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
-        final var query = PaymentEntity.getEntityManager()
-                .createQuery("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
-                        + " a WHERE a.publicId = :publicId" + dateClause, BigDecimal.class)
-                .setParameter("publicId", accountPublicId);
-        if (hasRange) {
-            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
-        }
-        return query.getSingleResult();
+        return createDateRangedPaymentQuery("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
+                + " a WHERE a.publicId = :publicId", "", BigDecimal.class, startDate, endDate)
+                .setParameter("publicId", accountPublicId).getSingleResult();
     }
 
     /** Returns all-time balances for the given list of account publicIds. */
@@ -273,15 +268,11 @@ public class AccountAccessService {
     private void aggregateBalances(final Map<String, BigDecimal> balances, final String joinPath, final boolean add,
             final List<String> accountPublicIds, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {
-        final boolean hasRange = startDate != null && endDate != null;
-        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
-        final var query = PaymentEntity.getEntityManager().createQuery(
-                "SELECT p." + joinPath + ".publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p " + "WHERE p."
-                        + joinPath + ".publicId IN :publicIds" + dateClause + " GROUP BY p." + joinPath + ".publicId",
-                Object[].class).setParameter("publicIds", accountPublicIds);
-        if (hasRange) {
-            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
-        }
+        final var query = createDateRangedPaymentQuery(
+                "SELECT p." + joinPath + ".publicId, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p."
+                        + joinPath + ".publicId IN :publicIds",
+                " GROUP BY p." + joinPath + ".publicId", Object[].class, startDate, endDate)
+                .setParameter("publicIds", accountPublicIds);
         for (final Object[] row : query.getResultList()) {
             final String publicId = (String) row[0];
             final BigDecimal amount = (BigDecimal) row[1];
@@ -351,17 +342,11 @@ public class AccountAccessService {
             final String joinPath, final boolean incoming, final List<String> accountPublicIds,
             final Map<String, Boolean> negativeFlagsByAccount, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {
-        final boolean hasRange = startDate != null && endDate != null;
-        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
-        final var query = PaymentEntity.getEntityManager()
-                .createQuery(
-                        "SELECT a.publicId, p.date, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
-                                + " a WHERE a.publicId IN :publicIds" + dateClause + " GROUP BY a.publicId, p.date",
-                        Object[].class)
+        final var query = createDateRangedPaymentQuery(
+                "SELECT a.publicId, p.date, COALESCE(SUM(p.amount), 0) FROM PaymentEntity p JOIN p." + joinPath
+                        + " a WHERE a.publicId IN :publicIds",
+                " GROUP BY a.publicId, p.date", Object[].class, startDate, endDate)
                 .setParameter("publicIds", accountPublicIds);
-        if (hasRange) {
-            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
-        }
         for (final Object[] row : query.getResultList()) {
             final String publicId = (String) row[0];
             final LocalDate date = (LocalDate) row[1];
@@ -378,6 +363,17 @@ public class AccountAccessService {
             }
             dailyDeltas.merge(date, contribution, BigDecimal::add);
         }
+    }
+
+    private static <T> TypedQuery<T> createDateRangedPaymentQuery(final String baseJpql, final String suffixJpql,
+            final Class<T> resultClass, @Nullable final LocalDate startDate, @Nullable final LocalDate endDate) {
+        final boolean hasRange = startDate != null && endDate != null;
+        final String dateClause = hasRange ? " AND p.date BETWEEN :startDate AND :endDate" : "";
+        final var query = PaymentEntity.getEntityManager().createQuery(baseJpql + dateClause + suffixJpql, resultClass);
+        if (hasRange) {
+            query.setParameter("startDate", startDate).setParameter("endDate", endDate);
+        }
+        return query;
     }
 
     /** Folds an ordered map of per-date deltas into a cumulative running-balance series. */

@@ -1,13 +1,14 @@
 package de.vptr.midas.gui.view;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 
 import de.vptr.midas.gui.service.AuthService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Base view for views that accept a string URL parameter and require user authentication. */
 public abstract class AbstractAuthenticatedParameterView extends AbstractAsyncDataView

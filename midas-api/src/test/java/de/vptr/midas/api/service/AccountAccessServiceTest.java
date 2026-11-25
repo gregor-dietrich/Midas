@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
@@ -28,9 +32,6 @@ import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
 class AccountAccessServiceTest {

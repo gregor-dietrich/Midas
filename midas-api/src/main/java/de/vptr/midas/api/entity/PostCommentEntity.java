@@ -3,9 +3,6 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
-
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +11,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 /** JPA entity representing a post comment. */
 @Entity

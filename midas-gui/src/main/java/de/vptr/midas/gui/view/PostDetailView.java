@@ -4,6 +4,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.AttachEvent;
@@ -25,11 +28,10 @@ import de.vptr.midas.gui.dto.PostResponseDto;
 import de.vptr.midas.gui.service.Broadcaster;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.PostUiUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** PostDetailView view. */
 @Route(value = "posts", layout = MainLayout.class)
@@ -96,40 +98,45 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
 
     private void loadPostAsync() {
         final var idStr = Objects.requireNonNull(this.identifier);
-        LOG.infof("Loading post with identifier: %s", idStr);
+        LOG.infof("Loading post with identifier: %s", LogSanitizer.sanitize(idStr));
 
-        this.loadDataAsync(() -> {
-            if (idStr.length() == 26 && idStr.matches("^[0-9A-Z]{26}$")) {
-                final var post = this.postService.getPostById(idStr);
-                if (post.isPresent()) {
-                    return post.get();
-                }
-            } else {
-                LOG.debugf("Identifier '%s' is not a ULID, trying search", idStr);
-            }
-
-            // Fallback: search by title
-            final var results = this.postService.searchPosts(idStr);
-            if (results != null && !results.isEmpty()) {
-                return results.get(0);
-            }
-
-            return null;
-        }, post -> {
-            if (post == null) {
-                this.showNotFound();
-            } else {
-                this.currentPostId = post.getPublicId();
-                this.buildPostContent(post);
-                final var postId = post.getPublicId();
-                if (postId != null) {
-                    this.loadCommentsAsync(postId); // ensure uses loadDataAsync
-                }
-            }
-        }, throwable -> {
-            LOG.errorf(throwable, "Error loading post: %s", throwable.getMessage());
+        this.loadDataAsync(() -> this.resolvePost(idStr), this::onPostLoaded, throwable -> {
+            LOG.errorf(throwable, "Error loading post: %s", LogSanitizer.sanitize(throwable.getMessage()));
             MidasErrorHandler.handleInUiContext(throwable);
         }, 30);
+    }
+
+    @Nullable
+    private PostResponseDto resolvePost(final String idStr) {
+        if (idStr.length() == 26 && idStr.matches("^[0-9A-Z]{26}$")) {
+            final var post = this.postService.getPostById(idStr);
+            if (post.isPresent()) {
+                return post.get();
+            }
+        } else {
+            LOG.debugf("Identifier '%s' is not a ULID, trying search", LogSanitizer.sanitize(idStr));
+        }
+
+        // Fallback: search by title
+        final var results = this.postService.searchPosts(idStr);
+        if (results != null && !results.isEmpty()) {
+            return results.get(0);
+        }
+
+        return null;
+    }
+
+    private void onPostLoaded(@Nullable final PostResponseDto post) {
+        if (post == null) {
+            this.showNotFound();
+            return;
+        }
+        this.currentPostId = post.getPublicId();
+        this.buildPostContent(post);
+        final var postId = post.getPublicId();
+        if (postId != null) {
+            this.loadCommentsAsync(postId); // ensure uses loadDataAsync
+        }
     }
 
     private void buildPostContent(final PostResponseDto post) {
@@ -164,14 +171,14 @@ public class PostDetailView extends AbstractAuthenticatedParameterView {
     }
 
     private void loadCommentsAsync(final String postId) {
-        LOG.infof("Loading comments for post: %s", postId);
+        LOG.infof("Loading comments for post: %s", LogSanitizer.sanitize(postId));
 
         this.loadDataAsync(() -> this.postCommentService.getCommentsByPost(postId), this::buildCommentsSection,
                 this::handleCommentLoadError, 15);
     }
 
     void handleCommentLoadError(final Throwable throwable) {
-        LOG.errorf(throwable, "Error loading comments: %s", throwable.getMessage());
+        LOG.errorf(throwable, "Error loading comments: %s", LogSanitizer.sanitize(throwable.getMessage()));
         MidasErrorHandler.handleInUiContext(throwable);
     }
 

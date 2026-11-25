@@ -5,6 +5,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.core.Response;
+
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +17,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.core.Response;
 
 @ExtendWith(MockitoExtension.class)
 class BackendHealthCheckTest {

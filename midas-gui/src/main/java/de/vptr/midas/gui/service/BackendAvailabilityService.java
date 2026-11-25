@@ -2,15 +2,17 @@ package de.vptr.midas.gui.service;
 
 import java.time.temporal.ChronoUnit;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.BackendHealthClient;
+import de.vptr.midas.gui.util.LogSanitizer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Service for checking backend availability during navigation.
@@ -48,7 +50,7 @@ public class BackendAvailabilityService {
             }
             return available;
         } catch (final RuntimeException e) {
-            LOG.tracef("Health check failed (will retry): %s", e.getMessage());
+            LOG.tracef("Health check failed (will retry): %s", LogSanitizer.sanitize(e.getMessage()));
             throw e;
         }
     }
@@ -79,7 +81,7 @@ public class BackendAvailabilityService {
             }
             return available;
         } catch (final RuntimeException e) {
-            LOG.debugf("Raw health check failed: %s", e.getMessage());
+            LOG.debugf("Raw health check failed: %s", LogSanitizer.sanitize(e.getMessage()));
             return false;
         }
     }

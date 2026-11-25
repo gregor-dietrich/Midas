@@ -1,12 +1,14 @@
 package de.vptr.midas.gui.service;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.exception.AuthenticationException;
-import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
+import de.vptr.midas.gui.util.LogSanitizer;
 
 /** Component. */
 @Dependent
@@ -28,7 +30,7 @@ public class GreetService {
      *             if the user is not authenticated
      */
     public String greet(final String name) {
-        LOG.debugf("GreetService.greet called with name: %s", name);
+        LOG.debugf("GreetService.greet called with name: %s", LogSanitizer.sanitize(name));
 
         final var authHeader = this.authService.getAuthorizationHeader();
         if (authHeader == null) {

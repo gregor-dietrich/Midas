@@ -2,11 +2,12 @@ package de.vptr.midas.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 // Literal client IPs are the subject under test here, not a hard-coded endpoint.
 @SuppressWarnings("PMD.AvoidUsingHardCodedIP")

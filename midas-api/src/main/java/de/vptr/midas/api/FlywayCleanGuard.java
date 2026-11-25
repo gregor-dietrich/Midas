@@ -2,19 +2,21 @@ package de.vptr.midas.api;
 
 import java.util.List;
 
-import org.eclipse.microprofile.config.Config;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
-import org.jboss.logging.Logger;
-
-import io.quarkus.flyway.FlywayConfigurationCustomizer;
-import io.quarkus.runtime.LaunchMode;
-import io.smallrye.config.SmallRyeConfig;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
+
+import org.eclipse.microprofile.config.Config;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.jboss.logging.Logger;
+
+import de.vptr.midas.api.util.LogSanitizer;
+import io.quarkus.flyway.FlywayConfigurationCustomizer;
+import io.quarkus.runtime.LaunchMode;
+import io.smallrye.config.SmallRyeConfig;
 
 /**
  * Keeps a production launch away from the dev and test settings, whatever the profile says (#31). {@code %dev,test} set
@@ -58,7 +60,8 @@ public class FlywayCleanGuard implements FlywayConfigurationCustomizer {
         }
         final var nonProduction = this.profiles.stream().filter(NON_PRODUCTION_PROFILES::contains).toList();
         if (!nonProduction.isEmpty()) {
-            LOG.errorf("FATAL: this production build was started with the %s profile!", nonProduction);
+            LOG.errorf("FATAL: this production build was started with the %s profile!",
+                    LogSanitizer.sanitize(nonProduction));
             LOG.error("Unset quarkus.profile (QUARKUS_PROFILE) and quarkus.config.profile.parent, or set the profile "
                     + "to prod, before starting.");
             throw new IllegalStateException("Production build started with a dev or test profile: " + nonProduction);

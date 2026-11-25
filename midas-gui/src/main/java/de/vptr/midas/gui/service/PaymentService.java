@@ -8,16 +8,18 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PaymentClient;
 import de.vptr.midas.gui.dto.PaymentDto;
 import de.vptr.midas.gui.dto.PaymentResponseDto;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Service for payment operations. */
 @ApplicationScoped
@@ -43,14 +45,14 @@ public class PaymentService {
 
     /** Returns the payment by id, or empty if it does not exist. */
     public Optional<PaymentDto> getPaymentById(final String id) {
-        LOG.debugf("Fetching payment with ID: %s", id);
+        LOG.debugf("Fetching payment with ID: %s", LogSanitizer.sanitize(id));
         return ServiceHelper.executeOptional(() -> this.paymentClient.getPayment(id), this.authService, LOG,
                 "fetching payment " + id).map(PaymentDto::from);
     }
 
     /** Returns the payments by user. */
     public List<PaymentResponseDto> getPaymentsByUser(final String userId) {
-        LOG.debugf("Fetching payments for user: %s", userId);
+        LOG.debugf("Fetching payments for user: %s", LogSanitizer.sanitize(userId));
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsByUser(userId), this.authService, LOG,
                 "fetching payments for user " + userId);
     }
@@ -65,28 +67,29 @@ public class PaymentService {
 
     /** Returns the payments by date range. */
     public List<PaymentResponseDto> getPaymentsByDateRange(final LocalDate startDate, final LocalDate endDate) {
-        LOG.debugf("Fetching payments for date range: %s to %s", startDate, endDate);
+        LOG.debugf("Fetching payments for date range: %s to %s", LogSanitizer.sanitize(startDate),
+                LogSanitizer.sanitize(endDate));
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsByDateRange(endDate, startDate),
                 this.authService, LOG, "fetching payments by date range");
     }
 
     /** Returns the payments by source account. */
     public List<PaymentResponseDto> getPaymentsBySourceAccount(final String sourceId) {
-        LOG.debugf("Fetching payments for source account: %s", sourceId);
+        LOG.debugf("Fetching payments for source account: %s", LogSanitizer.sanitize(sourceId));
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsBySourceAccount(sourceId), this.authService,
                 LOG, "fetching payments for source account " + sourceId);
     }
 
     /** Returns the payments by target account. */
     public List<PaymentResponseDto> getPaymentsByTargetAccount(final String targetId) {
-        LOG.debugf("Fetching payments for target account: %s", targetId);
+        LOG.debugf("Fetching payments for target account: %s", LogSanitizer.sanitize(targetId));
         return ServiceHelper.execute(() -> this.paymentClient.getPaymentsByTargetAccount(targetId), this.authService,
                 LOG, "fetching payments for target account " + targetId);
     }
 
     /** Returns the payments by account (source or target). */
     public List<PaymentResponseDto> getPaymentsByAccount(final String accountId) {
-        LOG.debugf("Fetching all payments for account: %s", accountId);
+        LOG.debugf("Fetching all payments for account: %s", LogSanitizer.sanitize(accountId));
 
         final List<PaymentResponseDto> sourcePayments =
                 ServiceHelper.execute(() -> this.paymentClient.getPaymentsBySourceAccount(accountId), this.authService,
@@ -106,14 +109,14 @@ public class PaymentService {
 
     /** Creates a new payment. */
     public PaymentDto createPayment(final PaymentDto payment) {
-        LOG.debugf("Creating new payment: %s", payment);
+        LOG.debugf("Creating new payment: %s", LogSanitizer.sanitize(payment));
         return PaymentDto.from(ServiceHelper.execute(() -> this.paymentClient.createPayment(payment), this.authService,
                 LOG, "creating payment", "Failed to create payment"));
     }
 
     /** Updates the payment. */
     public PaymentDto updatePayment(final PaymentDto payment) {
-        LOG.debugf("Updating payment: %s", payment);
+        LOG.debugf("Updating payment: %s", LogSanitizer.sanitize(payment));
         final var paymentId = Objects.requireNonNull(payment.getPublicId(), "Payment ID must not be null for update");
         return PaymentDto.from(ServiceHelper.execute(() -> this.paymentClient.updatePayment(paymentId, payment),
                 this.authService, LOG, "updating payment " + payment.getPublicId(), "Failed to update payment"));
@@ -121,14 +124,14 @@ public class PaymentService {
 
     /** Handles the delete payment operation. */
     public void deletePayment(final String id) {
-        LOG.debugf("Deleting payment with ID: %s", id);
+        LOG.debugf("Deleting payment with ID: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.paymentClient.deletePayment(id), this.authService, LOG,
                 "deleting payment " + id);
     }
 
     /** Handles the search payments operation. */
     public List<PaymentResponseDto> searchPayments(final String query) {
-        LOG.debugf("Searching payments with query: %s", query);
+        LOG.debugf("Searching payments with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.paymentClient.searchPayments(query), this.authService, LOG,
                 "searching payments");
     }

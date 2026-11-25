@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H3;
@@ -13,7 +15,6 @@ import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.service.UserRankService;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing user ranks in the admin view. Encapsulates form fields, binder, permission

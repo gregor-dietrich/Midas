@@ -2,8 +2,9 @@ package de.vptr.midas.api.dto;
 
 import java.time.LocalDateTime;
 
-import de.vptr.midas.api.entity.PostCommentEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.PostCommentEntity;
 
 /** Data transfer object for post comment response data. */
 public class PostCommentResponseDto {

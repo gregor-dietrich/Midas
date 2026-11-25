@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
@@ -18,7 +20,6 @@ import de.vptr.midas.gui.service.BackendAvailabilityService;
 import de.vptr.midas.gui.service.ThemeService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
-import jakarta.inject.Inject;
 
 /** View displayed when the backend is unavailable. */
 @Route(value = "backend-error", layout = MainLayout.class)

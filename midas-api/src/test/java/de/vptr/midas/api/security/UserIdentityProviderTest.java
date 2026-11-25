@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.security.identity.request.UsernamePasswordAuthenticationRequest;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 @QuarkusTest
 class UserIdentityProviderTest {

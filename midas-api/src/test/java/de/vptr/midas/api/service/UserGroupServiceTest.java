@@ -12,14 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Objects;
 
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.UserGroupDto;
 import de.vptr.midas.api.util.PaginationUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
 class UserGroupServiceTest {

@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import de.vptr.midas.api.entity.AccountEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.AccountEntity;
 
 /**
  * Response DTO for account operations. Contains computed fields and safe data for client responses.

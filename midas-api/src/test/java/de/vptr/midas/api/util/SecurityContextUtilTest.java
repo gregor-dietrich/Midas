@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.Principal;
 
-import org.junit.jupiter.api.Test;
-
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.SecurityContext;
+
+import org.junit.jupiter.api.Test;
 
 class SecurityContextUtilTest {
 

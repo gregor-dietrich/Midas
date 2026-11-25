@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import de.vptr.midas.api.entity.PaymentEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.PaymentEntity;
 
 /** Data transfer object for payment response data. */
 public class PaymentResponseDto {

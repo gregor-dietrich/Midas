@@ -2,8 +2,6 @@ package de.vptr.midas.api.entity;
 
 import java.util.Objects;
 
-import de.vptr.midas.api.util.UlidUtil;
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+
+import de.vptr.midas.api.util.UlidUtil;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 /** Base class for all entities with a public ULID identifier. */
 @MappedSuperclass

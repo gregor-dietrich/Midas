@@ -3,9 +3,9 @@ package de.vptr.midas.api.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import jakarta.annotation.Nullable;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 /** A single point of a balance-over-time series: the cumulative balance as of {@code date}. */
 public class BalancePointDto {

@@ -2,10 +2,11 @@ package de.vptr.midas.api.security;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 @QuarkusTest
 class AuthFailureRateLimitServiceTest {

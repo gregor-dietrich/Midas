@@ -1,11 +1,11 @@
 package de.vptr.midas.gui.service;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.theme.lumo.Lumo;
-
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
 
 /** Component. */
 @ApplicationScoped

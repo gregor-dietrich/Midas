@@ -20,12 +20,13 @@
     },
     {
       "customType": "regex",
-      "description": "devkit's parent POM: its version is the tag without the leading v",
+      "description": "devkit's parent POMs: their version is the tag without the leading v",
       "managerFilePatterns": [
-        "/^pom\\.xml$/"
+        "/^pom\\.xml$/",
+        "/^midas-gui/pom\\.xml$/"
       ],
       "matchStrings": [
-        "<artifactId>devkit-parent</artifactId>\\s*<version>(?<currentValue>[^<]+)</version>"
+        "<artifactId>devkit-(?:quarkus-|vaadin-)?parent</artifactId>\\s*<version>(?<currentValue>[^<]+)</version>"
       ],
       "depNameTemplate": "devkit-parent",
       "packageNameTemplate": "gregor/devkit",

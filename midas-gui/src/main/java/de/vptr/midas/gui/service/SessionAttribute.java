@@ -6,6 +6,8 @@ import org.jboss.logging.Logger;
 
 import com.vaadin.flow.server.VaadinSession;
 
+import de.vptr.midas.gui.util.LogSanitizer;
+
 final class SessionAttribute<T> {
 
     private final String name;
@@ -30,7 +32,7 @@ final class SessionAttribute<T> {
             return Optional.empty();
         }
         if (!this.type.isInstance(value)) {
-            logger.warnf("Ignoring unexpected value type for session attribute %s", this.name);
+            logger.warnf("Ignoring unexpected value type for session attribute %s", LogSanitizer.sanitize(this.name));
             session.setAttribute(this.name, null);
             return Optional.empty();
         }

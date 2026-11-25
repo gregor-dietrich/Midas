@@ -2,6 +2,8 @@ package de.vptr.midas.gui.view;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
@@ -13,7 +15,6 @@ import de.vptr.midas.gui.component.button.ThemeToggleButton;
 import de.vptr.midas.gui.component.button.UserViewButton;
 import de.vptr.midas.gui.component.tabs.AdminNavigationTabs;
 import de.vptr.midas.gui.dto.UserRankDto;
-import jakarta.annotation.Nullable;
 
 /** Layout for admin main. */
 public class AdminMainLayout extends AbstractMainLayoutBase {

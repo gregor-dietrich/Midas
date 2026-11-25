@@ -3,16 +3,17 @@ package de.vptr.midas.api.service;
 import java.util.List;
 import java.util.Optional;
 
-import de.vptr.midas.api.dto.AccountDto;
-import de.vptr.midas.api.dto.AccountResponseDto;
-import de.vptr.midas.api.entity.AccountEntity;
-import de.vptr.midas.api.entity.PaymentEntity;
-import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.dto.AccountDto;
+import de.vptr.midas.api.dto.AccountResponseDto;
+import de.vptr.midas.api.entity.AccountEntity;
+import de.vptr.midas.api.entity.PaymentEntity;
+import de.vptr.midas.api.util.SearchQueryUtil;
 
 /** Service for account CRUD business logic. */
 @ApplicationScoped

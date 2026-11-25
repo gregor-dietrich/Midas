@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -23,10 +26,10 @@ import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserGroupService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /** Detail view for a single user group. */
 @Route(value = "groups/:identifier", layout = MainLayout.class)
@@ -77,14 +80,15 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
         this.resolveGroupAndLoad(identifier);
     }
 
+    @SuppressFBWarnings(value = "IMPROPER_UNICODE", justification = "Case-insensitive display-name lookup in UI view")
     private void resolveGroupAndLoad(final String identifier) {
         final String safeIdentifier = Objects.requireNonNull(identifier, "identifier must not be null");
         this.loadDataAsync(() -> {
-            LOG.infof("Resolving group with identifier: %s", safeIdentifier);
+            LOG.infof("Resolving group with identifier: %s", LogSanitizer.sanitize(safeIdentifier));
             if (safeIdentifier.length() == 26 && safeIdentifier.matches("^[0-9A-Z]{26}$")) {
                 return this.groupService.getGroupById(safeIdentifier).orElse(null);
             } else {
-                LOG.infof("Identifier is not a ULID, searching by name: %s", safeIdentifier);
+                LOG.infof("Identifier is not a ULID, searching by name: %s", LogSanitizer.sanitize(safeIdentifier));
                 final var results = this.groupService.searchGroups(safeIdentifier);
                 return results.stream().filter(group -> safeIdentifier.equalsIgnoreCase(group.getName())).findFirst()
                         .orElse(null);
@@ -139,7 +143,7 @@ public class UserGroupDetailView extends AbstractAsyncDataView implements Before
 
     private void loadMembersAsync() {
         final var id = Objects.requireNonNull(this.groupId);
-        LOG.infof("Starting async member loading for group: %s", id);
+        LOG.infof("Starting async member loading for group: %s", LogSanitizer.sanitize(id));
 
         this.loadDataAsync(() -> {
             LOG.info("Making REST call to load group members");

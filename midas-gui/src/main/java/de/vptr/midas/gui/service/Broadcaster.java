@@ -7,9 +7,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import com.vaadin.flow.shared.Registration;
-
 import jakarta.enterprise.context.ApplicationScoped;
+
+import com.vaadin.flow.shared.Registration;
 
 /**
  * A simple broadcaster to push updates to multiple UIs.

@@ -1,11 +1,12 @@
 package de.vptr.midas.gui.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /** Data transfer object for user rank. */
-@SuppressWarnings("PMD.ExcessivePublicCount")
+// 25 permission flags require getters, setters and convenience methods (91 methods, max CC 1).
+@SuppressWarnings({ "PMD.ExcessivePublicCount", "PMD.CyclomaticComplexity" })
 public class UserRankDto {
 
     @JsonProperty("publicId")
@@ -381,103 +382,103 @@ public class UserRankDto {
 
     // Convenience methods for checking permissions
     public boolean canAdminView() {
-        return this.adminView != null && this.adminView;
+        return Boolean.TRUE.equals(this.adminView);
     }
 
     public boolean canAddPage() {
-        return this.pageAdd != null && this.pageAdd;
+        return Boolean.TRUE.equals(this.pageAdd);
     }
 
     public boolean canDeletePage() {
-        return this.pageDelete != null && this.pageDelete;
+        return Boolean.TRUE.equals(this.pageDelete);
     }
 
     public boolean canEditPage() {
-        return this.pageEdit != null && this.pageEdit;
+        return Boolean.TRUE.equals(this.pageEdit);
     }
 
     public boolean canAddPost() {
-        return this.postAdd != null && this.postAdd;
+        return Boolean.TRUE.equals(this.postAdd);
     }
 
     public boolean canDeletePost() {
-        return this.postDelete != null && this.postDelete;
+        return Boolean.TRUE.equals(this.postDelete);
     }
 
     public boolean canEditPost() {
-        return this.postEdit != null && this.postEdit;
+        return Boolean.TRUE.equals(this.postEdit);
     }
 
     public boolean canAddPostCategory() {
-        return this.postCategoryAdd != null && this.postCategoryAdd;
+        return Boolean.TRUE.equals(this.postCategoryAdd);
     }
 
     public boolean canDeletePostCategory() {
-        return this.postCategoryDelete != null && this.postCategoryDelete;
+        return Boolean.TRUE.equals(this.postCategoryDelete);
     }
 
     public boolean canEditPostCategory() {
-        return this.postCategoryEdit != null && this.postCategoryEdit;
+        return Boolean.TRUE.equals(this.postCategoryEdit);
     }
 
     public boolean canAddPostComment() {
-        return this.postCommentAdd != null && this.postCommentAdd;
+        return Boolean.TRUE.equals(this.postCommentAdd);
     }
 
     public boolean canDeletePostComment() {
-        return this.postCommentDelete != null && this.postCommentDelete;
+        return Boolean.TRUE.equals(this.postCommentDelete);
     }
 
     public boolean canEditPostComment() {
-        return this.postCommentEdit != null && this.postCommentEdit;
+        return Boolean.TRUE.equals(this.postCommentEdit);
     }
 
     public boolean canAddUser() {
-        return this.userAdd != null && this.userAdd;
+        return Boolean.TRUE.equals(this.userAdd);
     }
 
     public boolean canDeleteUser() {
-        return this.userDelete != null && this.userDelete;
+        return Boolean.TRUE.equals(this.userDelete);
     }
 
     public boolean canEditUser() {
-        return this.userEdit != null && this.userEdit;
+        return Boolean.TRUE.equals(this.userEdit);
     }
 
     public boolean canAddUserGroup() {
-        return this.userGroupAdd != null && this.userGroupAdd;
+        return Boolean.TRUE.equals(this.userGroupAdd);
     }
 
     public boolean canDeleteUserGroup() {
-        return this.userGroupDelete != null && this.userGroupDelete;
+        return Boolean.TRUE.equals(this.userGroupDelete);
     }
 
     public boolean canEditUserGroup() {
-        return this.userGroupEdit != null && this.userGroupEdit;
+        return Boolean.TRUE.equals(this.userGroupEdit);
     }
 
     public boolean canAddUserAccount() {
-        return this.userAccountAdd != null && this.userAccountAdd;
+        return Boolean.TRUE.equals(this.userAccountAdd);
     }
 
     public boolean canDeleteUserAccount() {
-        return this.userAccountDelete != null && this.userAccountDelete;
+        return Boolean.TRUE.equals(this.userAccountDelete);
     }
 
     public boolean canEditUserAccount() {
-        return this.userAccountEdit != null && this.userAccountEdit;
+        return Boolean.TRUE.equals(this.userAccountEdit);
     }
 
     public boolean canAddUserRank() {
-        return this.userRankAdd != null && this.userRankAdd;
+        return Boolean.TRUE.equals(this.userRankAdd);
     }
 
     public boolean canDeleteUserRank() {
-        return this.userRankDelete != null && this.userRankDelete;
+        return Boolean.TRUE.equals(this.userRankDelete);
     }
 
     public boolean canEditUserRank() {
-        return this.userRankEdit != null && this.userRankEdit;
+        return Boolean.TRUE.equals(this.userRankEdit);
     }
 
     /** Returns whether any permission is granted. */

@@ -2,6 +2,8 @@ package de.vptr.midas.gui.component.layout;
 
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -11,7 +13,6 @@ import com.vaadin.flow.component.textfield.TextField;
 
 import de.vptr.midas.gui.component.button.SearchButton;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /**
  * Reusable search layout with text field, search button, and clear button. Includes built-in search-in-progress state

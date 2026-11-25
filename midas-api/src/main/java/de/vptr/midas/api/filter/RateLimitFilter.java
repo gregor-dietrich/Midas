@@ -6,16 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import de.vptr.midas.api.exception.ApiErrorResponse;
-import de.vptr.midas.api.util.IpUtil;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.netty.util.NetUtil;
-import io.vertx.core.http.HttpConnection;
-import io.vertx.core.net.SocketAddress;
-import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Priority;
@@ -28,6 +18,17 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.PreMatching;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import de.vptr.midas.api.exception.ApiErrorResponse;
+import de.vptr.midas.api.util.IpUtil;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.netty.util.NetUtil;
+import io.vertx.core.http.HttpConnection;
+import io.vertx.core.net.SocketAddress;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * Enforces per-endpoint read/write request rate limits before resource matching.

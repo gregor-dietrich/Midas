@@ -16,6 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.inject.Inject;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,6 @@ import de.vptr.midas.gui.util.StubBackend;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 
 /**
  * Pins the credential flow end to end with the real {@link AuthService}: the login check against the auth endpoint, and

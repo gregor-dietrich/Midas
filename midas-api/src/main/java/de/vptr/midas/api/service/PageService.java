@@ -3,15 +3,16 @@ package de.vptr.midas.api.service;
 import java.util.List;
 import java.util.Optional;
 
-import de.vptr.midas.api.dto.PageDto;
-import de.vptr.midas.api.dto.PageResponseDto;
-import de.vptr.midas.api.entity.PageEntity;
-import de.vptr.midas.api.security.HtmlSanitizerService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.dto.PageDto;
+import de.vptr.midas.api.dto.PageResponseDto;
+import de.vptr.midas.api.entity.PageEntity;
+import de.vptr.midas.api.security.HtmlSanitizerService;
 
 /** Service for page business logic. */
 @ApplicationScoped

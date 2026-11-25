@@ -2,12 +2,13 @@ package de.vptr.midas.api.filter;
 
 import java.io.IOException;
 
-import de.vptr.midas.api.service.AdminAccessService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
+
+import de.vptr.midas.api.service.AdminAccessService;
 
 /** Clears per-request admin access cache after each response. */
 @Provider

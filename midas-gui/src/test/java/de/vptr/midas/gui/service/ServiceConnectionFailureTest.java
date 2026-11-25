@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import jakarta.ws.rs.ProcessingException;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,7 +28,6 @@ import de.vptr.midas.gui.client.UserClient;
 import de.vptr.midas.gui.client.UserGroupClient;
 import de.vptr.midas.gui.client.UserRankClient;
 import de.vptr.midas.gui.exception.ServiceException;
-import jakarta.ws.rs.ProcessingException;
 
 /** Every service reports an unreachable backend the same way; the stub backend cannot simulate that cheaply. */
 @ExtendWith(MockitoExtension.class)

@@ -2,8 +2,9 @@ package de.vptr.midas.api.dto;
 
 import java.time.LocalDateTime;
 
-import de.vptr.midas.api.entity.PageEntity;
 import jakarta.annotation.Nullable;
+
+import de.vptr.midas.api.entity.PageEntity;
 
 /** Data transfer object for page response data. */
 public class PageResponseDto {

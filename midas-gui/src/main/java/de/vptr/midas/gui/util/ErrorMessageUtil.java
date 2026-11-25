@@ -2,14 +2,14 @@ package de.vptr.midas.gui.util;
 
 import java.util.regex.Pattern;
 
+import jakarta.annotation.Nullable;
+import jakarta.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.annotation.Nullable;
-import jakarta.ws.rs.core.Response;
 
 /**
  * Utility class for extracting error messages from HTTP responses.
@@ -48,7 +48,8 @@ public final class ErrorMessageUtil {
                 }
             }
         } catch (final RuntimeException e) {
-            LOG.warnf("Failed to extract error message from %s response: %s", response.getStatus(), e.getMessage());
+            LOG.warnf("Failed to extract error message from %s response: %s", response.getStatus(),
+                    LogSanitizer.sanitize(e.getMessage()));
         }
 
         return "HTTP " + response.getStatus();

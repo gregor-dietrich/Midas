@@ -8,14 +8,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.container.ContainerRequestContext;
+
 import org.junit.jupiter.api.Test;
 
 import io.vertx.core.http.HttpConnection;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
-import jakarta.enterprise.inject.Instance;
-import jakarta.ws.rs.container.ContainerRequestContext;
 
 // Literal client IPs are the subject under test here, not a hard-coded endpoint.
 @SuppressWarnings({ "PMD.AvoidUsingHardCodedIP", "unchecked" })

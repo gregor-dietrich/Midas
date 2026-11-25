@@ -1,10 +1,10 @@
 package de.vptr.midas.api.exception;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /** Maps Jackson JSON parse/mapping errors to 400 Bad Request. */
 @Provider

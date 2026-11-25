@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -12,7 +14,6 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.entity.UserRankEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.ws.rs.WebApplicationException;
 
 /** Tests the privilege ceiling against the demo ranks: Administrator holds every permission, Guest none. */
 @QuarkusTest

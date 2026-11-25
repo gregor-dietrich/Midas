@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -11,10 +14,9 @@ import de.vptr.midas.gui.client.UserClient;
 import de.vptr.midas.gui.dto.PasswordChangeDto;
 import de.vptr.midas.gui.dto.UserDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Service for user operations. */
 @ApplicationScoped
@@ -47,50 +49,50 @@ public class UserService {
 
     /** Returns the user by id, or empty if it does not exist. */
     public Optional<UserResponseDto> getUserById(final String id) {
-        LOG.debugf("Fetching user with ID: %s", id);
+        LOG.debugf("Fetching user with ID: %s", LogSanitizer.sanitize(id));
         return ServiceHelper.executeOptional(() -> this.userClient.getUser(id), this.authService, LOG,
                 "fetching user " + id);
     }
 
     /** Returns the user by username, or empty if it does not exist. */
     public Optional<UserResponseDto> getUserByUsername(final String username) {
-        LOG.debugf("Fetching user with username: %s", username);
+        LOG.debugf("Fetching user with username: %s", LogSanitizer.sanitize(username));
         return ServiceHelper.executeOptional(() -> this.userClient.getUserByUsername(username), this.authService, LOG,
                 "fetching user by username " + username);
     }
 
     /** Creates a new user. */
     public UserResponseDto createUser(final UserDto user) {
-        LOG.debugf("Creating new user: %s", user.getUsername());
+        LOG.debugf("Creating new user: %s", LogSanitizer.sanitize(user.getUsername()));
         return ServiceHelper.execute(() -> this.userClient.createUser(user), this.authService, LOG, "creating user",
                 "Failed to create user");
     }
 
     /** Updates the user. */
     public UserResponseDto updateUser(final UserDto user) {
-        LOG.debugf("Updating user: %s", user.getPublicId());
         final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for update");
+        LOG.debugf("Updating user: %s", LogSanitizer.sanitize(userId));
         return ServiceHelper.execute(() -> this.userClient.updateUser(userId, user), this.authService, LOG,
-                "updating user " + user.getPublicId(), "Failed to update user");
+                "updating user " + userId, "Failed to update user");
     }
 
     /** Updates the user password. */
     public UserResponseDto updateUserPassword(final UserDto user) {
-        LOG.debugf("Updating password for user: %s", user.getPublicId());
         final var userId = Objects.requireNonNull(user.getPublicId(), "User ID must not be null for password update");
+        LOG.debugf("Updating password for user: %s", LogSanitizer.sanitize(userId));
         return ServiceHelper.execute(() -> this.userClient.patchUser(userId, user), this.authService, LOG,
-                "updating user password " + user.getPublicId(), "Failed to update user password");
+                "updating user password " + userId, "Failed to update user password");
     }
 
     /** Handles the delete user operation. */
     public void deleteUser(final String id) {
-        LOG.debugf("Deleting user: %s", id);
+        LOG.debugf("Deleting user: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.userClient.deleteUser(id), this.authService, LOG, "deleting user " + id);
     }
 
     /** Handles the search users operation. */
     public List<UserResponseDto> searchUsers(final String query) {
-        LOG.debugf("Searching users with query: %s", query);
+        LOG.debugf("Searching users with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.userClient.searchUsers(query), this.authService, LOG,
                 "searching users");
     }

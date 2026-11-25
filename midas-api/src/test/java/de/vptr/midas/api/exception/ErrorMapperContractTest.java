@@ -3,11 +3,11 @@ package de.vptr.midas.api.exception;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import jakarta.validation.ValidationException;
+
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
-
-import jakarta.validation.ValidationException;
 
 // NOTE: This is an intentional plain JUnit test, not a @QuarkusTest.
 // It tests mapper contract logic via direct instantiation without requiring the full CDI container.

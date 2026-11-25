@@ -3,6 +3,8 @@ package de.vptr.midas.gui.component.dialog;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.data.binder.Binder;
 
@@ -10,7 +12,6 @@ import de.vptr.midas.gui.dto.PostCategoryDto;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.service.PostCategoryService;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing post categories in the admin view. Encapsulates form fields, binder, parent category

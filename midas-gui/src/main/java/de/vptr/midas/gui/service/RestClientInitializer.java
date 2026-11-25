@@ -1,15 +1,17 @@
 package de.vptr.midas.gui.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.client.BackendHealthClient;
+import de.vptr.midas.gui.util.LogSanitizer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.quarkus.runtime.StartupEvent;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
 
 /**
  * Eagerly initializes REST clients at Quarkus startup on the main thread.
@@ -57,7 +59,7 @@ public class RestClientInitializer {
             LOG.debug("BackendHealthClient initialized successfully");
         } catch (final Exception e) {
             LOG.debugf("BackendHealthClient initialization failed (expected on first health check if backend down): %s",
-                    e.getMessage());
+                    LogSanitizer.sanitize(e.getMessage()));
         }
 
         try {
@@ -67,7 +69,7 @@ public class RestClientInitializer {
             final String _ = this.authClient.getClass().getName();
             LOG.debug("AuthClient initialized successfully");
         } catch (final Exception e) {
-            LOG.debugf("AuthClient initialization error: %s", e.getMessage());
+            LOG.debugf("AuthClient initialization error: %s", LogSanitizer.sanitize(e.getMessage()));
         }
 
         LOG.info("REST clients initialization complete");

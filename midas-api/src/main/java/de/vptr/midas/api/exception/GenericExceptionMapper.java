@@ -1,7 +1,6 @@
 package de.vptr.midas.api.exception;
 
-import org.hibernate.exception.ConstraintViolationException;
-import org.jboss.logging.Logger;
+import java.util.Locale;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Priority;
@@ -12,6 +11,12 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
+import org.hibernate.exception.ConstraintViolationException;
+import org.jboss.logging.Logger;
+
+import de.vptr.midas.api.util.LogSanitizer;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 // Note: ExceptionMapper<Exception> intentionally excludes Error subclasses
 // (OOM, SOE) which should propagate to the container.
@@ -34,12 +39,13 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
         }
 
         if (isCausedBy(exception, ConstraintViolationException.class)) {
-            LOG.warnf("Constraint violation: %s", exception.getMessage());
+            LOG.warnf("Constraint violation: %s", LogSanitizer.sanitize(exception.getMessage()));
             return buildErrorResponse(409, "Conflict", "A resource with the same identifier already exists");
         }
 
-        LOG.errorf(exception, "Unhandled exception on %s %s: %s", uriInfo != null ? uriInfo.getRequestUri() : "unknown",
-                exception.getClass().getSimpleName(), exception.getMessage());
+        LOG.errorf(exception, "Unhandled exception on %s %s: %s",
+                uriInfo != null ? LogSanitizer.sanitize(uriInfo.getRequestUri()) : "unknown",
+                exception.getClass().getSimpleName(), LogSanitizer.sanitize(exception.getMessage()));
 
         return buildErrorResponse(500, "Internal Server Error", GENERIC_INTERNAL_MESSAGE);
     }
@@ -67,6 +73,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
         return buildErrorResponse(status, reason, message);
     }
 
+    @SuppressFBWarnings(value = "IMPROPER_UNICODE",
+            justification = "Case-insensitive comparison against ASCII HTTP status reason phrase")
     private static String resolveClientMessage(@Nullable final String rawMessage, final int status,
             final String fallback) {
         if (rawMessage == null) {
@@ -74,7 +82,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
         }
 
         final String message = rawMessage.trim();
-        if (message.isEmpty() || message.equalsIgnoreCase(fallback)
+        if (message.isEmpty() || message.toLowerCase(Locale.ROOT).equals(fallback.toLowerCase(Locale.ROOT))
                 || message.startsWith(WebApplicationException.class.getName()) || message.contains("HTTP " + status)) {
             return fallback;
         }

@@ -18,6 +18,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -30,9 +34,6 @@ import de.vptr.midas.api.security.UserRankIdentityAugmentor;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.validation.ValidationException;
-import jakarta.ws.rs.WebApplicationException;
 
 /**
  * Tests the last-administrator guard through every service path it covers. Most tests run in a rolled-back transaction

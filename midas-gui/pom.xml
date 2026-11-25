@@ -5,48 +5,35 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.vptr</groupId>
-    <artifactId>midas-parent</artifactId>
-    <version>${revision}</version>
-    <relativePath>../pom.xml</relativePath>
+    <groupId>de.vptr.devkit</groupId>
+    <artifactId>devkit-vaadin-parent</artifactId>
+    <version>0.9.0</version>
+    <relativePath>../.devkit/java/vaadin/pom.xml</relativePath>
   </parent>
 
+  <groupId>de.vptr</groupId>
   <artifactId>midas-gui</artifactId>
   <version>${revision}</version>
   <packaging>quarkus</packaging>
 
   <properties>
+    <revision>1.0.0-SNAPSHOT</revision>
+    <java.version>25</java.version>
+    <maven.compiler.release>${java.version}</maven.compiler.release>
+    <!-- Generated sources (openapi-generator output) are not ours to fix. -->
+    <error-prone.extra.args>-XepExcludedPaths:.*/generated-sources/.*</error-prone.extra.args>
+
     <openapi-generator-plugin.version>7.26.0</openapi-generator-plugin.version>
     <nullaway.annotated.packages>de.vptr.midas.gui</nullaway.annotated.packages>
 
     <assertj.version>3.27.7</assertj.version>
     <line-awesome.version>2.1.0</line-awesome.version>
-    <vaadin.version>25.3.3</vaadin.version>
-    <!-- Node.js for every Vaadin frontend build. vaadin-maven-plugin reads these two properties
-    directly; quarkus-maven-plugin passes them to the Quarkus build step and to dev mode (see its
-    systemProperties). Vaadin downloads this version to ~/.vaadin instead of using a node on PATH,
-    so the npm bundled with it, and with that package-lock.json, is the same on every machine.
-    Bump together with vaadin.version, to the new release's FrontendTools.DEFAULT_NODE_VERSION. -->
-    <vaadin.node.version>v24.21.0</vaadin.node.version>
-    <vaadin.require.home.node>true</vaadin.require.home.node>
-    <!-- npm ci instead of npm install: installs exactly what package-lock.json records and fails
-    the build when package.json and the lockfile disagree, instead of rewriting the lockfile.
-    Off only in `make regen-lockfile`, which updates the lockfile. -->
-    <vaadin.ci.build>true</vaadin.ci.build>
     <!-- Jackson 3 security pin (transitive via Vaadin). See dependencyManagement. -->
     <jackson3.version>3.1.8</jackson3.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>com.vaadin</groupId>
-        <artifactId>vaadin-bom</artifactId>
-        <version>${vaadin.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
       <!-- Pin Jackson 3 to fix CVEs. Neither the Quarkus nor the Vaadin BOM manages
       tools.jackson.*, so this BOM is declared last: it only fills in those unmanaged versions and
       cannot override the Quarkus-managed com.fasterxml.jackson.core:jackson-annotations (which
@@ -60,7 +47,7 @@
           Stays on the 3.1.x line Vaadin 25.3 is built against rather than moving to 3.2.x, which
           needs com.fasterxml.jackson.core:jackson-annotations 2.22 (Quarkus manages 2.21).
           Jackson 2 (via Quarkus) is already patched at 2.21.7.
-        3.1.7 -> 3.1.8: the newest 3.1.x release; Vaadin 25.3.3 ships 3.1.7.
+        3.1.7 -> 3.1.8: the newest 3.1.x release; Vaadin 25.3.4 ships 3.1.7.
       Remove this pin once Vaadin ships tools.jackson.core >= ${jackson3.version}. -->
       <dependency>
         <groupId>tools.jackson</groupId>
@@ -73,11 +60,18 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- Vaadin -->
+    <!-- Quarkus Core (shared) -->
     <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-quarkus-extension</artifactId>
-      <version>${vaadin.version}</version>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-logging-json</artifactId>
     </dependency>
 
     <!-- Quarkus (module-specific) -->
@@ -98,7 +92,12 @@
       <artifactId>quarkus-caffeine</artifactId>
     </dependency>
 
-    <!-- Test (GUI-specific) -->
+    <!-- Test -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-junit-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
@@ -107,6 +106,10 @@
     </dependency>
 
     <!-- Other dependencies -->
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.parttio</groupId>
       <artifactId>line-awesome</artifactId>
@@ -197,20 +200,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>${quarkus.platform.group-id}</groupId>
-        <artifactId>quarkus-maven-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <!-- vaadin.build.*: Quarkus build step; vaadin.*: dev mode's runtime dev server -->
-            <vaadin.build.node-version>${vaadin.node.version}</vaadin.build.node-version>
-            <vaadin.build.require-home-node-exec>${vaadin.require.home.node}</vaadin.build.require-home-node-exec>
-            <vaadin.build.ci-build>${vaadin.ci.build}</vaadin.build.ci-build>
-            <vaadin.node.version>${vaadin.node.version}</vaadin.node.version>
-            <vaadin.require.home.node>${vaadin.require.home.node}</vaadin.require.home.node>
-          </systemProperties>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>com.vaadin</groupId>
         <artifactId>vaadin-maven-plugin</artifactId>
         <version>${vaadin.version}</version>
@@ -264,28 +253,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>production</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-maven-plugin</artifactId>
-            <version>${vaadin.version}</version>
-            <executions>
-              <execution>
-                <phase>compile</phase>
-                <goals>
-                  <goal>prepare-frontend</goal>
-                  <goal>build-frontend</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

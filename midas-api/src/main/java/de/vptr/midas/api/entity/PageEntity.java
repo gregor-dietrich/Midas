@@ -3,15 +3,16 @@ package de.vptr.midas.api.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.Generated;
-import org.hibernate.generator.EventType;
-
-import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
+import de.vptr.midas.api.util.SearchQueryUtil;
 
 /** JPA entity representing a static page. */
 @Entity

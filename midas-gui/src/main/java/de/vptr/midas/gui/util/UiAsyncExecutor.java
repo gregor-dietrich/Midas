@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.UI;
@@ -17,7 +19,6 @@ import com.vaadin.flow.function.SerializableRunnable;
 import com.vaadin.flow.server.VaadinSession;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /** Detached-safe async execution for Vaadin views. */
 public final class UiAsyncExecutor {

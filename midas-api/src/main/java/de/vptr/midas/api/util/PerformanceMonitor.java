@@ -28,6 +28,7 @@ public final class PerformanceMonitor {
      * @return The result of the supplier
      */
     public static <T> T time(final String operation, final Supplier<T> supplier) {
+        final String safeOperation = LogSanitizer.sanitize(operation);
         final long startTime = System.currentTimeMillis();
         try {
             final T result = supplier.get();
@@ -35,18 +36,18 @@ public final class PerformanceMonitor {
             final long duration = endTime - startTime;
 
             if (duration > SLOW_THRESHOLD_MS) {
-                LOG.warnf("SLOW QUERY: %s took %sms", operation, duration);
+                LOG.warnf("SLOW QUERY: %s took %sms", safeOperation, duration);
             } else if (duration > INFO_THRESHOLD_MS) {
-                LOG.infof("PERFORMANCE: %s took %sms", operation, duration);
+                LOG.infof("PERFORMANCE: %s took %sms", safeOperation, duration);
             } else {
-                LOG.debugf("PERFORMANCE: %s took %sms", operation, duration);
+                LOG.debugf("PERFORMANCE: %s took %sms", safeOperation, duration);
             }
 
             return result;
         } catch (final RuntimeException e) {
             final long endTime = System.currentTimeMillis();
             final long duration = endTime - startTime;
-            LOG.errorf(e, "PERFORMANCE ERROR: %s failed after %sms", operation, duration);
+            LOG.errorf(e, "PERFORMANCE ERROR: %s failed after %sms", safeOperation, duration);
             throw e;
         }
     }

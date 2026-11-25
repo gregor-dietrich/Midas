@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -19,8 +22,6 @@ import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiConstants;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** User view for browsing users. */
 @Route(value = "users", layout = MainLayout.class)

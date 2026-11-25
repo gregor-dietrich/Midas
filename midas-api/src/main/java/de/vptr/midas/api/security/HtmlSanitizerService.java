@@ -2,11 +2,11 @@ package de.vptr.midas.api.security;
 
 import java.util.Objects;
 
-import org.owasp.html.PolicyFactory;
-import org.owasp.html.Sanitizers;
-
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
 
 /** Sanitizes user-supplied HTML content to prevent XSS. */
 @ApplicationScoped

@@ -1,5 +1,7 @@
 package de.vptr.midas.gui.view;
 
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -15,7 +17,6 @@ import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.GreetService;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.inject.Inject;
 
 /** Landing/home view for authenticated users. */
 @Route(value = "", layout = MainLayout.class)

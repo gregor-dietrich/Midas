@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.client.PostCategoryClient;
 import de.vptr.midas.gui.dto.PostCategoryDto;
 import de.vptr.midas.gui.dto.PostCategoryResponseDto;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Service for post category operations. */
 @ApplicationScoped
@@ -44,21 +46,21 @@ public class PostCategoryService {
 
     /** Returns the category by id, or empty if it does not exist. */
     public Optional<PostCategoryResponseDto> getCategoryById(final String id) {
-        LOG.debugf("Fetching category with ID: %s", id);
+        LOG.debugf("Fetching category with ID: %s", LogSanitizer.sanitize(id));
         return ServiceHelper.executeOptional(() -> this.categoryClient.getCategory(id), this.authService, LOG,
                 "fetching category " + id);
     }
 
     /** Returns the categories by parent. */
     public List<PostCategoryResponseDto> getCategoriesByParent(final String parentId) {
-        LOG.debugf("Fetching categories for parent: %s", parentId);
+        LOG.debugf("Fetching categories for parent: %s", LogSanitizer.sanitize(parentId));
         return ServiceHelper.execute(() -> this.categoryClient.getCategoriesByParent(parentId), this.authService, LOG,
                 "fetching categories for parent " + parentId);
     }
 
     /** Creates a new category. */
     public PostCategoryDto createCategory(final PostCategoryDto category) {
-        LOG.debugf("Creating new category: %s", category.getName());
+        LOG.debugf("Creating new category: %s", LogSanitizer.sanitize(category.getName()));
         return PostCategoryDto.from(ServiceHelper.execute(() -> {
             final var parent = category.getParent();
             if (parent != null && category.getParentPublicId() == null) {
@@ -72,7 +74,7 @@ public class PostCategoryService {
     /** Updates the category. */
     public PostCategoryDto updateCategory(final PostCategoryDto category) {
         final String publicId = Objects.requireNonNull(category.getPublicId(), "category.publicId");
-        LOG.debugf("Updating category: %s", publicId);
+        LOG.debugf("Updating category: %s", LogSanitizer.sanitize(publicId));
         return PostCategoryDto.from(ServiceHelper.execute(() -> {
             final PostCategoryDto parent = category.getParent();
             if (parent != null && category.getParentPublicId() == null) {
@@ -85,14 +87,14 @@ public class PostCategoryService {
 
     /** Handles the delete category operation. */
     public void deleteCategory(final String id) {
-        LOG.debugf("Deleting category: %s", id);
+        LOG.debugf("Deleting category: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.categoryClient.deleteCategory(id), this.authService, LOG,
                 "deleting category " + id);
     }
 
     /** Handles the search categories operation. */
     public List<PostCategoryResponseDto> searchCategories(final String query) {
-        LOG.debugf("Searching categories with query: %s", query);
+        LOG.debugf("Searching categories with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.categoryClient.searchCategories(query), this.authService, LOG,
                 "searching categories");
     }

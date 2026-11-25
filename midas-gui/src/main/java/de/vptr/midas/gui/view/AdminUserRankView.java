@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 import com.vaadin.flow.component.Component;
@@ -20,8 +23,6 @@ import de.vptr.midas.gui.component.button.RefreshButton;
 import de.vptr.midas.gui.component.dialog.AdminUserRankDialog;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.service.UserRankService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Admin view for managing user ranks and permissions. */
 @Route(value = "admin/user-ranks", layout = AdminMainLayout.class)

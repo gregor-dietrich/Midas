@@ -1,9 +1,9 @@
 package de.vptr.midas.gui.component.dialog;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-
-import jakarta.annotation.Nullable;
 
 /** Dialog for confirmation. */
 public class ConfirmationDialog extends ConfirmDialog {

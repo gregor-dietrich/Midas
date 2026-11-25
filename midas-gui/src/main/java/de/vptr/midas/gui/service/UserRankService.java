@@ -2,6 +2,10 @@ package de.vptr.midas.gui.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -13,9 +17,8 @@ import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.dto.UserRankResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Service for user rank operations. */
 @ApplicationScoped
@@ -52,17 +55,9 @@ public class UserRankService {
         // Check session cache first to avoid repeated REST calls
         final var session = VaadinSession.getCurrent();
         if (session != null) {
-            final var cachedRank = CURRENT_USER_RANK_ATTRIBUTE.read(session, LOG).orElse(null);
-            final var lastCacheTime = CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.read(session, LOG).orElse(null);
-            final var currentTime = System.currentTimeMillis();
-
-            if (cachedRank != null && lastCacheTime != null && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
-                LOG.debugf("Using cached user rank data (%sms old)", currentTime - lastCacheTime);
-                return cachedRank;
-            }
-            if (cachedRank != null || lastCacheTime != null) {
-                CURRENT_USER_RANK_ATTRIBUTE.clear(session);
-                CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.clear(session);
+            final var cachedRank = readValidCachedRank(session);
+            if (cachedRank.isPresent()) {
+                return cachedRank.get();
             }
         }
 
@@ -74,13 +69,14 @@ public class UserRankService {
         }
 
         final var user = currentUser.get();
-        if (user.getRankPublicId() == null) {
+        final var rankPublicId = user.getRankPublicId();
+        if (rankPublicId == null) {
             LOG.warn("User has no rank assigned for permission check");
             return emptyRank;
         }
 
         try {
-            final var userRank = UserRankDto.from(this.getRankById(user.getRankPublicId()));
+            final var userRank = UserRankDto.from(this.getRankById(rankPublicId));
 
             // Cache the result in session
             if (session != null) {
@@ -91,9 +87,25 @@ public class UserRankService {
 
             return userRank;
         } catch (final AuthenticationException | ServiceException e) {
-            LOG.errorf(e, "Error fetching user rank for permission check: %s", e.getMessage());
+            LOG.errorf(e, "Error fetching user rank for permission check: %s", LogSanitizer.sanitize(e.getMessage()));
             return emptyRank;
         }
+    }
+
+    private static Optional<UserRankDto> readValidCachedRank(final VaadinSession session) {
+        final var cachedRank = CURRENT_USER_RANK_ATTRIBUTE.read(session, LOG).orElse(null);
+        final var lastCacheTime = CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.read(session, LOG).orElse(null);
+        final var currentTime = System.currentTimeMillis();
+
+        if (cachedRank != null && lastCacheTime != null && (currentTime - lastCacheTime) < CACHE_VALIDITY_MS) {
+            LOG.debugf("Using cached user rank data (%sms old)", currentTime - lastCacheTime);
+            return Optional.of(cachedRank);
+        }
+        if (cachedRank != null || lastCacheTime != null) {
+            CURRENT_USER_RANK_ATTRIBUTE.clear(session);
+            CURRENT_USER_RANK_TIMESTAMP_ATTRIBUTE.clear(session);
+        }
+        return Optional.empty();
     }
 
     /**
@@ -110,48 +122,49 @@ public class UserRankService {
 
     /** Returns the rank by id. */
     public UserRankResponseDto getRankById(final String id) {
-        LOG.infof("Getting user rank by id: %s", id);
+        LOG.infof("Getting user rank by id: %s", LogSanitizer.sanitize(id));
         final var rank =
                 ServiceHelper
                         .executeOptional(() -> this.userRankClient.getRank(id), this.authService, LOG,
                                 "getting user rank " + id)
                         .orElseThrow(() -> new ServiceException("User rank not found"));
-        LOG.infof("Successfully retrieved user rank: %s", rank.getName());
+        LOG.infof("Successfully retrieved user rank: %s", LogSanitizer.sanitize(rank.getName()));
         return rank;
     }
 
     /** Creates a new rank. */
     public UserRankDto createRank(final UserRankDto rank) {
-        LOG.infof("Creating user rank: %s", rank.getName());
+        LOG.infof("Creating user rank: %s", LogSanitizer.sanitize(rank.getName()));
         final var createdRank = UserRankDto.from(ServiceHelper.execute(() -> this.userRankClient.createRank(rank),
                 this.authService, LOG, "creating user rank", "Failed to create user rank"));
-        LOG.infof("Successfully created user rank: %s", createdRank.getName());
+        LOG.infof("Successfully created user rank: %s", LogSanitizer.sanitize(createdRank.getName()));
         return createdRank;
     }
 
     /** Updates the rank. */
     public UserRankDto updateRank(final UserRankDto rank) {
         final String publicId = Objects.requireNonNull(rank.getPublicId(), "rank.publicId");
-        LOG.infof("Updating user rank: %s (%s)", rank.getName(), publicId);
+        LOG.infof("Updating user rank: %s (%s)", LogSanitizer.sanitize(rank.getName()),
+                LogSanitizer.sanitize(publicId));
         final var updatedRank =
                 UserRankDto.from(ServiceHelper.execute(() -> this.userRankClient.updateRank(publicId, rank),
                         this.authService, LOG, "updating user rank " + publicId, "Failed to update user rank"));
-        LOG.infof("Successfully updated user rank: %s", updatedRank.getName());
+        LOG.infof("Successfully updated user rank: %s", LogSanitizer.sanitize(updatedRank.getName()));
         return updatedRank;
     }
 
     /** Handles the search ranks operation. */
     public List<UserRankResponseDto> searchRanks(final String query) {
-        LOG.debugf("Searching ranks with query: %s", query);
+        LOG.debugf("Searching ranks with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.userRankClient.searchRanks(query), this.authService, LOG,
                 "searching ranks");
     }
 
     /** Handles the delete rank operation. */
     public void deleteRank(final String id) {
-        LOG.infof("Deleting user rank: %s", id);
+        LOG.infof("Deleting user rank: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.userRankClient.deleteRank(id), this.authService, LOG,
                 "deleting user rank " + id, "User rank not found");
-        LOG.infof("Successfully deleted user rank: %s", id);
+        LOG.infof("Successfully deleted user rank: %s", LogSanitizer.sanitize(id));
     }
 }

@@ -2,8 +2,9 @@ package de.vptr.midas.api.util;
 
 import java.util.Locale;
 
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.annotation.Nullable;
+
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 
 /** Shared search query normalization helpers. */
 public final class SearchQueryUtil {

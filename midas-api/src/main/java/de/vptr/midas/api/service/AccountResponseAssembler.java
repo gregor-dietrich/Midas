@@ -3,11 +3,12 @@ package de.vptr.midas.api.service;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.entity.AccountEntity;
 import de.vptr.midas.api.entity.UserAccountMetaEntity;
 import de.vptr.midas.api.util.QueryAggregationUtil;
-import jakarta.enterprise.context.ApplicationScoped;
 
 /** Builds account response DTOs with batched association lookups. */
 @ApplicationScoped

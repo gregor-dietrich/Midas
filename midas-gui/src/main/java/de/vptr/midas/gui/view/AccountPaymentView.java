@@ -12,6 +12,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
 import com.vaadin.flow.component.UI;
@@ -38,6 +41,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
 import de.vptr.midas.gui.component.chart.BalanceChart;
+import de.vptr.midas.gui.component.dialog.AdminPaymentDialog;
 import de.vptr.midas.gui.component.dialog.FormDialog;
 import de.vptr.midas.gui.component.layout.AsyncSearchLayout;
 import de.vptr.midas.gui.component.layout.DateFilterLayout;
@@ -52,8 +56,6 @@ import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
 import de.vptr.midas.gui.util.UiAsyncExecutor;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** AccountPaymentView view. */
 @Route(value = "accounts/:accountId", layout = MainLayout.class)
@@ -373,15 +375,8 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var form = new FormLayout();
         form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
 
-        final var sourceAccountField = new ComboBox<AccountResponseDto>("Source Account");
-        sourceAccountField.setItems(this.userAccounts != null ? this.userAccounts : List.of());
-        sourceAccountField.setItemLabelGenerator(AccountResponseDto::getName);
-        sourceAccountField.setWidthFull();
-
-        final var targetAccountField = new ComboBox<AccountResponseDto>("Recipient Account");
-        targetAccountField.setItems(this.userAccounts != null ? this.userAccounts : List.of());
-        targetAccountField.setItemLabelGenerator(AccountResponseDto::getName);
-        targetAccountField.setWidthFull();
+        final var sourceAccountField = this.createAccountComboBox("Source Account");
+        final var targetAccountField = this.createAccountComboBox("Recipient Account");
 
         final var amountField = new BigDecimalField("Amount (EUR)");
         amountField.setWidthFull();
@@ -392,33 +387,9 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         final var commentField = new TextField("Comment");
         commentField.setWidthFull();
 
-        // Validation for account selection
-        sourceAccountField.addValueChangeListener(e -> {
-            if (e.getValue() != null && e.getValue().equals(targetAccountField.getValue())) {
-                NotificationUtil.showWarning("Sender and Recipient accounts cannot be the same");
-                sourceAccountField.setValue(null);
-            }
-        });
-
-        targetAccountField.addValueChangeListener(e -> {
-            if (e.getValue() != null && e.getValue().equals(sourceAccountField.getValue())) {
-                NotificationUtil.showWarning("Sender and Recipient accounts cannot be the same");
-                targetAccountField.setValue(null);
-            }
-        });
-
-        b.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountPublicId()),
-                (p, v) -> p.setSourceAccountPublicId(v != null ? v.getPublicId() : null));
-        b.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountPublicId()),
-                (p, v) -> p.setTargetAccountPublicId(v != null ? v.getPublicId() : null));
-
-        b.forField(amountField)
-                .withValidator(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0, "Amount must be positive")
-                .bind(PaymentDto::getAmount, PaymentDto::setAmount);
-        b.forField(dateField).withValidator(v -> v != null, "Date is required").bind(PaymentDto::getDate,
-                PaymentDto::setDate);
-        b.forField(commentField).withValidator(v -> v != null && !v.trim().isEmpty(), "Comment is required")
-                .bind(PaymentDto::getComment, PaymentDto::setComment);
+        AdminPaymentDialog.preventSameAccountSelection(sourceAccountField, targetAccountField,
+                "Sender and Recipient accounts cannot be the same");
+        this.bindPaymentFields(b, sourceAccountField, targetAccountField, amountField, dateField, commentField);
 
         form.add(sourceAccountField, targetAccountField, amountField, dateField, commentField);
 
@@ -434,17 +405,48 @@ public class AccountPaymentView extends VerticalLayout implements BeforeEnterObs
         b.readBean(this.currentPayment);
 
         if (payment == null) {
-            if (openAsRecipient) {
-                targetAccountField.setValue(this.currentAccount);
-            } else {
-                sourceAccountField.setValue(this.currentAccount);
-            }
-            dateField.setValue(LocalDate.now(ZoneId.systemDefault()));
+            this.applyNewPaymentDefaults(sourceAccountField, targetAccountField, dateField, openAsRecipient);
         }
 
         pd.open();
 
         this.binder = b;
+    }
+
+    private ComboBox<AccountResponseDto> createAccountComboBox(final String label) {
+        final var field = new ComboBox<AccountResponseDto>(label);
+        field.setItems(this.userAccounts != null ? this.userAccounts : List.of());
+        field.setItemLabelGenerator(AccountResponseDto::getName);
+        field.setWidthFull();
+        return field;
+    }
+
+    private void bindPaymentFields(final Binder<PaymentDto> b, final ComboBox<AccountResponseDto> sourceAccountField,
+            final ComboBox<AccountResponseDto> targetAccountField, final BigDecimalField amountField,
+            final DatePicker dateField, final TextField commentField) {
+        b.forField(sourceAccountField).bind(p -> this.findAccountById(p.getSourceAccountPublicId()),
+                (p, v) -> p.setSourceAccountPublicId(v != null ? v.getPublicId() : null));
+        b.forField(targetAccountField).bind(p -> this.findAccountById(p.getTargetAccountPublicId()),
+                (p, v) -> p.setTargetAccountPublicId(v != null ? v.getPublicId() : null));
+
+        b.forField(amountField)
+                .withValidator(v -> v != null && v.compareTo(BigDecimal.ZERO) > 0, "Amount must be positive")
+                .bind(PaymentDto::getAmount, PaymentDto::setAmount);
+        b.forField(dateField).withValidator(v -> v != null, "Date is required").bind(PaymentDto::getDate,
+                PaymentDto::setDate);
+        b.forField(commentField).withValidator(v -> v != null && !v.trim().isEmpty(), "Comment is required")
+                .bind(PaymentDto::getComment, PaymentDto::setComment);
+    }
+
+    private void applyNewPaymentDefaults(final ComboBox<AccountResponseDto> sourceAccountField,
+            final ComboBox<AccountResponseDto> targetAccountField, final DatePicker dateField,
+            final boolean openAsRecipient) {
+        if (openAsRecipient) {
+            targetAccountField.setValue(this.currentAccount);
+        } else {
+            sourceAccountField.setValue(this.currentAccount);
+        }
+        dateField.setValue(LocalDate.now(ZoneId.systemDefault()));
     }
 
     @Nullable

@@ -8,6 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import de.vptr.midas.api.dto.PostDto;
 import de.vptr.midas.api.dto.PostResponseDto;
 import de.vptr.midas.api.entity.PostCategoryEntity;
@@ -17,13 +26,6 @@ import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.security.HtmlSanitizerService;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /** Service for post business logic. */
 @ApplicationScoped
@@ -90,6 +92,17 @@ public class PostService {
         final LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
         final String like = SearchQueryUtil.toContainsLikePattern(query);
 
+        final String jpql = buildPublishedPostsJpql(categoryPublicId, startDateTime, endDateTime, like);
+        final var jpaQuery = PostEntity.getEntityManager().createQuery(jpql, PostEntity.class);
+        bindPublishedPostsParameters(jpaQuery, categoryPublicId, startDateTime, endDateTime, like);
+        jpaQuery.setFirstResult(page * size).setMaxResults(size);
+
+        return this.toResponseDtos(jpaQuery.getResultList());
+    }
+
+    private static String buildPublishedPostsJpql(@Nullable final String categoryPublicId,
+            @Nullable final LocalDateTime startDateTime, @Nullable final LocalDateTime endDateTime,
+            @Nullable final String like) {
         final StringBuilder jpql = new StringBuilder("SELECT p FROM PostEntity p "
                 + "LEFT JOIN FETCH p.user LEFT JOIN FETCH p.category WHERE p.published = true");
         if (categoryPublicId != null) {
@@ -107,8 +120,12 @@ public class PostService {
                     .append(" OR LOWER(p.user.username) LIKE :like ESCAPE '\\')");
         }
         jpql.append(" ORDER BY p.created DESC");
+        return jpql.toString();
+    }
 
-        final var jpaQuery = PostEntity.getEntityManager().createQuery(jpql.toString(), PostEntity.class);
+    private static void bindPublishedPostsParameters(final TypedQuery<PostEntity> jpaQuery,
+            @Nullable final String categoryPublicId, @Nullable final LocalDateTime startDateTime,
+            @Nullable final LocalDateTime endDateTime, @Nullable final String like) {
         if (categoryPublicId != null) {
             jpaQuery.setParameter("categoryPublicId", categoryPublicId);
         }
@@ -121,9 +138,6 @@ public class PostService {
         if (like != null) {
             jpaQuery.setParameter("like", like);
         }
-        jpaQuery.setFirstResult(page * size).setMaxResults(size);
-
-        return this.toResponseDtos(jpaQuery.getResultList());
     }
 
     /** Returns all posts by the given user with default pagination. */
@@ -193,12 +207,7 @@ public class PostService {
 
         // Set category if provided
         if (postDto.categoryPublicId != null) {
-            final PostCategoryEntity category =
-                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
-            if (category == null) {
-                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
-            }
-            post.category = category;
+            post.category = resolveCategory(postDto.categoryPublicId);
         }
 
         return post;
@@ -224,16 +233,7 @@ public class PostService {
         // userPublicId changes are not allowed — preserve existing user
 
         // Set category if provided
-        if (postDto.categoryPublicId != null) {
-            final PostCategoryEntity category =
-                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
-            if (category == null) {
-                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
-            }
-            existingPost.category = category;
-        } else {
-            existingPost.category = null;
-        }
+        existingPost.category = postDto.categoryPublicId != null ? resolveCategory(postDto.categoryPublicId) : null;
 
         existingPost.persistAndFlush();
         return this.toResponseDto(existingPost);
@@ -251,10 +251,17 @@ public class PostService {
         this.verifyPostOwnership(currentUsername, existingPost);
 
         // Partial update (PATCH semantics) - only update provided fields
-        if (postDto.title != null && !postDto.title.trim().isEmpty()) {
+        this.applyPatchFields(existingPost, postDto);
+
+        existingPost.persistAndFlush();
+        return this.toResponseDto(existingPost);
+    }
+
+    private void applyPatchFields(final PostEntity existingPost, final PostDto postDto) {
+        if (isNonBlank(postDto.title)) {
             existingPost.title = postDto.title;
         }
-        if (postDto.content != null && !postDto.content.trim().isEmpty()) {
+        if (isNonBlank(postDto.content)) {
             existingPost.content = this.htmlSanitizer.sanitizeRichContent(postDto.content);
         }
         if (postDto.published != null) {
@@ -263,21 +270,22 @@ public class PostService {
         if (postDto.commentable != null) {
             existingPost.commentable = postDto.commentable;
         }
-
         // userPublicId changes are not allowed — preserve existing user
-
-        // Set category if provided
         if (postDto.categoryPublicId != null) {
-            final PostCategoryEntity category =
-                    PostCategoryEntity.find("publicId", postDto.categoryPublicId).firstResult();
-            if (category == null) {
-                throw new ValidationException("Category with Public ID " + postDto.categoryPublicId + " not found");
-            }
-            existingPost.category = category;
+            existingPost.category = resolveCategory(postDto.categoryPublicId);
         }
+    }
 
-        existingPost.persistAndFlush();
-        return this.toResponseDto(existingPost);
+    private static boolean isNonBlank(@Nullable final String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private static PostCategoryEntity resolveCategory(final String categoryPublicId) {
+        final PostCategoryEntity category = PostCategoryEntity.find("publicId", categoryPublicId).firstResult();
+        if (category == null) {
+            throw new ValidationException("Category with Public ID " + categoryPublicId + " not found");
+        }
+        return category;
     }
 
     /** Deletes the post with the given publicId. */

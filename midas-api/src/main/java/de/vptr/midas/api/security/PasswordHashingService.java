@@ -2,10 +2,11 @@ package de.vptr.midas.api.security;
 
 import java.nio.charset.StandardCharsets;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ValidationException;
+
+import io.quarkus.elytron.security.common.BcryptUtil;
 
 /**
  * Service for hashing and verifying passwords using Bcrypt.

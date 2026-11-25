@@ -3,6 +3,8 @@ package de.vptr.midas.gui.component.dialog;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -17,7 +19,6 @@ import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /** Dialog panel for managing user group membership. */
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2",

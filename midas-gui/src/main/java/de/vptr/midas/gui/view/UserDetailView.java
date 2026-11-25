@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.Component;
@@ -21,8 +24,7 @@ import de.vptr.midas.gui.dto.UserGroupResponseDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.service.UserGroupService;
 import de.vptr.midas.gui.service.UserService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
+import de.vptr.midas.gui.util.LogSanitizer;
 
 /** Detail view for a single user. */
 @Route(value = "users", layout = MainLayout.class)
@@ -118,7 +120,7 @@ public class UserDetailView extends AbstractDetailViewBase<UserResponseDto> {
 
     private void loadGroupsAsync(final String userId) {
         this.loadDataAsync(() -> {
-            LOG.infof("Loading groups for user: %s", userId);
+            LOG.infof("Loading groups for user: %s", LogSanitizer.sanitize(userId));
             return this.userGroupService.getGroupsByUser(userId);
         }, groups -> {
             LOG.infof("Successfully loaded %s groups for user", groups.size());

@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 
-import org.junit.jupiter.api.Test;
-
 import jakarta.validation.ValidationException;
+
+import org.junit.jupiter.api.Test;
 
 class EntityValidatorTest {
 

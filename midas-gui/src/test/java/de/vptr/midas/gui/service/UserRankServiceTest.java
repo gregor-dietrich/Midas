@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import jakarta.ws.rs.WebApplicationException;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,7 +25,6 @@ import de.vptr.midas.gui.client.UserRankClient;
 import de.vptr.midas.gui.dto.UserRankDto;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
 import de.vptr.midas.gui.util.MockDataUtil;
-import jakarta.ws.rs.WebApplicationException;
 
 /** Covers the session cache around {@link UserRankService#getCurrentUserRank()}; HTTP behaviour is pinned elsewhere. */
 class UserRankServiceTest extends AbstractSessionServiceTestBase {

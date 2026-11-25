@@ -4,13 +4,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+
+import org.jboss.logging.Logger;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
 
 /** Application lifecycle management. */
 @ApplicationScoped
@@ -18,6 +20,8 @@ public class AppLifecycleBean {
 
     private static final Logger LOG = Logger.getLogger(AppLifecycleBean.class);
 
+    @SuppressFBWarnings(value = "CRLF_INJECTION_LOGS",
+            justification = "Banner comes from packaged classpath banner.txt and is intentionally multi-line")
     void onStart(@Observes final StartupEvent ev) {
         final String banner = readBanner();
         if (banner != null) {

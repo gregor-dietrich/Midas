@@ -3,15 +3,16 @@ package de.vptr.midas.gui.util;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
-import jakarta.annotation.Nullable;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /**
  * Centralises the duplicated try/catch exception-handling pattern found in every GUI service method that calls a REST
@@ -74,14 +75,14 @@ public final class ServiceHelper {
         try {
             return action.get();
         } catch (final ProcessingException e) {
-            log.errorf(e, "Connection error while %s", operation);
+            log.errorf(e, "Connection error while %s", LogSanitizer.sanitize(operation));
             throw new ServiceException("Backend connection failed", e);
         } catch (final WebApplicationException e) {
             throw translateWebApplicationException(e, authService, log, operation, failurePrefix);
         } catch (final AuthenticationException | ServiceException e) {
             throw e;
         } catch (final RuntimeException e) {
-            log.errorf(e, "Unexpected error while %s", operation);
+            log.errorf(e, "Unexpected error while %s", LogSanitizer.sanitize(operation));
             throw new ServiceException("Unexpected error", e);
         }
     }
@@ -109,7 +110,7 @@ public final class ServiceHelper {
                     throw e;
                 }
                 e.getResponse().close();
-                log.debugf("Not found while %s", operation);
+                log.debugf("Not found while %s", LogSanitizer.sanitize(operation));
                 return Optional.empty();
             }
         }, authService, log, operation);
@@ -171,18 +172,23 @@ public final class ServiceHelper {
             final String statusText = response == null ? "unknown" : Integer.toString(response.getStatus());
             final String backendMessage =
                     response == null ? "HTTP unknown" : ErrorMessageUtil.extractErrorMessage(response);
-            log.warnf("HTTP error while %s: %s — backend message: %s", operation, statusText, backendMessage);
+            log.warnf("HTTP error while %s: %s — backend message: %s", LogSanitizer.sanitize(operation),
+                    LogSanitizer.sanitize(statusText), LogSanitizer.sanitize(backendMessage));
             if (response != null && response.getStatus() == 401) {
                 authService.logout();
                 return new AuthenticationException("Session expired", exception);
             }
             if (response != null && response.getStatus() == 422) {
-                return new ServiceException(
-                        failurePrefix != null && !failurePrefix.isBlank() ? failurePrefix + ": " + backendMessage
-                                : "HTTP 422".equals(backendMessage) ? "Backend error: 422" : backendMessage,
-                        exception);
+                return new ServiceException(formatValidationMessage(failurePrefix, backendMessage), exception);
             }
             return new ServiceException("Backend request failed", exception);
         }
+    }
+
+    private static String formatValidationMessage(@Nullable final String failurePrefix, final String backendMessage) {
+        if (failurePrefix != null && !failurePrefix.isBlank()) {
+            return failurePrefix + ": " + backendMessage;
+        }
+        return "HTTP 422".equals(backendMessage) ? "Backend error: 422" : backendMessage;
     }
 }

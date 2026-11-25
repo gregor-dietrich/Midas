@@ -14,7 +14,6 @@ import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -200,23 +199,18 @@ class EntityCoverageTest {
     }
 
     @SuppressWarnings("EqualsNull")
-    private void verifyEqualsHashCode(PanacheEntityBase entity, PanacheEntityBase other) {
+    private void verifyEqualsHashCode(BaseEntity entity, BaseEntity other) {
         assertEquals(entity, entity);
         assertNotNull(entity);
         assertNotEquals(entity, new Object());
 
-        try {
-            var idField = entity.getClass().getField("id");
-            idField.set(other, idField.get(entity));
-            assertEquals(entity, other);
-            assertEquals(entity.hashCode(), other.hashCode());
+        Long originalId = Objects.requireNonNull(entity.id);
+        other.id = originalId;
+        assertEquals(entity, other);
+        assertEquals(entity.hashCode(), other.hashCode());
 
-            // Test with different ID
-            Long originalId = (Long) idField.get(entity);
-            idField.set(other, originalId + 1);
-            assertNotEquals(entity, other);
-        } catch (Exception e) {
-            // expected for some cases
-        }
+        // Test with different ID
+        other.id = originalId + 1;
+        assertNotEquals(entity, other);
     }
 }

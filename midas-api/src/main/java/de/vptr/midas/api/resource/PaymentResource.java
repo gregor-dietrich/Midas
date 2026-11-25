@@ -4,20 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import de.vptr.midas.api.dto.PaymentDto;
-import de.vptr.midas.api.dto.PaymentResponseDto;
-import de.vptr.midas.api.exception.ApiErrorResponse;
-import de.vptr.midas.api.service.PaymentService;
-import de.vptr.midas.api.util.PaginationUtil;
-import de.vptr.midas.api.util.ResponseUtil;
-import de.vptr.midas.api.util.SecurityContextUtil;
-import io.quarkus.security.Authenticated;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -38,6 +24,21 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponseSchema;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+import de.vptr.midas.api.dto.PaymentDto;
+import de.vptr.midas.api.dto.PaymentResponseDto;
+import de.vptr.midas.api.exception.ApiErrorResponse;
+import de.vptr.midas.api.service.PaymentService;
+import de.vptr.midas.api.util.PaginationUtil;
+import de.vptr.midas.api.util.ResponseUtil;
+import de.vptr.midas.api.util.SecurityContextUtil;
+import io.quarkus.security.Authenticated;
 
 /** REST resource for managing payments. */
 @Path("/payments")

@@ -1,8 +1,8 @@
 package de.vptr.midas.gui.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.annotation.Nullable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Data transfer object for account. */
 public class AccountDto {

@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 import de.vptr.midas.api.entity.UserEntity;
@@ -16,8 +19,6 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.identity.SecurityIdentityAugmentor;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /** Security identity augmentor that adds roles based on user rank. */
 @ApplicationScoped

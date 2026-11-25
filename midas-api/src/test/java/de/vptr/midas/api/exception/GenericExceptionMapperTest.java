@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.sql.SQLException;
 
-import org.hibernate.exception.ConstraintViolationException;
-import org.junit.jupiter.api.Test;
-
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import org.hibernate.exception.ConstraintViolationException;
+import org.junit.jupiter.api.Test;
 
 class GenericExceptionMapperTest {
 

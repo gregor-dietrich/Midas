@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.UserDto;
@@ -14,8 +17,6 @@ import de.vptr.midas.api.dto.UserRankDto;
 import de.vptr.midas.api.dto.UserResponseDto;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 /**
  * Tests that a caller without {@code user-rank:edit} or {@code admin:view} cannot write back the rank or status it read

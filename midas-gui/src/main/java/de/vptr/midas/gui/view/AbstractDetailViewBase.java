@@ -4,6 +4,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.Component;
@@ -13,8 +15,8 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.router.BeforeEnterEvent;
 
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
 
 /** Base view class for single entity detail views using identifiers. */
 public abstract class AbstractDetailViewBase<T> extends AbstractAuthenticatedParameterView {
@@ -52,7 +54,9 @@ public abstract class AbstractDetailViewBase<T> extends AbstractAuthenticatedPar
         }
 
         final var idStr = Objects.requireNonNull(this.identifier);
-        this.log.infof("Loading %s with identifier: %s", this.getEntitySingleName().toLowerCase(Locale.ROOT), idStr);
+        this.log.infof("Loading %s with identifier: %s",
+                LogSanitizer.sanitize(this.getEntitySingleName().toLowerCase(Locale.ROOT)),
+                LogSanitizer.sanitize(idStr));
 
         final String entityId = this.tryParseId(idStr);
 
@@ -78,10 +82,12 @@ public abstract class AbstractDetailViewBase<T> extends AbstractAuthenticatedPar
     protected void handleLoadResult(final Optional<T> optionalEntity, final Object searchedId) {
         if (optionalEntity.isPresent()) {
             final var entity = optionalEntity.get();
-            this.log.infof("Successfully loaded %s", this.getEntitySingleName().toLowerCase(Locale.ROOT));
+            this.log.infof("Successfully loaded %s",
+                    LogSanitizer.sanitize(this.getEntitySingleName().toLowerCase(Locale.ROOT)));
             this.renderEntity(entity);
         } else {
-            this.log.warnf("%s not found with identifier: %s", this.getEntitySingleName(), searchedId);
+            this.log.warnf("%s not found with identifier: %s", LogSanitizer.sanitize(this.getEntitySingleName()),
+                    LogSanitizer.sanitize(searchedId));
             this.renderNotFound();
         }
     }

@@ -3,9 +3,10 @@ package de.vptr.midas.api.service;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.vptr.midas.api.entity.UserEntity;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import de.vptr.midas.api.entity.UserEntity;
 
 /** Shared admin permission checks for service-layer authorization. */
 @ApplicationScoped

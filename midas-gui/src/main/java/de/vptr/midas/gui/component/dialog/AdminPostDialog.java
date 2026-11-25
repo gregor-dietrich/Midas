@@ -3,11 +3,12 @@ package de.vptr.midas.gui.component.dialog;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -19,7 +20,6 @@ import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.NotificationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /**
  * Dialog for creating and editing posts in the admin view. Encapsulates form fields, binder, and save/cancel logic.
@@ -45,28 +45,16 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
     public void open(@Nullable final PostResponseDto post,
             @Nullable final List<PostCategoryResponseDto> availableCategories) {
         this.removeAll();
-        this.currentBean = post != null ? PostDto.from(post) : new PostDto();
-        this.binder = new Binder<>(PostDto.class);
+        final var bean = post != null ? PostDto.from(post) : new PostDto();
+        this.currentBean = bean;
+        final var b = new Binder<>(PostDto.class);
+        this.binder = b;
 
-        if (post == null) {
-            try {
-                final var currentUser = this.userService.getCurrentUser();
-                if (currentUser.isPresent()) {
-                    this.currentBean.setUsername(currentUser.get().getUsername());
-                } else {
-                    LOG.warn("Current user not found when creating new post");
-                    NotificationUtil.showError("Unable to determine current user. Please try logging in again.");
-                    return;
-                }
-            } catch (final RuntimeException e) {
-                LOG.error("Error retrieving current user for new post", e);
-                NotificationUtil.showError("Error retrieving user information. Please try again.");
-                return;
-            }
+        if (post == null && !this.assignCurrentAuthorForNewPost(bean)) {
+            return;
         }
 
-        final var form = new FormLayout();
-        form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
+        final var form = this.createResponsiveFormLayout();
 
         final var titleField = new TextField("Title");
         titleField.setRequired(true);
@@ -91,40 +79,64 @@ public class AdminPostDialog extends AbstractAdminEntityDialogBase<PostDto> {
         categoryField.setClearButtonVisible(true);
         categoryField.setInvalid(false);
 
-        this.binder.forField(titleField)
-                .withValidator(value -> value != null && !value.trim().isEmpty(), "Title is required")
-                .bind(PostDto::getTitle, PostDto::setTitle);
-        this.binder.forField(contentField)
-                .withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
-                .bind(PostDto::getContent, PostDto::setContent);
-        this.binder.bind(publishedField, p -> {
-            final var published = p.isPublished();
-            return published != null ? published : false;
-        }, PostDto::setPublished);
-        this.binder.bind(commentableField, p -> {
-            final var commentable = p.isCommentable();
-            return commentable != null ? commentable : false;
-        }, PostDto::setCommentable);
-
-        this.binder.bind(categoryField, p -> {
-            if (p.getCategoryPublicId() != null && availableCategories != null) {
-                return availableCategories.stream().filter(cat -> cat.getPublicId().equals(p.getCategoryPublicId()))
-                        .findFirst().orElse(null);
-            }
-            return null;
-        }, (p, value) -> {
-            if (value != null) {
-                p.setCategoryPublicId(value.getPublicId());
-                p.setCategoryName(value.getName());
-            } else {
-                p.setCategoryPublicId(null);
-                p.setCategoryName(null);
-            }
-        });
+        bindPostFields(b, titleField, contentField, publishedField, commentableField, categoryField,
+                availableCategories);
 
         form.add(titleField, contentField, categoryField, publishedField, commentableField);
 
         this.initDialogLayout(post != null ? "Edit Post" : "Create Post", form);
+    }
+
+    private boolean assignCurrentAuthorForNewPost(final PostDto bean) {
+        try {
+            final var currentUser = this.userService.getCurrentUser();
+            if (currentUser.isPresent()) {
+                bean.setUsername(currentUser.get().getUsername());
+                return true;
+            }
+            LOG.warn("Current user not found when creating new post");
+            NotificationUtil.showError("Unable to determine current user. Please try logging in again.");
+            return false;
+        } catch (final RuntimeException e) {
+            LOG.error("Error retrieving current user for new post", e);
+            NotificationUtil.showError("Error retrieving user information. Please try again.");
+            return false;
+        }
+    }
+
+    private static void bindPostFields(final Binder<PostDto> b, final TextField titleField, final TextArea contentField,
+            final Checkbox publishedField, final Checkbox commentableField,
+            final ComboBox<PostCategoryResponseDto> categoryField,
+            @Nullable final List<PostCategoryResponseDto> availableCategories) {
+        b.forField(titleField).withValidator(value -> value != null && !value.trim().isEmpty(), "Title is required")
+                .bind(PostDto::getTitle, PostDto::setTitle);
+        b.forField(contentField).withValidator(value -> value != null && !value.trim().isEmpty(), "Content is required")
+                .bind(PostDto::getContent, PostDto::setContent);
+        b.bind(publishedField, p -> Boolean.TRUE.equals(p.isPublished()), PostDto::setPublished);
+        b.bind(commentableField, p -> Boolean.TRUE.equals(p.isCommentable()), PostDto::setCommentable);
+        b.bind(categoryField, p -> findCategoryByPublicId(availableCategories, p.getCategoryPublicId()),
+                AdminPostDialog::applyCategorySelection);
+    }
+
+    @Nullable
+    private static PostCategoryResponseDto findCategoryByPublicId(
+            @Nullable final List<PostCategoryResponseDto> availableCategories,
+            @Nullable final String categoryPublicId) {
+        if (categoryPublicId == null || availableCategories == null) {
+            return null;
+        }
+        return availableCategories.stream().filter(cat -> cat.getPublicId().equals(categoryPublicId)).findFirst()
+                .orElse(null);
+    }
+
+    private static void applyCategorySelection(final PostDto post, @Nullable final PostCategoryResponseDto value) {
+        if (value != null) {
+            post.setCategoryPublicId(value.getPublicId());
+            post.setCategoryName(value.getName());
+        } else {
+            post.setCategoryPublicId(null);
+            post.setCategoryName(null);
+        }
     }
 
     @Override

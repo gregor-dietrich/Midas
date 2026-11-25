@@ -13,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,10 +31,6 @@ import de.vptr.midas.api.util.ServiceTestUtil;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
 class UserServiceTest {

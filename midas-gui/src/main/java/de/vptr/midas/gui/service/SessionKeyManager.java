@@ -22,11 +22,14 @@ import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
+import de.vptr.midas.gui.util.LogSanitizer;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Manages the session encryption key used by {@link SessionAuthorizationStore}.
@@ -53,13 +56,15 @@ public class SessionKeyManager {
     private SecretKey key;
 
     /** Returns the session encryption key, loading or generating it on first access. */
+    @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN",
+            justification = "keyPath comes from operator configuration (midas.session.key.path), not user input")
     public synchronized SecretKey getKey() {
         if (this.key != null) {
             return this.key;
         }
 
         final var path = Paths.get(this.keyPath);
-        LOG.infof("Session key file: %s", path.toAbsolutePath());
+        LOG.infof("Session key file: %s", LogSanitizer.sanitize(path.toAbsolutePath()));
 
         if (Files.exists(path)) {
             this.key = loadKey(path);
@@ -125,7 +130,8 @@ public class SessionKeyManager {
                     // Filesystem does not support atomic moves even within the same
                     // directory. Fall back to a regular move; the temp file already
                     // carries 0600 permissions, and we re-assert them on the target.
-                    LOG.warnf("Atomic move unsupported for %s; using non-atomic move", absolutePath);
+                    LOG.warnf("Atomic move unsupported for %s; using non-atomic move",
+                            LogSanitizer.sanitize(absolutePath));
                     Files.move(tmp, absolutePath, StandardCopyOption.REPLACE_EXISTING);
                     restrictToOwner(absolutePath);
                 }
@@ -133,7 +139,7 @@ public class SessionKeyManager {
                 Files.deleteIfExists(tmp);
             }
 
-            LOG.infof("Generated new session key at: %s", absolutePath);
+            LOG.infof("Generated new session key at: %s", LogSanitizer.sanitize(absolutePath));
             return new SecretKeySpec(keyBytes, "AES");
         } catch (final IOException e) {
             throw new IllegalStateException("Failed to generate and save session key at: " + path, e);
@@ -152,7 +158,7 @@ public class SessionKeyManager {
                     Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
             return;
         } catch (final UnsupportedOperationException posixUnsupported) {
-            LOG.debugf("POSIX permissions unsupported for %s; trying ACL fallback", file);
+            LOG.debugf("POSIX permissions unsupported for %s; trying ACL fallback", LogSanitizer.sanitize(file));
         }
 
         final AclFileAttributeView aclView = Files.getFileAttributeView(file, AclFileAttributeView.class);
@@ -170,6 +176,6 @@ public class SessionKeyManager {
                         AclEntryPermission.SYNCHRONIZE, AclEntryPermission.DELETE))
                 .build();
         aclView.setAcl(List.of(entry));
-        LOG.infof("Applied owner-only ACL to session key file %s (POSIX unavailable)", file);
+        LOG.infof("Applied owner-only ACL to session key file %s (POSIX unavailable)", LogSanitizer.sanitize(file));
     }
 }

@@ -3,6 +3,8 @@ package de.vptr.midas.gui.component.dialog;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -19,8 +21,8 @@ import de.vptr.midas.gui.component.button.RefreshButton;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
 
 /** Base dialog panel for managing user associations (e.g. account users, group members). */
 public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
@@ -138,7 +140,7 @@ public abstract class AbstractUserAssociationPanel<T, U> extends FormDialog {
         } catch (final ServiceException e) {
             NotificationUtil.showError(e, errorMessage);
         } catch (final RuntimeException e) {
-            this.log.error("Unexpected error: " + errorMessage, e);
+            this.log.errorf(e, "Unexpected error: %s", LogSanitizer.sanitize(errorMessage));
             NotificationUtil.showError("Unexpected error occurred");
         }
     }

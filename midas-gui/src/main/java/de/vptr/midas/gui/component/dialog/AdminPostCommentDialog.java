@@ -2,10 +2,11 @@ package de.vptr.midas.gui.component.dialog;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
 
 /** Dialog for editing post comments in the admin view. */
 public class AdminPostCommentDialog extends AbstractPostCommentDialogBase {

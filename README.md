@@ -558,9 +558,10 @@ This project is a single Git repository where:
 
 - The root holds `docker-compose.yml`, the scripts, the root `Makefile` and the
   root `pom.xml`
-- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules and
-  inherits their quality-gate configuration from devkit's parent POM
-  (`.devkit/java/parent/pom.xml`)
+- The root `pom.xml` aggregates `midas-api` and `midas-gui` as Maven modules
+  and inherits `devkit-quarkus-parent` (`.devkit/java/quarkus/pom.xml`), while
+  `midas-gui/pom.xml` inherits `devkit-vaadin-parent`
+  (`.devkit/java/vaadin/pom.xml`) directly
 
 ## 📖 Related Guides
 

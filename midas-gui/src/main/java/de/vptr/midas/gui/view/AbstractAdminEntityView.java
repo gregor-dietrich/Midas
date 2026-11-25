@@ -6,6 +6,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -25,10 +28,9 @@ import de.vptr.midas.gui.component.layout.SearchLayout;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.service.AuthService;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Abstract base class for admin entity management views. */
 public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView implements BeforeEnterObserver {
@@ -216,7 +218,8 @@ public abstract class AbstractAdminEntityView<T> extends AbstractAsyncDataView i
             NotificationUtil.showError(e,
                     "Deleting " + this.getEntityNameSingle().toLowerCase(Locale.ROOT) + " failed. Please try again.");
         } catch (final RuntimeException e) {
-            this.log.error("Unexpected error deleting " + this.getEntityNameSingle().toLowerCase(Locale.ROOT), e);
+            this.log.errorf(e, "Unexpected error deleting %s",
+                    LogSanitizer.sanitize(this.getEntityNameSingle().toLowerCase(Locale.ROOT)));
             NotificationUtil.showError("Unexpected error occurred");
         }
     }

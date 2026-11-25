@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.GridVariant;
@@ -19,8 +22,7 @@ import de.vptr.midas.gui.dto.PostCategoryResponseDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PostCategoryService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
+import de.vptr.midas.gui.util.LogSanitizer;
 
 /** Base view for post category hierarchies shared between normal and admin views. */
 public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView implements BeforeEnterObserver {
@@ -52,7 +54,7 @@ public abstract class AbstractPostCategoryBaseView extends AbstractAsyncDataView
                 return;
             }
         } catch (final AuthenticationException e) {
-            LOG.debugf("Authentication required: %s", e.getMessage());
+            LOG.debugf("Authentication required: %s", LogSanitizer.sanitize(e.getMessage()));
             event.forwardTo(LoginView.class);
             return;
         }

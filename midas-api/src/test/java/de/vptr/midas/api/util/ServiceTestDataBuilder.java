@@ -3,6 +3,8 @@ package de.vptr.midas.api.util;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import jakarta.annotation.Nullable;
+
 import de.vptr.midas.api.dto.PageDto;
 import de.vptr.midas.api.dto.PaymentDto;
 import de.vptr.midas.api.dto.PostCategoryDto;
@@ -17,7 +19,6 @@ import de.vptr.midas.api.entity.PostCategoryEntity;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
-import jakarta.annotation.Nullable;
 
 /**
  * Builder utility for creating test data objects for service tests

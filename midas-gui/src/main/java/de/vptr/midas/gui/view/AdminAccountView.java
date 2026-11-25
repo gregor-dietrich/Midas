@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.function.ValueProvider;
@@ -20,8 +23,6 @@ import de.vptr.midas.gui.component.layout.SearchLayout;
 import de.vptr.midas.gui.dto.AccountResponseDto;
 import de.vptr.midas.gui.service.AccountService;
 import de.vptr.midas.gui.service.UserService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Admin view for managing accounts. */
 @Route(value = "admin/accounts", layout = AdminMainLayout.class)

@@ -5,11 +5,12 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import jakarta.enterprise.context.ApplicationScoped;
 
 /** Tracks failed authentication attempts and enforces token-bucket lockout windows. */
 @ApplicationScoped

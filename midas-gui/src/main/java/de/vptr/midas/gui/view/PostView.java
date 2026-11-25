@@ -5,6 +5,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -27,8 +30,6 @@ import de.vptr.midas.gui.service.PostCategoryService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.PostUiUtil;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** View for browsing published posts. */
 @Route(value = "posts", layout = MainLayout.class)

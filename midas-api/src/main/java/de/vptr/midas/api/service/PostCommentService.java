@@ -6,13 +6,6 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
-import de.vptr.midas.api.dto.PostCommentDto;
-import de.vptr.midas.api.dto.PostCommentResponseDto;
-import de.vptr.midas.api.entity.PostCommentEntity;
-import de.vptr.midas.api.entity.PostEntity;
-import de.vptr.midas.api.entity.UserEntity;
-import de.vptr.midas.api.security.HtmlSanitizerService;
-import de.vptr.midas.api.util.SearchQueryUtil;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -21,6 +14,14 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.dto.PostCommentDto;
+import de.vptr.midas.api.dto.PostCommentResponseDto;
+import de.vptr.midas.api.entity.PostCommentEntity;
+import de.vptr.midas.api.entity.PostEntity;
+import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.security.HtmlSanitizerService;
+import de.vptr.midas.api.util.SearchQueryUtil;
 
 /** Service for post comment business logic. */
 @ApplicationScoped

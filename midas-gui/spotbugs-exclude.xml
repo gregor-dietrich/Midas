@@ -75,33 +75,10 @@
   <!-- ============================== 2. VAADIN UI =============================== -->
 
   <!--
-    SE_NO_SERIALVERSIONID / SE_TRANSIENT_FIELD_NOT_RESTORED / SE_BAD_FIELD:
-    Vaadin Flow components are Serializable by inheritance but are never actually
-    serialized here - they are ephemeral and created per request/session. Adding
-    serialVersionUID would be boilerplate that implies a serialization contract the
-    application does not have. Same decision as -Xlint:-serial in the compiler args.
-  -->
-  <Match>
-    <Bug pattern="SE_NO_SERIALVERSIONID" />
-  </Match>
-  <Match>
-    <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
-  </Match>
-  <Match>
-    <Bug pattern="SE_BAD_FIELD" />
-  </Match>
+    SE_NO_SERIALVERSIONID, SE_TRANSIENT_FIELD_NOT_RESTORED, SE_BAD_FIELD and
+    MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR are excluded module-wide by
+    devkit-vaadin-parent's spotbugs-vaadin.xml (read before this file).
 
-  <!--
-    MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR:
-    Vaadin components routinely call setSizeFull(), setWidthFull(), getElement() etc.
-    in constructors. This is the standard Vaadin pattern, and these classes are not
-    designed for subclassing. Same decision as -Xlint:-this-escape.
-  -->
-  <Match>
-    <Bug pattern="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR" />
-  </Match>
-
-  <!--
     CT_CONSTRUCTOR_THROW:
     Vaadin components can throw from constructors during initialization (setIcon,
     addThemeVariants). The object is fully initialized before any throwing call and

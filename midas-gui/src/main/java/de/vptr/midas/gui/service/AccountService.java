@@ -7,6 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -20,12 +25,9 @@ import de.vptr.midas.gui.dto.PaymentResponseDto;
 import de.vptr.midas.gui.dto.UserAccountMetaDto;
 import de.vptr.midas.gui.dto.UserResponseDto;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.PaginationParamUtil;
 import de.vptr.midas.gui.util.ServiceHelper;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 /** Service for account operations. */
 @ApplicationScoped
@@ -51,21 +53,21 @@ public class AccountService {
 
     /** Returns the account by id, or empty if it does not exist. */
     public Optional<AccountDto> getAccountById(final String id) {
-        LOG.debugf("Fetching account with ID: %s", id);
+        LOG.debugf("Fetching account with ID: %s", LogSanitizer.sanitize(id));
         return ServiceHelper.executeOptional(() -> this.accountClient.getAccount(id), this.authService, LOG,
                 "fetching account " + id).map(AccountDto::from);
     }
 
     /** Returns the account by name, or empty if it does not exist. */
     public Optional<AccountDto> getAccountByName(final String name) {
-        LOG.debugf("Fetching account with name: %s", name);
+        LOG.debugf("Fetching account with name: %s", LogSanitizer.sanitize(name));
         return ServiceHelper.executeOptional(() -> this.accountClient.getAccountByName(name), this.authService, LOG,
                 "fetching account by name " + name).map(AccountDto::from);
     }
 
     /** Returns the accounts by user. */
     public List<AccountResponseDto> getAccountsByUser(final String userId) {
-        LOG.debugf("Fetching accounts for user: %s", userId);
+        LOG.debugf("Fetching accounts for user: %s", LogSanitizer.sanitize(userId));
         return ServiceHelper.execute(() -> this.accountClient.getAccountsByUser(userId), this.authService, LOG,
                 "fetching accounts for user " + userId);
     }
@@ -94,35 +96,35 @@ public class AccountService {
 
     /** Handles the search accounts operation. */
     public List<AccountResponseDto> searchAccounts(final String query) {
-        LOG.debugf("Searching accounts with query: %s", query);
+        LOG.debugf("Searching accounts with query: %s", LogSanitizer.sanitize(query));
         return ServiceHelper.execute(() -> this.accountClient.searchAccounts(query), this.authService, LOG,
                 "searching accounts");
     }
 
     /** Returns the outgoing payments. */
     public List<PaymentDto> getOutgoingPayments(final String accountId) {
-        LOG.debugf("Fetching outgoing payments for account: %s", accountId);
+        LOG.debugf("Fetching outgoing payments for account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getOutgoingPayments(accountId), this.authService, LOG,
                 "fetching outgoing payments for account " + accountId).stream().map(PaymentDto::from).toList();
     }
 
     /** Returns the incoming payments. */
     public List<PaymentDto> getIncomingPayments(final String accountId) {
-        LOG.debugf("Fetching incoming payments for account: %s", accountId);
+        LOG.debugf("Fetching incoming payments for account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getIncomingPayments(accountId), this.authService, LOG,
                 "fetching incoming payments for account " + accountId).stream().map(PaymentDto::from).toList();
     }
 
     /** Returns the associated users. */
     public List<UserResponseDto> getAssociatedUsers(final String accountId) {
-        LOG.debugf("Fetching users associated with account: %s", accountId);
+        LOG.debugf("Fetching users associated with account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getAssociatedUsers(accountId), this.authService, LOG,
                 "fetching users for account " + accountId);
     }
 
     /** Creates a new account. */
     public AccountDto createAccount(final AccountDto account) {
-        LOG.debugf("Creating new account: %s", account);
+        LOG.debugf("Creating new account: %s", LogSanitizer.sanitize(account));
         return AccountDto.from(ServiceHelper.execute(() -> this.accountClient.createAccount(account), this.authService,
                 LOG, "creating account", "Failed to create account"));
     }
@@ -130,28 +132,29 @@ public class AccountService {
     /** Updates the account. */
     public AccountDto updateAccount(final AccountDto account) {
         final String publicId = Objects.requireNonNull(account.getPublicId(), "account.publicId");
-        LOG.debugf("Updating account: %s", account);
+        LOG.debugf("Updating account: %s", LogSanitizer.sanitize(account));
         return AccountDto.from(ServiceHelper.execute(() -> this.accountClient.updateAccount(publicId, account),
                 this.authService, LOG, "updating account " + publicId, "Failed to update account"));
     }
 
     /** Handles the delete account operation. */
     public void deleteAccount(final String id) {
-        LOG.debugf("Deleting account with ID: %s", id);
+        LOG.debugf("Deleting account with ID: %s", LogSanitizer.sanitize(id));
         ServiceHelper.executeVoid(() -> this.accountClient.deleteAccount(id), this.authService, LOG,
                 "deleting account " + id);
     }
 
     /** Handles the associate user with account operation. */
     public void associateUserWithAccount(final String accountId, final String userId) {
-        LOG.debugf("Associating user %s with account %s", userId, accountId);
+        LOG.debugf("Associating user %s with account %s", LogSanitizer.sanitize(userId),
+                LogSanitizer.sanitize(accountId));
         ServiceHelper.executeVoid(() -> {
             try {
                 this.accountClient.associateUserWithAccount(accountId, userId);
             } catch (final WebApplicationException e) {
                 if (e.getResponse().getStatus() == 409) {
                     e.getResponse().close();
-                    throw new ServiceException("User is already associated with this account");
+                    throw new ServiceException("User is already associated with this account", e);
                 }
                 throw e;
             }
@@ -160,7 +163,7 @@ public class AccountService {
 
     /** Removes the user from account. */
     public void removeUserFromAccount(final String accountId, final String userId) {
-        LOG.debugf("Removing user %s from account %s", userId, accountId);
+        LOG.debugf("Removing user %s from account %s", LogSanitizer.sanitize(userId), LogSanitizer.sanitize(accountId));
         ServiceHelper.executeVoid(() -> this.accountClient.removeUserFromAccount(accountId, userId), this.authService,
                 LOG, "removing user " + userId + " from account " + accountId);
     }
@@ -168,8 +171,8 @@ public class AccountService {
     /** Updates the user-account meta (e.g. isNegative, canManage flags) for the given association. */
     public void updateUserAccountMeta(final String accountId, final String userId, final boolean isNegative,
             final boolean canManage) {
-        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s, canManage=%s", accountId,
-                userId, isNegative, canManage);
+        LOG.debugf("Updating user-account meta: accountId=%s, userId=%s, isNegative=%s, canManage=%s",
+                LogSanitizer.sanitize(accountId), LogSanitizer.sanitize(userId), isNegative, canManage);
         final var dto = new UserAccountMetaDto();
         dto.setIsNegative(isNegative);
         dto.setCanManage(canManage);
@@ -179,14 +182,15 @@ public class AccountService {
 
     /** Deletes the my account payment. */
     public void deleteMyAccountPayment(final String accountId, final String paymentId) {
-        LOG.debugf("Deleting payment %s for my account: %s", paymentId, accountId);
+        LOG.debugf("Deleting payment %s for my account: %s", LogSanitizer.sanitize(paymentId),
+                LogSanitizer.sanitize(accountId));
         ServiceHelper.executeVoid(() -> this.accountClient.deleteMyAccountPayment(accountId, paymentId),
                 this.authService, LOG, "deleting payment " + paymentId + " for my account " + accountId);
     }
 
     /** Returns the account balance. */
     public BigDecimal getAccountBalance(final String accountId) {
-        LOG.debugf("Fetching balance for account: %s", accountId);
+        LOG.debugf("Fetching balance for account: %s", LogSanitizer.sanitize(accountId));
         return requireBalance(ServiceHelper.execute(() -> this.accountClient.getAccountBalance(accountId),
                 this.authService, LOG, "fetching balance for account " + accountId));
     }
@@ -198,7 +202,7 @@ public class AccountService {
      */
     public BigDecimal getMyAccountBalance(final String accountId, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {
-        LOG.debugf("Fetching balance for my account: %s", accountId);
+        LOG.debugf("Fetching balance for my account: %s", LogSanitizer.sanitize(accountId));
         return requireBalance(
                 ServiceHelper.execute(() -> this.accountClient.getMyAccountBalance(accountId, endDate, startDate),
                         this.authService, LOG, "fetching balance for my account " + accountId));
@@ -211,7 +215,7 @@ public class AccountService {
      */
     public List<BalancePointDto> getMyAccountBalanceHistory(final String accountId, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate) {
-        LOG.debugf("Fetching balance history for my account: %s", accountId);
+        LOG.debugf("Fetching balance history for my account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountBalanceHistory(accountId, endDate, startDate),
                 this.authService, LOG, "fetching balance history for my account " + accountId);
     }
@@ -243,7 +247,7 @@ public class AccountService {
      */
     public List<PaymentResponseDto> getMyAccountPayments(final String accountId, @Nullable final LocalDate startDate,
             @Nullable final LocalDate endDate, @Nullable final String query, final Integer page, final Integer size) {
-        LOG.debugf("Fetching payments for my account: %s", accountId);
+        LOG.debugf("Fetching payments for my account: %s", LogSanitizer.sanitize(accountId));
         final Integer safePage = PaginationParamUtil.sanitizePage(page);
         final Integer safeSize = PaginationParamUtil.sanitizeSize(size);
         return ServiceHelper.execute(
@@ -262,7 +266,7 @@ public class AccountService {
     // payments
     /** Returns the my account outgoing payments. */
     public List<PaymentResponseDto> getMyAccountOutgoingPayments(final String accountId) {
-        LOG.debugf("Fetching outgoing payments for my account: %s", accountId);
+        LOG.debugf("Fetching outgoing payments for my account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountOutgoingPayments(accountId), this.authService,
                 LOG, "fetching outgoing payments for my account " + accountId);
     }
@@ -271,7 +275,7 @@ public class AccountService {
     // payments
     /** Returns the my account incoming payments. */
     public List<PaymentResponseDto> getMyAccountIncomingPayments(final String accountId) {
-        LOG.debugf("Fetching incoming payments for my account: %s", accountId);
+        LOG.debugf("Fetching incoming payments for my account: %s", LogSanitizer.sanitize(accountId));
         return ServiceHelper.execute(() -> this.accountClient.getMyAccountIncomingPayments(accountId), this.authService,
                 LOG, "fetching incoming payments for my account " + accountId);
     }
@@ -279,7 +283,7 @@ public class AccountService {
     // User-facing method that checks account access before creating payment
     /** Creates a new my account payment. */
     public PaymentDto createMyAccountPayment(final String accountId, final PaymentDto payment) {
-        LOG.debugf("Creating payment for my account: %s", accountId);
+        LOG.debugf("Creating payment for my account: %s", LogSanitizer.sanitize(accountId));
         return PaymentDto.from(ServiceHelper.execute(
                 () -> this.accountClient.createMyAccountPayment(accountId, payment), this.authService, LOG,
                 "creating payment for my account " + accountId, "Failed to create payment"));
@@ -288,7 +292,8 @@ public class AccountService {
     // User-facing method that checks account access before updating payment
     /** Updates the my account payment. */
     public PaymentDto updateMyAccountPayment(final String accountId, final String paymentId, final PaymentDto payment) {
-        LOG.debugf("Updating payment %s for my account: %s", paymentId, accountId);
+        LOG.debugf("Updating payment %s for my account: %s", LogSanitizer.sanitize(paymentId),
+                LogSanitizer.sanitize(accountId));
         return PaymentDto.from(ServiceHelper.execute(
                 () -> this.accountClient.updateMyAccountPayment(accountId, paymentId, payment), this.authService, LOG,
                 "updating payment " + paymentId + " for my account " + accountId, "Failed to update payment"));

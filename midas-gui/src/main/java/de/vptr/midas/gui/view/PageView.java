@@ -2,6 +2,9 @@ package de.vptr.midas.gui.view;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.grid.Grid;
@@ -16,8 +19,6 @@ import de.vptr.midas.gui.dto.PageResponseDto;
 import de.vptr.midas.gui.service.AuthService;
 import de.vptr.midas.gui.service.PageService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** User view for browsing pages. */
 @Route(value = "pages", layout = MainLayout.class)

@@ -4,10 +4,11 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import de.vptr.midas.api.entity.UserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
+
+import de.vptr.midas.api.entity.UserEntity;
 
 /**
  * Refuses user and rank changes that would leave no active administrator.

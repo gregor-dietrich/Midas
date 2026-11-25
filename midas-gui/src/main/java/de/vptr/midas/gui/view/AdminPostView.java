@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -30,8 +33,6 @@ import de.vptr.midas.gui.service.PostCommentService;
 import de.vptr.midas.gui.service.PostService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Admin view for managing posts. */
 @Route(value = "admin/posts", layout = AdminMainLayout.class)

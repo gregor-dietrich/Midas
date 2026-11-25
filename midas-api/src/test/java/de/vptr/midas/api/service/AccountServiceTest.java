@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.junit.jupiter.api.Test;
 
 import de.vptr.midas.api.dto.AccountDto;
@@ -26,8 +29,6 @@ import de.vptr.midas.api.dto.AccountResponseDto;
 import de.vptr.midas.api.util.PaginationUtil;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 @QuarkusTest
 class AccountServiceTest {

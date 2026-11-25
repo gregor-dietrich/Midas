@@ -2,6 +2,8 @@ package de.vptr.midas.gui.view;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -9,7 +11,6 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import de.vptr.midas.gui.component.button.AdminViewButton;
 import de.vptr.midas.gui.component.button.ThemeToggleButton;
 import de.vptr.midas.gui.component.tabs.NavigationTabs;
-import jakarta.annotation.Nullable;
 
 /** Layout for main. */
 public class MainLayout extends AbstractMainLayoutBase {
@@ -50,7 +51,7 @@ public class MainLayout extends AbstractMainLayoutBase {
     @Override
     // Identity is the question being asked: whether this exact component instance is
     // already attached to the top bar. Vaadin components do not define value equality.
-    @SuppressWarnings("ReferenceEquality")
+    @SuppressWarnings({ "ReferenceEquality", "PMD.CompareObjectsWithEquals" })
     protected void showNavigationTabs() {
         if (this.navigationTabs == null || this.topBar == null
                 || this.topBar.getChildren().anyMatch(component -> component == this.navigationTabs)) {

@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nullable;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +27,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import jakarta.annotation.Nullable;
 
 /**
  * An in-process stub of the Midas API, used to pin GUI service behaviour against real HTTP rather than against a mocked

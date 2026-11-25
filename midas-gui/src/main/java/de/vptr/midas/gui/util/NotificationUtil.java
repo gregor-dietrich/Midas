@@ -1,9 +1,9 @@
 package de.vptr.midas.gui.util;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-
-import jakarta.annotation.Nullable;
 
 /** Utility class for notification. */
 public final class NotificationUtil {

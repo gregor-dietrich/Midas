@@ -16,6 +16,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.ws.rs.ProcessingException;
+
 import org.junit.jupiter.api.Test;
 
 import com.vaadin.flow.server.ErrorEvent;
@@ -27,7 +29,6 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.view.AbstractUiTestBase;
 import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
-import jakarta.ws.rs.ProcessingException;
 
 class MidasErrorHandlerTest extends AbstractUiTestBase {
 

@@ -4,6 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -13,11 +19,6 @@ import com.vaadin.flow.server.VaadinSession;
 import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
 
 /** Component. */
 @ApplicationScoped
@@ -50,7 +51,7 @@ public class AuthService {
     public AuthResultDto authenticate(final String username, final String password) {
         LOG.trace("Starting authentication");
 
-        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+        if (isBlank(username) || isBlank(password)) {
             LOG.trace("Username or password is empty");
             return AuthResultDto.invalidInput();
         }
@@ -67,17 +68,7 @@ public class AuthService {
                 return AuthResultDto.backendUnavailable();
             }
 
-            withSessionLock(session, () -> {
-                final var previousSessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
-                if (previousSessionId != null) {
-                    this.sessionAuthorizationStore.revokeSession(previousSessionId);
-                }
-                final var sessionId = this.sessionAuthorizationStore.createSession(authHeader);
-
-                USERNAME_ATTRIBUTE.write(session, username);
-                SESSION_ID_ATTRIBUTE.write(session, sessionId);
-                AUTHENTICATED_ATTRIBUTE.write(session, Boolean.TRUE);
-            });
+            this.establishSession(session, username, authHeader);
 
             LOG.trace("User authenticated successfully");
             return AuthResultDto.success();
@@ -97,6 +88,24 @@ public class AuthService {
             LOG.error("Unexpected error during authentication", e);
             return AuthResultDto.backendUnavailable();
         }
+    }
+
+    private static boolean isBlank(@Nullable final String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private void establishSession(final VaadinSession session, final String username, final String authHeader) {
+        withSessionLock(session, () -> {
+            final var previousSessionId = SESSION_ID_ATTRIBUTE.read(session, LOG).orElse(null);
+            if (previousSessionId != null) {
+                this.sessionAuthorizationStore.revokeSession(previousSessionId);
+            }
+            final var sessionId = this.sessionAuthorizationStore.createSession(authHeader);
+
+            USERNAME_ATTRIBUTE.write(session, username);
+            SESSION_ID_ATTRIBUTE.write(session, sessionId);
+            AUTHENTICATED_ATTRIBUTE.write(session, Boolean.TRUE);
+        });
     }
 
     /** Logs out the current user. */

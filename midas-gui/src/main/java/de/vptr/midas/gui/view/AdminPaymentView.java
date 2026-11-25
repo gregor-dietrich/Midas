@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -26,8 +29,6 @@ import de.vptr.midas.gui.service.PaymentService;
 import de.vptr.midas.gui.service.UserService;
 import de.vptr.midas.gui.util.MidasErrorHandler;
 import de.vptr.midas.gui.util.UiConstants;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** Admin view for managing payments. */
 @Route(value = "admin/payments", layout = AdminMainLayout.class)

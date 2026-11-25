@@ -5,6 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.annotation.Nullable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import de.vptr.midas.api.dto.UserRankDto;
@@ -14,13 +22,6 @@ import de.vptr.midas.api.entity.UserRankEntity;
 import de.vptr.midas.api.util.SearchQueryUtil;
 import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
-import jakarta.annotation.Nullable;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 /** Service for user rank business logic. */
 @ApplicationScoped
@@ -186,84 +187,37 @@ public class UserRankService {
         applyPermissionsFromDto(rank, dto);
     }
 
+    private static Boolean keepExistingIfNull(@Nullable final Boolean value, final Boolean current) {
+        return value != null ? value : current;
+    }
+
     /** Applies non-null permission fields from the DTO to the entity. */
-    @SuppressWarnings("PMD.NPathComplexity")
     private void applyPermissionsFromDto(final UserRankEntity rank, final UserRankDto dto) {
-        if (dto.adminView != null) {
-            rank.adminView = dto.adminView;
-        }
-        if (dto.pageAdd != null) {
-            rank.pageAdd = dto.pageAdd;
-        }
-        if (dto.pageDelete != null) {
-            rank.pageDelete = dto.pageDelete;
-        }
-        if (dto.pageEdit != null) {
-            rank.pageEdit = dto.pageEdit;
-        }
-        if (dto.postAdd != null) {
-            rank.postAdd = dto.postAdd;
-        }
-        if (dto.postDelete != null) {
-            rank.postDelete = dto.postDelete;
-        }
-        if (dto.postEdit != null) {
-            rank.postEdit = dto.postEdit;
-        }
-        if (dto.postCategoryAdd != null) {
-            rank.postCategoryAdd = dto.postCategoryAdd;
-        }
-        if (dto.postCategoryDelete != null) {
-            rank.postCategoryDelete = dto.postCategoryDelete;
-        }
-        if (dto.postCategoryEdit != null) {
-            rank.postCategoryEdit = dto.postCategoryEdit;
-        }
-        if (dto.postCommentAdd != null) {
-            rank.postCommentAdd = dto.postCommentAdd;
-        }
-        if (dto.postCommentDelete != null) {
-            rank.postCommentDelete = dto.postCommentDelete;
-        }
-        if (dto.postCommentEdit != null) {
-            rank.postCommentEdit = dto.postCommentEdit;
-        }
-        if (dto.userAdd != null) {
-            rank.userAdd = dto.userAdd;
-        }
-        if (dto.userDelete != null) {
-            rank.userDelete = dto.userDelete;
-        }
-        if (dto.userEdit != null) {
-            rank.userEdit = dto.userEdit;
-        }
-        if (dto.userGroupAdd != null) {
-            rank.userGroupAdd = dto.userGroupAdd;
-        }
-        if (dto.userGroupDelete != null) {
-            rank.userGroupDelete = dto.userGroupDelete;
-        }
-        if (dto.userGroupEdit != null) {
-            rank.userGroupEdit = dto.userGroupEdit;
-        }
-        if (dto.userAccountAdd != null) {
-            rank.userAccountAdd = dto.userAccountAdd;
-        }
-        if (dto.userAccountDelete != null) {
-            rank.userAccountDelete = dto.userAccountDelete;
-        }
-        if (dto.userAccountEdit != null) {
-            rank.userAccountEdit = dto.userAccountEdit;
-        }
-        if (dto.userRankAdd != null) {
-            rank.userRankAdd = dto.userRankAdd;
-        }
-        if (dto.userRankDelete != null) {
-            rank.userRankDelete = dto.userRankDelete;
-        }
-        if (dto.userRankEdit != null) {
-            rank.userRankEdit = dto.userRankEdit;
-        }
+        rank.adminView = keepExistingIfNull(dto.adminView, rank.adminView);
+        rank.pageAdd = keepExistingIfNull(dto.pageAdd, rank.pageAdd);
+        rank.pageDelete = keepExistingIfNull(dto.pageDelete, rank.pageDelete);
+        rank.pageEdit = keepExistingIfNull(dto.pageEdit, rank.pageEdit);
+        rank.postAdd = keepExistingIfNull(dto.postAdd, rank.postAdd);
+        rank.postDelete = keepExistingIfNull(dto.postDelete, rank.postDelete);
+        rank.postEdit = keepExistingIfNull(dto.postEdit, rank.postEdit);
+        rank.postCategoryAdd = keepExistingIfNull(dto.postCategoryAdd, rank.postCategoryAdd);
+        rank.postCategoryDelete = keepExistingIfNull(dto.postCategoryDelete, rank.postCategoryDelete);
+        rank.postCategoryEdit = keepExistingIfNull(dto.postCategoryEdit, rank.postCategoryEdit);
+        rank.postCommentAdd = keepExistingIfNull(dto.postCommentAdd, rank.postCommentAdd);
+        rank.postCommentDelete = keepExistingIfNull(dto.postCommentDelete, rank.postCommentDelete);
+        rank.postCommentEdit = keepExistingIfNull(dto.postCommentEdit, rank.postCommentEdit);
+        rank.userAdd = keepExistingIfNull(dto.userAdd, rank.userAdd);
+        rank.userDelete = keepExistingIfNull(dto.userDelete, rank.userDelete);
+        rank.userEdit = keepExistingIfNull(dto.userEdit, rank.userEdit);
+        rank.userGroupAdd = keepExistingIfNull(dto.userGroupAdd, rank.userGroupAdd);
+        rank.userGroupDelete = keepExistingIfNull(dto.userGroupDelete, rank.userGroupDelete);
+        rank.userGroupEdit = keepExistingIfNull(dto.userGroupEdit, rank.userGroupEdit);
+        rank.userAccountAdd = keepExistingIfNull(dto.userAccountAdd, rank.userAccountAdd);
+        rank.userAccountDelete = keepExistingIfNull(dto.userAccountDelete, rank.userAccountDelete);
+        rank.userAccountEdit = keepExistingIfNull(dto.userAccountEdit, rank.userAccountEdit);
+        rank.userRankAdd = keepExistingIfNull(dto.userRankAdd, rank.userRankAdd);
+        rank.userRankDelete = keepExistingIfNull(dto.userRankDelete, rank.userRankDelete);
+        rank.userRankEdit = keepExistingIfNull(dto.userRankEdit, rank.userRankEdit);
     }
 
     /** Deletes the rank with the given publicId without a caller, so without a {@link PrivilegeCeiling}. */

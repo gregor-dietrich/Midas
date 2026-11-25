@@ -4,6 +4,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import jakarta.annotation.Nullable;
+import jakarta.ws.rs.ProcessingException;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.UI;
@@ -15,8 +18,6 @@ import de.vptr.midas.gui.exception.ServiceException;
 import de.vptr.midas.gui.view.BackendErrorView;
 import de.vptr.midas.gui.view.LoginView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
-import jakarta.ws.rs.ProcessingException;
 
 /** Handler for error events. */
 public final class MidasErrorHandler {
@@ -150,15 +151,15 @@ public final class MidasErrorHandler {
     private static void logUserFacing(@Nullable final Throwable cause, @Nullable final String fallbackMessage) {
         final String message = resolveUserMessage(cause, fallbackMessage);
         if (cause instanceof AuthenticationException) {
-            LOG.warnf(cause, "Authentication failure shown to user: %s", message);
+            LOG.warnf(cause, "Authentication failure shown to user: %s", LogSanitizer.sanitize(message));
         } else if (cause instanceof TimeoutException) {
-            LOG.warnf(cause, "Timeout shown to user: %s", message);
+            LOG.warnf(cause, "Timeout shown to user: %s", LogSanitizer.sanitize(message));
         } else if (cause instanceof ServiceException) {
-            LOG.errorf(cause, "Service failure shown to user: %s", message);
+            LOG.errorf(cause, "Service failure shown to user: %s", LogSanitizer.sanitize(message));
         } else if (cause != null) {
-            LOG.errorf(cause, "Unexpected failure shown to user: %s", message);
+            LOG.errorf(cause, "Unexpected failure shown to user: %s", LogSanitizer.sanitize(message));
         } else {
-            LOG.errorf("Unknown failure shown to user: %s", message);
+            LOG.errorf("Unknown failure shown to user: %s", LogSanitizer.sanitize(message));
         }
     }
 }

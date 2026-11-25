@@ -3,6 +3,9 @@ package de.vptr.midas.gui.view;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+import jakarta.inject.Inject;
+
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -16,8 +19,6 @@ import de.vptr.midas.gui.component.dialog.AdminPostCommentDialog;
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.dto.PostCommentResponseDto;
 import de.vptr.midas.gui.service.PostCommentService;
-import jakarta.annotation.Nullable;
-import jakarta.inject.Inject;
 
 /** AdminPostCommentView view. */
 @Route(value = "admin/comments", layout = AdminMainLayout.class)

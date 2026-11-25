@@ -5,17 +5,20 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import de.vptr.midas.api.service.UserService;
-import io.quarkus.runtime.LaunchMode;
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import de.vptr.midas.api.service.UserService;
+import de.vptr.midas.api.util.LogSanitizer;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.quarkus.runtime.LaunchMode;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
 
 /** Application lifecycle management. */
 @ApplicationScoped
@@ -48,6 +51,8 @@ public class AppLifecycleBean {
         this.bootstrapAdminPassword = bootstrapAdminPassword;
     }
 
+    @SuppressFBWarnings(value = "CRLF_INJECTION_LOGS",
+            justification = "Banner comes from packaged classpath banner.txt and is intentionally multi-line")
     void onStart(@Observes final StartupEvent ev) {
         this.failOnDefaultDbPasswordInProduction();
         this.bootstrapAdminInProduction();
@@ -89,7 +94,7 @@ public class AppLifecycleBean {
             LOG.infof(
                     "Created the initial admin account '%s'. APP_BOOTSTRAP_ADMIN_PASSWORD is no longer needed and can "
                             + "be removed from the configuration.",
-                    this.bootstrapAdminUsername);
+                    LogSanitizer.sanitize(this.bootstrapAdminUsername));
         }
     }
 

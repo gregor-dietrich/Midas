@@ -2,13 +2,14 @@ package de.vptr.midas.gui.component.dialog;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.Binder;
 
 import de.vptr.midas.gui.dto.PostCommentDto;
 import de.vptr.midas.gui.service.PostCommentService;
-import jakarta.annotation.Nullable;
 
 /** Base dialog class for editing or adding post comments. */
 public abstract class AbstractPostCommentDialogBase extends AbstractAdminEntityDialogBase<PostCommentDto> {

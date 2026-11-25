@@ -4,6 +4,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nullable;
+
 import org.jboss.logging.Logger;
 
 import com.vaadin.flow.component.button.Button;
@@ -20,8 +22,8 @@ import com.vaadin.flow.function.ValueProvider;
 
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.exception.ServiceException;
+import de.vptr.midas.gui.util.LogSanitizer;
 import de.vptr.midas.gui.util.NotificationUtil;
-import jakarta.annotation.Nullable;
 
 /** Base class for admin entity dialogs to unify layout, binder handling, and save/cancel flows. */
 public abstract class AbstractAdminEntityDialogBase<T> extends FormDialog {
@@ -91,31 +93,39 @@ public abstract class AbstractAdminEntityDialogBase<T> extends FormDialog {
                 return;
             }
 
-            if (isNew) {
-                createAction.accept(bean);
-                NotificationUtil.showSuccess(createMsg);
-            } else {
-                updateAction.accept(bean);
-                NotificationUtil.showSuccess(updateMsg);
-            }
-
-            this.close();
-            if (this.onSave != null) {
-                this.onSave.run();
-            }
+            this.saveAndNotify(bean, isNew, createMsg, updateMsg, createAction, updateAction);
 
         } catch (final ValidationException e) {
             NotificationUtil.showError("Please check the form for errors");
         } catch (final AuthenticationException e) {
             NotificationUtil.showError("Session expired. Please log in again.");
-            if (this.onAuthFailure != null) {
-                this.onAuthFailure.run();
+            final var authFailure = this.onAuthFailure;
+            if (authFailure != null) {
+                authFailure.run();
             }
         } catch (final ServiceException e) {
             this.handleServiceException(e, entityName);
         } catch (final RuntimeException e) {
-            this.log.error("Unexpected error saving " + entityName.toLowerCase(Locale.ROOT), e);
+            this.log.errorf(e, "Unexpected error saving %s",
+                    LogSanitizer.sanitize(entityName.toLowerCase(Locale.ROOT)));
             NotificationUtil.showError("Unexpected error occurred");
+        }
+    }
+
+    private void saveAndNotify(final T bean, final boolean isNew, final String createMsg, final String updateMsg,
+            final Consumer<T> createAction, final Consumer<T> updateAction) {
+        if (isNew) {
+            createAction.accept(bean);
+            NotificationUtil.showSuccess(createMsg);
+        } else {
+            updateAction.accept(bean);
+            NotificationUtil.showSuccess(updateMsg);
+        }
+
+        this.close();
+        final var saveCallback = this.onSave;
+        if (saveCallback != null) {
+            saveCallback.run();
         }
     }
 

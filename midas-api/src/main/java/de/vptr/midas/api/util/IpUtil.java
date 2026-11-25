@@ -4,8 +4,9 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.vertx.core.http.HttpServerRequest;
 import jakarta.annotation.Nullable;
+
+import io.vertx.core.http.HttpServerRequest;
 
 /** Utility for resolving client IP addresses from HTTP requests. */
 public final class IpUtil {
@@ -42,20 +43,27 @@ public final class IpUtil {
      * @return the resolved IP address, or "unknown" if not resolvable
      */
     public static String resolveIp(final HttpServerRequest request, final Set<String> trustedProxyIps) {
-        String ip = "unknown";
-        final boolean trustForwardedFor =
-                request.remoteAddress() != null && trustedProxyIps.contains(request.remoteAddress().hostAddress());
-        final String forwardedFor = trustForwardedFor ? request.getHeader("X-Forwarded-For") : null;
-        final String realIp = trustForwardedFor ? request.getHeader("X-Real-IP") : null;
+        final String remoteHost = request.remoteAddress() != null ? request.remoteAddress().hostAddress() : null;
+        if (remoteHost != null && trustedProxyIps.contains(remoteHost)) {
+            final String forwarded = resolveForwardedHeader(request);
+            if (forwarded != null) {
+                return forwarded;
+            }
+        }
+        return remoteHost != null ? remoteHost : "unknown";
+    }
 
+    @Nullable
+    private static String resolveForwardedHeader(final HttpServerRequest request) {
+        final String forwardedFor = request.getHeader("X-Forwarded-For");
         if (forwardedFor != null && !forwardedFor.isBlank()) {
             final int commaIndex = forwardedFor.indexOf(',');
-            ip = (commaIndex >= 0 ? forwardedFor.substring(0, commaIndex) : forwardedFor).trim();
-        } else if (realIp != null && !realIp.isBlank()) {
-            ip = realIp.trim();
-        } else if (request.remoteAddress() != null) {
-            ip = request.remoteAddress().hostAddress();
+            return (commaIndex >= 0 ? forwardedFor.substring(0, commaIndex) : forwardedFor).trim();
         }
-        return ip != null ? ip : "unknown";
+        final String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return null;
     }
 }

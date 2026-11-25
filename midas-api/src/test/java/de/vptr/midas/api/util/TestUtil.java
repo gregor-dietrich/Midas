@@ -6,11 +6,12 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
+import jakarta.annotation.Nullable;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
-import jakarta.annotation.Nullable;
 
 /**
  * General test utilities for REST API testing

@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 
 /**
  * Every foreign key in the public schema has an index whose leading columns are the key's columns, in order. Without

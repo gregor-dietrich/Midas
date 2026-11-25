@@ -2,10 +2,11 @@ package de.vptr.midas.gui.dto;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.annotation.Nullable;
 
 /** Data transfer object for post category. */
 @SuppressFBWarnings(value = "EI_EXPOSE_REP",

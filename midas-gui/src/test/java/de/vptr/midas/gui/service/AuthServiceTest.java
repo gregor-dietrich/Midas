@@ -11,6 +11,10 @@ import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import org.assertj.core.api.Assertions;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
@@ -24,9 +28,6 @@ import de.vptr.midas.gui.client.AuthClient;
 import de.vptr.midas.gui.dto.AuthResultDto;
 import de.vptr.midas.gui.exception.AuthenticationException;
 import de.vptr.midas.gui.util.AbstractSessionServiceTestBase;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 class AuthServiceTest extends AbstractSessionServiceTestBase {
 

@@ -3,13 +3,14 @@ package de.vptr.midas.api.service;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import de.vptr.midas.api.dto.UserResponseDto;
 import de.vptr.midas.api.entity.PostCommentEntity;
 import de.vptr.midas.api.entity.PostEntity;
 import de.vptr.midas.api.entity.UserEntity;
 import de.vptr.midas.api.util.QueryAggregationUtil;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import jakarta.enterprise.context.ApplicationScoped;
 
 /** Builds user response DTOs with batched post/comment count lookups. */
 @ApplicationScoped

@@ -2,12 +2,13 @@ package de.vptr.midas.api.service;
 
 import java.util.Set;
 
-import de.vptr.midas.api.entity.UserEntity;
-import de.vptr.midas.api.entity.UserRankEntity;
-import de.vptr.midas.api.security.UserRankIdentityAugmentor;
 import jakarta.annotation.Nullable;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+
+import de.vptr.midas.api.entity.UserEntity;
+import de.vptr.midas.api.entity.UserRankEntity;
+import de.vptr.midas.api.security.UserRankIdentityAugmentor;
 
 /**
  * Keeps a caller from acting above their own rank: they cannot modify or delete a user, or modify or delete a rank,

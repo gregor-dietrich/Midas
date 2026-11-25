@@ -1,10 +1,11 @@
 package de.vptr.midas.api.exception;
 
-import de.vptr.midas.api.util.ResponseUtil;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
+import de.vptr.midas.api.util.ResponseUtil;
 
 /** Type definition. */
 @Provider

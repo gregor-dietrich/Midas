@@ -1,12 +1,13 @@
 package de.vptr.midas.gui.client;
 
-import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
-
-import de.vptr.midas.gui.service.AuthService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MultivaluedMap;
+
+import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
+
+import de.vptr.midas.gui.service.AuthService;
 
 /**
  * Supplies the backend credentials for every generated REST client call.
