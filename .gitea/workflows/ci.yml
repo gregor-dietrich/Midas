@@ -37,6 +37,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
+          check-latest: true # not an older 25.x the runner has cached
       # Replaces the settings.xml setup-java writes, whose only content is a server no step uses.
       - name: Use the Maven Central mirror
         run: |
@@ -81,6 +82,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
+          check-latest: true # not an older 25.x the runner has cached
       - name: Use the Maven Central mirror
         run: |
           cat >~/.m2/settings.xml <<'EOF'
